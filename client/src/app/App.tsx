@@ -1,4 +1,4 @@
-import ChromaticCircle from './ChromaticCircle';
+import ChromaticCircle from '../shared/components/ChromaticCircle';
 
 export default function App() {
   return (
@@ -8,4 +8,3 @@ export default function App() {
     </main>
   );
 }
-

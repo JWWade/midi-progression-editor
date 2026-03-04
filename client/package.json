@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings=0",
     "preview": "vite preview",
-    "generate:api": "openapi-typescript http://localhost:5000/swagger/v1/swagger.json -o src/api/generated.ts"
+    "generate:api": "openapi-typescript http://localhost:5000/swagger/v1/swagger.json -o src/api/generated/index.ts"
   },
   "dependencies": {
     "react": "^19.2.0",

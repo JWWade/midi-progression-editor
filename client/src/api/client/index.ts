@@ -1,4 +1,4 @@
-import type { components, operations } from "./generated";
+import type { components, operations } from "../generated";
 
 const API_BASE =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
