@@ -1,6 +1,6 @@
 # .NET build artifacts
-server/ParametricMusic.Api/bin/
-server/ParametricMusic.Api/obj/
+server/**/bin/
+server/**/obj/
 
 # Frontend dependencies and build output
 client/node_modules/
