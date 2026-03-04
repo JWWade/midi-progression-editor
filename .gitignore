@@ -1,0 +1,12 @@
+# .NET build artifacts
+server/ParametricMusic.Api/bin/
+server/ParametricMusic.Api/obj/
+
+# Frontend dependencies and build output
+client/node_modules/
+client/dist/
+
+# IDE
+.vs/
+.vscode/
+*.user

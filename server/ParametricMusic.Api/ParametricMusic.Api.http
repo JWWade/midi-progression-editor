@@ -1,0 +1,3 @@
+@ParametricMusic.Api_HostAddress = http://localhost:5110
+
+GET {{ParametricMusic.Api_HostAddress}}/health
