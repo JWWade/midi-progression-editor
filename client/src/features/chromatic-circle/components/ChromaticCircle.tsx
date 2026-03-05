@@ -13,6 +13,9 @@ import {
 } from "@/features/chord/utils/transpose";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
+import type { ScaleType } from "@/features/scale/types";
+import { SCALE_LABELS } from "@/features/scale/types";
+import { getScaleNotes } from "@/features/scale/utils";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -22,6 +25,9 @@ const NATURAL_FONT_SIZE = 11;
 const SHARP_FONT_SIZE = 9;
 const PRIMARY_COLOR = "#4F46E5";
 const SEVENTH_COLOR = "#A855F7";
+const NON_SCALE_COLOR = "#D1D5DB";
+const NON_SCALE_OPACITY = 0.6;
+const NON_SCALE_TEXT_COLOR = "#4B5563";
 
 const ACTIVE_BUTTON_STYLE: React.CSSProperties = {
   fontWeight: "bold",
@@ -124,12 +130,14 @@ const CHORD_INTERVALS: Record<ChordType, readonly number[]> = {
 export function ChromaticCircle() {
   const [chordType, setChordType] = useState<ChordType>("major");
   const [rootIndex, setRootIndex] = useState(0);
+  const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
 
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
   const baseIntervals = CHORD_INTERVALS[chordType];
   const chordNotes = transposeChord(baseIntervals, rootIndex);
   const chordIndices = chordNotes.map((n) => n.index);
+  const scaleIndices = getScaleNotes(rootIndex, selectedScale);
 
   const strokeColor = isSeventhChord ? SEVENTH_COLOR : PRIMARY_COLOR;
   const strokeDasharray = isSeventhChord ? "5,5" : undefined;
@@ -194,6 +202,23 @@ export function ChromaticCircle() {
             ))}
           </select>
         </div>
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="scale-select" style={LABEL_STYLE}>
+            Scale:
+          </label>
+          <select
+            id="scale-select"
+            value={selectedScale}
+            onChange={(e) => setSelectedScale(e.target.value as ScaleType)}
+            style={SELECT_STYLE}
+          >
+            {(Object.keys(SCALE_LABELS) as ScaleType[]).map((scale) => (
+              <option key={scale} value={scale}>
+                {SCALE_LABELS[scale]}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <svg
         width={SIZE}
@@ -222,15 +247,19 @@ export function ChromaticCircle() {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
           const x = CENTER + RING_RADIUS * Math.cos(angle);
           const y = CENTER + RING_RADIUS * Math.sin(angle);
+          const isInScale = scaleIndices.includes(i);
+          const nodeFill = isInScale ? PRIMARY_COLOR : NON_SCALE_COLOR;
+          const textFill = isInScale ? "#fff" : NON_SCALE_TEXT_COLOR;
           return (
             <g key={label}>
               <circle
                 cx={x}
                 cy={y}
                 r={NODE_RADIUS}
-                fill="#646cff"
+                fill={nodeFill}
                 stroke="#fff"
                 strokeWidth={1.5}
+                opacity={isInScale ? 1 : NON_SCALE_OPACITY}
               />
               <text
                 x={x}
@@ -238,7 +267,7 @@ export function ChromaticCircle() {
                 textAnchor="middle"
                 dominantBaseline="central"
                 fontSize={label.length > 1 ? SHARP_FONT_SIZE : NATURAL_FONT_SIZE}
-                fill="#fff"
+                fill={textFill}
                 fontFamily="sans-serif"
                 fontWeight="bold"
               >

@@ -1,0 +1,1 @@
+export { getScaleNotes } from "./scaleUtils";
