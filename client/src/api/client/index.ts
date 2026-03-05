@@ -1,8 +1,10 @@
 import type { components, operations } from "../generated";
 
+// API base URL: Override with VITE_API_BASE_URL environment variable
+// MUST match backend port (5110 for local dev, update if backend moves)
 const API_BASE =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:5000";
+  "http://localhost:5110";
 
 export type HealthResponse = components["schemas"]["HealthResponse"];
 
