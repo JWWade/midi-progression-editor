@@ -13,6 +13,8 @@ import {
 } from "@/features/chord/utils/transpose";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
+import { CHORD_NAME_TO_DATA } from "@/features/chord/data/chordNames";
+import { ChordSelector } from "@/features/chord/components/ChordSelector";
 import type { ScaleType } from "@/features/scale/types";
 import { SCALE_LABELS } from "@/features/scale/types";
 import { getScaleNotes } from "@/features/scale/utils";
@@ -34,52 +36,6 @@ const NON_SCALE_OPACITY = 0.6;
 const NON_SCALE_TEXT_COLOR = "#4B5563";
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
-
-const ACTIVE_BUTTON_STYLE: React.CSSProperties = {
-  fontWeight: "bold",
-  backgroundColor: PRIMARY_COLOR,
-  color: "white",
-  border: `2px solid ${PRIMARY_COLOR}`,
-  borderRadius: "4px",
-  padding: "4px 16px",
-  cursor: "pointer",
-};
-
-const ACTIVE_SEVENTH_BUTTON_STYLE: React.CSSProperties = {
-  fontWeight: "bold",
-  backgroundColor: SEVENTH_COLOR,
-  color: "white",
-  border: `2px solid ${SEVENTH_COLOR}`,
-  borderRadius: "4px",
-  padding: "4px 16px",
-  cursor: "pointer",
-};
-
-const INACTIVE_BUTTON_STYLE: React.CSSProperties = {
-  fontWeight: "normal",
-  backgroundColor: "transparent",
-  color: PRIMARY_COLOR,
-  border: `2px solid ${PRIMARY_COLOR}`,
-  borderRadius: "4px",
-  padding: "4px 16px",
-  cursor: "pointer",
-};
-
-const INACTIVE_SEVENTH_BUTTON_STYLE: React.CSSProperties = {
-  fontWeight: "normal",
-  backgroundColor: "transparent",
-  color: SEVENTH_COLOR,
-  border: `2px solid ${SEVENTH_COLOR}`,
-  borderRadius: "4px",
-  padding: "4px 16px",
-  cursor: "pointer",
-};
-
-const TOGGLE_CONTAINER_STYLE: React.CSSProperties = {
-  display: "flex",
-  gap: "8px",
-  justifyContent: "center",
-};
 
 const CONTROLS_STYLE: React.CSSProperties = {
   display: "flex",
@@ -107,21 +63,6 @@ const SELECT_STYLE: React.CSSProperties = {
 
 const LABEL_STYLE: React.CSSProperties = {
   fontWeight: "bold",
-};
-
-const SECTION_LABEL_STYLE: React.CSSProperties = {
-  fontWeight: "bold",
-  fontSize: "11px",
-  color: "#888",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-};
-
-const CHORD_GROUP_STYLE: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "6px",
-  alignItems: "center",
 };
 
 const CHORD_INTERVALS: Record<ChordType, readonly number[]> = {
@@ -164,15 +105,16 @@ const CHORD_SUMMARY_STYLE: React.CSSProperties = {
 };
 
 export function ChromaticCircle() {
-  const [chordType, setChordType] = useState<ChordType>("major");
-  const [rootIndex, setRootIndex] = useState(0);
-  const [toChordType, setToChordType] = useState<ChordType>("major");
-  const [toRootIndex, setToRootIndex] = useState(5); // F
+  const [selectedChordName, setSelectedChordName] = useState("C");
+  const [selectedToChordName, setSelectedToChordName] = useState("F");
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
   const [showVoiceLeads, setShowVoiceLeads] = useState(false);
   const [showMorph, setShowMorph] = useState(false);
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
+
+  const { root: rootIndex, type: chordType } = CHORD_NAME_TO_DATA[selectedChordName];
+  const { root: toRootIndex, type: toChordType } = CHORD_NAME_TO_DATA[selectedToChordName];
 
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
   const isToSeventhChord = SEVENTH_CHORD_TYPES.has(toChordType);
@@ -212,24 +154,6 @@ export function ChromaticCircle() {
     RING_RADIUS,
   );
 
-  const getTriadButtonStyle = (type: ChordType): React.CSSProperties =>
-    chordType === type ? ACTIVE_BUTTON_STYLE : INACTIVE_BUTTON_STYLE;
-
-  const getSeventhButtonStyle = (type: ChordType): React.CSSProperties =>
-    chordType === type ? ACTIVE_SEVENTH_BUTTON_STYLE : INACTIVE_SEVENTH_BUTTON_STYLE;
-
-  const getToTriadButtonStyle = (type: ChordType): React.CSSProperties =>
-    toChordType === type
-      ? { ...ACTIVE_BUTTON_STYLE, backgroundColor: TO_CHORD_COLOR, border: `2px solid ${TO_CHORD_COLOR}` }
-      : { ...INACTIVE_BUTTON_STYLE, color: TO_CHORD_COLOR, border: `2px solid ${TO_CHORD_COLOR}` };
-
-  const getToSeventhButtonStyle = (type: ChordType): React.CSSProperties =>
-    toChordType === type
-      ? { ...ACTIVE_SEVENTH_BUTTON_STYLE, backgroundColor: TO_CHORD_SEVENTH_COLOR, border: `2px solid ${TO_CHORD_SEVENTH_COLOR}` }
-      : { ...INACTIVE_SEVENTH_BUTTON_STYLE, color: TO_CHORD_SEVENTH_COLOR, border: `2px solid ${TO_CHORD_SEVENTH_COLOR}` };
-
-  const fromChordLabel = `${PITCH_CLASSES[rootIndex]} ${chordType}`;
-  const toChordLabel = `${PITCH_CLASSES[toRootIndex]} ${toChordType}`;
   const fromNoteNames = chordNotes.map((n) => n.name).join(", ");
   const toNoteNames = toChordNotes.map((n) => n.name).join(", ");
 
@@ -240,110 +164,30 @@ export function ChromaticCircle() {
         <div style={VOICE_LEAD_ROW_STYLE}>
           {/* From Chord */}
           <div style={CHORD_SELECTOR_STYLE}>
-            <span style={{ ...SECTION_LABEL_STYLE, color: PRIMARY_COLOR }}>From Chord</span>
-            <div style={CHORD_GROUP_STYLE}>
-              <span style={SECTION_LABEL_STYLE}>Triads</span>
-              <div style={TOGGLE_CONTAINER_STYLE}>
-                <button onClick={() => setChordType("major")} style={getTriadButtonStyle("major")}>
-                  Major
-                </button>
-                <button onClick={() => setChordType("minor")} style={getTriadButtonStyle("minor")}>
-                  Minor
-                </button>
-              </div>
-            </div>
-            <div style={CHORD_GROUP_STYLE}>
-              <span style={SECTION_LABEL_STYLE}>Sevenths</span>
-              <div style={TOGGLE_CONTAINER_STYLE}>
-                <button onClick={() => setChordType("maj7")} style={getSeventhButtonStyle("maj7")}>
-                  Maj7
-                </button>
-                <button onClick={() => setChordType("min7")} style={getSeventhButtonStyle("min7")}>
-                  Min7
-                </button>
-                <button onClick={() => setChordType("dom7")} style={getSeventhButtonStyle("dom7")}>
-                  Dom7
-                </button>
-                <button
-                  onClick={() => setChordType("halfdim7")}
-                  style={getSeventhButtonStyle("halfdim7")}
-                >
-                  HalfDim7
-                </button>
-              </div>
-            </div>
-            <div style={ROOT_SELECTOR_STYLE}>
-              <label htmlFor="root-note-select" style={LABEL_STYLE}>
-                From Root:
-              </label>
-              <select
-                id="root-note-select"
-                value={rootIndex}
-                onChange={(e) => setRootIndex(Number(e.target.value))}
-                style={SELECT_STYLE}
-              >
-                {PITCH_CLASSES.map((pitch, i) => (
-                  <option key={pitch} value={i}>
-                    {pitch}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <label htmlFor="from-chord-select" style={{ ...LABEL_STYLE, color: PRIMARY_COLOR }}>
+              From Chord
+            </label>
+            <ChordSelector
+              id="from-chord-select"
+              value={selectedChordName}
+              onChange={setSelectedChordName}
+              style={{ ...SELECT_STYLE }}
+            />
           </div>
 
           <span style={ARROW_STYLE}>→</span>
 
           {/* To Chord */}
           <div style={{ ...CHORD_SELECTOR_STYLE, borderColor: TO_CHORD_COLOR }}>
-            <span style={{ ...SECTION_LABEL_STYLE, color: TO_CHORD_COLOR }}>To Chord</span>
-            <div style={CHORD_GROUP_STYLE}>
-              <span style={SECTION_LABEL_STYLE}>Triads</span>
-              <div style={TOGGLE_CONTAINER_STYLE}>
-                <button onClick={() => setToChordType("major")} style={getToTriadButtonStyle("major")}>
-                  Major
-                </button>
-                <button onClick={() => setToChordType("minor")} style={getToTriadButtonStyle("minor")}>
-                  Minor
-                </button>
-              </div>
-            </div>
-            <div style={CHORD_GROUP_STYLE}>
-              <span style={SECTION_LABEL_STYLE}>Sevenths</span>
-              <div style={TOGGLE_CONTAINER_STYLE}>
-                <button onClick={() => setToChordType("maj7")} style={getToSeventhButtonStyle("maj7")}>
-                  Maj7
-                </button>
-                <button onClick={() => setToChordType("min7")} style={getToSeventhButtonStyle("min7")}>
-                  Min7
-                </button>
-                <button onClick={() => setToChordType("dom7")} style={getToSeventhButtonStyle("dom7")}>
-                  Dom7
-                </button>
-                <button
-                  onClick={() => setToChordType("halfdim7")}
-                  style={getToSeventhButtonStyle("halfdim7")}
-                >
-                  HalfDim7
-                </button>
-              </div>
-            </div>
-            <div style={ROOT_SELECTOR_STYLE}>
-              <label htmlFor="to-root-note-select" style={LABEL_STYLE}>
-                To Root:
-              </label>
-              <select
-                id="to-root-note-select"
-                value={toRootIndex}
-                onChange={(e) => setToRootIndex(Number(e.target.value))}
-                style={{ ...SELECT_STYLE, borderColor: TO_CHORD_COLOR, color: TO_CHORD_COLOR }}
-              >
-                {PITCH_CLASSES.map((pitch, i) => (
-                  <option key={pitch} value={i}>
-                    {pitch}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <label htmlFor="to-chord-select" style={{ ...LABEL_STYLE, color: TO_CHORD_COLOR }}>
+              To Chord
+            </label>
+            <ChordSelector
+              id="to-chord-select"
+              value={selectedToChordName}
+              onChange={setSelectedToChordName}
+              style={{ ...SELECT_STYLE, borderColor: TO_CHORD_COLOR, color: TO_CHORD_COLOR }}
+            />
           </div>
         </div>
 
@@ -398,11 +242,11 @@ export function ChromaticCircle() {
       {/* Chord summary */}
       <p style={CHORD_SUMMARY_STYLE}>
         <span style={{ color: PRIMARY_COLOR, fontWeight: "bold" }}>
-          From: {fromChordLabel} ({fromNoteNames})
+          From: {selectedChordName} ({fromNoteNames})
         </span>
         {" → "}
         <span style={{ color: TO_CHORD_COLOR, fontWeight: "bold" }}>
-          To: {toChordLabel} ({toNoteNames})
+          To: {selectedToChordName} ({toNoteNames})
         </span>
       </p>
 
