@@ -15,6 +15,7 @@ import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import { CHORD_NAME_TO_DATA } from "@/features/chord/data/chordNames";
 import { ChordSelector } from "@/features/chord/components/ChordSelector";
+import { ChordLabel } from "@/features/chord/components/ChordLabel";
 import type { ScaleType } from "@/features/scale/types";
 import { SCALE_LABELS } from "@/features/scale/types";
 import { getScaleNotes } from "@/features/scale/utils";
@@ -36,6 +37,19 @@ const NON_SCALE_OPACITY = 0.6;
 const NON_SCALE_TEXT_COLOR = "#4B5563";
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
+const LABEL_DISTANCE = RING_RADIUS + 28; // 28px clears the node circle (r=12) with readable spacing
+
+function computeLabelPoint(
+  cx: number,
+  cy: number,
+  noteIndex: number,
+): { x: number; y: number } {
+  const angle = (noteIndex / 12) * 2 * Math.PI;
+  return {
+    x: cx + LABEL_DISTANCE * Math.sin(angle),
+    y: cy - LABEL_DISTANCE * Math.cos(angle),
+  };
+}
 
 const CONTROLS_STYLE: React.CSSProperties = {
   display: "flex",
@@ -255,6 +269,7 @@ export function ChromaticCircle() {
         height={SIZE}
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         aria-label="Chromatic Circle"
+        overflow="visible"
       >
         <circle
           cx={CENTER}
@@ -302,6 +317,26 @@ export function ChromaticCircle() {
           strokeDasharray={toStrokeDasharray}
           opacity={staticPolygonOpacity}
         />
+
+        {/* From chord vertex labels */}
+        {chordNotes.map((note) => (
+          <ChordLabel
+            key={`from-label-${note.index}`}
+            point={computeLabelPoint(CENTER, CENTER, note.index)}
+            noteName={note.name}
+            fill={strokeColor}
+          />
+        ))}
+
+        {/* To chord vertex labels */}
+        {toChordNotes.map((note) => (
+          <ChordLabel
+            key={`to-label-${note.index}`}
+            point={computeLabelPoint(CENTER, CENTER, note.index)}
+            noteName={note.name}
+            fill={toStrokeColor}
+          />
+        ))}
 
         {/* Morphed polygon (shown when "Animate Morph" is enabled) */}
         {showMorph && (
