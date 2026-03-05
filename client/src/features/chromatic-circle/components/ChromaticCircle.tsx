@@ -2,7 +2,11 @@ import { useState } from "react";
 import { useChromaticCircleData } from "../hooks/useChromaticCircleData";
 import { PITCH_CLASSES } from "../utils";
 import { calculatePolygonPoints } from "../utils/geometry";
-import { getChordNotes } from "@/features/chord/api/getChordNotes";
+import {
+  transposeChord,
+  MAJOR_INTERVALS,
+  MINOR_INTERVALS,
+} from "@/features/chord/utils/transpose";
 import type { ChordType } from "@/features/chord/types";
 
 const SIZE = 300;
@@ -36,32 +40,80 @@ const INACTIVE_BUTTON_STYLE: React.CSSProperties = {
 const TOGGLE_CONTAINER_STYLE: React.CSSProperties = {
   display: "flex",
   gap: "8px",
-  marginBottom: "12px",
   justifyContent: "center",
+};
+
+const CONTROLS_STYLE: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px",
+  alignItems: "center",
+  marginBottom: "12px",
+};
+
+const ROOT_SELECTOR_STYLE: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+};
+
+const SELECT_STYLE: React.CSSProperties = {
+  padding: "4px 8px",
+  borderRadius: "4px",
+  border: `2px solid ${PRIMARY_COLOR}`,
+  color: PRIMARY_COLOR,
+  fontWeight: "bold",
+  cursor: "pointer",
+  backgroundColor: "transparent",
+};
+
+const LABEL_STYLE: React.CSSProperties = {
+  fontWeight: "bold",
 };
 
 export function ChromaticCircle() {
   const [quality, setQuality] = useState<ChordType>("major");
+  const [rootIndex, setRootIndex] = useState(0);
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
 
-  const chordNotes = getChordNotes(quality);
+  const baseIntervals = quality === "major" ? MAJOR_INTERVALS : MINOR_INTERVALS;
+  const chordNotes = transposeChord(baseIntervals, rootIndex);
   const chordIndices = chordNotes.map((n) => n.index);
 
   return (
     <div>
-      <div style={TOGGLE_CONTAINER_STYLE}>
-        <button
-          onClick={() => setQuality("major")}
-          style={quality === "major" ? ACTIVE_BUTTON_STYLE : INACTIVE_BUTTON_STYLE}
-        >
-          Major
-        </button>
-        <button
-          onClick={() => setQuality("minor")}
-          style={quality === "minor" ? ACTIVE_BUTTON_STYLE : INACTIVE_BUTTON_STYLE}
-        >
-          Minor
-        </button>
+      <div style={CONTROLS_STYLE}>
+        <div style={TOGGLE_CONTAINER_STYLE}>
+          <button
+            onClick={() => setQuality("major")}
+            style={quality === "major" ? ACTIVE_BUTTON_STYLE : INACTIVE_BUTTON_STYLE}
+          >
+            Major
+          </button>
+          <button
+            onClick={() => setQuality("minor")}
+            style={quality === "minor" ? ACTIVE_BUTTON_STYLE : INACTIVE_BUTTON_STYLE}
+          >
+            Minor
+          </button>
+        </div>
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="root-note-select" style={LABEL_STYLE}>
+            Root Note:
+          </label>
+          <select
+            id="root-note-select"
+            value={rootIndex}
+            onChange={(e) => setRootIndex(Number(e.target.value))}
+            style={SELECT_STYLE}
+          >
+            {PITCH_CLASSES.map((pitch, i) => (
+              <option key={pitch} value={i}>
+                {pitch}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <svg
         width={SIZE}
