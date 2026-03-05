@@ -30,6 +30,7 @@ import {
 } from "@/features/chord-inspection";
 import type { ToneInfo } from "@/features/chord-inspection";
 import { calculateCentroid } from "@/features/chord-geometry";
+import { IntervalLabel, getIntervals, getIntervalName } from "@/features/chord-intervals";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -164,6 +165,7 @@ export function ChromaticCircle() {
   const [showVoiceLeads, setShowVoiceLeads] = useState(false);
   const [showExtension, setShowExtension] = useState(false);
   const [showCentroid, setShowCentroid] = useState(false);
+  const [showIntervals, setShowIntervals] = useState(false);
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const [selectedTone, setSelectedTone] = useState<ToneInfo | null>(null);
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
@@ -379,6 +381,20 @@ export function ChromaticCircle() {
           />
         </div>
 
+        {/* Show Intervals toggle */}
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="show-intervals" style={LABEL_STYLE}>
+            Show Intervals:
+          </label>
+          <input
+            id="show-intervals"
+            type="checkbox"
+            checked={showIntervals}
+            onChange={(e) => setShowIntervals(e.target.checked)}
+            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+          />
+        </div>
+
         {/* Scale selector */}
         <div style={ROOT_SELECTOR_STYLE}>
           <label htmlFor="scale-select" style={LABEL_STYLE}>
@@ -549,6 +565,42 @@ export function ChromaticCircle() {
             />
           </g>
         )}
+
+        {/* From chord interval labels */}
+        {showIntervals &&
+          getIntervals(chordIndices).map((semitones, i) => {
+            const from = fromMorphedPoints[i];
+            const to = fromMorphedPoints[(i + 1) % fromMorphedPoints.length];
+            if (!from || !to) return null;
+            return (
+              <IntervalLabel
+                key={`from-interval-${i}`}
+                from={from}
+                to={to}
+                intervalName={getIntervalName(semitones)}
+                centerX={CENTER}
+                centerY={CENTER}
+              />
+            );
+          })}
+
+        {/* To chord interval labels */}
+        {showIntervals &&
+          getIntervals(toChordIndices).map((semitones, i) => {
+            const from = toPoints[i];
+            const to = toPoints[(i + 1) % toPoints.length];
+            if (!from || !to) return null;
+            return (
+              <IntervalLabel
+                key={`to-interval-${i}`}
+                from={from}
+                to={to}
+                intervalName={getIntervalName(semitones)}
+                centerX={CENTER}
+                centerY={CENTER}
+              />
+            );
+          })}
 
         {/* From chord clickable vertices */}
         {chordNotes.map((note, i) => {
