@@ -21,6 +21,7 @@ import { SCALE_LABELS } from "@/features/scale/types";
 import { getScaleNotes } from "@/features/scale/utils";
 import { calculateVoiceLeads } from "@/features/voice-leading";
 import { useChordMorph, interpolateColor } from "@/features/chord-morphing";
+import { useAudioPlayback } from "@/features/audio";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -118,6 +119,21 @@ const CHORD_SUMMARY_STYLE: React.CSSProperties = {
   textAlign: "center",
 };
 
+function playButtonStyle(color: string, disabled: boolean): React.CSSProperties {
+  return {
+    padding: "4px 12px",
+    borderRadius: "4px",
+    border: `2px solid ${color}`,
+    color: disabled ? "#9CA3AF" : color,
+    fontWeight: "bold",
+    cursor: disabled ? "not-allowed" : "pointer",
+    backgroundColor: "transparent",
+    borderColor: disabled ? "#9CA3AF" : color,
+    fontSize: "13px",
+    marginTop: "4px",
+  };
+}
+
 export function ChromaticCircle() {
   const [selectedChordName, setSelectedChordName] = useState("C");
   const [selectedToChordName, setSelectedToChordName] = useState("F");
@@ -126,6 +142,8 @@ export function ChromaticCircle() {
   const [showMorph, setShowMorph] = useState(false);
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
+  const fromAudio = useAudioPlayback();
+  const toAudio = useAudioPlayback();
 
   const { root: rootIndex, type: chordType } = CHORD_NAME_TO_DATA[selectedChordName];
   const { root: toRootIndex, type: toChordType } = CHORD_NAME_TO_DATA[selectedToChordName];
@@ -170,6 +188,7 @@ export function ChromaticCircle() {
 
   const fromNoteNames = chordNotes.map((n) => n.name).join(", ");
   const toNoteNames = toChordNotes.map((n) => n.name).join(", ");
+  const anyPlaying = fromAudio.isPlaying || toAudio.isPlaying;
 
   return (
     <div>
@@ -187,6 +206,14 @@ export function ChromaticCircle() {
               onChange={setSelectedChordName}
               style={{ ...SELECT_STYLE }}
             />
+            <button
+              style={playButtonStyle(PRIMARY_COLOR, anyPlaying)}
+              disabled={anyPlaying}
+              onClick={() => void fromAudio.play(chordNotes)}
+              aria-label={`Play ${selectedChordName} chord`}
+            >
+              ▶ Play
+            </button>
           </div>
 
           <span style={ARROW_STYLE}>→</span>
@@ -202,6 +229,14 @@ export function ChromaticCircle() {
               onChange={setSelectedToChordName}
               style={{ ...SELECT_STYLE, borderColor: TO_CHORD_COLOR, color: TO_CHORD_COLOR }}
             />
+            <button
+              style={playButtonStyle(TO_CHORD_COLOR, anyPlaying)}
+              disabled={anyPlaying}
+              onClick={() => void toAudio.play(toChordNotes)}
+              aria-label={`Play ${selectedToChordName} chord`}
+            >
+              ▶ Play
+            </button>
           </div>
         </div>
 
