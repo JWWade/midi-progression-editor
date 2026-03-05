@@ -13,14 +13,14 @@ import {
 } from "@/features/chord/utils/transpose";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
-import { CHORD_NAME_TO_DATA } from "@/features/chord/data/chordNames";
+import { CHORD_NAME_TO_DATA, CHORD_TYPE_ORDER, getChordName } from "@/features/chord/data/chordNames";
 import { ChordSelector } from "@/features/chord/components/ChordSelector";
 import { ChordLabel } from "@/features/chord/components/ChordLabel";
 import type { ScaleType } from "@/features/scale/types";
 import { SCALE_LABELS } from "@/features/scale/types";
 import { getScaleNotes } from "@/features/scale/utils";
 import { calculateVoiceLeads } from "@/features/voice-leading";
-import { useChordMorph, interpolateColor } from "@/features/chord-morphing";
+import { useChordMorphing } from "@/features/chord-animation";
 import { useAudioPlayback } from "@/features/audio";
 
 const SIZE = 300;
@@ -89,6 +89,15 @@ const CHORD_INTERVALS: Record<ChordType, readonly number[]> = {
   halfdim7: HALFDIM7_INTERVALS,
 };
 
+const CHORD_TYPE_LABELS: Record<ChordType, string> = {
+  major: "Major",
+  minor: "Minor",
+  dom7: "Dom 7",
+  maj7: "Maj 7",
+  min7: "Min 7",
+  halfdim7: "Half-dim 7",
+};
+
 const CHORD_SELECTOR_STYLE: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
@@ -139,7 +148,6 @@ export function ChromaticCircle() {
   const [selectedToChordName, setSelectedToChordName] = useState("F");
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
   const [showVoiceLeads, setShowVoiceLeads] = useState(false);
-  const [showMorph, setShowMorph] = useState(false);
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
   const fromAudio = useAudioPlayback();
@@ -160,7 +168,7 @@ export function ChromaticCircle() {
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
   const toPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, toChordIndices);
-  const { morphedPoints, morphProgress } = useChordMorph(fromPoints, toPoints);
+  const { morphedPoints: fromMorphedPoints, morphProgress } = useChordMorphing(fromPoints);
   const isAnimating = morphProgress > 0 && morphProgress < 1;
 
   const strokeColor = isSeventhChord ? SEVENTH_COLOR : PRIMARY_COLOR;
@@ -175,8 +183,7 @@ export function ChromaticCircle() {
     ? "rgba(217, 119, 6, 0.1)"
     : "rgba(5, 150, 105, 0.1)";
 
-  const morphStrokeColor = interpolateColor(strokeColor, toStrokeColor, morphProgress);
-  const staticPolygonOpacity = showMorph && isAnimating ? 0.35 : 1;
+  const fromPolygonOpacity = isAnimating ? 0.75 : 1;
 
   const voiceLeads = calculateVoiceLeads(
     chordNotes,
@@ -197,15 +204,57 @@ export function ChromaticCircle() {
         <div style={VOICE_LEAD_ROW_STYLE}>
           {/* From Chord */}
           <div style={CHORD_SELECTOR_STYLE}>
-            <label htmlFor="from-chord-select" style={{ ...LABEL_STYLE, color: PRIMARY_COLOR }}>
+            <label style={{ ...LABEL_STYLE, color: PRIMARY_COLOR }}>
               From Chord
             </label>
+            {/* Combined chord name dropdown */}
             <ChordSelector
               id="from-chord-select"
               value={selectedChordName}
               onChange={setSelectedChordName}
               style={{ ...SELECT_STYLE }}
+              aria-label="From chord"
             />
+            {/* Separate root-note selector */}
+            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              <label htmlFor="from-root-select" style={{ ...LABEL_STYLE, fontSize: "12px" }}>
+                Root:
+              </label>
+              <select
+                id="from-root-select"
+                value={rootIndex}
+                onChange={(e) =>
+                  setSelectedChordName(getChordName(Number(e.target.value), chordType))
+                }
+                style={SELECT_STYLE}
+                aria-label="From chord root note"
+              >
+                {PITCH_CLASSES.map((label, i) => (
+                  <option key={i} value={i}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              {/* Separate chord-type selector */}
+              <label htmlFor="from-type-select" style={{ ...LABEL_STYLE, fontSize: "12px" }}>
+                Type:
+              </label>
+              <select
+                id="from-type-select"
+                value={chordType}
+                onChange={(e) =>
+                  setSelectedChordName(getChordName(rootIndex, e.target.value as ChordType))
+                }
+                style={SELECT_STYLE}
+                aria-label="From chord type"
+              >
+                {CHORD_TYPE_ORDER.map((type) => (
+                  <option key={type} value={type}>
+                    {CHORD_TYPE_LABELS[type]}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               style={playButtonStyle(PRIMARY_COLOR, anyPlaying)}
               disabled={anyPlaying}
@@ -250,20 +299,6 @@ export function ChromaticCircle() {
             type="checkbox"
             checked={showVoiceLeads}
             onChange={(e) => setShowVoiceLeads(e.target.checked)}
-            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-          />
-        </div>
-
-        {/* Show Morph toggle */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="show-morph" style={LABEL_STYLE}>
-            Animate Morph:
-          </label>
-          <input
-            id="show-morph"
-            type="checkbox"
-            checked={showMorph}
-            onChange={(e) => setShowMorph(e.target.checked)}
             style={{ cursor: "pointer", width: "16px", height: "16px" }}
           />
         </div>
@@ -333,14 +368,14 @@ export function ChromaticCircle() {
             />
           ))}
 
-        {/* From chord polygon */}
+        {/* From chord polygon — uses morphed points for smooth auto-animation */}
         <polygon
-          points={fromPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+          points={fromMorphedPoints.map((p) => `${p.x},${p.y}`).join(" ")}
           fill={fillColor}
           stroke={strokeColor}
           strokeWidth={2}
           strokeDasharray={strokeDasharray}
-          opacity={staticPolygonOpacity}
+          opacity={fromPolygonOpacity}
         />
 
         {/* To chord polygon */}
@@ -350,7 +385,6 @@ export function ChromaticCircle() {
           stroke={toStrokeColor}
           strokeWidth={2}
           strokeDasharray={toStrokeDasharray}
-          opacity={staticPolygonOpacity}
         />
 
         {/* From chord vertex labels */}
@@ -372,17 +406,6 @@ export function ChromaticCircle() {
             fill={toStrokeColor}
           />
         ))}
-
-        {/* Morphed polygon (shown when "Animate Morph" is enabled) */}
-        {showMorph && (
-          <polygon
-            points={morphedPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-            fill="transparent"
-            stroke={morphStrokeColor}
-            strokeWidth={3}
-            strokeLinejoin="round"
-          />
-        )}
 
         {PITCH_CLASSES.map((label, i) => {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
