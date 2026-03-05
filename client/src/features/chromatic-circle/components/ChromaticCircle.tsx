@@ -1,5 +1,7 @@
 import { useChromaticCircleData } from "../hooks/useChromaticCircleData";
 import { PITCH_CLASSES } from "../utils";
+import { calculatePolygonPoints } from "../utils/geometry";
+import { getChordNotes } from "@/features/chord/api/getChordNotes";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -7,6 +9,9 @@ const RING_RADIUS = 110;
 const NODE_RADIUS = 12;
 const NATURAL_FONT_SIZE = 11;
 const SHARP_FONT_SIZE = 9;
+
+const C_MAJOR_CHORD = getChordNotes("major");
+const C_MAJOR_INDICES = C_MAJOR_CHORD.map((n) => n.index);
 
 export function ChromaticCircle() {
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
@@ -34,6 +39,14 @@ export function ChromaticCircle() {
           fill="none"
           stroke="#555"
           strokeWidth={1}
+        />
+        <polygon
+          points={calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, C_MAJOR_INDICES)
+            .map((p) => `${p.x},${p.y}`)
+            .join(" ")}
+          fill="rgba(79, 70, 229, 0.1)"
+          stroke="#4F46E5"
+          strokeWidth={2}
         />
         {PITCH_CLASSES.map((label, i) => {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
