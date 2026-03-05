@@ -1,1 +1,1 @@
-export {};
+export { useChromaticCircleData } from "./useChromaticCircleData";
