@@ -29,6 +29,7 @@ import {
   noteIndexToFrequency,
 } from "@/features/chord-inspection";
 import type { ToneInfo } from "@/features/chord-inspection";
+import { calculateCentroid } from "@/features/chord-geometry";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -50,6 +51,8 @@ const VERTEX_RADIUS = 6;
 const VERTEX_RADIUS_SELECTED = 9;
 const VERTEX_SELECTED_FILL = "#FCD34D";
 const VERTEX_SELECTED_STROKE = "#D97706";
+const CENTROID_RADIUS = 4;
+const CENTROID_CROSSHAIR_LENGTH = 8;
 
 function computeLabelPoint(
   cx: number,
@@ -160,6 +163,7 @@ export function ChromaticCircle() {
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
   const [showVoiceLeads, setShowVoiceLeads] = useState(false);
   const [showExtension, setShowExtension] = useState(false);
+  const [showCentroid, setShowCentroid] = useState(false);
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const [selectedTone, setSelectedTone] = useState<ToneInfo | null>(null);
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
@@ -211,6 +215,9 @@ export function ChromaticCircle() {
 
   const { morphedPoints: fromMorphedPoints, morphProgress } = useChordMorphing(fromPoints);
   const isAnimating = morphProgress > 0 && morphProgress < 1;
+
+  const fromCentroid = calculateCentroid(fromMorphedPoints);
+  const toCentroid = calculateCentroid(toPoints);
 
   const strokeColor = isSeventhChord ? SEVENTH_COLOR : PRIMARY_COLOR;
   const strokeDasharray = isSeventhChord ? "5,5" : undefined;
@@ -358,6 +365,20 @@ export function ChromaticCircle() {
           />
         </div>
 
+        {/* Show Centroid toggle */}
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="show-centroid" style={LABEL_STYLE}>
+            Show Centroid:
+          </label>
+          <input
+            id="show-centroid"
+            type="checkbox"
+            checked={showCentroid}
+            onChange={(e) => setShowCentroid(e.target.checked)}
+            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+          />
+        </div>
+
         {/* Scale selector */}
         <div style={ROOT_SELECTOR_STYLE}>
           <label htmlFor="scale-select" style={LABEL_STYLE}>
@@ -465,6 +486,68 @@ export function ChromaticCircle() {
             stroke={TO_CHORD_COLOR}
             strokeWidth={2}
           />
+        )}
+
+        {/* From chord centroid marker */}
+        {showCentroid && (
+          <g aria-label="From chord centroid">
+            <line
+              x1={fromCentroid.x - CENTROID_CROSSHAIR_LENGTH}
+              y1={fromCentroid.y}
+              x2={fromCentroid.x + CENTROID_CROSSHAIR_LENGTH}
+              y2={fromCentroid.y}
+              stroke={strokeColor}
+              strokeWidth={1}
+              opacity={0.5}
+            />
+            <line
+              x1={fromCentroid.x}
+              y1={fromCentroid.y - CENTROID_CROSSHAIR_LENGTH}
+              x2={fromCentroid.x}
+              y2={fromCentroid.y + CENTROID_CROSSHAIR_LENGTH}
+              stroke={strokeColor}
+              strokeWidth={1}
+              opacity={0.5}
+            />
+            <circle
+              cx={fromCentroid.x}
+              cy={fromCentroid.y}
+              r={CENTROID_RADIUS}
+              fill={strokeColor}
+              opacity={0.7}
+            />
+          </g>
+        )}
+
+        {/* To chord centroid marker */}
+        {showCentroid && (
+          <g aria-label="To chord centroid">
+            <line
+              x1={toCentroid.x - CENTROID_CROSSHAIR_LENGTH}
+              y1={toCentroid.y}
+              x2={toCentroid.x + CENTROID_CROSSHAIR_LENGTH}
+              y2={toCentroid.y}
+              stroke={toStrokeColor}
+              strokeWidth={1}
+              opacity={0.5}
+            />
+            <line
+              x1={toCentroid.x}
+              y1={toCentroid.y - CENTROID_CROSSHAIR_LENGTH}
+              x2={toCentroid.x}
+              y2={toCentroid.y + CENTROID_CROSSHAIR_LENGTH}
+              stroke={toStrokeColor}
+              strokeWidth={1}
+              opacity={0.5}
+            />
+            <circle
+              cx={toCentroid.x}
+              cy={toCentroid.y}
+              r={CENTROID_RADIUS}
+              fill={toStrokeColor}
+              opacity={0.7}
+            />
+          </g>
         )}
 
         {/* From chord clickable vertices */}
