@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useChromaticCircleData } from "../hooks/useChromaticCircleData";
 import { PITCH_CLASSES } from "../utils";
 import { calculatePolygonPoints } from "../utils/geometry";
@@ -23,6 +23,12 @@ import { getScaleNotes } from "@/features/scale/utils";
 import { calculateVoiceLeads } from "@/features/voice-leading";
 import { useChordMorphing } from "@/features/chord-animation";
 import { useAudioPlayback } from "@/features/audio";
+import {
+  ToneInfoPanel,
+  getToneRole,
+  noteIndexToFrequency,
+} from "@/features/chord-inspection";
+import type { ToneInfo } from "@/features/chord-inspection";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -40,6 +46,10 @@ const NON_SCALE_TEXT_COLOR = "#4B5563";
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
 const LABEL_DISTANCE = RING_RADIUS + 28; // 28px clears the node circle (r=12) with readable spacing
+const VERTEX_RADIUS = 6;
+const VERTEX_RADIUS_SELECTED = 9;
+const VERTEX_SELECTED_FILL = "#FCD34D";
+const VERTEX_SELECTED_STROKE = "#D97706";
 
 function computeLabelPoint(
   cx: number,
@@ -151,9 +161,20 @@ export function ChromaticCircle() {
   const [showVoiceLeads, setShowVoiceLeads] = useState(false);
   const [showExtension, setShowExtension] = useState(false);
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
+  const [selectedTone, setSelectedTone] = useState<ToneInfo | null>(null);
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
   const fromAudio = useAudioPlayback();
   const toAudio = useAudioPlayback();
+
+  const deselectTone = useCallback(() => setSelectedTone(null), []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") deselectTone();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [deselectTone]);
 
   const { root: rootIndex, type: chordType } = CHORD_NAME_TO_DATA[selectedChordName];
   const { root: toRootIndex, type: toChordType } = CHORD_NAME_TO_DATA[selectedToChordName];
@@ -218,7 +239,7 @@ export function ChromaticCircle() {
   const anyPlaying = fromAudio.isPlaying || toAudio.isPlaying;
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
       <div style={CONTROLS_STYLE}>
         {/* Voice lead chord selectors */}
         <div style={VOICE_LEAD_ROW_STYLE}>
@@ -374,6 +395,8 @@ export function ChromaticCircle() {
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         aria-label="Chromatic Circle"
         overflow="visible"
+        onClick={deselectTone}
+        style={{ cursor: "default" }}
       >
         <circle
           cx={CENTER}
@@ -444,6 +467,70 @@ export function ChromaticCircle() {
           />
         )}
 
+        {/* From chord clickable vertices */}
+        {chordNotes.map((note, i) => {
+          const point = fromPoints[i];
+          const interval = baseIntervals[i];
+          const isSelected =
+            selectedTone?.chordLabel === "From Chord" &&
+            selectedTone?.note.index === note.index;
+          return point !== undefined ? (
+            <circle
+              key={`from-vertex-${note.index}`}
+              cx={point.x}
+              cy={point.y}
+              r={isSelected ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS}
+              fill={isSelected ? VERTEX_SELECTED_FILL : strokeColor}
+              stroke={isSelected ? VERTEX_SELECTED_STROKE : "none"}
+              strokeWidth={isSelected ? 2 : 0}
+              style={{ cursor: "pointer" }}
+              aria-label={`${note.name} in From Chord`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedTone({
+                  note,
+                  role: getToneRole(interval, chordType),
+                  interval,
+                  frequency: noteIndexToFrequency(note.index),
+                  chordLabel: "From Chord",
+                });
+              }}
+            />
+          ) : null;
+        })}
+
+        {/* To chord clickable vertices */}
+        {toChordNotes.map((note, i) => {
+          const point = toPoints[i];
+          const interval = toBaseIntervals[i];
+          const isSelected =
+            selectedTone?.chordLabel === "To Chord" &&
+            selectedTone?.note.index === note.index;
+          return point !== undefined ? (
+            <circle
+              key={`to-vertex-${note.index}`}
+              cx={point.x}
+              cy={point.y}
+              r={isSelected ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS}
+              fill={isSelected ? VERTEX_SELECTED_FILL : toStrokeColor}
+              stroke={isSelected ? VERTEX_SELECTED_STROKE : "none"}
+              strokeWidth={isSelected ? 2 : 0}
+              style={{ cursor: "pointer" }}
+              aria-label={`${note.name} in To Chord`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedTone({
+                  note,
+                  role: getToneRole(interval, toChordType),
+                  interval,
+                  frequency: noteIndexToFrequency(note.index),
+                  chordLabel: "To Chord",
+                });
+              }}
+            />
+          ) : null;
+        })}
+
         {/* From chord vertex labels */}
         {chordNotes.map((note) => (
           <ChordLabel
@@ -498,6 +585,7 @@ export function ChromaticCircle() {
           );
         })}
       </svg>
+      <ToneInfoPanel selectedTone={selectedTone} />
       {isLoading && <p style={{ marginTop: "1rem" }}>Loading scale notes…</p>}
       {error && <p style={{ marginTop: "1rem", color: "#888" }}>Scale notes unavailable.</p>}
       {!isLoading && !error && scaleNotes.length > 0 && (
