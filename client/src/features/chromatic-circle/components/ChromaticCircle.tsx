@@ -4,6 +4,7 @@ import { PITCH_CLASSES } from "../utils";
 import { calculatePolygonPoints } from "../utils/geometry";
 import {
   transposeChord,
+  getChordTriad,
   MAJOR_INTERVALS,
   MINOR_INTERVALS,
   MAJ7_INTERVALS,
@@ -148,6 +149,7 @@ export function ChromaticCircle() {
   const [selectedToChordName, setSelectedToChordName] = useState("F");
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
   const [showVoiceLeads, setShowVoiceLeads] = useState(false);
+  const [showExtension, setShowExtension] = useState(false);
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
   const fromAudio = useAudioPlayback();
@@ -168,6 +170,24 @@ export function ChromaticCircle() {
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
   const toPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, toChordIndices);
+
+  // Triad subset points for seventh chords (used when showExtension is enabled)
+  const fromTriadIntervals = getChordTriad(chordType);
+  const fromTriadNotes = fromTriadIntervals
+    ? transposeChord(fromTriadIntervals, rootIndex)
+    : null;
+  const fromTriadPoints = fromTriadNotes
+    ? calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, fromTriadNotes.map((n) => n.index))
+    : null;
+
+  const toTriadIntervals = getChordTriad(toChordType);
+  const toTriadNotes = toTriadIntervals
+    ? transposeChord(toTriadIntervals, toRootIndex)
+    : null;
+  const toTriadPoints = toTriadNotes
+    ? calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, toTriadNotes.map((n) => n.index))
+    : null;
+
   const { morphedPoints: fromMorphedPoints, morphProgress } = useChordMorphing(fromPoints);
   const isAnimating = morphProgress > 0 && morphProgress < 1;
 
@@ -303,6 +323,20 @@ export function ChromaticCircle() {
           />
         </div>
 
+        {/* Show Extension toggle */}
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="show-extension" style={LABEL_STYLE}>
+            Show Extension:
+          </label>
+          <input
+            id="show-extension"
+            type="checkbox"
+            checked={showExtension}
+            onChange={(e) => setShowExtension(e.target.checked)}
+            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+          />
+        </div>
+
         {/* Scale selector */}
         <div style={ROOT_SELECTOR_STYLE}>
           <label htmlFor="scale-select" style={LABEL_STYLE}>
@@ -369,6 +403,7 @@ export function ChromaticCircle() {
           ))}
 
         {/* From chord polygon — uses morphed points for smooth auto-animation */}
+        {/* When showing extension for a seventh chord, this is the seventh polygon (background) */}
         <polygon
           points={fromMorphedPoints.map((p) => `${p.x},${p.y}`).join(" ")}
           fill={fillColor}
@@ -378,7 +413,19 @@ export function ChromaticCircle() {
           opacity={fromPolygonOpacity}
         />
 
+        {/* From chord triad polygon (foreground, only when extension is enabled) */}
+        {showExtension && fromTriadPoints && (
+          <polygon
+            points={fromTriadPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+            fill="rgba(79, 70, 229, 0.1)"
+            stroke={PRIMARY_COLOR}
+            strokeWidth={2}
+            opacity={fromPolygonOpacity}
+          />
+        )}
+
         {/* To chord polygon */}
+        {/* When showing extension for a seventh chord, this is the seventh polygon (background) */}
         <polygon
           points={toPoints.map((p) => `${p.x},${p.y}`).join(" ")}
           fill={toFillColor}
@@ -386,6 +433,16 @@ export function ChromaticCircle() {
           strokeWidth={2}
           strokeDasharray={toStrokeDasharray}
         />
+
+        {/* To chord triad polygon (foreground, only when extension is enabled) */}
+        {showExtension && toTriadPoints && (
+          <polygon
+            points={toTriadPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+            fill="rgba(5, 150, 105, 0.1)"
+            stroke={TO_CHORD_COLOR}
+            strokeWidth={2}
+          />
+        )}
 
         {/* From chord vertex labels */}
         {chordNotes.map((note) => (
