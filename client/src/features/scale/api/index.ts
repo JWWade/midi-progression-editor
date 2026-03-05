@@ -1,0 +1,1 @@
+export { getScaleCMajor } from "./getScale";
