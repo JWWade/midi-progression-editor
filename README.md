@@ -69,14 +69,14 @@ See [client/.env.example](client/.env.example) for all available variables.
 
 ## API Client Type Generation
 
-When you modify backend API endpoints, regenerate the TypeScript types:
+When you modify backend API endpoints, regenerate the TypeScript types **and client functions**:
 
 ```bash
 cd client
 npm run generate:api
 ```
 
-This fetches the OpenAPI spec from your running backend and regenerates src/api/generated/index.ts with type-safe definitions.
+This fetches the OpenAPI spec from your running backend and regenerates `src/api/generated/index.ts` with complete type-safe client functions.
 
 **Requirements**:
 - Backend must be running on port 5110
@@ -86,6 +86,18 @@ This fetches the OpenAPI spec from your running backend and regenerates src/api/
 - After changing controller endpoints
 - After modifying DTOs or response types
 - After adding/removing API parameters
+- After adding new controllers
+
+**Usage**:
+```typescript
+import { client } from '@/api/client';
+
+// Fully typed, all operations auto-generated from spec
+const result = await client.post('/Scale/from-root', {
+  query: { note: 'C' },
+  body: { scaleType: 'major' }
+});
+```
 
 ## Testing
 

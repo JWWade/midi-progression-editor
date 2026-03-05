@@ -69,9 +69,9 @@ client/
 ├── src/
 │   ├── api/                              # API integration layer
 │   │   ├── client/
-│   │   │   └── index.ts                 # Handwritten fetch-based API client
+│   │   │   └── index.ts                 # Minimal wrapper: creates client instance, re-exports types
 │   │   ├── generated/
-│   │   │   └── index.ts                 # Auto-generated types (DO NOT EDIT)
+│   │   │   └── index.ts                 # Auto-generated: types + client functions (DO NOT EDIT)
 │   │   └── index.ts                      # Public exports
 │   │
 │   ├── app/                              # Application bootstrap
@@ -130,30 +130,41 @@ Each feature module is self-contained with:
 
 #### API Client Pattern
 
-**Two-layer approach**:
+**Unified Code Generation Approach**:
 
-1. **Generated Layer** (`src/api/generated/`):
-   - Auto-generated TypeScript types from OpenAPI spec
-   - Includes `operations`, `components` type definitions
-   - Regenerated via `npm run generate:api`
+The API client is automatically generated from the OpenAPI specification. This ensures perfect synchronization between specification, types, and client code—no manual updates needed.
+
+1. **Generated Client** (`src/api/generated/`):
+   - Auto-generated types AND client functions from OpenAPI spec
+   - Created via `npm run generate:api` from running backend
+   - Includes all operations, schemas, and response types
    - **Never edit manually**
 
-2. **Handwritten Client** (`src/api/client/`):
-   - Fetch-based HTTP client
-   - Wraps generated types for type safety
-   - Handles errors, base URL configuration
-   - Example:
-     ```typescript
-     export async function getScaleFromRoot(note: Note): Promise<NoteInfo[]> {
-       const res = await fetch(`${API_BASE}/Scale/from-root?note=${note}`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({ scaleType: 'major' })
-       });
-       if (!res.ok) throw new Error(`Failed: ${res.status}`);
-       return res.json();
-     }
-     ```
+2. **Client Wrapper** (`src/api/client/`):
+   - Minimal configuration layer
+   - Creates pre-configured client instance with base URL
+   - Re-exports all generated types
+   - Single source for API configuration
+
+**Usage in Components**:
+
+```typescript
+import { client } from '@/api/client';
+
+// All operations are fully typed
+const health = await client.get('/Health');
+const scale = await client.post('/Scale/from-root', {
+  query: { note: 'C' },
+  body: { scaleType: 'major' }
+});
+```
+
+**Benefits**:
+- ✅ No manual function definitions to maintain
+- ✅ Automatic type safety from OpenAPI spec
+- ✅ Single source of truth (the backend spec)
+- ✅ IDE autocomplete on all operations
+- ✅ Change backend API → Regenerate → Everything updates
 
 #### Path Alias
 
@@ -527,7 +538,7 @@ echo 'VITE_API_BASE_URL=http://localhost:5110' > .env.local
 
 ### API Client Type Generation
 
-Generate TypeScript types from OpenAPI spec:
+Generate TypeScript types **and client functions** from OpenAPI spec:
 
 ```bash
 cd client
@@ -536,8 +547,9 @@ npm run generate:api
 
 This command:
 1. Fetches OpenAPI spec from `http://localhost:5110/swagger/v1/swagger.json`
-2. Generates TypeScript types into `src/api/generated/index.ts`
-3. Overwrites the previous generated file
+2. Generates TypeScript types for all schemas
+3. Generates typed client functions for all operations
+4. Outputs everything into `src/api/generated/index.ts`
 
 **Requirements**:
 - Backend must be running on port 5110
@@ -550,11 +562,24 @@ This command:
 - After adding new controllers
 
 **Workflow**:
-1. Modify backend code (add controller, change DTO, etc.)
+1. Modify backend code (add controller, change DTO, change enum, etc.)
 2. Run backend: `dotnet run`
-3. Generate types: `npm run generate:api`
-4. Update frontend to use new types
-5. Commit both generated types and backend changes
+3. Generate client: `npm run generate:api`
+4. Use new types/functions in frontend (IDE will guide you)
+5. Commit both backend changes and generated client code
+
+**Example Generated Code**:
+```typescript
+// Fully typed client functions auto-generated from OpenAPI spec
+export const getHealth = createOperation('GET', '/Health');
+export const postScaleFromRoot = createOperation('POST', '/Scale/from-root');
+
+// Full type safety - errors at compile time, not runtime
+const result = await client.post('/Scale/from-root', {
+  query: { note: 'C' },
+  body: { scaleType: 'major' }
+});
+```
 
 ---
 
