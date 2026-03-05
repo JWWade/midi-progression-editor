@@ -1,4 +1,4 @@
-import ChromaticCircle from '../shared/components/ChromaticCircle';
+import { ChromaticCircle } from '../features/chromatic-circle';
 
 export default function App() {
   return (

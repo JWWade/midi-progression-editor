@@ -6,4 +6,4 @@ export interface ChordNoteInfo {
   role: ChordRole;
 }
 
-export type ChordType = "major";
+export type ChordType = "major" | "minor";
