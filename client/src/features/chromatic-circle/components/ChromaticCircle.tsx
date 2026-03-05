@@ -17,6 +17,7 @@ import type { ScaleType } from "@/features/scale/types";
 import { SCALE_LABELS } from "@/features/scale/types";
 import { getScaleNotes } from "@/features/scale/utils";
 import { calculateVoiceLeads } from "@/features/voice-leading";
+import { useChordMorph, interpolateColor } from "@/features/chord-morphing";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -169,6 +170,7 @@ export function ChromaticCircle() {
   const [toRootIndex, setToRootIndex] = useState(5); // F
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
   const [showVoiceLeads, setShowVoiceLeads] = useState(false);
+  const [showMorph, setShowMorph] = useState(false);
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
 
@@ -182,6 +184,11 @@ export function ChromaticCircle() {
   const toChordIndices = toChordNotes.map((n) => n.index);
   const scaleIndices = getScaleNotes(rootIndex, selectedScale);
 
+  const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
+  const toPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, toChordIndices);
+  const { morphedPoints, morphProgress } = useChordMorph(fromPoints, toPoints);
+  const isAnimating = morphProgress > 0 && morphProgress < 1;
+
   const strokeColor = isSeventhChord ? SEVENTH_COLOR : PRIMARY_COLOR;
   const strokeDasharray = isSeventhChord ? "5,5" : undefined;
   const fillColor = isSeventhChord
@@ -193,6 +200,9 @@ export function ChromaticCircle() {
   const toFillColor = isToSeventhChord
     ? "rgba(217, 119, 6, 0.1)"
     : "rgba(5, 150, 105, 0.1)";
+
+  const morphStrokeColor = interpolateColor(strokeColor, toStrokeColor, morphProgress);
+  const staticPolygonOpacity = showMorph && isAnimating ? 0.35 : 1;
 
   const voiceLeads = calculateVoiceLeads(
     chordNotes,
@@ -351,6 +361,20 @@ export function ChromaticCircle() {
           />
         </div>
 
+        {/* Show Morph toggle */}
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="show-morph" style={LABEL_STYLE}>
+            Animate Morph:
+          </label>
+          <input
+            id="show-morph"
+            type="checkbox"
+            checked={showMorph}
+            onChange={(e) => setShowMorph(e.target.checked)}
+            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+          />
+        </div>
+
         {/* Scale selector */}
         <div style={ROOT_SELECTOR_STYLE}>
           <label htmlFor="scale-select" style={LABEL_STYLE}>
@@ -417,25 +441,34 @@ export function ChromaticCircle() {
 
         {/* From chord polygon */}
         <polygon
-          points={calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices)
-            .map((p) => `${p.x},${p.y}`)
-            .join(" ")}
+          points={fromPoints.map((p) => `${p.x},${p.y}`).join(" ")}
           fill={fillColor}
           stroke={strokeColor}
           strokeWidth={2}
           strokeDasharray={strokeDasharray}
+          opacity={staticPolygonOpacity}
         />
 
         {/* To chord polygon */}
         <polygon
-          points={calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, toChordIndices)
-            .map((p) => `${p.x},${p.y}`)
-            .join(" ")}
+          points={toPoints.map((p) => `${p.x},${p.y}`).join(" ")}
           fill={toFillColor}
           stroke={toStrokeColor}
           strokeWidth={2}
           strokeDasharray={toStrokeDasharray}
+          opacity={staticPolygonOpacity}
         />
+
+        {/* Morphed polygon (shown when "Animate Morph" is enabled) */}
+        {showMorph && (
+          <polygon
+            points={morphedPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+            fill="transparent"
+            stroke={morphStrokeColor}
+            strokeWidth={3}
+            strokeLinejoin="round"
+          />
+        )}
 
         {PITCH_CLASSES.map((label, i) => {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
