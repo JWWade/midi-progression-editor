@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ChromaticCircle } from '../features/chromatic-circle';
 import { CurrentChordPanel, type Chord } from '../features/current-chord';
-import { PITCH_CLASSES } from '../features/chromatic-circle/utils';
+import { PITCH_CLASSES, getDiatonicIndices } from '../features/chromatic-circle/utils';
 import { ChordQualityColors } from '../features/chord/constants/chordQualityColors';
 import { CHORD_QUALITY_LABELS } from '../features/current-chord/utils/chordName';
 import { getChordNoteIndices } from '../features/chord/utils/transpose';
 import { ChordThumbnail } from '../features/current-chord/components/ChordThumbnail';
 import { getChordComplexity, getChordColor } from '../features/color-language/utils/chordColorUtils';
+import type { ScaleType } from '../features/scale/types';
 
 interface ProgressionEntry {
   id: string;
@@ -19,9 +20,21 @@ const PROGRESSION_TILE_MIN_WIDTH = 64;
 export default function App() {
   const [currentChord, setCurrentChord] = useState<Chord | null>(null);
   const [progression, setProgression] = useState<ProgressionEntry[]>([]);
+  const [keyRoot, setKeyRoot] = useState<number>(0);
+  const [keyScale, setKeyScale] = useState<ScaleType>("major");
+
+  const diatonicIndices = useMemo(
+    () => getDiatonicIndices(keyRoot, keyScale),
+    [keyRoot, keyScale],
+  );
 
   const handleCurrentChordChange = useCallback((chord: Chord) => {
     setCurrentChord(chord);
+  }, []);
+
+  const handleKeyScaleChange = useCallback((root: number, scale: ScaleType) => {
+    setKeyRoot(root);
+    setKeyScale(scale);
   }, []);
 
   const handleAddChord = useCallback(() => {
@@ -34,8 +47,8 @@ export default function App() {
   return (
     <main style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: '2rem 1rem', boxSizing: 'border-box' }}>
       <h1>Hello World</h1>
-      <CurrentChordPanel chord={currentChord} onAddChord={handleAddChord} />
-      <ChromaticCircle onCurrentChordChange={handleCurrentChordChange} />
+      <CurrentChordPanel chord={currentChord} onAddChord={handleAddChord} diatonicIndices={diatonicIndices} />
+      <ChromaticCircle onCurrentChordChange={handleCurrentChordChange} onKeyScaleChange={handleKeyScaleChange} />
       {progression.length > 0 && (
         <div
           aria-label="Chord progression"
@@ -70,7 +83,7 @@ export default function App() {
                     minWidth: `${PROGRESSION_TILE_MIN_WIDTH}px`,
                   }}
                 >
-                  <ChordThumbnail noteIndices={noteIndices} quality={entry.chord.quality} complexity={complexity} size={PROGRESSION_TILE_THUMBNAIL_SIZE} />
+                  <ChordThumbnail noteIndices={noteIndices} quality={entry.chord.quality} complexity={complexity} size={PROGRESSION_TILE_THUMBNAIL_SIZE} diatonicIndices={diatonicIndices} />
                   <span style={{ fontSize: '12px', fontWeight: '700', color: colors.dark }}>
                     {PITCH_CLASSES[entry.chord.root]}
                   </span>

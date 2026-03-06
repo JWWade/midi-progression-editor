@@ -160,7 +160,14 @@ function playButtonStyle(color: string, disabled: boolean): React.CSSProperties 
   };
 }
 
-export function ChromaticCircle({ onCurrentChordChange }: { onCurrentChordChange?: (chord: Chord) => void }) {
+export function ChromaticCircle({
+  onCurrentChordChange,
+  onKeyScaleChange,
+}: {
+  onCurrentChordChange?: (chord: Chord) => void;
+  /** Called whenever the key root or scale mode changes. */
+  onKeyScaleChange?: (root: number, scale: ScaleType) => void;
+}) {
   const [selectedChordName, setSelectedChordName] = useState("C");
   const [selectedToChordName, setSelectedToChordName] = useState("F");
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
@@ -202,6 +209,10 @@ export function ChromaticCircle({ onCurrentChordChange }: { onCurrentChordChange
   useEffect(() => {
     onCurrentChordChange?.({ root: rootIndex, quality: chordType });
   }, [rootIndex, chordType, onCurrentChordChange]);
+
+  useEffect(() => {
+    onKeyScaleChange?.(rootIndex, selectedScale);
+  }, [rootIndex, selectedScale, onKeyScaleChange]);
 
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
   const isToSeventhChord = SEVENTH_CHORD_TYPES.has(toChordType);
