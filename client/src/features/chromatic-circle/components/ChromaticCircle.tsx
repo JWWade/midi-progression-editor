@@ -51,7 +51,12 @@ import {
   CHORD_TONE_FILLS,
   chordToneGradientId,
 } from "../utils/noteStyles";
-import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
+import {
+  getChordComplexity,
+  getChordColor,
+  getChordFillColor,
+} from "@/features/color-language/utils/chordColorUtils";
+import type { ChordComplexity } from "@/features/color-language/utils/chordColorUtils";
 import type { Chord } from "@/features/current-chord";
 
 const PRIMARY_COLOR = "#4F46E5";
@@ -233,13 +238,16 @@ export function ChromaticCircle({ onCurrentChordChange }: { onCurrentChordChange
   const fromCentroid = calculateCentroid(fromMorphedPoints);
   const toCentroid = calculateCentroid(toPoints);
 
-  const strokeColor = ChordQualityColors[chordType].base;
-  const strokeDasharray = isSeventhChord ? "5,5" : undefined;
-  const fillColor = ChordQualityColors[chordType].fill;
+  const chordComplexity: ChordComplexity = getChordComplexity({ root: rootIndex, quality: chordType });
+  const toChordComplexity: ChordComplexity = getChordComplexity({ root: toRootIndex, quality: toChordType });
 
-  const toStrokeColor = ChordQualityColors[toChordType].base;
+  const strokeColor = getChordColor(chordType, chordComplexity);
+  const strokeDasharray = isSeventhChord ? "5,5" : undefined;
+  const fillColor = getChordFillColor(chordType, chordComplexity);
+
+  const toStrokeColor = getChordColor(toChordType, toChordComplexity);
   const toStrokeDasharray = isToSeventhChord ? "5,5" : undefined;
-  const toFillColor = ChordQualityColors[toChordType].fill;
+  const toFillColor = getChordFillColor(toChordType, toChordComplexity);
 
   const fromPolygonOpacity = isAnimating ? 0.75 : 1;
 
@@ -465,20 +473,22 @@ export function ChromaticCircle({ onCurrentChordChange }: { onCurrentChordChange
             cursor: "default",
           }}
         >
-        {/* Radial gradient fills for chord-tone note nodes (one per quality) */}
+        {/* Radial gradient fills for chord-tone note nodes (one per quality × complexity) */}
         <defs>
-          {(Object.keys(CHORD_TONE_FILLS) as ChordType[]).map((quality) => (
-            <radialGradient
-              key={quality}
-              id={chordToneGradientId(quality)}
-              cx="35%"
-              cy="35%"
-              r="65%"
-            >
-              <stop offset="0%" stopColor="#fff" stopOpacity={0.55} />
-              <stop offset="100%" stopColor={CHORD_TONE_FILLS[quality]} stopOpacity={1} />
-            </radialGradient>
-          ))}
+          {(Object.keys(CHORD_TONE_FILLS) as ChordType[]).flatMap((quality) =>
+            (["triad", "seventh", "extended"] as ChordComplexity[]).map((complexity) => (
+              <radialGradient
+                key={`${quality}-${complexity}`}
+                id={chordToneGradientId(quality, complexity)}
+                cx="35%"
+                cy="35%"
+                r="65%"
+              >
+                <stop offset="0%" stopColor="#fff" stopOpacity={0.55} />
+                <stop offset="100%" stopColor={getChordColor(quality, complexity)} stopOpacity={1} />
+              </radialGradient>
+            ))
+          )}
         </defs>
 
         {/* Ambient background tint — shifts with key and chord quality */}
@@ -751,10 +761,10 @@ export function ChromaticCircle({ onCurrentChordChange }: { onCurrentChordChange
           // From-chord tones take priority over to-chord tones; non-chord notes
           // fall back to diatonic / chromatic styling.
           const noteStyle = chordIndices.includes(i)
-            ? getNoteStyle(i, chordIndices, chordType, diatonicIndices)
+            ? getNoteStyle(i, chordIndices, chordType, diatonicIndices, chordComplexity)
             : toChordIndices.includes(i)
-            ? getNoteStyle(i, toChordIndices, toChordType, diatonicIndices)
-            : getNoteStyle(i, [], chordType, diatonicIndices);
+            ? getNoteStyle(i, toChordIndices, toChordType, diatonicIndices, toChordComplexity)
+            : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
           return (
             <g key={label}>
               <circle
