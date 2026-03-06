@@ -112,3 +112,12 @@
 .addButtonActive {
   transform: scale(0.93);
 }
+
+/* ── Progression full message ───────────────────────────────────────────── */
+.fullMessage {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+  letter-spacing: 0.02em;
+  margin-top: 4px;
+}
