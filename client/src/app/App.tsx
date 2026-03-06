@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { ChromaticCircle } from '../features/chromatic-circle';
 import { CurrentChordPanel, type Chord } from '../features/current-chord';
 import { getDiatonicIndices } from '../features/chromatic-circle/utils';
@@ -14,6 +14,10 @@ export default function App() {
   const [keyScale, setKeyScale] = useState<ScaleType>("major");
 
   const { chords, addChord, moveChord, deleteChord } = useProgression();
+  // Guard ref to prevent duplicate progression entries from rapid double-clicks.
+  // Set synchronously when add is initiated; cleared after the current animation
+  // frame so intentional subsequent adds still work.
+  const addGuardRef = useRef(false);
 
   const diatonicIndices = useMemo(
     () => getDiatonicIndices(keyRoot, keyScale),
@@ -30,9 +34,15 @@ export default function App() {
   }, []);
 
   const handleAddChord = useCallback(() => {
-    if (currentChord === null) return;
+    if (currentChord === null || addGuardRef.current) return;
+    addGuardRef.current = true;
     addChord(currentChord);
-    setCurrentChord(null);
+    // currentChord intentionally stays after adding so the panel remains
+    // populated and the user can immediately add the same chord again
+    // without re-selecting it on the circle.
+    requestAnimationFrame(() => {
+      addGuardRef.current = false;
+    });
   }, [currentChord, addChord]);
 
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
@@ -40,7 +50,6 @@ export default function App() {
   return (
     <div className={styles.layout}>
       <main className={styles.circleArea}>
-        <h1>Hello World</h1>
         <CurrentChordPanel
           chord={currentChord}
           onAddChord={handleAddChord}
