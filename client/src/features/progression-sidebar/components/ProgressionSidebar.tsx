@@ -7,9 +7,12 @@ interface ProgressionSidebarProps {
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
   onDelete: (index: number) => void;
+  maxLength: number;
 }
 
-export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete }: ProgressionSidebarProps) {
+export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength }: ProgressionSidebarProps) {
+  const isFull = chords.length >= maxLength;
+
   return (
     <aside
       className={styles.sidebar}
@@ -17,6 +20,9 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete }: P
     >
       <div className={styles.header}>
         <h2 className={styles.heading}>Progression</h2>
+        <span className={styles.count} aria-label={`${chords.length} of ${maxLength} chords`}>
+          {chords.length}/{maxLength}
+        </span>
       </div>
       <div className={styles.chordList} aria-label="Chord list">
         {chords.length === 0 && (
@@ -40,6 +46,11 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete }: P
           />
         ))}
       </div>
+      {isFull && (
+        <div className={styles.fullIndicator} role="status" aria-live="polite">
+          Maximum {maxLength} chords reached
+        </div>
+      )}
     </aside>
   );
 }
