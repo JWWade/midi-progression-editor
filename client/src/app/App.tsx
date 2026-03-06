@@ -6,6 +6,7 @@ import { ChordQualityColors } from '../features/chord/constants/chordQualityColo
 import { CHORD_QUALITY_LABELS } from '../features/current-chord/utils/chordName';
 import { getChordNoteIndices } from '../features/chord/utils/transpose';
 import { ChordThumbnail } from '../features/current-chord/components/ChordThumbnail';
+import { getChordComplexity, getChordColor } from '../features/color-language/utils/chordColorUtils';
 
 interface ProgressionEntry {
   id: string;
@@ -48,6 +49,8 @@ export default function App() {
         >
           {progression.map((entry, i) => {
             const colors = ChordQualityColors[entry.chord.quality];
+            const complexity = getChordComplexity(entry.chord);
+            const tileBase = getChordColor(entry.chord.quality, complexity);
             const noteIndices = getChordNoteIndices(entry.chord.root, entry.chord.quality);
             return (
               <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -63,11 +66,11 @@ export default function App() {
                     padding: '8px 12px',
                     borderRadius: '8px',
                     backgroundColor: colors.light,
-                    border: `1.5px solid ${colors.base}`,
+                    border: `1.5px solid ${tileBase}`,
                     minWidth: `${PROGRESSION_TILE_MIN_WIDTH}px`,
                   }}
                 >
-                  <ChordThumbnail noteIndices={noteIndices} quality={entry.chord.quality} size={PROGRESSION_TILE_THUMBNAIL_SIZE} />
+                  <ChordThumbnail noteIndices={noteIndices} quality={entry.chord.quality} complexity={complexity} size={PROGRESSION_TILE_THUMBNAIL_SIZE} />
                   <span style={{ fontSize: '12px', fontWeight: '700', color: colors.dark }}>
                     {PITCH_CLASSES[entry.chord.root]}
                   </span>

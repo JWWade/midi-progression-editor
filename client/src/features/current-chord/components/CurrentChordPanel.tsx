@@ -5,6 +5,7 @@ import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
 import { getCircleColor } from "@/features/chromatic-circle/utils/circleColors";
 import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
+import { getChordComplexity, getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import { ChordThumbnail } from "./ChordThumbnail";
 import styles from "./CurrentChordPanel.module.css";
 
@@ -35,7 +36,9 @@ export function CurrentChordPanel({ chord, onAddChord }: CurrentChordPanelProps)
     ? getCircleColor(chord.root, chord.quality)
     : undefined;
 
+  const complexity = chord ? getChordComplexity(chord) : "triad" as const;
   const qualityColors = chord ? ChordQualityColors[chord.quality] : null;
+  const qualityBase = chord ? getChordColor(chord.quality, complexity) : null;
 
   const buttonClassName = [
     styles.addButton,
@@ -47,9 +50,9 @@ export function CurrentChordPanel({ chord, onAddChord }: CurrentChordPanelProps)
 
   const panelStyle = {
     ...(panelBg ? { "--chord-panel-bg": panelBg } : {}),
-    ...(qualityColors ? {
-      "--chord-quality-base": qualityColors.base,
-      "--chord-quality-dark": qualityColors.dark,
+    ...(qualityBase ? {
+      "--chord-quality-base": qualityBase,
+      "--chord-quality-dark": qualityColors?.dark,
     } : {}),
   } as React.CSSProperties;
 
@@ -65,6 +68,7 @@ export function CurrentChordPanel({ chord, onAddChord }: CurrentChordPanelProps)
         <ChordThumbnail
           noteIndices={noteIndices}
           quality={chord?.quality ?? "major"}
+          complexity={complexity}
           size={80}
         />
       </div>

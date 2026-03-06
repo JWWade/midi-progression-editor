@@ -1,10 +1,13 @@
 import type { ChordType } from "@/features/chord/types";
 import { calculatePolygonPoints } from "@/features/chromatic-circle/utils/geometry";
-import { CHORD_TONE_FILLS } from "@/features/chromatic-circle/utils/noteStyles";
+import type { ChordComplexity } from "@/features/color-language/utils/chordColorUtils";
+import { getChordColor } from "@/features/color-language/utils/chordColorUtils";
 
 interface ChordThumbnailProps {
   noteIndices: number[];
   quality: ChordType;
+  /** Complexity tier that controls the fill intensity. Defaults to `"triad"`. */
+  complexity?: ChordComplexity;
   size?: number;
 }
 
@@ -18,11 +21,11 @@ const RADIUS_RATIO = 0.38;
  * When fewer than two note indices are provided (e.g. no active chord) a
  * neutral grey circle placeholder is shown instead.
  */
-export function ChordThumbnail({ noteIndices, quality, size = 80 }: ChordThumbnailProps) {
+export function ChordThumbnail({ noteIndices, quality, complexity = "triad", size = 80 }: ChordThumbnailProps) {
   const center = size / 2;
   const radius = size * RADIUS_RATIO;
-  const gradientId = `thumb-gradient-${quality}`;
-  const baseColor = CHORD_TONE_FILLS[quality];
+  const gradientId = `thumb-gradient-${quality}-${complexity}`;
+  const baseColor = getChordColor(quality, complexity);
 
   if (noteIndices.length < 2) {
     return (
