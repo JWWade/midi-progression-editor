@@ -56,6 +56,7 @@ import {
   CHORD_TONE_FILLS,
   chordToneGradientId,
 } from "../utils/noteStyles";
+import type { Chord } from "@/features/current-chord";
 
 const PRIMARY_COLOR = "#4F46E5";
 const SEVENTH_COLOR = "#A855F7";
@@ -168,7 +169,7 @@ function playButtonStyle(color: string, disabled: boolean): React.CSSProperties 
   };
 }
 
-export function ChromaticCircle() {
+export function ChromaticCircle({ onCurrentChordChange }: { onCurrentChordChange?: (chord: Chord) => void }) {
   const [selectedChordName, setSelectedChordName] = useState("C");
   const [selectedToChordName, setSelectedToChordName] = useState("F");
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
@@ -206,6 +207,10 @@ export function ChromaticCircle() {
 
   const { root: rootIndex, type: chordType } = CHORD_NAME_TO_DATA[selectedChordName];
   const { root: toRootIndex, type: toChordType } = CHORD_NAME_TO_DATA[selectedToChordName];
+
+  useEffect(() => {
+    onCurrentChordChange?.({ root: rootIndex, quality: chordType });
+  }, [rootIndex, chordType, onCurrentChordChange]);
 
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
   const isToSeventhChord = SEVENTH_CHORD_TYPES.has(toChordType);
