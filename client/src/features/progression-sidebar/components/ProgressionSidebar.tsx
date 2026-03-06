@@ -24,6 +24,7 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
           {chords.length}/{maxLength}
         </span>
       </div>
+      <p className={styles.resetNote}>Resets on page reload</p>
       <div className={styles.chordList} aria-label="Chord list">
         {chords.length === 0 && (
           <div className={styles.emptyState} aria-live="polite">
