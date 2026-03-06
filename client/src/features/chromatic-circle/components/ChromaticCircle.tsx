@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useChromaticCircleData } from "../hooks/useChromaticCircleData";
-import { PITCH_CLASSES } from "../utils";
+import { PITCH_CLASSES, getDiatonicIndices, DIATONIC_OPACITY, CHROMATIC_OPACITY } from "../utils";
 import { getCircleColor } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
 import {
@@ -20,7 +20,6 @@ import { ChordSelector } from "@/features/chord/components/ChordSelector";
 import { ChordLabel } from "@/features/chord/components/ChordLabel";
 import type { ScaleType } from "@/features/scale/types";
 import { SCALE_LABELS } from "@/features/scale/types";
-import { getScaleNotes } from "@/features/scale/utils";
 import { calculateVoiceLeads } from "@/features/voice-leading";
 import { useChordMorphing } from "@/features/chord-animation";
 import { useAudioPlayback } from "@/features/audio";
@@ -44,7 +43,6 @@ const SEVENTH_COLOR = "#A855F7";
 const TO_CHORD_COLOR = "#059669";
 const TO_CHORD_SEVENTH_COLOR = "#D97706";
 const NON_SCALE_COLOR = "#D1D5DB";
-const NON_SCALE_OPACITY = 0.6;
 const NON_SCALE_TEXT_COLOR = "#4B5563";
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
@@ -206,7 +204,6 @@ export function ChromaticCircle() {
   const toChordNotes = transposeChord(toBaseIntervals, toRootIndex);
   const chordIndices = chordNotes.map((n) => n.index);
   const toChordIndices = toChordNotes.map((n) => n.index);
-  const scaleIndices = getScaleNotes(rootIndex, selectedScale);
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
   const toPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, toChordIndices);
@@ -263,6 +260,11 @@ export function ChromaticCircle() {
   const circleColor = useMemo(
     () => getCircleColor(rootIndex, chordType),
     [rootIndex, chordType],
+  );
+
+  const diatonicIndices = useMemo(
+    () => getDiatonicIndices(rootIndex, selectedScale),
+    [rootIndex, selectedScale],
   );
 
   const circleTransition = prefersReducedMotion ? undefined : "fill 0.4s ease";
@@ -722,9 +724,9 @@ export function ChromaticCircle() {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
           const x = CENTER + RING_RADIUS * Math.cos(angle);
           const y = CENTER + RING_RADIUS * Math.sin(angle);
-          const isInScale = scaleIndices.includes(i);
-          const nodeFill = isInScale ? PRIMARY_COLOR : NON_SCALE_COLOR;
-          const textFill = isInScale ? "#fff" : NON_SCALE_TEXT_COLOR;
+          const isDiatonic = diatonicIndices.has(i);
+          const nodeFill = isDiatonic ? PRIMARY_COLOR : NON_SCALE_COLOR;
+          const textFill = isDiatonic ? "#fff" : NON_SCALE_TEXT_COLOR;
           return (
             <g key={label}>
               <circle
@@ -734,7 +736,7 @@ export function ChromaticCircle() {
                 fill={nodeFill}
                 stroke="#fff"
                 strokeWidth={1.5}
-                opacity={isInScale ? 1 : NON_SCALE_OPACITY}
+                opacity={isDiatonic ? DIATONIC_OPACITY : CHROMATIC_OPACITY}
               />
               <text
                 x={x}
