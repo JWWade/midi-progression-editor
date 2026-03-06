@@ -4,6 +4,7 @@ import { formatChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
 import { getCircleColor } from "@/features/chromatic-circle/utils/circleColors";
+import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import { ChordThumbnail } from "./ChordThumbnail";
 import styles from "./CurrentChordPanel.module.css";
 
@@ -34,6 +35,8 @@ export function CurrentChordPanel({ chord, onAddChord }: CurrentChordPanelProps)
     ? getCircleColor(chord.root, chord.quality)
     : undefined;
 
+  const qualityColors = chord ? ChordQualityColors[chord.quality] : null;
+
   const buttonClassName = [
     styles.addButton,
     isDisabled ? styles.addButtonDisabled : "",
@@ -42,10 +45,18 @@ export function CurrentChordPanel({ chord, onAddChord }: CurrentChordPanelProps)
     .filter(Boolean)
     .join(" ");
 
+  const panelStyle = {
+    ...(panelBg ? { "--chord-panel-bg": panelBg } : {}),
+    ...(qualityColors ? {
+      "--chord-quality-base": qualityColors.base,
+      "--chord-quality-dark": qualityColors.dark,
+    } : {}),
+  } as React.CSSProperties;
+
   return (
     <div
       className={styles.panel}
-      style={panelBg ? ({ "--chord-panel-bg": panelBg } as React.CSSProperties & { "--chord-panel-bg"?: string }) : undefined}
+      style={panelStyle}
       aria-label="Current chord panel"
       aria-live="polite"
     >
