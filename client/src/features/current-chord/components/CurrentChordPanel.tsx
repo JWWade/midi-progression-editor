@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import type { Chord } from "../types";
 import { formatChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
@@ -63,12 +64,67 @@ const THUMBNAIL_STYLE: React.CSSProperties = {
   marginBottom: "4px",
 };
 
+const ADD_BUTTON_STYLE: React.CSSProperties = {
+  marginTop: "12px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
+  minWidth: "44px",
+  minHeight: "44px",
+  padding: "10px 20px",
+  border: "none",
+  borderRadius: "8px",
+  backgroundColor: "#4f46e5",
+  color: "#ffffff",
+  fontSize: "15px",
+  fontWeight: 600,
+  cursor: "pointer",
+  boxShadow: "0 2px 6px rgba(79,70,229,0.35)",
+  transition: "transform 0.1s ease, background-color 0.15s ease",
+};
+
+const ADD_BUTTON_DISABLED_STYLE: React.CSSProperties = {
+  ...ADD_BUTTON_STYLE,
+  backgroundColor: "#d1d5db",
+  color: "#9ca3af",
+  cursor: "not-allowed",
+  boxShadow: "none",
+};
+
+const ADD_BUTTON_ACTIVE_STYLE: React.CSSProperties = {
+  ...ADD_BUTTON_STYLE,
+  transform: "scale(0.93)",
+};
+
 interface CurrentChordPanelProps {
   chord: Chord | null;
+  onAddChord: () => void;
 }
 
-export function CurrentChordPanel({ chord }: CurrentChordPanelProps) {
+export function CurrentChordPanel({ chord, onAddChord }: CurrentChordPanelProps) {
   const noteIndices = chord ? getChordNoteIndices(chord.root, chord.quality) : [];
+  const isDisabled = chord === null;
+  const [pressing, setPressing] = useState(false);
+
+  const handleClick = useCallback(() => {
+    if (isDisabled) return;
+    onAddChord();
+  }, [isDisabled, onAddChord]);
+
+  const handlePointerDown = useCallback(() => {
+    if (!isDisabled) setPressing(true);
+  }, [isDisabled]);
+
+  const handlePointerUp = useCallback(() => {
+    setPressing(false);
+  }, []);
+
+  const buttonStyle = isDisabled
+    ? ADD_BUTTON_DISABLED_STYLE
+    : pressing
+      ? ADD_BUTTON_ACTIVE_STYLE
+      : ADD_BUTTON_STYLE;
 
   return (
     <div style={PANEL_STYLE} aria-label="Current chord panel" aria-live="polite">
@@ -91,6 +147,18 @@ export function CurrentChordPanel({ chord }: CurrentChordPanelProps) {
           </div>
         </>
       )}
+      <button
+        style={buttonStyle}
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        disabled={isDisabled}
+        aria-disabled={isDisabled}
+        aria-label="Add chord to progression"
+      >
+        Add to Progression &#8594;
+      </button>
     </div>
   );
 }
