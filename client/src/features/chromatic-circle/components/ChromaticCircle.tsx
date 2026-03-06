@@ -26,12 +26,7 @@ import {
 import {
   transposeChord,
   getChordTriad,
-  MAJOR_INTERVALS,
-  MINOR_INTERVALS,
-  MAJ7_INTERVALS,
-  MIN7_INTERVALS,
-  DOM7_INTERVALS,
-  HALFDIM7_INTERVALS,
+  CHORD_INTERVALS,
 } from "@/features/chord/utils/transpose";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
@@ -105,14 +100,6 @@ const LABEL_STYLE: React.CSSProperties = {
   fontWeight: "bold",
 };
 
-const CHORD_INTERVALS: Record<ChordType, readonly number[]> = {
-  major: MAJOR_INTERVALS,
-  minor: MINOR_INTERVALS,
-  maj7: MAJ7_INTERVALS,
-  min7: MIN7_INTERVALS,
-  dom7: DOM7_INTERVALS,
-  halfdim7: HALFDIM7_INTERVALS,
-};
 
 const CHORD_TYPE_LABELS: Record<ChordType, string> = {
   major: "Major",

@@ -1,6 +1,8 @@
 import type { Chord } from "../types";
 import { formatChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
+import { getChordNoteIndices } from "@/features/chord/utils/transpose";
+import { ChordThumbnail } from "./ChordThumbnail";
 
 const PANEL_STYLE: React.CSSProperties = {
   display: "flex",
@@ -57,14 +59,27 @@ const QUALITY_STYLE: React.CSSProperties = {
   color: "#6b7280",
 };
 
+const THUMBNAIL_STYLE: React.CSSProperties = {
+  marginBottom: "4px",
+};
+
 interface CurrentChordPanelProps {
   chord: Chord | null;
 }
 
 export function CurrentChordPanel({ chord }: CurrentChordPanelProps) {
+  const noteIndices = chord ? getChordNoteIndices(chord.root, chord.quality) : [];
+
   return (
     <div style={PANEL_STYLE} aria-label="Current chord panel" aria-live="polite">
       <span style={LABEL_STYLE}>Current Chord</span>
+      <div style={THUMBNAIL_STYLE}>
+        <ChordThumbnail
+          noteIndices={noteIndices}
+          quality={chord?.quality ?? "major"}
+          size={80}
+        />
+      </div>
       {chord === null ? (
         <span style={PLACEHOLDER_STYLE}>No chord selected</span>
       ) : (

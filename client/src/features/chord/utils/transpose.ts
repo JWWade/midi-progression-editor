@@ -44,3 +44,24 @@ export function transposeChord(
     };
   });
 }
+
+/** Maps each chord quality to its chromatic intervals. */
+export const CHORD_INTERVALS: Readonly<Record<ChordType, readonly number[]>> = {
+  major:    MAJOR_INTERVALS,
+  minor:    MINOR_INTERVALS,
+  maj7:     MAJ7_INTERVALS,
+  min7:     MIN7_INTERVALS,
+  dom7:     DOM7_INTERVALS,
+  halfdim7: HALFDIM7_INTERVALS,
+};
+
+/**
+ * Returns the chromatic note indices for a chord given its root and quality.
+ *
+ * @param root    Root note index (0 = C … 11 = B)
+ * @param quality Chord quality / type
+ * @returns       Array of chromatic note indices (0–11)
+ */
+export function getChordNoteIndices(root: number, quality: ChordType): number[] {
+  return transposeChord(CHORD_INTERVALS[quality], root).map((n) => n.index);
+}
