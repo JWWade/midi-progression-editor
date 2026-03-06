@@ -1,7 +1,7 @@
 import type { ChordType } from "@/features/chord/types";
 import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import type { ChordComplexity } from "@/features/color-language/utils/chordColorUtils";
-import { DIATONIC_OPACITY, CHROMATIC_OPACITY } from "./scaleUtils";
+import { getHarmonyOpacity } from "@/features/color-language/utils/harmonyOpacity";
 
 /** Visual style returned for a single note node on the chromatic circle. */
 export interface NoteStyle {
@@ -61,23 +61,25 @@ export function getNoteStyle(
   diatonicIndices: Set<number>,
   complexity: ChordComplexity = "triad",
 ): NoteStyle {
-  if (chordIndices.includes(index)) {
+  const isChordTone = chordIndices.includes(index);
+  const opacity = getHarmonyOpacity(index, diatonicIndices, isChordTone);
+  if (isChordTone) {
     return {
       fill: `url(#${chordToneGradientId(quality, complexity)})`,
-      opacity: 1,
+      opacity,
       textFill: "#fff",
     };
   }
   if (diatonicIndices.has(index)) {
     return {
       fill: NOTE_DIATONIC_FILL,
-      opacity: DIATONIC_OPACITY,
+      opacity,
       textFill: "#fff",
     };
   }
   return {
     fill: NOTE_CHROMATIC_FILL,
-    opacity: CHROMATIC_OPACITY,
+    opacity,
     textFill: NOTE_CHROMATIC_TEXT,
   };
 }
