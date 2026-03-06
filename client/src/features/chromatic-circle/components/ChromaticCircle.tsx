@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useChromaticCircleData } from "../hooks/useChromaticCircleData";
-import { PITCH_CLASSES, getDiatonicIndices, DIATONIC_OPACITY, CHROMATIC_OPACITY } from "../utils";
+import { PITCH_CLASSES, getDiatonicIndices } from "../utils";
 import { getCircleColor } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
 import {
@@ -31,6 +31,11 @@ import {
 import type { ToneInfo } from "@/features/chord-inspection";
 import { calculateCentroid } from "@/features/chord-geometry";
 import { IntervalLabel, getIntervals, getIntervalName } from "@/features/chord-intervals";
+import {
+  getNoteStyle,
+  CHORD_TONE_FILLS,
+  chordToneGradientId,
+} from "../utils/noteStyles";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -42,8 +47,6 @@ const PRIMARY_COLOR = "#4F46E5";
 const SEVENTH_COLOR = "#A855F7";
 const TO_CHORD_COLOR = "#059669";
 const TO_CHORD_SEVENTH_COLOR = "#D97706";
-const NON_SCALE_COLOR = "#D1D5DB";
-const NON_SCALE_TEXT_COLOR = "#4B5563";
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
 const LABEL_DISTANCE = RING_RADIUS + 28; // 28px clears the node circle (r=12) with readable spacing
@@ -457,6 +460,22 @@ export function ChromaticCircle() {
         onClick={deselectTone}
         style={{ cursor: "default" }}
       >
+        {/* Radial gradient fills for chord-tone note nodes (one per quality) */}
+        <defs>
+          {(Object.keys(CHORD_TONE_FILLS) as ChordType[]).map((quality) => (
+            <radialGradient
+              key={quality}
+              id={chordToneGradientId(quality)}
+              cx="35%"
+              cy="35%"
+              r="65%"
+            >
+              <stop offset="0%" stopColor="#fff" stopOpacity={0.55} />
+              <stop offset="100%" stopColor={CHORD_TONE_FILLS[quality]} stopOpacity={1} />
+            </radialGradient>
+          ))}
+        </defs>
+
         {/* Ambient background tint — shifts with key and chord quality */}
         <circle
           cx={CENTER}
@@ -724,19 +743,23 @@ export function ChromaticCircle() {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
           const x = CENTER + RING_RADIUS * Math.cos(angle);
           const y = CENTER + RING_RADIUS * Math.sin(angle);
-          const isDiatonic = diatonicIndices.has(i);
-          const nodeFill = isDiatonic ? PRIMARY_COLOR : NON_SCALE_COLOR;
-          const textFill = isDiatonic ? "#fff" : NON_SCALE_TEXT_COLOR;
+          // From-chord tones take priority over to-chord tones; non-chord notes
+          // fall back to diatonic / chromatic styling.
+          const noteStyle = chordIndices.includes(i)
+            ? getNoteStyle(i, chordIndices, chordType, diatonicIndices)
+            : toChordIndices.includes(i)
+            ? getNoteStyle(i, toChordIndices, toChordType, diatonicIndices)
+            : getNoteStyle(i, [], chordType, diatonicIndices);
           return (
             <g key={label}>
               <circle
                 cx={x}
                 cy={y}
                 r={NODE_RADIUS}
-                fill={nodeFill}
+                fill={noteStyle.fill}
                 stroke="#fff"
                 strokeWidth={1.5}
-                opacity={isDiatonic ? DIATONIC_OPACITY : CHROMATIC_OPACITY}
+                opacity={noteStyle.opacity}
               />
               <text
                 x={x}
@@ -744,7 +767,7 @@ export function ChromaticCircle() {
                 textAnchor="middle"
                 dominantBaseline="central"
                 fontSize={label.length > 1 ? SHARP_FONT_SIZE : NATURAL_FONT_SIZE}
-                fill={textFill}
+                fill={noteStyle.textFill}
                 fontFamily="sans-serif"
                 fontWeight="bold"
               >
