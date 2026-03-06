@@ -1,4 +1,5 @@
 import type { Chord } from "@/features/current-chord/types";
+import { ChordTile } from "./ChordTile";
 import styles from "./ProgressionSidebar.module.css";
 
 interface ProgressionSidebarProps {
@@ -23,6 +24,9 @@ export function ProgressionSidebar({ chords }: ProgressionSidebarProps) {
             </p>
           </div>
         )}
+        {chords.map((chord, i) => (
+          <ChordTile key={`${i}-${chord.root}-${chord.quality}`} chord={chord} index={i} />
+        ))}
       </div>
     </aside>
   );

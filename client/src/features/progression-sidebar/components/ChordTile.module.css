@@ -1,0 +1,54 @@
+/* ── Chord tile card ─────────────────────────────────────────────────────── */
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-color);
+  background-color: rgba(255, 255, 255, 0.04);
+  cursor: default;
+  transition: background-color 0.15s ease;
+  min-height: 64px;
+  box-sizing: border-box;
+}
+
+.tile:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+}
+
+/* ── Thumbnail wrapper ───────────────────────────────────────────────────── */
+.thumbnail {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Chord name label ────────────────────────────────────────────────────── */
+.chordName {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e7eb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+/* ── Light color scheme overrides ───────────────────────────────────────── */
+@media (prefers-color-scheme: light) {
+  .tile {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  .tile:hover {
+    background-color: rgba(0, 0, 0, 0.07);
+  }
+
+  .chordName {
+    color: #111827;
+  }
+}
