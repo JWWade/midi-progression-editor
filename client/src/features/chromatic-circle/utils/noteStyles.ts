@@ -1,5 +1,6 @@
 import type { ChordType } from "@/features/chord/types";
 import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
+import type { ChordComplexity } from "@/features/color-language/utils/chordColorUtils";
 import { DIATONIC_OPACITY, CHROMATIC_OPACITY } from "./scaleUtils";
 
 /** Visual style returned for a single note node on the chromatic circle. */
@@ -22,6 +23,9 @@ const NOTE_CHROMATIC_TEXT = "#4B5563";
  * Per-quality expressive fill colours for chord-tone nodes.
  * Derived from {@link ChordQualityColors} base values so that the node colour
  * always matches the quality's system-wide color family.
+ *
+ * @deprecated Prefer {@link getChordColor} with a {@link ChordComplexity} tier.
+ *   This record is kept for SVG gradient-def iteration and backward compat.
  */
 export const CHORD_TONE_FILLS: Readonly<Record<ChordType, string>> = Object.fromEntries(
   (Object.keys(ChordQualityColors) as ChordType[]).map((q) => [q, ChordQualityColors[q].base]),
@@ -29,10 +33,11 @@ export const CHORD_TONE_FILLS: Readonly<Record<ChordType, string>> = Object.from
 
 /**
  * Returns the SVG `<radialGradient>` `id` used for a chord-tone node of the
- * given quality.  The matching gradient must be defined in the SVG `<defs>`.
+ * given quality and complexity tier.  The matching gradient must be defined in
+ * the SVG `<defs>`.
  */
-export function chordToneGradientId(quality: ChordType): string {
-  return `chord-tone-${quality}`;
+export function chordToneGradientId(quality: ChordType, complexity: ChordComplexity = "triad"): string {
+  return `chord-tone-${quality}-${complexity}`;
 }
 
 /**
@@ -47,16 +52,18 @@ export function chordToneGradientId(quality: ChordType): string {
  * @param chordIndices   Chromatic indices of all notes in the target chord.
  * @param quality        Chord quality used to select the expressive fill colour.
  * @param diatonicIndices Set of diatonic note indices for the current key/scale.
+ * @param complexity     Complexity tier of the chord — controls gradient intensity.
  */
 export function getNoteStyle(
   index: number,
   chordIndices: number[],
   quality: ChordType,
   diatonicIndices: Set<number>,
+  complexity: ChordComplexity = "triad",
 ): NoteStyle {
   if (chordIndices.includes(index)) {
     return {
-      fill: `url(#${chordToneGradientId(quality)})`,
+      fill: `url(#${chordToneGradientId(quality, complexity)})`,
       opacity: 1,
       textFill: "#fff",
     };
