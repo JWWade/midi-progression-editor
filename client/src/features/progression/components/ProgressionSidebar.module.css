@@ -1,0 +1,85 @@
+/* ── Sidebar wrapper ─────────────────────────────────────────────────────── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #f3f4f6;
+  min-width: 180px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Section heading ─────────────────────────────────────────────────────── */
+.heading {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin: 0 0 4px;
+}
+
+/* ── Tile list ───────────────────────────────────────────────────────────── */
+.tileList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Individual chord tile ───────────────────────────────────────────────── */
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  /* Dynamic quality tint injected via CSS custom properties */
+  background-color: var(--tile-light, #f8f9fa);
+  border-left: 4px solid var(--tile-base, #d1d5db);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  transition: background-color 0.2s ease;
+}
+
+/* ── Tile position badge ─────────────────────────────────────────────────── */
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--tile-dark, #6b7280);
+  min-width: 16px;
+  text-align: right;
+  opacity: 0.7;
+}
+
+/* ── Tile chord name ─────────────────────────────────────────────────────── */
+.tileName {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tile-dark, #1f2937);
+  line-height: 1.2;
+}
+
+/* ── Tile quality label ──────────────────────────────────────────────────── */
+.tileQuality {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--tile-dark, #6b7280);
+  letter-spacing: 0.03em;
+  opacity: 0.8;
+  margin-left: auto;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty {
+  font-size: 12px;
+  font-style: italic;
+  color: #9ca3af;
+  text-align: center;
+  padding: 8px 0;
+}

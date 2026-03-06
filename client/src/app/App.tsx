@@ -1,11 +1,7 @@
 import { useState, useCallback } from 'react';
 import { ChromaticCircle } from '../features/chromatic-circle';
 import { CurrentChordPanel, type Chord } from '../features/current-chord';
-
-interface ProgressionEntry {
-  id: string;
-  chord: Chord;
-}
+import { ProgressionSidebar, type ProgressionEntry } from '../features/progression';
 
 export default function App() {
   const [currentChord, setCurrentChord] = useState<Chord | null>(null);
@@ -27,13 +23,7 @@ export default function App() {
       <h1>Hello World</h1>
       <CurrentChordPanel chord={currentChord} onAddChord={handleAddChord} />
       <ChromaticCircle onCurrentChordChange={handleCurrentChordChange} />
-      {progression.length > 0 && (
-        <div aria-label="Chord progression" style={{ marginTop: '1rem', fontSize: '14px', color: '#6b7280' }}>
-          Progression: {progression.map((entry, i) => (
-            <span key={entry.id}>{i > 0 ? ' → ' : ''}{entry.chord.root}/{entry.chord.quality}</span>
-          ))}
-        </div>
-      )}
+      <ProgressionSidebar progression={progression} />
     </main>
   );
 }

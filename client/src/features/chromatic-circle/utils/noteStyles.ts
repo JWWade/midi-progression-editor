@@ -1,4 +1,5 @@
 import type { ChordType } from "@/features/chord/types";
+import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import { DIATONIC_OPACITY, CHROMATIC_OPACITY } from "./scaleUtils";
 
 /** Visual style returned for a single note node on the chromatic circle. */
@@ -19,16 +20,16 @@ const NOTE_CHROMATIC_TEXT = "#4B5563";
 
 /**
  * Per-quality expressive fill colours for chord-tone nodes.
- * Each hue is vivid and saturated so that chord members pop against the
- * ambient background tint and maintain sufficient contrast with white text.
+ * Sourced from the system-wide {@link ChordQualityColors} palette so that
+ * node fills remain consistent with every other quality-coloured surface.
  */
 export const CHORD_TONE_FILLS: Readonly<Record<ChordType, string>> = {
-  major:    "#4F46E5", // indigo  – bright, uplifting
-  minor:    "#7C3AED", // violet  – darker, introspective
-  maj7:     "#0EA5E9", // sky-blue – luminous, open
-  min7:     "#6D28D9", // deep-purple – rich, complex
-  dom7:     "#D97706", // amber   – warm, tense
-  halfdim7: "#0891B2", // cyan    – cool, ambiguous
+  major:    ChordQualityColors.major.base,
+  minor:    ChordQualityColors.minor.base,
+  maj7:     ChordQualityColors.maj7.base,
+  min7:     ChordQualityColors.min7.base,
+  dom7:     ChordQualityColors.dom7.base,
+  halfdim7: ChordQualityColors.halfdim7.base,
 };
 
 /**
