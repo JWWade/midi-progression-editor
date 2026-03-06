@@ -38,6 +38,17 @@
   color: #6b7280;
 }
 
+/* ── Reset note ──────────────────────────────────────────────────────────── */
+.resetNote {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 4px 24px 12px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #4b5563;
+  font-style: italic;
+}
+
 /* ── Scrollable chord list area ─────────────────────────────────────────── */
 .chordList {
   flex: 1;
