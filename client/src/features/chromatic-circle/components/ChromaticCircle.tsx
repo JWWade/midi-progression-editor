@@ -51,12 +51,11 @@ import {
   CHORD_TONE_FILLS,
   chordToneGradientId,
 } from "../utils/noteStyles";
+import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import type { Chord } from "@/features/current-chord";
 
 const PRIMARY_COLOR = "#4F46E5";
-const SEVENTH_COLOR = "#A855F7";
 const TO_CHORD_COLOR = "#059669";
-const TO_CHORD_SEVENTH_COLOR = "#D97706";
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
 
@@ -234,17 +233,13 @@ export function ChromaticCircle({ onCurrentChordChange }: { onCurrentChordChange
   const fromCentroid = calculateCentroid(fromMorphedPoints);
   const toCentroid = calculateCentroid(toPoints);
 
-  const strokeColor = isSeventhChord ? SEVENTH_COLOR : PRIMARY_COLOR;
+  const strokeColor = ChordQualityColors[chordType].base;
   const strokeDasharray = isSeventhChord ? "5,5" : undefined;
-  const fillColor = isSeventhChord
-    ? "rgba(168, 85, 247, 0.1)"
-    : "rgba(79, 70, 229, 0.1)";
+  const fillColor = ChordQualityColors[chordType].fill;
 
-  const toStrokeColor = isToSeventhChord ? TO_CHORD_SEVENTH_COLOR : TO_CHORD_COLOR;
+  const toStrokeColor = ChordQualityColors[toChordType].base;
   const toStrokeDasharray = isToSeventhChord ? "5,5" : undefined;
-  const toFillColor = isToSeventhChord
-    ? "rgba(217, 119, 6, 0.1)"
-    : "rgba(5, 150, 105, 0.1)";
+  const toFillColor = ChordQualityColors[toChordType].fill;
 
   const fromPolygonOpacity = isAnimating ? 0.75 : 1;
 
@@ -540,8 +535,8 @@ export function ChromaticCircle({ onCurrentChordChange }: { onCurrentChordChange
         {showExtension && fromTriadPoints && (
           <polygon
             points={fromTriadPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-            fill="rgba(79, 70, 229, 0.1)"
-            stroke={PRIMARY_COLOR}
+            fill={fillColor}
+            stroke={strokeColor}
             strokeWidth={POLYGON_STROKE_WIDTH}
             opacity={fromPolygonOpacity}
           />
@@ -561,8 +556,8 @@ export function ChromaticCircle({ onCurrentChordChange }: { onCurrentChordChange
         {showExtension && toTriadPoints && (
           <polygon
             points={toTriadPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-            fill="rgba(5, 150, 105, 0.1)"
-            stroke={TO_CHORD_COLOR}
+            fill={toFillColor}
+            stroke={toStrokeColor}
             strokeWidth={POLYGON_STROKE_WIDTH}
           />
         )}
