@@ -1,3 +1,5 @@
+export { getDiatonicIndices, DIATONIC_OPACITY, CHROMATIC_OPACITY } from "./scaleUtils";
+
 export const PITCH_CLASSES = [
   "C",
   "C#",
