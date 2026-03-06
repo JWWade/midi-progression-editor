@@ -14,11 +14,24 @@ interface CurrentChordPanelProps {
   onAddChord: () => void;
   /** Optional diatonic indices for the active key, forwarded to the thumbnail. */
   diatonicIndices?: Set<number>;
+  /** Whether the progression has reached its maximum length. */
+  isProgressionFull?: boolean;
+  /** Current number of chords in the progression. */
+  progressionLength?: number;
+  /** Maximum number of chords allowed in the progression. */
+  maxProgressionLength?: number;
 }
 
-export function CurrentChordPanel({ chord, onAddChord, diatonicIndices }: CurrentChordPanelProps) {
+export function CurrentChordPanel({
+  chord,
+  onAddChord,
+  diatonicIndices,
+  isProgressionFull = false,
+  progressionLength = 0,
+  maxProgressionLength = 8,
+}: CurrentChordPanelProps) {
   const noteIndices = chord ? getChordNoteIndices(chord.root, chord.quality) : [];
-  const isDisabled = chord === null;
+  const isDisabled = chord === null || isProgressionFull;
   const [pressing, setPressing] = useState(false);
 
   const handleClick = useCallback(() => {
@@ -58,6 +71,14 @@ export function CurrentChordPanel({ chord, onAddChord, diatonicIndices }: Curren
     } : {}),
   } as React.CSSProperties;
 
+  const buttonAriaLabel = isProgressionFull
+    ? `Progression is full (${progressionLength}/${maxProgressionLength})`
+    : "Add chord to progression";
+
+  const buttonTitle = isProgressionFull
+    ? `Progression is full (${progressionLength}/${maxProgressionLength})`
+    : undefined;
+
   return (
     <div
       className={styles.panel}
@@ -94,10 +115,16 @@ export function CurrentChordPanel({ chord, onAddChord, diatonicIndices }: Curren
         onPointerLeave={handlePointerUp}
         disabled={isDisabled}
         aria-disabled={isDisabled}
-        aria-label="Add chord to progression"
+        aria-label={buttonAriaLabel}
+        title={buttonTitle}
       >
         Add to Progression &#8594;
       </button>
+      {isProgressionFull && (
+        <span className={styles.fullMessage} role="status">
+          Progression is full ({progressionLength}/{maxProgressionLength})
+        </span>
+      )}
     </div>
   );
 }
