@@ -4,6 +4,26 @@ import { PITCH_CLASSES, getDiatonicIndices } from "../utils";
 import { getCircleColor } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
 import {
+  VIEWBOX_SIZE,
+  CENTER,
+  RING_RADIUS,
+  NODE_RADIUS,
+  NODE_STROKE_WIDTH,
+  NATURAL_LABEL_FONT_SIZE,
+  ACCIDENTAL_LABEL_FONT_SIZE,
+  NOTE_FONT_FAMILY,
+  LABEL_DISTANCE,
+  VERTEX_RADIUS,
+  VERTEX_RADIUS_SELECTED,
+  VERTEX_SELECTED_FILL,
+  VERTEX_SELECTED_STROKE,
+  CENTROID_RADIUS,
+  CENTROID_CROSSHAIR_LENGTH,
+  RING_STROKE_WIDTH,
+  POLYGON_STROKE_WIDTH,
+  CIRCLE_PADDING,
+} from "../constants/visualConstants";
+import {
   transposeChord,
   getChordTriad,
   MAJOR_INTERVALS,
@@ -37,25 +57,12 @@ import {
   chordToneGradientId,
 } from "../utils/noteStyles";
 
-const SIZE = 300;
-const CENTER = SIZE / 2;
-const RING_RADIUS = 110;
-const NODE_RADIUS = 12;
-const NATURAL_FONT_SIZE = 11;
-const SHARP_FONT_SIZE = 9;
 const PRIMARY_COLOR = "#4F46E5";
 const SEVENTH_COLOR = "#A855F7";
 const TO_CHORD_COLOR = "#059669";
 const TO_CHORD_SEVENTH_COLOR = "#D97706";
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
-const LABEL_DISTANCE = RING_RADIUS + 28; // 28px clears the node circle (r=12) with readable spacing
-const VERTEX_RADIUS = 6;
-const VERTEX_RADIUS_SELECTED = 9;
-const VERTEX_SELECTED_FILL = "#FCD34D";
-const VERTEX_SELECTED_STROKE = "#D97706";
-const CENTROID_RADIUS = 4;
-const CENTROID_CROSSHAIR_LENGTH = 8;
 
 function computeLabelPoint(
   cx: number,
@@ -130,6 +137,7 @@ const VOICE_LEAD_ROW_STYLE: React.CSSProperties = {
   alignItems: "center",
   gap: "12px",
   justifyContent: "center",
+  flexWrap: "wrap",
 };
 
 const ARROW_STYLE: React.CSSProperties = {
@@ -273,7 +281,7 @@ export function ChromaticCircle() {
   const circleTransition = prefersReducedMotion ? undefined : "fill 0.4s ease";
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", maxWidth: "100%" }}>
       <div style={CONTROLS_STYLE}>
         {/* Voice lead chord selectors */}
         <div style={VOICE_LEAD_ROW_STYLE}>
@@ -451,15 +459,25 @@ export function ChromaticCircle() {
         </span>
       </p>
 
-      <svg
-        width={SIZE}
-        height={SIZE}
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        aria-label="Chromatic Circle"
-        overflow="visible"
-        onClick={deselectTone}
-        style={{ cursor: "default" }}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: VIEWBOX_SIZE + CIRCLE_PADDING * 2,
+          margin: "0 auto",
+          padding: `0 ${CIRCLE_PADDING}px`,
+          boxSizing: "border-box",
+        }}
       >
+        <svg
+          viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
+          aria-label="Chromatic Circle"
+          onClick={deselectTone}
+          style={{
+            display: "block",
+            width: "100%",
+            cursor: "default",
+          }}
+        >
         {/* Radial gradient fills for chord-tone note nodes (one per quality) */}
         <defs>
           {(Object.keys(CHORD_TONE_FILLS) as ChordType[]).map((quality) => (
@@ -494,7 +512,7 @@ export function ChromaticCircle() {
           r={RING_RADIUS}
           fill="none"
           stroke="#555"
-          strokeWidth={1}
+          strokeWidth={RING_STROKE_WIDTH}
         />
 
         {/* Voice lead lines (rendered below chord polygons) */}
@@ -521,7 +539,7 @@ export function ChromaticCircle() {
           points={fromMorphedPoints.map((p) => `${p.x},${p.y}`).join(" ")}
           fill={fillColor}
           stroke={strokeColor}
-          strokeWidth={2}
+          strokeWidth={POLYGON_STROKE_WIDTH}
           strokeDasharray={strokeDasharray}
           opacity={fromPolygonOpacity}
         />
@@ -532,7 +550,7 @@ export function ChromaticCircle() {
             points={fromTriadPoints.map((p) => `${p.x},${p.y}`).join(" ")}
             fill="rgba(79, 70, 229, 0.1)"
             stroke={PRIMARY_COLOR}
-            strokeWidth={2}
+            strokeWidth={POLYGON_STROKE_WIDTH}
             opacity={fromPolygonOpacity}
           />
         )}
@@ -543,7 +561,7 @@ export function ChromaticCircle() {
           points={toPoints.map((p) => `${p.x},${p.y}`).join(" ")}
           fill={toFillColor}
           stroke={toStrokeColor}
-          strokeWidth={2}
+          strokeWidth={POLYGON_STROKE_WIDTH}
           strokeDasharray={toStrokeDasharray}
         />
 
@@ -553,7 +571,7 @@ export function ChromaticCircle() {
             points={toTriadPoints.map((p) => `${p.x},${p.y}`).join(" ")}
             fill="rgba(5, 150, 105, 0.1)"
             stroke={TO_CHORD_COLOR}
-            strokeWidth={2}
+            strokeWidth={POLYGON_STROKE_WIDTH}
           />
         )}
 
@@ -566,7 +584,7 @@ export function ChromaticCircle() {
               x2={fromCentroid.x + CENTROID_CROSSHAIR_LENGTH}
               y2={fromCentroid.y}
               stroke={strokeColor}
-              strokeWidth={1}
+              strokeWidth={RING_STROKE_WIDTH}
               opacity={0.5}
             />
             <line
@@ -575,7 +593,7 @@ export function ChromaticCircle() {
               x2={fromCentroid.x}
               y2={fromCentroid.y + CENTROID_CROSSHAIR_LENGTH}
               stroke={strokeColor}
-              strokeWidth={1}
+              strokeWidth={RING_STROKE_WIDTH}
               opacity={0.5}
             />
             <circle
@@ -597,7 +615,7 @@ export function ChromaticCircle() {
               x2={toCentroid.x + CENTROID_CROSSHAIR_LENGTH}
               y2={toCentroid.y}
               stroke={toStrokeColor}
-              strokeWidth={1}
+              strokeWidth={RING_STROKE_WIDTH}
               opacity={0.5}
             />
             <line
@@ -606,7 +624,7 @@ export function ChromaticCircle() {
               x2={toCentroid.x}
               y2={toCentroid.y + CENTROID_CROSSHAIR_LENGTH}
               stroke={toStrokeColor}
-              strokeWidth={1}
+              strokeWidth={RING_STROKE_WIDTH}
               opacity={0.5}
             />
             <circle
@@ -758,7 +776,7 @@ export function ChromaticCircle() {
                 r={NODE_RADIUS}
                 fill={noteStyle.fill}
                 stroke="#fff"
-                strokeWidth={1.5}
+                strokeWidth={NODE_STROKE_WIDTH}
                 opacity={noteStyle.opacity}
               />
               <text
@@ -766,9 +784,9 @@ export function ChromaticCircle() {
                 y={y}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fontSize={label.length > 1 ? SHARP_FONT_SIZE : NATURAL_FONT_SIZE}
+                fontSize={label.length > 1 ? ACCIDENTAL_LABEL_FONT_SIZE : NATURAL_LABEL_FONT_SIZE}
                 fill={noteStyle.textFill}
-                fontFamily="sans-serif"
+                fontFamily={NOTE_FONT_FAMILY}
                 fontWeight="bold"
               >
                 {label}
@@ -776,7 +794,8 @@ export function ChromaticCircle() {
             </g>
           );
         })}
-      </svg>
+        </svg>
+      </div>
       <ToneInfoPanel selectedTone={selectedTone} />
       {isLoading && <p style={{ marginTop: "1rem" }}>Loading scale notes…</p>}
       {error && <p style={{ marginTop: "1rem", color: "#888" }}>Scale notes unavailable.</p>}
