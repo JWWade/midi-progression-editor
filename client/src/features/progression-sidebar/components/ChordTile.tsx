@@ -9,9 +9,14 @@ import styles from "./ChordTile.module.css";
 interface ChordTileProps {
   chord: Chord;
   index: number;
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onDelete: () => void;
 }
 
-export function ChordTile({ chord, index }: ChordTileProps) {
+export function ChordTile({ chord, index, isFirst, isLast, onMoveUp, onMoveDown, onDelete }: ChordTileProps) {
   const noteIndices = getChordNoteIndices(chord.root, chord.quality);
   const complexity = getChordComplexity(chord);
   const accentColor = ChordQualityColors[chord.quality].base;
@@ -32,6 +37,36 @@ export function ChordTile({ chord, index }: ChordTileProps) {
         />
       </div>
       <span className={styles.chordName}>{chordName}</span>
+      <div className={styles.controls} aria-label="Chord controls">
+        <button
+          className={styles.controlBtn}
+          onClick={onMoveUp}
+          disabled={isFirst}
+          aria-disabled={isFirst}
+          aria-label="Move chord up"
+          title="Move up"
+        >
+          ↑
+        </button>
+        <button
+          className={styles.controlBtn}
+          onClick={onMoveDown}
+          disabled={isLast}
+          aria-disabled={isLast}
+          aria-label="Move chord down"
+          title="Move down"
+        >
+          ↓
+        </button>
+        <button
+          className={`${styles.controlBtn} ${styles.deleteBtn}`}
+          onClick={onDelete}
+          aria-label="Delete chord"
+          title="Delete"
+        >
+          ✕
+        </button>
+      </div>
     </div>
   );
 }
