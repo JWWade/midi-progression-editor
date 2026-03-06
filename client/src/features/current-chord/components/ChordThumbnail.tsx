@@ -2,6 +2,7 @@ import type { ChordType } from "@/features/chord/types";
 import { calculatePolygonPoints } from "@/features/chromatic-circle/utils/geometry";
 import type { ChordComplexity } from "@/features/color-language/utils/chordColorUtils";
 import { getChordColor } from "@/features/color-language/utils/chordColorUtils";
+import { getHarmonyOpacity } from "@/features/color-language/utils/harmonyOpacity";
 
 interface ChordThumbnailProps {
   noteIndices: number[];
@@ -9,10 +10,19 @@ interface ChordThumbnailProps {
   /** Complexity tier that controls the fill intensity. Defaults to `"triad"`. */
   complexity?: ChordComplexity;
   size?: number;
+  /**
+   * Optional diatonic note indices for the current key. When provided, vertex
+   * dots are rendered at each polygon corner with opacity derived from
+   * {@link getHarmonyOpacity} so chromatic chord tones appear ghosted.
+   */
+  diatonicIndices?: Set<number>;
 }
 
 /** Fraction of `size` used as the polygon circumradius. */
 const RADIUS_RATIO = 0.38;
+
+/** Fraction of `size` used as the radius for each chord-tone vertex dot. */
+const VERTEX_DOT_RADIUS_RATIO = 0.055;
 
 /**
  * A small, self-contained SVG thumbnail that renders the chord's polygon shape
@@ -21,7 +31,7 @@ const RADIUS_RATIO = 0.38;
  * When fewer than two note indices are provided (e.g. no active chord) a
  * neutral grey circle placeholder is shown instead.
  */
-export function ChordThumbnail({ noteIndices, quality, complexity = "triad", size = 80 }: ChordThumbnailProps) {
+export function ChordThumbnail({ noteIndices, quality, complexity = "triad", size = 80, diatonicIndices }: ChordThumbnailProps) {
   const center = size / 2;
   const radius = size * RADIUS_RATIO;
   const gradientId = `thumb-gradient-${quality}-${complexity}`;
@@ -49,6 +59,7 @@ export function ChordThumbnail({ noteIndices, quality, complexity = "triad", siz
 
   const points = calculatePolygonPoints(center, center, radius, noteIndices);
   const polygonPoints = points.map((p) => `${p.x},${p.y}`).join(" ");
+  const dotRadius = size * VERTEX_DOT_RADIUS_RATIO;
 
   return (
     <svg
@@ -70,6 +81,22 @@ export function ChordThumbnail({ noteIndices, quality, complexity = "triad", siz
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
+      {diatonicIndices &&
+        noteIndices.map((noteIndex, i) => {
+          const pt = points[i];
+          if (!pt) return null;
+          const opacity = getHarmonyOpacity(noteIndex, diatonicIndices, true);
+          return (
+            <circle
+              key={noteIndex}
+              cx={pt.x}
+              cy={pt.y}
+              r={dotRadius}
+              fill={baseColor}
+              opacity={opacity}
+            />
+          );
+        })}
     </svg>
   );
 }

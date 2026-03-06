@@ -12,9 +12,11 @@ import styles from "./CurrentChordPanel.module.css";
 interface CurrentChordPanelProps {
   chord: Chord | null;
   onAddChord: () => void;
+  /** Optional diatonic indices for the active key, forwarded to the thumbnail. */
+  diatonicIndices?: Set<number>;
 }
 
-export function CurrentChordPanel({ chord, onAddChord }: CurrentChordPanelProps) {
+export function CurrentChordPanel({ chord, onAddChord, diatonicIndices }: CurrentChordPanelProps) {
   const noteIndices = chord ? getChordNoteIndices(chord.root, chord.quality) : [];
   const isDisabled = chord === null;
   const [pressing, setPressing] = useState(false);
@@ -70,6 +72,7 @@ export function CurrentChordPanel({ chord, onAddChord }: CurrentChordPanelProps)
           quality={chord?.quality ?? "major"}
           complexity={complexity}
           size={80}
+          diatonicIndices={diatonicIndices}
         />
       </div>
       {chord === null ? (
