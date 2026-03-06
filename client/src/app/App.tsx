@@ -38,6 +38,28 @@ export default function App() {
     setCurrentChord(null);
   }, [currentChord]);
 
+  const handleMoveUp = useCallback((index: number) => {
+    if (index === 0) return;
+    setProgression((prev) => {
+      const next = [...prev];
+      [next[index - 1], next[index]] = [next[index], next[index - 1]];
+      return next;
+    });
+  }, []);
+
+  const handleMoveDown = useCallback((index: number) => {
+    setProgression((prev) => {
+      if (index >= prev.length - 1) return prev;
+      const next = [...prev];
+      [next[index], next[index + 1]] = [next[index + 1], next[index]];
+      return next;
+    });
+  }, []);
+
+  const handleDelete = useCallback((index: number) => {
+    setProgression((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
   return (
     <div className={styles.layout}>
       <main className={styles.circleArea}>
@@ -45,7 +67,12 @@ export default function App() {
         <CurrentChordPanel chord={currentChord} onAddChord={handleAddChord} diatonicIndices={diatonicIndices} />
         <ChromaticCircle onCurrentChordChange={handleCurrentChordChange} onKeyScaleChange={handleKeyScaleChange} />
       </main>
-      <ProgressionSidebar chords={progression.map((entry) => entry.chord)} />
+      <ProgressionSidebar
+        chords={progression.map((entry) => entry.chord)}
+        onMoveUp={handleMoveUp}
+        onMoveDown={handleMoveDown}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

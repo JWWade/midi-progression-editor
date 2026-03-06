@@ -4,9 +4,12 @@ import styles from "./ProgressionSidebar.module.css";
 
 interface ProgressionSidebarProps {
   chords: Chord[];
+  onMoveUp: (index: number) => void;
+  onMoveDown: (index: number) => void;
+  onDelete: (index: number) => void;
 }
 
-export function ProgressionSidebar({ chords }: ProgressionSidebarProps) {
+export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete }: ProgressionSidebarProps) {
   return (
     <aside
       className={styles.sidebar}
@@ -25,7 +28,16 @@ export function ProgressionSidebar({ chords }: ProgressionSidebarProps) {
           </div>
         )}
         {chords.map((chord, i) => (
-          <ChordTile key={`${i}-${chord.root}-${chord.quality}`} chord={chord} index={i} />
+          <ChordTile
+            key={`${i}-${chord.root}-${chord.quality}`}
+            chord={chord}
+            index={i}
+            isFirst={i === 0}
+            isLast={i === chords.length - 1}
+            onMoveUp={() => onMoveUp(i)}
+            onMoveDown={() => onMoveDown(i)}
+            onDelete={() => onDelete(i)}
+          />
         ))}
       </div>
     </aside>
