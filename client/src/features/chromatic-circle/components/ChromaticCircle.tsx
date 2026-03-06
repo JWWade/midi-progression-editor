@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useChromaticCircleData } from "../hooks/useChromaticCircleData";
 import { PITCH_CLASSES } from "../utils";
+import { getCircleColor } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
 import {
   transposeChord,
@@ -168,6 +169,11 @@ export function ChromaticCircle() {
   const [showIntervals, setShowIntervals] = useState(false);
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const [selectedTone, setSelectedTone] = useState<ToneInfo | null>(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
   const fromAudio = useAudioPlayback();
   const toAudio = useAudioPlayback();
@@ -181,6 +187,13 @@ export function ChromaticCircle() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [deselectTone]);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
 
   const { root: rootIndex, type: chordType } = CHORD_NAME_TO_DATA[selectedChordName];
   const { root: toRootIndex, type: toChordType } = CHORD_NAME_TO_DATA[selectedToChordName];
@@ -246,6 +259,13 @@ export function ChromaticCircle() {
   const fromNoteNames = chordNotes.map((n) => n.name).join(", ");
   const toNoteNames = toChordNotes.map((n) => n.name).join(", ");
   const anyPlaying = fromAudio.isPlaying || toAudio.isPlaying;
+
+  const circleColor = useMemo(
+    () => getCircleColor(rootIndex, chordType),
+    [rootIndex, chordType],
+  );
+
+  const circleTransition = prefersReducedMotion ? undefined : "fill 0.4s ease";
 
   return (
     <div style={{ position: "relative" }}>
@@ -435,6 +455,18 @@ export function ChromaticCircle() {
         onClick={deselectTone}
         style={{ cursor: "default" }}
       >
+        {/* Ambient background tint — shifts with key and chord quality */}
+        <circle
+          cx={CENTER}
+          cy={CENTER}
+          r={RING_RADIUS}
+          fill={circleColor}
+          stroke="none"
+          style={{ transition: circleTransition }}
+          aria-hidden="true"
+        />
+
+        {/* Ring outline */}
         <circle
           cx={CENTER}
           cy={CENTER}
