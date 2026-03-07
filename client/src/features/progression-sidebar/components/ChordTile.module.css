@@ -94,6 +94,28 @@
   color: #fca5a5;
 }
 
+/* ── Enter animation ────────────────────────────────────────────────────── */
+@keyframes tileHighlight {
+  from {
+    box-shadow:
+      0 0 0 2px var(--accent-color),
+      0 0 16px 0 color-mix(in srgb, var(--accent-color) 45%, transparent);
+  }
+  to {
+    box-shadow: none;
+  }
+}
+
+.entering {
+  animation: tileHighlight 600ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entering {
+    animation: none;
+  }
+}
+
 /* ── Light color scheme overrides ───────────────────────────────────────── */
 @media (prefers-color-scheme: light) {
   .tile {
