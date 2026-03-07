@@ -1,0 +1,75 @@
+name: Delete Merged Branches
+
+on:
+  pull_request:
+    types: [closed]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  delete-merged-branches:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Delete merged branches
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const PROTECTED_BRANCHES = ['main', 'develop'];
+
+            const branches = await github.paginate(github.rest.repos.listBranches, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const deleted = [];
+            const skipped = [];
+
+            for (const branch of branches) {
+              if (PROTECTED_BRANCHES.includes(branch.name)) {
+                skipped.push(`${branch.name} (protected)`);
+                continue;
+              }
+
+              // Skip branches with open pull requests
+              const openPRs = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:${branch.name}`,
+                state: 'open',
+              });
+
+              if (openPRs.data.length > 0) {
+                skipped.push(`${branch.name} (open PR #${openPRs.data[0].number})`);
+                continue;
+              }
+
+              // Delete branches whose commits are already in main
+              try {
+                const comparison = await github.rest.repos.compareCommitsWithBasehead({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  basehead: `main...${branch.name}`,
+                });
+
+                if (comparison.data.ahead_by === 0) {
+                  await github.rest.git.deleteRef({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ref: `heads/${branch.name}`,
+                  });
+                  deleted.push(branch.name);
+                } else {
+                  skipped.push(`${branch.name} (${comparison.data.ahead_by} unmerged commit(s))`);
+                }
+              } catch (error) {
+                skipped.push(`${branch.name} (error: ${error.message})`);
+              }
+            }
+
+            console.log(`\nDeleted (${deleted.length}): ${deleted.join(', ') || 'none'}`);
+            console.log(`Skipped (${skipped.length}): ${skipped.join(', ') || 'none'}`);

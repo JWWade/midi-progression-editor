@@ -1,0 +1,150 @@
+/* ── Chord tile card ─────────────────────────────────────────────────────── */
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-color);
+  background-color: rgba(255, 255, 255, 0.04);
+  cursor: default;
+  transition: background-color 0.15s ease;
+  min-height: 64px;
+  box-sizing: border-box;
+}
+
+.tile:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+}
+
+/* ── Thumbnail wrapper ───────────────────────────────────────────────────── */
+.thumbnail {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Chord name label ────────────────────────────────────────────────────── */
+.chordName {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e7eb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+/* ── Inline controls ─────────────────────────────────────────────────────── */
+.controls {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.tile:hover .controls,
+.tile:focus-within .controls {
+  opacity: 1;
+}
+
+.controlBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.controlBtn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #e5e7eb;
+}
+
+.controlBtn:focus-visible {
+  outline: 2px solid var(--accent-color, #6b7280);
+  outline-offset: 1px;
+}
+
+.controlBtn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.deleteBtn {
+  color: #f87171;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background-color: rgba(248, 113, 113, 0.15);
+  color: #fca5a5;
+}
+
+/* ── Enter animation ────────────────────────────────────────────────────── */
+@keyframes tileHighlight {
+  from {
+    box-shadow:
+      0 0 0 2px var(--accent-color),
+      0 0 16px 0 color-mix(in srgb, var(--accent-color) 45%, transparent);
+  }
+  to {
+    box-shadow: none;
+  }
+}
+
+.entering {
+  animation: tileHighlight 600ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entering {
+    animation: none;
+  }
+}
+
+/* ── Light color scheme overrides ───────────────────────────────────────── */
+@media (prefers-color-scheme: light) {
+  .tile {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  .tile:hover {
+    background-color: rgba(0, 0, 0, 0.07);
+  }
+
+  .chordName {
+    color: #111827;
+  }
+
+  .controlBtn {
+    color: #6b7280;
+  }
+
+  .controlBtn:hover:not(:disabled) {
+    background-color: rgba(0, 0, 0, 0.08);
+    color: #111827;
+  }
+
+  .deleteBtn {
+    color: #dc2626;
+  }
+
+  .deleteBtn:hover:not(:disabled) {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: #b91c1c;
+  }
+}

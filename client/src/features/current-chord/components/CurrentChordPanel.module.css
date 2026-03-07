@@ -1,0 +1,123 @@
+/* ── Panel surface ──────────────────────────────────────────────────────── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 32px;
+  border-radius: 12px;
+  /* Dynamic tint is injected via the --chord-panel-bg custom property */
+  background-color: var(--chord-panel-bg, #f8f9fa);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.10),
+    0 1px 3px rgba(0, 0, 0, 0.06);
+  min-width: 200px;
+  text-align: center;
+  transition: background-color 0.35s ease;
+}
+
+/* ── Section label ("Current Chord") ────────────────────────────────────── */
+.sectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 2px;
+}
+
+/* ── Primary chord name ─────────────────────────────────────────────────── */
+.chordName {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* ── No-chord placeholder ───────────────────────────────────────────────── */
+.placeholder {
+  font-size: 16px;
+  font-weight: 500;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* ── Root / quality row ─────────────────────────────────────────────────── */
+.rootQualityRow {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-top: 4px;
+}
+
+.root {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--chord-quality-dark, #4f46e5);
+}
+
+.quality {
+  font-size: 12px;
+  font-weight: 400;
+  color: #6b7280;
+  letter-spacing: 0.02em;
+}
+
+/* ── Thumbnail wrapper ──────────────────────────────────────────────────── */
+.thumbnail {
+  margin-bottom: 4px;
+}
+
+/* ── Add-to-progression button ──────────────────────────────────────────── */
+.addButton {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--chord-quality-base, #4f46e5);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease, background-color 0.15s ease;
+}
+
+.addButton:focus-visible {
+  outline: 3px solid var(--chord-quality-base, #4f46e5);
+  outline-offset: 3px;
+}
+
+.addButtonDisabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.addButtonDisabled:focus-visible {
+  outline: 3px solid #9ca3af;
+  outline-offset: 3px;
+}
+
+.addButtonActive {
+  transform: scale(0.93);
+}
+
+/* ── Progression full message ───────────────────────────────────────────── */
+.fullMessage {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+  letter-spacing: 0.02em;
+  margin-top: 4px;
+}
