@@ -1,8 +1,11 @@
+import { useId } from "react";
 import type { ChordType } from "@/features/chord/types";
+import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import { calculatePolygonPoints } from "@/features/chromatic-circle/utils/geometry";
 import type { ChordComplexity } from "@/features/color-language/utils/chordColorUtils";
 import { getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import { getHarmonyOpacity } from "@/features/color-language/utils/harmonyOpacity";
+import { createRadialGradientDef } from "@/features/color-language/utils/svgGradient";
 
 interface ChordThumbnailProps {
   noteIndices: number[];
@@ -32,10 +35,14 @@ const VERTEX_DOT_RADIUS_RATIO = 0.055;
  * neutral grey circle placeholder is shown instead.
  */
 export function ChordThumbnail({ noteIndices, quality, complexity = "triad", size = 80, diatonicIndices }: ChordThumbnailProps) {
+  const uid = useId();
   const center = size / 2;
   const radius = size * RADIUS_RATIO;
-  const gradientId = `thumb-gradient-${quality}-${complexity}`;
+  // React's useId() uses colons (e.g. ":r0:") which are valid XML IDs but
+  // break CSS selector syntax; strip them so url(#id) references work safely.
+  const gradientId = `${uid.replace(/:/g, "")}-thumb-gradient`;
   const baseColor = getChordColor(quality, complexity);
+  const colorSet = { ...ChordQualityColors[quality], base: baseColor };
 
   if (noteIndices.length < 2) {
     return (
@@ -69,10 +76,7 @@ export function ChordThumbnail({ noteIndices, quality, complexity = "triad", siz
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id={gradientId} cx="50%" cy="40%" r="65%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.65" />
-          <stop offset="100%" stopColor={baseColor} stopOpacity="1" />
-        </radialGradient>
+        {createRadialGradientDef(gradientId, colorSet)}
       </defs>
       <polygon
         points={polygonPoints}

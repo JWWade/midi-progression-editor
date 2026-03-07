@@ -54,15 +54,23 @@ import {
 import {
   getChordComplexity,
   getChordColor,
-  getChordFillColor,
 } from "@/features/color-language/utils/chordColorUtils";
 import type { ChordComplexity } from "@/features/color-language/utils/chordColorUtils";
+import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
+import {
+  createRadialGradientDef,
+} from "@/features/color-language/utils/svgGradient";
 import type { Chord } from "@/features/current-chord";
 
 const PRIMARY_COLOR = "#4F46E5";
 const TO_CHORD_COLOR = "#059669";
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
+
+/** Returns the SVG `<radialGradient>` `id` used for a chord polygon fill. */
+function chordPolygonGradientId(quality: ChordType, complexity: ChordComplexity): string {
+  return `chord-polygon-${quality}-${complexity}`;
+}
 
 function computeLabelPoint(
   cx: number,
@@ -256,11 +264,11 @@ export function ChromaticCircle({
 
   const strokeColor = getChordColor(chordType, chordComplexity);
   const strokeDasharray = isSeventhChord ? "5,5" : undefined;
-  const fillColor = getChordFillColor(chordType, chordComplexity);
+  const fillColor = `url(#${chordPolygonGradientId(chordType, chordComplexity)})`;
 
   const toStrokeColor = getChordColor(toChordType, toChordComplexity);
   const toStrokeDasharray = isToSeventhChord ? "5,5" : undefined;
-  const toFillColor = getChordFillColor(toChordType, toChordComplexity);
+  const toFillColor = `url(#${chordPolygonGradientId(toChordType, toChordComplexity)})`;
 
   const fromPolygonOpacity = isAnimating ? 0.75 : 1;
 
@@ -486,7 +494,8 @@ export function ChromaticCircle({
             cursor: "default",
           }}
         >
-        {/* Radial gradient fills for chord-tone note nodes (one per quality × complexity) */}
+        {/* Radial gradient fills for chord-tone note nodes (one per quality × complexity)
+             and chord polygon fills (one per quality × complexity). */}
         <defs>
           {(Object.keys(CHORD_TONE_FILLS) as ChordType[]).flatMap((quality) =>
             (["triad", "seventh", "extended"] as ChordComplexity[]).map((complexity) => (
@@ -501,6 +510,14 @@ export function ChromaticCircle({
                 <stop offset="100%" stopColor={getChordColor(quality, complexity)} stopOpacity={1} />
               </radialGradient>
             ))
+          )}
+          {(Object.keys(ChordQualityColors) as ChordType[]).flatMap((quality) =>
+            (["triad", "seventh", "extended"] as ChordComplexity[]).map((complexity) =>
+              createRadialGradientDef(
+                chordPolygonGradientId(quality, complexity),
+                { ...ChordQualityColors[quality], base: getChordColor(quality, complexity) },
+              )
+            )
           )}
         </defs>
 
@@ -550,6 +567,7 @@ export function ChromaticCircle({
           fill={fillColor}
           stroke={strokeColor}
           strokeWidth={POLYGON_STROKE_WIDTH}
+          strokeLinejoin="round"
           strokeDasharray={strokeDasharray}
           opacity={fromPolygonOpacity}
         />
@@ -561,6 +579,7 @@ export function ChromaticCircle({
             fill={fillColor}
             stroke={strokeColor}
             strokeWidth={POLYGON_STROKE_WIDTH}
+            strokeLinejoin="round"
             opacity={fromPolygonOpacity}
           />
         )}
@@ -572,6 +591,7 @@ export function ChromaticCircle({
           fill={toFillColor}
           stroke={toStrokeColor}
           strokeWidth={POLYGON_STROKE_WIDTH}
+          strokeLinejoin="round"
           strokeDasharray={toStrokeDasharray}
         />
 
@@ -582,6 +602,7 @@ export function ChromaticCircle({
             fill={toFillColor}
             stroke={toStrokeColor}
             strokeWidth={POLYGON_STROKE_WIDTH}
+            strokeLinejoin="round"
           />
         )}
 
