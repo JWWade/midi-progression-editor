@@ -2,8 +2,7 @@ import { useState } from "react";
 import { ChordThumbnail } from "@/features/current-chord/components/ChordThumbnail";
 import { getChordName } from "@/features/chord/data/chordNames";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
-import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
-import { getChordComplexity } from "@/features/color-language/utils/chordColorUtils";
+import { getChordComplexity, getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import type { Chord } from "@/features/current-chord/types";
 import styles from "./ChordTile.module.css";
 
@@ -21,7 +20,7 @@ export function ChordTile({ chord, index, isFirst, isLast, onMoveUp, onMoveDown,
   const [isEntering, setIsEntering] = useState(true);
   const noteIndices = getChordNoteIndices(chord.root, chord.quality);
   const complexity = getChordComplexity(chord);
-  const accentColor = ChordQualityColors[chord.quality].base;
+  const accentColor = getChordColor(chord.quality, complexity);
   const chordName = getChordName(chord.root, chord.quality);
 
   return (
