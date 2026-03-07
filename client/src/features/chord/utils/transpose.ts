@@ -3,6 +3,8 @@ import type { ChordNoteInfo, ChordType } from "../types";
 
 export const MAJOR_INTERVALS = [0, 4, 7] as const;
 export const MINOR_INTERVALS = [0, 3, 7] as const;
+export const DIM_INTERVALS   = [0, 3, 6] as const;
+export const AUG_INTERVALS   = [0, 4, 8] as const;
 export const MAJ7_INTERVALS = [0, 4, 7, 11] as const;
 export const MIN7_INTERVALS = [0, 3, 7, 10] as const;
 export const DOM7_INTERVALS = [0, 4, 7, 10] as const;
@@ -49,6 +51,8 @@ export function transposeChord(
 export const CHORD_INTERVALS: Readonly<Record<ChordType, readonly number[]>> = {
   major:    MAJOR_INTERVALS,
   minor:    MINOR_INTERVALS,
+  dim:      DIM_INTERVALS,
+  aug:      AUG_INTERVALS,
   maj7:     MAJ7_INTERVALS,
   min7:     MIN7_INTERVALS,
   dom7:     DOM7_INTERVALS,

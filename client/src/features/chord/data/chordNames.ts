@@ -9,6 +9,8 @@ export interface ChordNameData {
 const CHORD_TYPE_ORDER: readonly ChordType[] = [
   "major",
   "minor",
+  "dim",
+  "aug",
   "dom7",
   "maj7",
   "min7",
@@ -18,6 +20,8 @@ const CHORD_TYPE_ORDER: readonly ChordType[] = [
 const CHORD_TYPE_SUFFIXES: Record<ChordType, string> = {
   major: "",
   minor: "m",
+  dim:   "dim",
+  aug:   "aug",
   dom7: "7",
   maj7: "maj7",
   min7: "m7",
