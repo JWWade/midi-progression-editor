@@ -4,10 +4,15 @@
 
 **MIDI Progression Editor** is a parametric MIDI sequencer for exploring and editing chord progressions. It combines an interactive React/TypeScript web interface with an ASP.NET Core Web API backend, enabling musicians to:
 
-- Visualize musical scales and chord progressions
-- Generate scales from any root note
-- Explore different scale modes
-- Export MIDI data for use in DAWs
+- Visualize chord shapes on an interactive chromatic circle
+- Build chord progressions with a dedicated sidebar
+- Explore triads and seventh chords across all root notes and qualities
+- Animate smooth transitions between chord shapes
+- Display scale degrees and diatonic transparency on the circle
+- Identify voice-leading paths between consecutive chords
+- Color-coded chord quality system (major, minor, diminished, augmented, dominant 7th, etc.)
+- Play back chords with in-browser audio
+- Generate scales from any root note via the backend API
 
 ## Prerequisites
 
@@ -112,7 +117,7 @@ Runs xUnit test suite for business logic.
 
 ### Frontend Tests
 
-Not yet implemented (planned for Phase 2).
+Not yet implemented (planned for Epic 2).
 
 ## Lint & Code Quality
 
@@ -142,6 +147,19 @@ midi-progression-editor/
     src/
        api/         # API client & generated types
        features/    # Feature modules
+          audio/              # In-browser chord audio playback
+          chord/              # Core chord data, types & utilities
+          chord-animation/    # Animated chord shape transitions
+          chord-geometry/     # Polygon vertex calculations
+          chord-inspection/   # Chord detail analysis panel
+          chord-intervals/    # Interval pattern visualisation
+          chord-morphing/     # Smooth polygon morphing hooks
+          chromatic-circle/   # Main 12-note circle visualisation
+          color-language/     # Quality-based color system
+          current-chord/      # Current-chord info panel
+          progression-sidebar/ # Chord progression sidebar
+          scale/              # Scale generation & display
+          voice-leading/      # Voice-leading path utilities
        shared/      # Shared components & utilities
        App.tsx
     .env.example     # Environment variable template
