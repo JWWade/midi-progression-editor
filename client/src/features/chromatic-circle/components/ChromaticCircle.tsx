@@ -108,6 +108,8 @@ const LABEL_STYLE: React.CSSProperties = {
 const CHORD_TYPE_LABELS: Record<ChordType, string> = {
   major: "Major",
   minor: "Minor",
+  dim:   "Diminished",
+  aug:   "Augmented",
   dom7: "Dom 7",
   maj7: "Maj 7",
   min7: "Min 7",
