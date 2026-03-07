@@ -5,6 +5,8 @@ import type { Chord } from "../types";
 export const CHORD_QUALITY_LABELS: Record<ChordType, string> = {
   major: "Major",
   minor: "Minor",
+  dim:   "Diminished",
+  aug:   "Augmented",
   dom7: "Dominant 7",
   maj7: "Major 7",
   min7: "Minor 7",
