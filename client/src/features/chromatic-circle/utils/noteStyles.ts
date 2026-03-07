@@ -1,6 +1,7 @@
 import type { ChordType } from "@/features/chord/types";
-import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
+import { ChordColors } from "@/features/color-language/constants/chordColors";
 import type { ChordComplexity } from "@/features/color-language/utils/chordColorUtils";
+import { getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import { getHarmonyOpacity } from "@/features/color-language/utils/harmonyOpacity";
 
 /** Visual style returned for a single note node on the chromatic circle. */
@@ -21,14 +22,14 @@ const NOTE_CHROMATIC_TEXT = "#4B5563";
 
 /**
  * Per-quality expressive fill colours for chord-tone nodes.
- * Derived from {@link ChordQualityColors} base values so that the node colour
+ * Derived from {@link ChordColors} base values so that the node colour
  * always matches the quality's system-wide color family.
  *
  * @deprecated Prefer {@link getChordColor} with a {@link ChordComplexity} tier.
  *   This record is kept for SVG gradient-def iteration and backward compat.
  */
 export const CHORD_TONE_FILLS: Readonly<Record<ChordType, string>> = Object.fromEntries(
-  (Object.keys(ChordQualityColors) as ChordType[]).map((q) => [q, ChordQualityColors[q].base]),
+  (Object.keys(ChordColors) as ChordType[]).map((q) => [q, getChordColor(q, "triad")]),
 ) as Record<ChordType, string>;
 
 /**

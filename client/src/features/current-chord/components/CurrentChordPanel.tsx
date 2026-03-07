@@ -4,7 +4,7 @@ import { formatChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
 import { getCircleColor } from "@/features/chromatic-circle/utils/circleColors";
-import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
+import { ChordColors } from "@/features/color-language/constants/chordColors";
 import { getChordComplexity, getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import { ChordThumbnail } from "./ChordThumbnail";
 import styles from "./CurrentChordPanel.module.css";
@@ -52,7 +52,7 @@ export function CurrentChordPanel({
     : undefined;
 
   const complexity = chord ? getChordComplexity(chord) : "triad" as const;
-  const qualityColors = chord ? ChordQualityColors[chord.quality] : null;
+  const qualityColors = chord ? ChordColors[chord.quality] : null;
   const qualityBase = chord ? getChordColor(chord.quality, complexity) : null;
 
   const buttonClassName = [
