@@ -82,19 +82,68 @@ client/
 │   │   └── store/                       # Global state (future)
 │   │
 │   ├── features/                         # Feature modules (feature-based architecture)
-│   │   ├── chromatic-circle/
-│   │   │   ├── api/                     # Feature-specific API calls
-│   │   │   ├── components/              # Feature components (stubs)
-│   │   │   ├── hooks/                   # Feature-specific hooks
-│   │   │   ├── types/                   # Feature types
-│   │   │   └── utils/                   # Feature utilities
+│   │   ├── audio/                        # In-browser chord audio playback
+│   │   │   ├── hooks/                   # usePlayChord and related hooks
+│   │   │   └── utils/                   # Audio synthesis helpers
 │   │   │
-│   │   └── scale/
-│   │       ├── api/                     # Scale API integration
-│   │       ├── components/              # Scale components
-│   │       ├── hooks/                   # Scale hooks
-│   │       ├── types/                   # Scale types
-│   │       └── utils/                   # Scale utilities
+│   │   ├── chord/                        # Core chord data, types & utilities
+│   │   │   ├── api/                     # Chord-related API calls
+│   │   │   ├── components/              # Chord selector UI (dropdown)
+│   │   │   ├── constants/               # ChordQualityColors, chord definitions
+│   │   │   ├── data/                    # Static chord interval tables
+│   │   │   ├── types/                   # ChordType, ChordShape, etc.
+│   │   │   └── utils/                   # Transpose, interval helpers
+│   │   │
+│   │   ├── chord-animation/              # Animated chord transitions
+│   │   │   └── hooks/                   # useChordMorphing (easeInOutQuad, 350ms)
+│   │   │
+│   │   ├── chord-geometry/               # Polygon vertex calculations
+│   │   │   └── utils/                   # CHORD_SHAPES, geometry helpers
+│   │   │
+│   │   ├── chord-inspection/             # Chord detail analysis panel
+│   │   │   ├── components/              # ChordInspectionPanel component
+│   │   │   ├── types/                   # Panel prop types
+│   │   │   └── utils/                   # Analysis utilities
+│   │   │
+│   │   ├── chord-intervals/              # Interval pattern visualisation
+│   │   │   ├── components/              # Interval display component
+│   │   │   └── utils/                   # Interval calculation helpers
+│   │   │
+│   │   ├── chord-morphing/               # Smooth polygon morphing
+│   │   │   ├── hooks/                   # Morphing animation hooks
+│   │   │   └── utils/                   # Interpolation helpers
+│   │   │
+│   │   ├── chromatic-circle/             # Main 12-note circle visualisation
+│   │   │   ├── api/                     # Scale API calls (getDiatonicNotes)
+│   │   │   ├── components/              # ChromaticCircle SVG component
+│   │   │   ├── constants/               # visualConstants (radii, fonts, colours)
+│   │   │   ├── hooks/                   # Circle interaction hooks
+│   │   │   ├── types/                   # Circle prop/state types
+│   │   │   └── utils/                   # geometry, noteStyles, scaleUtils, etc.
+│   │   │
+│   │   ├── color-language/               # Quality-based color system
+│   │   │   ├── constants/               # Color palette constants
+│   │   │   └── utils/                   # chordColorUtils, harmonyOpacity, etc.
+│   │   │
+│   │   ├── current-chord/                # Current-chord info panel
+│   │   │   ├── components/              # CurrentChordPanel component
+│   │   │   ├── types/                   # Panel types
+│   │   │   └── utils/                   # Thumbnail geometry helpers
+│   │   │
+│   │   ├── progression-sidebar/          # Chord progression sidebar
+│   │   │   ├── components/              # ProgressionSidebar, chord tile components
+│   │   │   ├── constants/               # MAX_PROGRESSION_LENGTH, etc.
+│   │   │   └── hooks/                   # useProgression (session-only state)
+│   │   │
+│   │   ├── scale/                        # Scale generation & display
+│   │   │   ├── api/                     # POST /Scale/from-root wrapper
+│   │   │   ├── components/              # Scale display components
+│   │   │   ├── hooks/                   # useScale hook
+│   │   │   ├── types/                   # Scale types
+│   │   │   └── utils/                   # Scale helpers
+│   │   │
+│   │   └── voice-leading/                # Voice-leading path utilities
+│   │       └── utils/                   # Path calculation between chords
 │   │
 │   ├── shared/                           # Shared across features
 │   │   ├── components/                  # Reusable components
@@ -182,12 +231,17 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 
 ### Current Implementation Status
 
-- ✅ **Chromatic Circle**: Functional visualization component
-- ✅ **Structure**: Feature-based architecture in place
-- ⏳ **Scale Editor**: Stub component (implementation pending)
-- ⏳ **Routing**: Not yet implemented
-- ⏳ **State Management**: Not yet implemented
-- ⏳ **Tests**: Not yet implemented
+- ✅ **Chromatic Circle**: Full SVG visualisation with diatonic transparency, chord-tone emphasis, colour-responsive background, and note labels
+- ✅ **Chord Selector**: Dropdown for selecting root note and chord quality across all 8 chord types
+- ✅ **Chord Shapes**: Triangles for triads, quadrilaterals for seventh chords; dual-layer overlay supported
+- ✅ **Chord Animation**: Smooth 350 ms easeInOutQuad polygon morphing on chord changes
+- ✅ **Color Language**: Quality-based colour grammar (major → amber, minor → blue, dim → purple, aug → orange, dom7 → red-orange) with radial gradient fills
+- ✅ **Current-Chord Panel**: Displays chord identity, stylised geometric thumbnail, and add-to-progression button
+- ✅ **Progression Sidebar**: Right-hand vertical sidebar with chord tiles, thumbnails, add/remove controls, finite length limit, and session-only persistence
+- ✅ **Voice Leading**: Utility functions for calculating voice-leading paths between consecutive chords
+- ✅ **Audio Playback**: In-browser chord audio playback
+- ✅ **Scale Integration**: Scale generation via backend API with diatonic highlighting on the circle
+- ✅ **Structure**: Feature-based architecture across 13 modules
 
 ---
 
@@ -627,7 +681,7 @@ cd server/ParametricMusic.Tests
 dotnet test
 ```
 
-**Frontend tests**: Not yet implemented (for future development)
+**Frontend tests**: Not yet implemented (planned for Epic 2)
 
 ---
 
@@ -635,29 +689,17 @@ dotnet test
 
 ### ⚠️ Known Issues
 
-1. **API Contract Mismatch** (Planned Fix)
-   - Frontend expects certain parameter names/types
-   - Backend implementation differs
-   - Resolution: Align backend with contracted API during next sprint
-
-2. **Windows-Only Dev Script**
+1. **Windows-Only Dev Script**
    - `run-dev.bat` only works on Windows
    - Plan: Create shell script for Linux/Mac
 
-3. **Minimal Frontend Implementation**
-   - State management not yet integrated
-   - Routing not yet implemented
-   - Only basic components work
-
 ### 🚀 Future Improvements
 
-- [ ] Implement scale editor UI
+- [ ] Add frontend unit tests (Vitest)
 - [ ] Add state management (Zustand or Redux)
 - [ ] Implement client-side routing
-- [ ] Add frontend unit tests (Vitest)
-- [ ] Support for minor scales (backend ready, UI pending)
+- [ ] Support for minor scales in the UI (backend already supports it)
 - [ ] MIDI export functionality
-- [ ] Audio playback integration
 - [ ] Cross-platform dev script (shell version)
 - [ ] Docker configuration
 - [ ] Performance monitoring
@@ -673,4 +715,4 @@ dotnet test
 
 ---
 
-**Last Updated**: March 4, 2026
+**Last Updated**: March 7, 2026
