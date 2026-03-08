@@ -1,12 +1,12 @@
-# Epic 3 — Backend Domain Expansion
+# Epic 3 — Backend Foundations for Musical Intelligence
 
 ## Theme
 
-Transform the ASP.NET Core API from a minimal scale-generation stub into a full music-theory service layer, introduce server-side progression persistence, and add a MIDI export pipeline.
+Establish the backend as a musical computation engine, not a persistence layer.
 
-Epic 1 built the interactive frontend visualisation. Epic 2 polished the UI. Epic 3 is the backend counterpart: it moves authoritative music-theory computation to the server, gives progressions a durable home outside the browser, and opens an export path so users can take their work into a DAW.
+Epic 1 built the interactive frontend visualisation. Epic 2 polished the UI. Epic 3 is the backend counterpart: it introduces the core musical primitives the system needs for transform layers, generative workflows, and MIDI export — while keeping scope tight and backend-only.
 
-This epic deliberately avoids a database dependency in its first pass — an in-memory repository keeps the sprint focused on the API surface and business logic. A database storage backend can be swapped in as a follow-on once the contracts are stable.
+This epic deliberately avoids persistence work. The focus is on musical intelligence: interval tables, chord construction, voice-leading analysis, progression analysis, and export — all as stateless computation services that the frontend can call on demand.
 
 ---
 
@@ -19,365 +19,460 @@ This epic deliberately avoids a database dependency in its first pass — an in-
 | Serialisation | `System.Text.Json` with `JsonStringEnumConverter` |
 | API Docs | Swashbuckle (Swagger / OpenAPI 3) |
 | Testing | xUnit 2.9.3 |
-| Persistence | In-memory repository (no database dependency this epic) |
-| MIDI | Hand-rolled Standard MIDI File writer (no third-party library) |
+| Architecture | Stateless computation services (no persistence this epic) |
+| MIDI | Hand-rolled Standard MIDI File writer (Format 0, no third-party library) |
 | Validation | `System.ComponentModel.DataAnnotations` + `ModelState` |
 | Client codegen | `openapi-typescript` — frontend re-generates after each spec change (`npm run generate:api`) |
 
 ---
 
-## Milestone 1 — Complete the Scale API
+## Milestone 1 — Musical Primitives (Intervals, Chords, DTOs)
 
-The current `ScaleGenerator.BuildMajorScale` only implements the Ionian (major) mode. `ScaleType` already has a `Minor` member but it is silently ignored. Milestone 1 fills that gap and expands the endpoint to cover all seven diatonic modes.
+These foundational types underpin every milestone that follows. Defining them first ensures that the chord construction service, voice-leading engine, and progression analyser all share a single, consistent vocabulary.
 
 ---
 
-### ISSUE-61 — Implement All Diatonic Modes in ScaleGenerator
+### ISSUE-61 — Add `Interval` Enum + Helpers
 
 **Affected files**
-- `server/ParametricMusic.Api/ScaleGenerator.cs`
-- `server/ParametricMusic.Api/ScaleType.cs`
-- `server/ParametricMusic.Api/Controllers/ScaleController.cs`
-- `server/ParametricMusic.Tests/ScaleGeneratorTests.cs`
+- `server/ParametricMusic.Api/Interval.cs` *(new)*
+- `server/ParametricMusic.Tests/IntervalTests.cs` *(new)*
 
 **Summary**
 
-`ScaleType` should enumerate all seven diatonic modes (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian / Natural Minor, Locrian). `ScaleGenerator` should route to the correct interval pattern based on the requested mode. The `ScaleController` should honour the `scaleType` field in `ScaleOptionsDto` rather than ignoring it.
+An `Interval` enum with semitone values gives the rest of the system a type-safe way to express musical distances. Helper methods make conversions readable without magic numbers scattered across service code.
 
 **Requirements**
-- Extend `ScaleType` to include all seven modes:
+- Define `Interval` enum with named semitone values:
   ```csharp
-  public enum ScaleType
+  public enum Interval
   {
-      Major,        // Ionian  — intervals [0,2,4,5,7,9,11]
-      Dorian,       //          [0,2,3,5,7,9,10]
-      Phrygian,     //          [0,1,3,5,7,8,10]
-      Lydian,       //          [0,2,4,6,7,9,11]
-      Mixolydian,   //          [0,2,4,5,7,9,10]
-      Minor,        // Aeolian — [0,2,3,5,7,8,10]
-      Locrian       //          [0,1,3,5,6,8,10]
+      Unison = 0,
+      MinorSecond = 1,
+      MajorSecond = 2,
+      MinorThird = 3,
+      MajorThird = 4,
+      PerfectFourth = 5,
+      Tritone = 6,
+      PerfectFifth = 7,
+      MinorSixth = 8,
+      MajorSixth = 9,
+      MinorSeventh = 10,
+      MajorSeventh = 11,
+      Octave = 12
   }
   ```
-- Add a `private static readonly Dictionary<ScaleType, int[]> ScaleIntervals` lookup table in `ScaleGenerator`
-- Replace `BuildMajorScale(int root)` with a general `BuildScale(int root, ScaleType scaleType)` method that selects the correct interval array from the lookup
-- Update `ScaleController.BuildScale` to pass `options.ScaleType` to `ScaleGenerator.BuildScale`
-- Add an `[EnumMember]` or `[Display]` attribute on each new enum value for Swagger documentation
-- Extend `ScaleGeneratorTests.cs` with `[Theory]` cases covering each mode: verify note count (always 7), correct interval distances, and wraparound behaviour
+- Add extension methods in `IntervalExtensions`:
+  - `GetSemitones(this Interval interval)` — returns the integer semitone value
+  - `FromSemitones(int semitones)` — returns the matching `Interval` (mod 12), or throws `ArgumentOutOfRangeException` for values outside 0–12
+  - `GetDisplayName(this Interval interval)` — returns a human-readable string (e.g., `"Perfect Fifth"`)
+- Add `[Display(Name = "...")]` attribute on each enum value for Swagger documentation
 
 **Acceptance Criteria**
-- [ ] `POST /Scale/from-root?note=A` with `{ "scaleType": "Minor" }` returns the 7 notes of A natural minor
-- [ ] All seven modes return 7 notes regardless of root
-- [ ] Unknown or integer `scaleType` values return HTTP 400
-- [ ] Swagger UI lists all seven enum values
-- [ ] All existing `ScaleGeneratorTests` continue to pass
-- [ ] New xUnit tests cover every mode with at least two root values (including one that wraps around the B/C boundary)
+- [ ] `Interval.PerfectFifth.GetSemitones()` returns `7`
+- [ ] `IntervalExtensions.FromSemitones(7)` returns `Interval.PerfectFifth`
+- [ ] `FromSemitones` with a value outside 0–12 throws `ArgumentOutOfRangeException`
+- [ ] xUnit tests cover `GetSemitones`, `FromSemitones`, and `GetDisplayName` for every enum member
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
 
-### ISSUE-62 — Add `GET /Scale/types` Endpoint
+### ISSUE-62 — Add `ChordQuality` Enum
 
 **Affected files**
-- `server/ParametricMusic.Api/Controllers/ScaleController.cs`
-- `server/ParametricMusic.Api/ScaleTypeInfo.cs` *(new)*
+- `server/ParametricMusic.Api/ChordQuality.cs` *(new)*
 
 **Summary**
 
-The frontend scale selector currently hard-codes label strings. A `GET /Scale/types` endpoint returns a machine-readable list of available scale types so the selector can be populated dynamically, and the `openapi-typescript` codegen propagates the type to the client automatically.
+`ChordQuality` is the server-side counterpart to the frontend `ChordType` union. The enum names follow C# conventions while the JSON serialisation names match what the frontend already sends, keeping the API client compatible.
 
 **Requirements**
-- Add a new `ScaleTypeInfo` record:
+- Define `ChordQuality` enum:
   ```csharp
-  public record ScaleTypeInfo(string Value, string DisplayName, string Description);
+  public enum ChordQuality
+  {
+      [Display(Name = "Major")]        Major,
+      [Display(Name = "Minor")]        Minor,
+      [Display(Name = "Diminished")]   Diminished,
+      [Display(Name = "Augmented")]    Augmented,
+      [Display(Name = "Dominant 7")]   Dominant7,
+      [Display(Name = "Major 7")]      Major7,
+      [Display(Name = "Minor 7")]      Minor7,
+      [Display(Name = "Sus2")]         Sus2,
+      [Display(Name = "Sus4")]         Sus4
+  }
   ```
-- Add `[HttpGet("types")]` action to `ScaleController` that iterates `Enum.GetValues<ScaleType>()` and maps each to a `ScaleTypeInfo` using reflection on its `[Display]` attributes
-- Return `IEnumerable<ScaleTypeInfo>` with HTTP 200
-- Annotate with `[ProducesResponseType<IEnumerable<ScaleTypeInfo>>(StatusCodes.Status200OK)]` for accurate Swagger schema generation
+- Annotate each value with `[Display]` attributes for Swagger documentation
+- The enum must serialise to and from its string name (enforced by the existing `JsonStringEnumConverter` already registered in `Program.cs`)
 
 **Acceptance Criteria**
-- [ ] `GET /Scale/types` returns all seven mode objects with non-empty `DisplayName` and `Description` fields
-- [ ] Response is an array ordered to match the `ScaleType` enum declaration order
-- [ ] Swagger UI documents the response schema correctly
-- [ ] xUnit test verifies the count and that each entry has a non-empty `DisplayName`
+- [ ] `ChordQuality` deserialises correctly from the JSON string `"Major"`, `"Minor7"`, etc.
+- [ ] Swagger UI lists all nine quality values with their display names
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
 
-## Milestone 2 — Chord API
+### ISSUE-63 — Add `ChordDto`
 
-Chord interval calculations currently live entirely in the TypeScript client (`transpose.ts`, `chordIntervals` data files). Moving these to the server provides a single source of truth for interval tables, enables server-side chord identification, and opens the door to richer analysis (e.g., enharmonic spelling, Roman numeral analysis) without bundling that logic in the browser.
+**Affected files**
+- `server/ParametricMusic.Api/Dtos/ChordDto.cs` *(new)*
+- `server/ParametricMusic.Api/Dtos/ChordToneDto.cs` *(new)*
+- `server/ParametricMusic.Tests/ChordDtoSerializationTests.cs` *(new)*
+
+**Summary**
+
+`ChordDto` is the canonical outbound representation of a chord. Every chord-returning endpoint uses it so that the frontend always receives the same structure regardless of which endpoint produced the chord.
+
+**Requirements**
+- Add `ChordToneDto`:
+  ```csharp
+  public record ChordToneDto(int PitchClass, string Name, string Role);
+  // Role: "root" | "third" | "fifth" | "seventh" | "suspended"
+  ```
+- Add `ChordDto`:
+  ```csharp
+  public record ChordDto(
+      Note Root,
+      ChordQuality Quality,
+      string DisplayName,      // e.g. "C Major", "A♭ min7"
+      int[] PitchClasses,      // sorted, e.g. [0, 4, 7]
+      string[] NoteNames,      // e.g. ["C", "E", "G"]
+      Interval[] Intervals,    // intervals from root
+      ChordToneDto[] Tones     // one entry per note with Role
+  );
+  ```
+- Add `[ProducesResponseType<ChordDto>(StatusCodes.Status200OK)]` annotations on endpoints that return this type
+
+**Acceptance Criteria**
+- [ ] `ChordDto` serialises correctly to JSON (all fields present, enums as strings)
+- [ ] `PitchClasses` is always sorted ascending
+- [ ] xUnit serialisation tests round-trip a `ChordDto` through `System.Text.Json` and assert all field values
+- [ ] OpenAPI schema for `ChordDto` is visible in Swagger UI with correct field types
+- [ ] `dotnet build` succeeds with zero warnings
 
 ---
 
-### ISSUE-63 — Add `POST /Chord/notes` Endpoint
+### ISSUE-64 — Implement `ChordConstructionService`
+
+**Affected files**
+- `server/ParametricMusic.Api/Services/ChordConstructionService.cs` *(new)*
+- `server/ParametricMusic.Api/Program.cs`
+- `server/ParametricMusic.Tests/ChordConstructionServiceTests.cs` *(new)*
+
+**Summary**
+
+`ChordConstructionService` is the authoritative source for chord interval tables on the server. It constructs a `ChordDto` from a root note and quality, using the `Interval` enum from ISSUE-61 for all distances.
+
+**Requirements**
+- Implement `ChordConstructionService` with a public method:
+  ```csharp
+  public ChordDto Build(Note root, ChordQuality quality)
+  ```
+- Use an `IReadOnlyDictionary<ChordQuality, Interval[]>` lookup table covering all nine qualities:
+  | Quality | Intervals from root |
+  |---------|-------------------|
+  | Major | Unison, MajorThird, PerfectFifth |
+  | Minor | Unison, MinorThird, PerfectFifth |
+  | Diminished | Unison, MinorThird, Tritone |
+  | Augmented | Unison, MajorThird, MinorSixth |
+  | Dominant7 | Unison, MajorThird, PerfectFifth, MinorSeventh |
+  | Major7 | Unison, MajorThird, PerfectFifth, MajorSeventh |
+  | Minor7 | Unison, MinorThird, PerfectFifth, MinorSeventh |
+  | Sus2 | Unison, MajorSecond, PerfectFifth |
+  | Sus4 | Unison, PerfectFourth, PerfectFifth |
+- Derive `NoteNames` from the existing `Note` enum and `NoteExtensions.GetDisplayName()`
+- Assign `Role` to each `ChordToneDto` based on its position in the interval array (`"root"`, `"third"` / `"suspended"`, `"fifth"`, `"seventh"`)
+- Register as a scoped service: `builder.Services.AddScoped<ChordConstructionService>()`
+
+**Acceptance Criteria**
+- [ ] `Build(Note.C, ChordQuality.Major)` returns `PitchClasses = [0, 4, 7]` and `NoteNames = ["C", "E", "G"]`
+- [ ] `Build(Note.B, ChordQuality.Major7)` correctly wraps around (B, D#, F#, A# — all within 0–11)
+- [ ] All nine qualities produce the correct pitch classes for root C
+- [ ] xUnit tests cover all nine qualities plus at least two wrap-around root values
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+### ISSUE-65 — Add `POST /Chord/from-root` Endpoint
 
 **Affected files**
 - `server/ParametricMusic.Api/Controllers/ChordController.cs` *(new)*
-- `server/ParametricMusic.Api/ChordType.cs` *(new)*
-- `server/ParametricMusic.Api/ChordNotesRequestDto.cs` *(new)*
-- `server/ParametricMusic.Api/ChordNoteInfo.cs` *(new)*
+- `server/ParametricMusic.Api/Dtos/ChordFromRootRequestDto.cs` *(new)*
 - `server/ParametricMusic.Tests/ChordControllerTests.cs` *(new)*
 
 **Summary**
 
-Return the notes of any chord given a root and quality. Each note in the response includes its pitch-class index, display name, and interval role (root / third / fifth / seventh) so the frontend can use the server as the authoritative chord-interval source.
+Expose `ChordConstructionService` via a REST endpoint. This is the primary way the frontend will request chord data from the server.
 
 **Requirements**
-- Add `ChordType` enum mirroring the frontend values:
+- Add `ChordFromRootRequestDto`:
   ```csharp
-  public enum ChordType { Major, Minor, Dim, Aug, Maj7, Min7, Dom7, HalfDim7 }
-  ```
-- Add `ChordNoteInfo` record:
-  ```csharp
-  public record ChordNoteInfo(int Index, string Name, string Role);
-  // Role: "root" | "third" | "fifth" | "seventh"
-  ```
-- Add `ChordNotesRequestDto`:
-  ```csharp
-  public class ChordNotesRequestDto
+  public class ChordFromRootRequestDto
   {
-      [Required] public ChordType ChordType { get; set; }
+      [Required] public ChordQuality Quality { get; set; }
   }
   ```
-- Add a static `ChordGenerator` class with:
-  ```csharp
-  public static ChordNoteInfo[] BuildChord(int root, ChordType chordType)
+- Add `[HttpPost("from-root")]` action on `ChordController`:
   ```
-  Using an interval lookup table:
-  | ChordType | Semitone offsets |
-  |-----------|-----------------|
-  | Major | 0, 4, 7 |
-  | Minor | 0, 3, 7 |
-  | Dim | 0, 3, 6 |
-  | Aug | 0, 4, 8 |
-  | Maj7 | 0, 4, 7, 11 |
-  | Min7 | 0, 3, 7, 10 |
-  | Dom7 | 0, 4, 7, 10 |
-  | HalfDim7 | 0, 3, 6, 10 |
-- Add `[HttpPost("notes")]` action to `ChordController`:
+  POST /Chord/from-root?note=C
+  Body: { "quality": "Major" }
+  Response: ChordDto
   ```
-  POST /Chord/notes?note=C
-  Body: { "chordType": "Major" }
-  ```
-  Returns `ChordNoteInfo[]`
+- Inject `ChordConstructionService` via constructor injection
+- Return HTTP 200 with `ChordDto`, or HTTP 400 for invalid `note` or `quality` values
 
 **Acceptance Criteria**
-- [ ] `POST /Chord/notes?note=C` with `{ "chordType": "Major" }` returns `[C (root), E (third), G (fifth)]` with correct indices
-- [ ] Seventh chord types return exactly 4 notes; triads return exactly 3 notes
-- [ ] All 8 chord types work correctly for root notes that wrap around (e.g., note=A, chordType=Maj7)
-- [ ] Invalid `chordType` string returns HTTP 400 with a descriptive message
-- [ ] Swagger UI documents request and response schemas
-- [ ] xUnit tests cover all 8 chord types plus at least two edge-case root values
+- [ ] `POST /Chord/from-root?note=C` with `{ "quality": "Major" }` returns the full `ChordDto` for C Major
+- [ ] All nine chord qualities are supported
+- [ ] An unknown `quality` string in the body returns HTTP 400 with a `ProblemDetails` response
+- [ ] Swagger UI documents the endpoint with correct request and response schemas
+- [ ] xUnit tests cover the happy path for each quality and the 400 path for an invalid quality
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
 
-### ISSUE-64 — Add `POST /Chord/identify` Endpoint
+## Milestone 2 — Voice Leading Engine
+
+Voice leading already has utility functions in the frontend (`features/voice-leading/utils/`). Milestone 2 moves the authoritative computation to the server, augmenting it with a centroid shift and a tension score that the frontend does not currently calculate.
+
+---
+
+### ISSUE-66 — Add `VoiceLeadingDto`
 
 **Affected files**
-- `server/ParametricMusic.Api/Controllers/ChordController.cs`
-- `server/ParametricMusic.Api/ChordIdentificationRequestDto.cs` *(new)*
-- `server/ParametricMusic.Api/ChordIdentificationResultDto.cs` *(new)*
-- `server/ParametricMusic.Tests/ChordControllerTests.cs`
+- `server/ParametricMusic.Api/Dtos/VoiceLeadingDto.cs` *(new)*
+- `server/ParametricMusic.Api/Dtos/VoicePathDto.cs` *(new)*
 
 **Summary**
 
-Given an unordered set of pitch-class indices (e.g., `[0, 4, 7]`), identify the best-matching chord name, root, and quality. This enables the frontend to display human-readable chord names when a user selects arbitrary notes on the chromatic circle.
+Define the outbound DTO that the voice-leading endpoint returns. All fields are derived from the two input chords — no state is stored.
 
 **Requirements**
-- Add `ChordIdentificationRequestDto`:
+- Add `VoicePathDto`:
   ```csharp
-  public class ChordIdentificationRequestDto
-  {
-      [Required, MinLength(3), MaxLength(4)]
-      public int[] NoteIndices { get; set; } = [];
-  }
-  ```
-- Add `ChordIdentificationResultDto`:
-  ```csharp
-  public record ChordIdentificationResultDto(
-      Note Root,
-      ChordType ChordType,
-      string DisplayName,   // e.g. "C Major" or "A♭ min7"
-      bool IsExactMatch     // false when the closest match involves omissions
+  public record VoicePathDto(
+      int FromPitchClass, string FromName,
+      int ToPitchClass,   string ToName,
+      int Displacement    // semitones moved; negative = downward motion
   );
   ```
-- Implement identification by testing every possible root (0–11) and chord type against the sorted input interval set; return the match with the highest overlap score. When there is no exact match, return the best partial match with `IsExactMatch = false`
-- Add `[HttpPost("identify")]` action on `ChordController` returning `ChordIdentificationResultDto` or HTTP 422 when identification is impossible (fewer than 2 distinct notes, or all same note)
+- Add `VoiceLeadingDto`:
+  ```csharp
+  public record VoiceLeadingDto(
+      VoicePathDto[] Paths,
+      int TotalMotion,      // sum of absolute displacements
+      double CentroidShift, // difference in mean pitch class between chords
+      double TensionScore   // heuristic: sum of tritone/semitone intervals in target chord
+  );
+  ```
 
 **Acceptance Criteria**
-- [ ] `[0, 4, 7]` → `{ root: "C", chordType: "Major", displayName: "C Major", isExactMatch: true }`
-- [ ] `[9, 0, 4]` → identifies A minor (correct inversion handling)
-- [ ] `[0, 3, 6, 10]` → identifies C half-diminished 7
-- [ ] Input with fewer than 2 distinct notes returns HTTP 422
-- [ ] `isExactMatch: false` is returned when the input is a subset or superset of a known chord
-- [ ] xUnit tests cover exact matches for all 8 chord types, plus inversion scenarios
+- [ ] `VoiceLeadingDto` serialises to JSON with all fields present and correctly typed
+- [ ] OpenAPI schema is visible in Swagger UI
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
 
-### ISSUE-65 — Add `POST /Chord/voice-lead` Endpoint
+### ISSUE-67 — Implement `VoiceLeadingService`
 
 **Affected files**
-- `server/ParametricMusic.Api/Controllers/ChordController.cs`
-- `server/ParametricMusic.Api/VoiceLeadRequestDto.cs` *(new)*
-- `server/ParametricMusic.Api/VoiceLeadResultDto.cs` *(new)*
-- `server/ParametricMusic.Tests/ChordControllerTests.cs`
-
-**Summary**
-
-Given two chords (root + quality), compute the minimal voice-leading paths between them — the set of note movements that minimises total semitone displacement. The result mirrors the logic already in the frontend `voice-leading` feature, centralising it on the server for correctness and reusability.
-
-**Requirements**
-- Add `VoiceLeadRequestDto`:
-  ```csharp
-  public class VoiceLeadRequestDto
-  {
-      [Required] public Note FromRoot { get; set; }
-      [Required] public ChordType FromChordType { get; set; }
-      [Required] public Note ToRoot { get; set; }
-      [Required] public ChordType ToChordType { get; set; }
-  }
-  ```
-- Add `VoiceLeadPath` and `VoiceLeadResultDto`:
-  ```csharp
-  public record VoiceLeadPath(int FromIndex, string FromName, int ToIndex, string ToName, int Displacement);
-  public record VoiceLeadResultDto(VoiceLeadPath[] Paths, int TotalDisplacement);
-  ```
-- Implement voice-leading by building both chord note arrays, then assigning each "from" voice to the "to" note that minimises its semitone movement (considering octave equivalence within ±6 semitones), using a greedy nearest-neighbour assignment
-- Add `[HttpPost("voice-lead")]` action returning `VoiceLeadResultDto`
-
-**Acceptance Criteria**
-- [ ] C Major → G Major returns paths with total displacement ≤ 4 semitones
-- [ ] C Major → C Minor has at most one path with non-zero displacement (E → E♭, displacement = 1)
-- [ ] Mismatched triad → seventh chord (3 notes → 4 notes) returns HTTP 400 with a message explaining the size mismatch
-- [ ] xUnit tests verify total displacement is minimal for at least five well-known chord transitions
-- [ ] `dotnet build` succeeds with zero warnings
-
----
-
-## Milestone 3 — Progression Persistence
-
-The progression is currently stored only in React state and is lost on page reload. Milestone 3 introduces a server-side persistence layer backed by an in-memory repository. This deliberately uses an interface (`IProgressionRepository`) so a database implementation can be substituted later without changing any controller logic.
-
----
-
-### ISSUE-66 — Define `ProgressionRecord` Model and `IProgressionRepository`
-
-**Affected files**
-- `server/ParametricMusic.Api/Models/ProgressionRecord.cs` *(new)*
-- `server/ParametricMusic.Api/Models/ChordRecord.cs` *(new)*
-- `server/ParametricMusic.Api/Repositories/IProgressionRepository.cs` *(new)*
-- `server/ParametricMusic.Api/Repositories/InMemoryProgressionRepository.cs` *(new)*
+- `server/ParametricMusic.Api/Services/VoiceLeadingService.cs` *(new)*
 - `server/ParametricMusic.Api/Program.cs`
+- `server/ParametricMusic.Tests/VoiceLeadingServiceTests.cs` *(new)*
 
 **Summary**
 
-Define the domain model and repository abstraction before writing any controllers. Registering the in-memory implementation in `Program.cs` as a scoped service makes the controller testable via constructor injection.
+`VoiceLeadingService` computes the minimal-motion voice-leading assignment between two `ChordDto` objects and derives the centroid shift and tension score.
 
 **Requirements**
-- Add `ChordRecord`:
+- Implement `VoiceLeadingService` with:
   ```csharp
-  public record ChordRecord(string Root, string ChordType);
+  public VoiceLeadingDto Compute(ChordDto from, ChordDto to)
   ```
-- Add `ProgressionRecord`:
-  ```csharp
-  public class ProgressionRecord
-  {
-      public Guid Id { get; init; } = Guid.NewGuid();
-      public string Name { get; set; } = string.Empty;
-      public List<ChordRecord> Chords { get; set; } = [];
-      public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-      public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-  }
-  ```
-- Add `IProgressionRepository` with methods:
-  ```csharp
-  Task<ProgressionRecord> CreateAsync(ProgressionRecord record);
-  Task<ProgressionRecord?> GetByIdAsync(Guid id);
-  Task<IEnumerable<ProgressionRecord>> GetAllAsync();
-  Task<ProgressionRecord?> UpdateAsync(Guid id, ProgressionRecord record);
-  Task<bool> DeleteAsync(Guid id);
-  ```
-- Implement `InMemoryProgressionRepository` using a `ConcurrentDictionary<Guid, ProgressionRecord>` for thread safety
-- Register: `builder.Services.AddSingleton<IProgressionRepository, InMemoryProgressionRepository>()`
+- Voice assignment: for each "from" tone, choose the "to" pitch class that minimizes absolute semitone displacement, considering octave equivalence within ±6 semitones (i.e., use `Math.Min(dist, 12 - dist)` for circular distance)
+- Centroid shift: mean pitch class of `to` minus mean pitch class of `from`
+- Tension score: count of semitone-adjacent or tritone intervals within the `to` chord's pitch-class set, normalized by chord size
+- Register as scoped: `builder.Services.AddScoped<VoiceLeadingService>()`
 
 **Acceptance Criteria**
-- [ ] `InMemoryProgressionRepository` passes all CRUD operations in isolation (xUnit tests with no HTTP layer)
-- [ ] Concurrent reads and writes do not cause data races (use `ConcurrentDictionary`)
-- [ ] `IProgressionRepository` is registered in `Program.cs` as a singleton
+- [ ] C Major → G Major: `TotalMotion` ≤ 4
+- [ ] C Major → C Minor: exactly one path has `Displacement ≠ 0` (E → E♭, displacement = -1)
+- [ ] C Major → F Major: returns correct centroid shift direction (F is a fourth above C)
+- [ ] xUnit tests cover C→G, C→F, C→Am, and at least one seventh-chord transition
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
 
-### ISSUE-67 — Add `POST /Progression` and `GET /Progression` Endpoints
+### ISSUE-68 — Add `POST /VoiceLeading/between` Endpoint
+
+**Affected files**
+- `server/ParametricMusic.Api/Controllers/VoiceLeadingController.cs` *(new)*
+- `server/ParametricMusic.Api/Dtos/VoiceLeadingRequestDto.cs` *(new)*
+- `server/ParametricMusic.Tests/VoiceLeadingControllerTests.cs` *(new)*
+
+**Summary**
+
+Expose `VoiceLeadingService` as a REST endpoint. The request body contains two fully-specified chords (using the same shape as `ChordFromRootRequestDto`).
+
+**Requirements**
+- Add `VoiceLeadingRequestDto`:
+  ```csharp
+  public class VoiceLeadingRequestDto
+  {
+      [Required] public Note FromNote { get; set; }
+      [Required] public ChordQuality FromQuality { get; set; }
+      [Required] public Note ToNote { get; set; }
+      [Required] public ChordQuality ToQuality { get; set; }
+  }
+  ```
+- Add `[HttpPost("between")]` action on `VoiceLeadingController`:
+  ```
+  POST /VoiceLeading/between
+  Body: { "fromNote": "C", "fromQuality": "Major", "toNote": "G", "toQuality": "Major" }
+  Response: VoiceLeadingDto
+  ```
+- Internally construct both chords via `ChordConstructionService`, then pass them to `VoiceLeadingService.Compute`
+
+**Acceptance Criteria**
+- [ ] `POST /VoiceLeading/between` with C Major → G Major returns a `VoiceLeadingDto` with three paths and `TotalMotion` ≤ 4
+- [ ] Invalid `fromQuality` returns HTTP 400 with a `ProblemDetails` body
+- [ ] Swagger UI documents the endpoint
+- [ ] xUnit integration test covers the happy path and a 400 path
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+## Milestone 3 — Progression Analysis API
+
+With chord construction and voice leading in place, Milestone 3 builds the progression analysis layer. The endpoint accepts a sequence of chords and returns a continuity score, a centroid path, a tension curve, and rule-based next-chord suggestions.
+
+---
+
+### ISSUE-69 — Add `ProgressionDto`
+
+**Affected files**
+- `server/ParametricMusic.Api/Dtos/ProgressionDto.cs` *(new)*
+
+**Summary**
+
+`ProgressionDto` is the inbound representation of a chord sequence. It reuses the `ChordFromRootRequestDto` shape for each chord entry, keeping the API surface consistent.
+
+**Requirements**
+- Add `ProgressionChordDto` (one chord entry in a progression):
+  ```csharp
+  public class ProgressionChordDto
+  {
+      [Required] public Note Root { get; set; }
+      [Required] public ChordQuality Quality { get; set; }
+  }
+  ```
+- Add `ProgressionDto`:
+  ```csharp
+  public class ProgressionDto
+  {
+      [Required, MinLength(1), MaxLength(8)]
+      public List<ProgressionChordDto> Chords { get; set; } = [];
+  }
+  ```
+
+**Acceptance Criteria**
+- [ ] `ProgressionDto` deserialises correctly from a JSON array of chord objects
+- [ ] Validation rejects progressions with zero chords or more than eight chords
+- [ ] OpenAPI schema is visible in Swagger UI
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+### ISSUE-70 — Add `ProgressionAnalysisDto`
+
+**Affected files**
+- `server/ParametricMusic.Api/Dtos/ProgressionAnalysisDto.cs` *(new)*
+
+**Summary**
+
+`ProgressionAnalysisDto` is the outbound analysis result. It packages all computed metrics into a single structure so the frontend has everything it needs in one response.
+
+**Requirements**
+- Add `ProgressionAnalysisDto`:
+  ```csharp
+  public record ProgressionAnalysisDto(
+      double ContinuityScore,         // 0–1; higher = smoother voice leading
+      double[] CentroidPath,          // one entry per chord: mean pitch class
+      double[] TensionCurve,          // one entry per chord: tension score
+      ChordDto[] SuggestedNextChords  // 1–3 rule-based suggestions for the next chord
+  );
+  ```
+
+**Acceptance Criteria**
+- [ ] `ProgressionAnalysisDto` serialises to JSON with all fields present
+- [ ] Array lengths: `CentroidPath.Length == input.Chords.Count`, `TensionCurve.Length == input.Chords.Count`
+- [ ] `SuggestedNextChords` is an array of 1–3 `ChordDto` objects
+- [ ] OpenAPI schema is visible in Swagger UI
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+### ISSUE-71 — Implement `ProgressionAnalysisService`
+
+**Affected files**
+- `server/ParametricMusic.Api/Services/ProgressionAnalysisService.cs` *(new)*
+- `server/ParametricMusic.Api/Program.cs`
+- `server/ParametricMusic.Tests/ProgressionAnalysisServiceTests.cs` *(new)*
+
+**Summary**
+
+`ProgressionAnalysisService` aggregates chord construction, voice-leading scores, and a simple rule-based next-chord suggestion algorithm into a single `Analyze` method.
+
+**Requirements**
+- Implement `ProgressionAnalysisService` with:
+  ```csharp
+  public ProgressionAnalysisDto Analyze(IReadOnlyList<ProgressionChordDto> chords)
+  ```
+- **Continuity score**: average of `(1 - normalized TotalMotion)` across all consecutive chord pairs; normalize by dividing by 12 (maximum possible motion per voice); clamp to [0, 1]
+- **Centroid path**: for each chord, compute the mean pitch class across its tones using `ChordConstructionService`
+- **Tension curve**: compute directly from each chord's interval content (count of semitone-adjacent or tritone intervals, normalized by chord size)
+- **Suggested next chords**: apply two simple rules to the final chord in the progression:
+  - *Dominant resolution*: if the last chord is a `Dominant7`, suggest its tonic (root a perfect fifth below, `Major` quality)
+  - *Common-tone motion*: suggest the chord sharing the most pitch classes with the last chord from a candidate set of the 12 major and 12 minor chords
+  - *Contrary motion*: suggest the chord whose centroid is furthest from the last chord's centroid
+  - Return 1–3 unique suggestions (deduplicate by root + quality)
+- Register as scoped: `builder.Services.AddScoped<ProgressionAnalysisService>()`
+
+**Acceptance Criteria**
+- [ ] I–IV–V progression (C Major, F Major, G Major) produces `ContinuityScore > 0.7`
+- [ ] `CentroidPath` has the same length as the input chord list
+- [ ] Dominant-resolution rule fires for a progression ending on G Dominant7: a C Major suggestion is present
+- [ ] xUnit tests cover I–IV–V, I–vi–IV–V (50s progression), and a single-chord progression
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+### ISSUE-72 — Add `POST /Progression/analyze` Endpoint
 
 **Affected files**
 - `server/ParametricMusic.Api/Controllers/ProgressionController.cs` *(new)*
-- `server/ParametricMusic.Api/Dtos/CreateProgressionDto.cs` *(new)*
-- `server/ParametricMusic.Api/Dtos/ProgressionDto.cs` *(new)*
 - `server/ParametricMusic.Tests/ProgressionControllerTests.cs` *(new)*
 
 **Summary**
 
-Expose endpoints to create a new progression and list all saved progressions. The frontend saves its in-memory progression state here after a user explicitly triggers a "Save" action (to be wired up in a follow-on UI issue).
+Expose `ProgressionAnalysisService` as a REST endpoint. The frontend sends the current sidebar progression and receives the full analysis result in a single round-trip.
 
 **Requirements**
-- Add `CreateProgressionDto`:
-  ```csharp
-  public class CreateProgressionDto
-  {
-      [MaxLength(100)] public string Name { get; set; } = string.Empty;
-      [Required, MinLength(1), MaxLength(8)]
-      public List<ChordRecord> Chords { get; set; } = [];
-  }
+- Add `[HttpPost("analyze")]` action on `ProgressionController`:
   ```
-- Add `ProgressionDto` (outbound):
-  ```csharp
-  public record ProgressionDto(
-      Guid Id, string Name,
-      List<ChordRecord> Chords,
-      DateTime CreatedAt, DateTime UpdatedAt
-  );
+  POST /Progression/analyze
+  Body: ProgressionDto
+  Response: ProgressionAnalysisDto
   ```
-- Add `POST /Progression` → creates a new `ProgressionRecord`, returns `ProgressionDto` with HTTP 201 and a `Location` header pointing to `GET /Progression/{id}`
-- Add `GET /Progression` → returns `IEnumerable<ProgressionDto>` with HTTP 200
+- Inject `ProgressionAnalysisService` via constructor injection
+- Return HTTP 200 with `ProgressionAnalysisDto`, or HTTP 400 for validation failures
 
 **Acceptance Criteria**
-- [ ] `POST /Progression` with a valid body returns HTTP 201 and a `Location` header
-- [ ] `GET /Progression` returns an empty array when no progressions exist
-- [ ] `GET /Progression` returns all created progressions after several POSTs
-- [ ] Posting a progression with more than 8 chords returns HTTP 400
-- [ ] xUnit tests cover creation, list-empty, list-populated, and validation-failure cases
-- [ ] `dotnet build` succeeds with zero warnings
-
----
-
-### ISSUE-68 — Add `GET`, `PUT`, and `DELETE /Progression/{id}` Endpoints
-
-**Affected files**
-- `server/ParametricMusic.Api/Controllers/ProgressionController.cs`
-- `server/ParametricMusic.Api/Dtos/UpdateProgressionDto.cs` *(new)*
-- `server/ParametricMusic.Tests/ProgressionControllerTests.cs`
-
-**Summary**
-
-Complete the CRUD surface for progressions by adding individual resource retrieval, full replacement, and deletion.
-
-**Requirements**
-- Add `UpdateProgressionDto` (same shape as `CreateProgressionDto`)
-- Add `GET /Progression/{id}` → returns `ProgressionDto` with HTTP 200, or HTTP 404 if not found
-- Add `PUT /Progression/{id}` → replaces the progression, updates `UpdatedAt`, returns HTTP 200 with updated `ProgressionDto`, or HTTP 404
-- Add `DELETE /Progression/{id}` → deletes the progression, returns HTTP 204, or HTTP 404
-- Use `ProblemDetails` format for all error responses (configure `builder.Services.AddProblemDetails()` in `Program.cs`)
-
-**Acceptance Criteria**
-- [ ] `GET /Progression/{id}` returns the correct progression for a known id
-- [ ] `GET /Progression/{unknown-guid}` returns HTTP 404 with a `ProblemDetails` body
-- [ ] `PUT /Progression/{id}` updates name and chord list; `UpdatedAt` changes
-- [ ] `DELETE /Progression/{id}` removes the progression; subsequent GET returns 404
-- [ ] All four endpoints return `ProblemDetails`-formatted errors (not bare strings)
-- [ ] xUnit tests cover the full happy-path round-trip: create → get → update → delete → get-404
+- [ ] `POST /Progression/analyze` with a valid `ProgressionDto` returns `ProgressionAnalysisDto` with all fields populated
+- [ ] Empty chord list returns HTTP 400
+- [ ] Progression with more than 8 chords returns HTTP 400
+- [ ] Swagger UI documents the endpoint with correct request and response schemas
+- [ ] xUnit integration test covers the happy path and two 400 paths
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
@@ -388,101 +483,140 @@ MIDI export is the most tangible output of this tool. A user should be able to t
 
 ---
 
-### ISSUE-69 — Implement Standard MIDI File Writer
+### ISSUE-73 — Add `MidiExportOptionsDto`
 
 **Affected files**
-- `server/ParametricMusic.Api/Midi/MidiFileWriter.cs` *(new)*
-- `server/ParametricMusic.Api/Midi/MidiConstants.cs` *(new)*
-- `server/ParametricMusic.Tests/MidiFileWriterTests.cs` *(new)*
+- `server/ParametricMusic.Api/Dtos/MidiExportOptionsDto.cs` *(new)*
+- `server/ParametricMusic.Api/Dtos/MidiExportRequestDto.cs` *(new)*
 
 **Summary**
 
-Write a minimal Standard MIDI File (SMF) serialiser in C# that can produce a Format 0, single-track MIDI file from a list of timed note events. No third-party MIDI library is required — the SMF specification is well-defined and the byte layout for a simple chord sequence is straightforward.
+Define the export options DTO so the frontend has per-export control over tempo, chord duration, and voicing.
 
 **Requirements**
-- Implement `MidiConstants` with common values:
+- Add `VoicingMode` enum:
   ```csharp
-  public static class MidiConstants
+  public enum VoicingMode { ClosedPosition, OpenPosition }
+  ```
+- Add `MidiExportOptionsDto`:
+  ```csharp
+  public class MidiExportOptionsDto
   {
-      public const int DefaultTempo = 500_000;   // microseconds per beat (120 BPM)
-      public const int TicksPerQuarterNote = 480;
-      public const byte NoteOn = 0x90;
-      public const byte NoteOff = 0x80;
-      public const byte ProgramChange = 0xC0;
-      public const byte AcousticGrandPiano = 0x00;
+      [Range(40, 240)] public int Bpm { get; set; } = 120;
+      [Range(1, 8)]    public int BeatsPerChord { get; set; } = 4;
+      public VoicingMode Voicing { get; set; } = VoicingMode.ClosedPosition;
   }
   ```
-- Implement `MidiFileWriter.BuildChordSequence(IEnumerable<ChordRecord> chords, int bpm)` that:
-  - Converts each `ChordRecord` to MIDI pitch values (octave 4, i.e., middle C = 60)
-  - Writes each chord as simultaneous note-on events followed by note-off events after one beat
-  - Uses a standard MIDI file header chunk (`MThd`) and single track chunk (`MTrk`)
-  - Returns a `byte[]` representing a valid Format 0 SMF file
-- The byte layout must follow the SMF specification: variable-length delta times, correct chunk sizes, big-endian integer encoding
-- Keep `MidiFileWriter` as a static utility class (no DI needed)
+- Add `MidiExportRequestDto`:
+  ```csharp
+  public class MidiExportRequestDto
+  {
+      [Required] public ProgressionDto Progression { get; set; } = new();
+      public MidiExportOptionsDto Options { get; set; } = new();
+      [MaxLength(50)] public string FileName { get; set; } = "progression";
+  }
+  ```
 
 **Acceptance Criteria**
-- [ ] The returned byte array begins with the bytes `4D 54 68 64` (the `MThd` magic bytes)
-- [ ] The file can be loaded by a standard MIDI parser (verify programmatically with byte-level assertions in tests)
-- [ ] A single chord produces at least one note-on and one note-off event per note
-- [ ] Multiple chords produce events in sequence with correct delta times
-- [ ] xUnit tests assert magic bytes, chunk sizes, and that note count matches `chords.Count × notesPerChord`
+- [ ] `MidiExportOptionsDto` deserialises with defaults when fields are omitted from the JSON body
+- [ ] BPM out of the 40–240 range fails validation
+- [ ] OpenAPI schema is visible in Swagger UI
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
 
-### ISSUE-70 — Add `POST /Export/midi` Endpoint
+### ISSUE-74 — Implement `MidiExportService`
+
+**Affected files**
+- `server/ParametricMusic.Api/Services/MidiExportService.cs` *(new)*
+- `server/ParametricMusic.Api/Midi/MidiFileBuilder.cs` *(new)*
+- `server/ParametricMusic.Api/Midi/MidiConstants.cs` *(new)*
+- `server/ParametricMusic.Api/Program.cs`
+- `server/ParametricMusic.Tests/MidiExportServiceTests.cs` *(new)*
+
+**Summary**
+
+`MidiExportService` converts a `ProgressionDto` and options into a valid Standard MIDI File. It uses pitch classes from `ChordConstructionService` and the hand-rolled `MidiFileBuilder` for the SMF byte layout.
+
+**Requirements**
+- Add `MidiConstants`:
+  ```csharp
+  public static class MidiConstants
+  {
+      public const int TicksPerQuarterNote = 480;
+      public const byte NoteOn = 0x90;
+      public const byte NoteOff = 0x80;
+      public const byte AcousticGrandPiano = 0x00;
+      public const int MiddleCMidi = 60; // pitch class 0 in octave 4
+  }
+  ```
+- Implement `MidiFileBuilder` as an internal helper that:
+  - Writes the SMF header chunk (`MThd`): format 0, 1 track, ticks-per-quarter-note
+  - Writes a single track chunk (`MTrk`) with:
+    - Tempo meta-event (`0xFF 0x51 0x03`) derived from BPM
+    - For each chord: simultaneous note-on events (delta = 0 after the first), then note-off events after `BeatsPerChord × TicksPerQuarterNote` ticks
+    - End-of-track meta-event (`0xFF 0x2F 0x00`)
+  - All multi-byte integers big-endian; delta times as variable-length quantities (VLQ)
+  - Closed position: all notes in octave 4 (MIDI 60–71); open position: alternate octaves per voice
+- Implement `MidiExportService.Export(ProgressionDto progression, MidiExportOptionsDto options)` returning `byte[]`
+- Register: `builder.Services.AddScoped<MidiExportService>()`
+
+**Acceptance Criteria**
+- [ ] Returned bytes begin with `4D 54 68 64` (the `MThd` magic bytes)
+- [ ] A single-chord export produces at least one note-on and one note-off per chord tone
+- [ ] A two-chord export produces events for both chords in sequence with non-zero delta time between them
+- [ ] xUnit tests assert magic bytes, track chunk header, note-on count (= total tones across all chords), and correct BPM encoding
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+### ISSUE-75 — Add `POST /Export/midi` Endpoint
 
 **Affected files**
 - `server/ParametricMusic.Api/Controllers/ExportController.cs` *(new)*
-- `server/ParametricMusic.Api/Dtos/ExportMidiRequestDto.cs` *(new)*
 - `server/ParametricMusic.Tests/ExportControllerTests.cs` *(new)*
 
 **Summary**
 
-Expose the MIDI file writer via an HTTP endpoint. The client sends a chord list and optional BPM; the server returns a `.mid` file as a binary response.
+Expose `MidiExportService` via an HTTP endpoint that returns a binary `.mid` file for browser download.
 
 **Requirements**
-- Add `ExportMidiRequestDto`:
-  ```csharp
-  public class ExportMidiRequestDto
-  {
-      [Required, MinLength(1), MaxLength(8)]
-      public List<ChordRecord> Chords { get; set; } = [];
-      [Range(40, 240)] public int Bpm { get; set; } = 120;
-      [MaxLength(50)] public string FileName { get; set; } = "progression";
-  }
+- Add `[HttpPost("midi")]` action on `ExportController`:
   ```
-- Add `[HttpPost("midi")]` on `ExportController`:
-  - Calls `MidiFileWriter.BuildChordSequence(request.Chords, request.Bpm)`
-  - Returns `File(bytes, "audio/midi", $"{sanitizedFileName}.mid")` with HTTP 200
-  - Sanitizes `FileName` to remove path separators and restrict to alphanumeric, hyphens, and underscores only
+  POST /Export/midi
+  Body: MidiExportRequestDto
+  Response: application/octet-stream (.mid file)
+  ```
+- Inject `MidiExportService` via constructor injection
+- Sanitize `FileName`: strip path separators; restrict to alphanumeric characters, hyphens, and underscores
+- Return `File(bytes, "application/octet-stream", $"{sanitizedFileName}.mid")` with HTTP 200
 
 **Acceptance Criteria**
-- [ ] `POST /Export/midi` with a valid body returns HTTP 200 with `Content-Type: audio/midi`
-- [ ] The `Content-Disposition` header contains `attachment; filename="<name>.mid"`
-- [ ] BPM out of range (e.g., 300) returns HTTP 400
-- [ ] Empty chord list returns HTTP 400
-- [ ] File name with path traversal characters (e.g., `../../evil`) is sanitised before use
-- [ ] xUnit tests verify the response content type, disposition header, and that the byte array begins with `4D 54 68 64`
+- [ ] `POST /Export/midi` with a valid body returns HTTP 200 with `Content-Type: application/octet-stream`
+- [ ] `Content-Disposition` header contains `attachment; filename="<name>.mid"`
+- [ ] BPM out of range returns HTTP 400
+- [ ] Empty progression returns HTTP 400
+- [ ] `FileName` containing path traversal characters (e.g., `../../evil`) is sanitized before use
+- [ ] xUnit tests verify content type, disposition header, and that the response bytes begin with `4D 54 68 64`
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
 
-## Milestone 5 — Backend Hardening
+## Milestone 5 — Hardening & Documentation
 
-### ISSUE-71 — Standardise Error Responses with ProblemDetails
+### ISSUE-76 — Add RFC 9457 ProblemDetails to All Error Paths
 
 **Affected files**
 - `server/ParametricMusic.Api/Program.cs`
-- All existing controllers
+- All controllers
 
 **Summary**
 
-Currently, validation errors from `ModelState` return a default ASP.NET error shape. Enabling `AddProblemDetails` and `InvalidModelStateResponseFactory` ensures every error response follows RFC 9457 (`application/problem+json`), making error handling on the frontend consistent and predictable.
+All error responses should follow RFC 9457 (`application/problem+json`) for predictable client-side error handling.
 
 **Requirements**
 - Add `builder.Services.AddProblemDetails()` to `Program.cs`
-- Configure `builder.Services.Configure<ApiBehaviorOptions>` to use the built-in `ProblemDetails` factory for `ModelState` errors:
+- Configure `ApiBehaviorOptions.InvalidModelStateResponseFactory` to return `ProblemDetails`-formatted 400 responses:
   ```csharp
   options.InvalidModelStateResponseFactory = context =>
   {
@@ -496,46 +630,152 @@ Currently, validation errors from `ModelState` return a default ASP.NET error sh
       };
   };
   ```
-- Add `app.UseExceptionHandler()` middleware for unhandled exceptions
-- Update `HealthController` to include the API version in its response:
-  ```csharp
-  Ok(new { status = "healthy", timestamp = DateTime.UtcNow, version = "3.0.0" })
-  ```
+- Add `app.UseExceptionHandler()` for unhandled exceptions returning HTTP 500 in `ProblemDetails` format
 
 **Acceptance Criteria**
-- [ ] Sending an invalid `scaleType` to `POST /Scale/from-root` returns a `application/problem+json` response with a `type` and `errors` dictionary
-- [ ] Unhandled exceptions return HTTP 500 with a `ProblemDetails` body (not a raw stack trace)
-- [ ] `GET /Health` returns a `version` field
-- [ ] xUnit tests for existing controllers are updated to assert `application/problem+json` content type on 400 responses
+- [ ] Invalid `quality` value on any chord endpoint returns `application/problem+json` with an `errors` dictionary
+- [ ] Unhandled exceptions return HTTP 500 with a `ProblemDetails` body (no raw stack trace)
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
 
-### ISSUE-72 — Expand xUnit Test Coverage and Add Integration Tests
+### ISSUE-77 — Add Integration Tests Using `WebApplicationFactory`
 
 **Affected files**
-- `server/ParametricMusic.Tests/` — all test files
+- `server/ParametricMusic.Tests/` — new `IntegrationTests/` sub-folder
+- `server/ParametricMusic.Tests/ParametricMusic.Tests.csproj`
 
 **Summary**
 
-Unit tests exist for `ScaleGenerator` but there is no HTTP-level integration testing. Adding `WebApplicationFactory<Program>`-based integration tests verifies that the full middleware pipeline — routing, model binding, validation, and serialisation — works end-to-end, catching regressions that unit tests miss.
+Unit tests exist for `ScaleGenerator` but there is no HTTP-level integration testing. `WebApplicationFactory<Program>`-based tests verify the full middleware pipeline end-to-end.
 
 **Requirements**
-- Add `Microsoft.AspNetCore.Mvc.Testing` package to `ParametricMusic.Tests.csproj`
-- Add a `IntegrationTests/` sub-folder in the test project
-- Write at least one `WebApplicationFactory` integration test class per controller:
-  - `ScaleControllerIntegrationTests` — covers all seven scale modes and a 400 path
-  - `ChordControllerIntegrationTests` — covers `/notes`, `/identify`, `/voice-lead` happy paths and one 400 path each
-  - `ProgressionControllerIntegrationTests` — covers full CRUD round-trip
-  - `ExportControllerIntegrationTests` — verifies MIDI bytes and 400 paths
-- Each integration test class uses `IClassFixture<WebApplicationFactory<Program>>` and a shared `HttpClient`
-- Unit tests in `ScaleGeneratorTests.cs` should be moved into a `UnitTests/` sub-folder for clarity; no test logic changes required — only file relocation
+- Add `Microsoft.AspNetCore.Mvc.Testing` package reference to `ParametricMusic.Tests.csproj`
+- Write one integration test class per new controller, each using `IClassFixture<WebApplicationFactory<Program>>`:
+  - `ChordControllerIntegrationTests` — happy path for `/from-root` + a 400 path
+  - `VoiceLeadingControllerIntegrationTests` — happy path for `/between` + a 400 path
+  - `ProgressionControllerIntegrationTests` — happy path for `/analyze` + two 400 paths
+  - `ExportControllerIntegrationTests` — verifies MIDI magic bytes, content type, and a 400 path
 
 **Acceptance Criteria**
 - [ ] `dotnet test` passes with zero failures
-- [ ] Integration tests exercise the real HTTP pipeline (no mocks for controllers themselves)
-- [ ] Test project builds and runs without requiring a live backend instance (use `WebApplicationFactory`)
-- [ ] Each controller has at least one integration test for its primary happy path and at least one for a validation-failure path
+- [ ] No live server required (all tests use `WebApplicationFactory`)
+- [ ] Each controller has at least one happy-path and one 400-path integration test
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+### ISSUE-78 — Add XML Comments and Swagger Annotations
+
+**Affected files**
+- All new controllers and service classes
+
+**Summary**
+
+Improve OpenAPI documentation so that Swagger UI is useful as a standalone API reference, not just a schema viewer.
+
+**Requirements**
+- Add `/// <summary>` XML doc comments to every public controller action and every public service method
+- Add `[ProducesResponseType]` attributes on all controller actions covering at minimum HTTP 200 and HTTP 400 paths
+- Enable XML documentation generation in `ParametricMusic.Api.csproj`:
+  ```xml
+  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  <NoWarn>$(NoWarn);1591</NoWarn>
+  ```
+- Configure Swashbuckle to include the XML file:
+  ```csharp
+  builder.Services.AddSwaggerGen(c =>
+  {
+      var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+      c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFile));
+  });
+  ```
+
+**Acceptance Criteria**
+- [ ] Swagger UI shows description text for every new endpoint
+- [ ] All 200 and 400 response schemas are documented in Swagger UI
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+### ISSUE-79 — Regenerate Frontend API Client
+
+**Affected files**
+- `client/src/api/generated/index.ts`
+
+**Summary**
+
+After all new endpoints are in place, regenerate the frontend's auto-generated API client so the TypeScript types stay in sync with the new OpenAPI spec.
+
+**Requirements**
+- Start the backend (`dotnet run` from `server/ParametricMusic.Api`)
+- Run `npm run generate:api` from the `client/` directory
+- Commit the updated `client/src/api/generated/index.ts`
+- Verify that `npm run build` in the `client/` directory succeeds after regeneration
+
+**Acceptance Criteria**
+- [ ] `client/src/api/generated/index.ts` reflects all new endpoints and DTOs
+- [ ] `npm run build` passes with zero TypeScript errors
+- [ ] `npm run lint` passes with `--max-warnings=0`
+
+---
+
+## Optional Stretch Issues
+
+These issues are lower priority and can be addressed if time allows after Milestone 5 is complete.
+
+---
+
+### ISSUE-80 — Add `POST /Chord/identify` Endpoint
+
+**Summary**
+
+Given an unordered set of pitch-class indices (e.g., `[0, 4, 7]`), return the best-matching chord name, root, and quality. Useful when the user selects arbitrary notes on the chromatic circle.
+
+**Requirements**
+- Accept `int[]` of pitch classes (3–4 values)
+- Test every root (0–11) and `ChordQuality` against the input; return the highest-overlap match
+- Return a `ChordDto` extended with a `bool IsExactMatch` field, or HTTP 422 when identification is impossible
+
+**Acceptance Criteria**
+- [ ] `[0, 4, 7]` → C Major, `IsExactMatch: true`
+- [ ] `[9, 0, 4]` → A Minor (inversion handled)
+- [ ] Fewer than 2 distinct notes → HTTP 422
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+### ISSUE-81 — Add `GET /Scale/types` Endpoint
+
+**Summary**
+
+Return metadata for all scale types currently defined in `ScaleType`, so the frontend scale selector can be populated dynamically rather than hard-coding label strings.
+
+**Requirements**
+- Return `IEnumerable<ScaleTypeInfo>` with `Value`, `DisplayName`, and `Description` for each `ScaleType` member
+- Derive values from the existing `[Display]` attributes on `ScaleType`
+
+**Acceptance Criteria**
+- [ ] All current `ScaleType` members are returned with non-empty `DisplayName` and `Description`
+- [ ] `dotnet build` succeeds with zero warnings
+
+---
+
+### ISSUE-82 — Add `POST /Transform/rotate` Endpoint
+
+**Summary**
+
+Rotate a chord's pitch classes by N semitones (chromatic transposition), returning a new `ChordDto`. This is the first step toward a transform layer for generative workflows.
+
+**Requirements**
+- Accept a root + quality and an integer `semitones` parameter (range: -11 to 11)
+- Return a `ChordDto` for the transposed chord using `ChordConstructionService`
+- Out-of-range `semitones` returns HTTP 400
+
+**Acceptance Criteria**
+- [ ] Rotating C Major by 7 semitones returns G Major
+- [ ] Rotating A Minor by -2 semitones returns G Minor
+- [ ] `semitones` outside -11 to 11 returns HTTP 400
 - [ ] `dotnet build` succeeds with zero warnings
 
 ---
@@ -543,22 +783,38 @@ Unit tests exist for `ScaleGenerator` but there is no HTTP-level integration tes
 ## Issue Dependency Map
 
 ```
-ISSUE-61 (Scale modes)
-  └── ISSUE-62 (Scale types list)   ← uses same ScaleType enum
+ISSUE-61 (Interval enum)
+  └── ISSUE-64 (ChordConstructionService) ← uses Interval for all distances
 
-ISSUE-63 (Chord notes)
-  ├── ISSUE-64 (Chord identify)     ← reuses ChordGenerator interval tables
-  └── ISSUE-65 (Voice lead)         ← reuses ChordGenerator.BuildChord
+ISSUE-62 (ChordQuality enum)
+  └── ISSUE-63 (ChordDto)                 ← Quality field
+  └── ISSUE-64 (ChordConstructionService) ← interval lookup keyed by ChordQuality
+  └── ISSUE-65 (POST /Chord/from-root)    ← request body
 
-ISSUE-66 (ProgressionRecord + repo)
-  ├── ISSUE-67 (POST/GET /Progression) ← depends on repository interface
-  └── ISSUE-68 (GET/PUT/DELETE /Progression/{id}) ← depends on ISSUE-67
+ISSUE-63 (ChordDto)
+  └── ISSUE-65 (POST /Chord/from-root)    ← response type
+  └── ISSUE-66 (VoiceLeadingDto)          ← Paths reference chord tones
+  └── ISSUE-70 (ProgressionAnalysisDto)   ← SuggestedNextChords type
 
-ISSUE-69 (MidiFileWriter)
-  └── ISSUE-70 (POST /Export/midi)  ← wraps MidiFileWriter in HTTP endpoint
+ISSUE-64 (ChordConstructionService)
+  └── ISSUE-67 (VoiceLeadingService)      ← builds both chords internally
+  └── ISSUE-71 (ProgressionAnalysisService) ← builds each chord
 
-ISSUE-71 (ProblemDetails)
-  └── ISSUE-72 (Integration tests)  ← tests assert application/problem+json
+ISSUE-66 (VoiceLeadingDto) + ISSUE-67 (VoiceLeadingService)
+  └── ISSUE-68 (POST /VoiceLeading/between)
+
+ISSUE-69 (ProgressionDto) + ISSUE-70 (ProgressionAnalysisDto) + ISSUE-71 (ProgressionAnalysisService)
+  └── ISSUE-72 (POST /Progression/analyze)
+
+ISSUE-73 (MidiExportOptionsDto) + ISSUE-74 (MidiExportService)
+  └── ISSUE-75 (POST /Export/midi)
+
+ISSUE-76 (ProblemDetails)
+  └── ISSUE-77 (Integration tests) ← tests assert application/problem+json on 400 paths
+
+ISSUE-75, 72, 68, 65 (all new endpoints complete)
+  └── ISSUE-78 (Swagger XML comments)
+  └── ISSUE-79 (Regenerate API client)
 ```
 
 ---
@@ -567,25 +823,37 @@ ISSUE-71 (ProblemDetails)
 
 | File | Issues |
 |------|--------|
-| `server/ParametricMusic.Api/ScaleGenerator.cs` | 61 |
-| `server/ParametricMusic.Api/ScaleType.cs` | 61 |
-| `server/ParametricMusic.Api/Controllers/ScaleController.cs` | 61, 62 |
-| `server/ParametricMusic.Api/ScaleTypeInfo.cs` | 62 |
-| `server/ParametricMusic.Api/ChordType.cs` | 63, 64, 65 |
-| `server/ParametricMusic.Api/Controllers/ChordController.cs` | 63, 64, 65 |
-| `server/ParametricMusic.Api/Models/ProgressionRecord.cs` | 66, 67, 68 |
-| `server/ParametricMusic.Api/Repositories/IProgressionRepository.cs` | 66 |
-| `server/ParametricMusic.Api/Repositories/InMemoryProgressionRepository.cs` | 66 |
-| `server/ParametricMusic.Api/Controllers/ProgressionController.cs` | 67, 68 |
-| `server/ParametricMusic.Api/Midi/MidiFileWriter.cs` | 69, 70 |
-| `server/ParametricMusic.Api/Controllers/ExportController.cs` | 70 |
-| `server/ParametricMusic.Api/Program.cs` | 66, 71 |
-| `server/ParametricMusic.Api/Controllers/HealthController.cs` | 71 |
-| `server/ParametricMusic.Tests/ScaleGeneratorTests.cs` | 61, 72 |
-| `server/ParametricMusic.Tests/ChordControllerTests.cs` | 63, 64, 65, 72 |
-| `server/ParametricMusic.Tests/ProgressionControllerTests.cs` | 67, 68, 72 |
-| `server/ParametricMusic.Tests/MidiFileWriterTests.cs` | 69, 72 |
-| `server/ParametricMusic.Tests/ExportControllerTests.cs` | 70, 72 |
+| `server/ParametricMusic.Api/Interval.cs` | 61 |
+| `server/ParametricMusic.Api/ChordQuality.cs` | 62 |
+| `server/ParametricMusic.Api/Dtos/ChordDto.cs` | 63 |
+| `server/ParametricMusic.Api/Dtos/ChordToneDto.cs` | 63 |
+| `server/ParametricMusic.Api/Services/ChordConstructionService.cs` | 64 |
+| `server/ParametricMusic.Api/Controllers/ChordController.cs` | 65, 80 |
+| `server/ParametricMusic.Api/Dtos/VoiceLeadingDto.cs` | 66 |
+| `server/ParametricMusic.Api/Dtos/VoicePathDto.cs` | 66 |
+| `server/ParametricMusic.Api/Services/VoiceLeadingService.cs` | 67 |
+| `server/ParametricMusic.Api/Controllers/VoiceLeadingController.cs` | 68 |
+| `server/ParametricMusic.Api/Dtos/ProgressionDto.cs` | 69, 72 |
+| `server/ParametricMusic.Api/Dtos/ProgressionAnalysisDto.cs` | 70 |
+| `server/ParametricMusic.Api/Services/ProgressionAnalysisService.cs` | 71 |
+| `server/ParametricMusic.Api/Controllers/ProgressionController.cs` | 72 |
+| `server/ParametricMusic.Api/Dtos/MidiExportOptionsDto.cs` | 73 |
+| `server/ParametricMusic.Api/Dtos/MidiExportRequestDto.cs` | 73 |
+| `server/ParametricMusic.Api/Midi/MidiConstants.cs` | 74 |
+| `server/ParametricMusic.Api/Midi/MidiFileBuilder.cs` | 74 |
+| `server/ParametricMusic.Api/Services/MidiExportService.cs` | 74 |
+| `server/ParametricMusic.Api/Controllers/ExportController.cs` | 75 |
+| `server/ParametricMusic.Api/Program.cs` | 64, 67, 71, 74, 76 |
+| `server/ParametricMusic.Tests/IntervalTests.cs` | 61 |
+| `server/ParametricMusic.Tests/ChordConstructionServiceTests.cs` | 64 |
+| `server/ParametricMusic.Tests/ChordControllerTests.cs` | 65 |
+| `server/ParametricMusic.Tests/VoiceLeadingServiceTests.cs` | 67 |
+| `server/ParametricMusic.Tests/VoiceLeadingControllerTests.cs` | 68 |
+| `server/ParametricMusic.Tests/ProgressionAnalysisServiceTests.cs` | 71 |
+| `server/ParametricMusic.Tests/ProgressionControllerTests.cs` | 72 |
+| `server/ParametricMusic.Tests/MidiExportServiceTests.cs` | 74 |
+| `server/ParametricMusic.Tests/ExportControllerTests.cs` | 75 |
+| `client/src/api/generated/index.ts` | 79 |
 
 ---
 
@@ -593,14 +861,10 @@ ISSUE-71 (ProblemDetails)
 
 | Method | Path | Description | Issue |
 |--------|------|-------------|-------|
-| `POST` | `/Scale/from-root` | *(updated)* All 7 diatonic modes | 61 |
-| `GET` | `/Scale/types` | List all scale type metadata | 62 |
-| `POST` | `/Chord/notes` | Return chord tones with roles | 63 |
-| `POST` | `/Chord/identify` | Identify chord from note indices | 64 |
-| `POST` | `/Chord/voice-lead` | Compute minimal voice-leading paths | 65 |
-| `GET` | `/Progression` | List all saved progressions | 67 |
-| `POST` | `/Progression` | Save a new progression | 67 |
-| `GET` | `/Progression/{id}` | Retrieve a progression by id | 68 |
-| `PUT` | `/Progression/{id}` | Replace a progression | 68 |
-| `DELETE` | `/Progression/{id}` | Delete a progression | 68 |
-| `POST` | `/Export/midi` | Export progression as `.mid` file | 70 |
+| `POST` | `/Chord/from-root` | Construct chord from root + quality | 65 |
+| `POST` | `/VoiceLeading/between` | Minimal voice-leading analysis between two chords | 68 |
+| `POST` | `/Progression/analyze` | Full analysis: continuity, centroid path, tension, suggestions | 72 |
+| `POST` | `/Export/midi` | Export progression as `.mid` file | 75 |
+| `POST` | `/Chord/identify` | *(stretch)* Identify chord from pitch-class set | 80 |
+| `GET` | `/Scale/types` | *(stretch)* List scale type metadata | 81 |
+| `POST` | `/Transform/rotate` | *(stretch)* Chromatic transposition of a chord | 82 |
