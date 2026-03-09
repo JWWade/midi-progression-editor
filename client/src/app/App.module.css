@@ -11,7 +11,7 @@
 /* ── Primary flow container: three-column grid (Circle | Panel | Sidebar) ──── */
 .primaryFlowContainer {
   display: grid;
-  grid-template-columns: minmax(420px, 3fr) minmax(220px, 1fr) minmax(280px, 420px);
+  grid-template-columns: minmax(420px, 3fr) minmax(260px, 1fr) minmax(280px, 420px);
   gap: 24px;
   padding: 24px;
   min-width: 0;

@@ -34,6 +34,7 @@ import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import { CHORD_NAME_TO_DATA } from "@/features/chord/data/chordNames";
 import { ChordLabel } from "@/features/chord/components/ChordLabel";
+import { ChordSelector } from "@/features/chord/components/ChordSelector";
 import type { ScaleType } from "@/features/scale/types";
 import { calculateVoiceLeads } from "@/features/voice-leading";
 import { useChordMorphing } from "@/features/chord-animation";
@@ -101,8 +102,8 @@ export function ChromaticCircle({
   showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
 }: ChromaticCircleProps) {
-  const [selectedChordName] = useState("C");
-  const [selectedToChordName] = useState<string | null>(null);
+  const [selectedChordName, setSelectedChordName] = useState("C");
+  const [selectedToChordName, setSelectedToChordName] = useState<string | null>(null);
   const hasToChord = selectedToChordName !== null;
   // Use props for visualization toggles (received from App)
   const selectedScale = propSelectedScale;
@@ -661,6 +662,16 @@ export function ChromaticCircle({
         </svg>
       </div>
       <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
+      <div style={{ display: "flex", gap: 12, marginTop: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af" }}>
+          From
+          <ChordSelector value={selectedChordName} onChange={setSelectedChordName} aria-label="From chord" />
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af" }}>
+          To
+          <ChordSelector value={selectedToChordName ?? ""} onChange={(v) => setSelectedToChordName(v || null)} aria-label="To chord" />
+        </label>
+      </div>
     </div>
   );
 }

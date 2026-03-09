@@ -4,14 +4,15 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 24px 32px;
+  padding: 24px 20px;
   border-radius: 12px;
   /* Dynamic tint is injected via the --chord-panel-bg custom property */
   background-color: var(--chord-panel-bg, #f8f9fa);
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.10),
     0 1px 3px rgba(0, 0, 0, 0.06);
-  min-width: 200px;
+  width: 100%;
+  box-sizing: border-box;
   text-align: center;
   transition: background-color 0.35s ease;
 }
