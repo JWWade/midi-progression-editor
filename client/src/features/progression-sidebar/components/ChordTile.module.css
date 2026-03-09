@@ -6,7 +6,7 @@
   padding: 10px 12px;
   border-radius: 8px;
   border-left: 3px solid var(--accent-color);
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: var(--color-tile-bg);
   cursor: default;
   transition: background-color 0.15s ease;
   min-height: 64px;
@@ -14,7 +14,7 @@
 }
 
 .tile:hover {
-  background-color: rgba(255, 255, 255, 0.09);
+  background-color: var(--color-tile-bg-hover);
 }
 
 /* ── Thumbnail wrapper ───────────────────────────────────────────────────── */
@@ -31,7 +31,7 @@
   min-width: 0;
   font-size: 14px;
   font-weight: 600;
-  color: #e5e7eb;
+  color: var(--color-tile-name);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -63,7 +63,7 @@
   border: none;
   border-radius: 4px;
   background: transparent;
-  color: #9ca3af;
+  color: var(--color-control-btn);
   font-size: 11px;
   line-height: 1;
   cursor: pointer;
@@ -71,8 +71,8 @@
 }
 
 .controlBtn:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: #e5e7eb;
+  background-color: var(--color-control-btn-hover-bg);
+  color: var(--color-control-btn-hover);
 }
 
 .controlBtn:focus-visible {
@@ -86,12 +86,12 @@
 }
 
 .deleteBtn {
-  color: #f87171;
+  color: var(--color-delete-btn);
 }
 
 .deleteBtn:hover:not(:disabled) {
-  background-color: rgba(248, 113, 113, 0.15);
-  color: #fca5a5;
+  background-color: var(--color-delete-btn-hover-bg);
+  color: var(--color-delete-btn-hover);
 }
 
 /* ── Enter / highlight animation ─────────────────────────────────────────── */
@@ -118,37 +118,4 @@
 .tile:focus-visible {
   outline: 2px solid var(--accent-color, #4f46e5);
   outline-offset: 2px;
-}
-
-/* ── Light color scheme overrides ───────────────────────────────────────── */
-@media (prefers-color-scheme: light) {
-  .tile {
-    background-color: rgba(0, 0, 0, 0.03);
-  }
-
-  .tile:hover {
-    background-color: rgba(0, 0, 0, 0.07);
-  }
-
-  .chordName {
-    color: #111827;
-  }
-
-  .controlBtn {
-    color: #6b7280;
-  }
-
-  .controlBtn:hover:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.08);
-    color: #111827;
-  }
-
-  .deleteBtn {
-    color: #dc2626;
-  }
-
-  .deleteBtn:hover:not(:disabled) {
-    background-color: rgba(220, 38, 38, 0.1);
-    color: #b91c1c;
-  }
 }

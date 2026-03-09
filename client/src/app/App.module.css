@@ -16,7 +16,7 @@
   padding: 24px;
   min-width: 0;
   box-sizing: border-box;
-  background-color: #fafbfc;
+  background-color: var(--color-bg-page);
 }
 
 /* ── Primary flow areas with ARIA landmarks ────────────────────────────────── */
@@ -27,7 +27,7 @@
   justify-content: flex-start;
   min-width: 0;
   border-radius: 8px;
-  background-color: white;
+  background-color: var(--color-bg-surface);
   padding: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -39,7 +39,7 @@
   justify-content: flex-start;
   min-width: 0;
   border-radius: 8px;
-  background-color: white;
+  background-color: var(--color-bg-surface);
   padding: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
@@ -52,7 +52,7 @@
   justify-content: flex-start;
   min-width: 0;
   border-radius: 8px;
-  background-color: white;
+  background-color: var(--color-bg-surface);
   padding: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
