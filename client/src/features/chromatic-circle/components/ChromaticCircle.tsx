@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
 import { useChromaticCircleData } from "../hooks/useChromaticCircleData";
 import { PITCH_CLASSES, getDiatonicIndices } from "../utils";
 import { getCircleColor } from "../utils/circleColors";
@@ -267,12 +267,14 @@ export function ChromaticCircle({
             ))
           )}
           {(Object.keys(ChordQualityColors) as ChordType[]).flatMap((quality) =>
-            (["triad", "seventh", "extended"] as ChordComplexity[]).map((complexity) =>
-              createRadialGradientDef(
-                chordPolygonGradientId(quality, complexity),
-                { ...ChordQualityColors[quality], base: getChordColor(quality, complexity) },
-              )
-            )
+            (["triad", "seventh", "extended"] as ChordComplexity[]).map((complexity) => (
+              <Fragment key={`polygon-${quality}-${complexity}`}>
+                {createRadialGradientDef(
+                  chordPolygonGradientId(quality, complexity),
+                  { ...ChordQualityColors[quality], base: getChordColor(quality, complexity) },
+                )}
+              </Fragment>
+            ))
           )}
         </defs>
 
