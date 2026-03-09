@@ -670,7 +670,7 @@ export function ChromaticCircle({
         })}
         </svg>
       </div>
-      <ToneInfoPanel selectedTone={selectedTone} />
+      <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
       {isLoading && <p style={{ marginTop: "1rem" }}>Loading scale notes…</p>}
       {error && <p style={{ marginTop: "1rem", color: "#888" }}>Scale notes unavailable.</p>}
       {!isLoading && !error && scaleNotes.length > 0 && (

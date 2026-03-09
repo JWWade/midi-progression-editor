@@ -2,26 +2,45 @@ import type { ToneInfo } from "../types/tone-info";
 
 interface ToneInfoPanelProps {
   selectedTone: ToneInfo | null;
+  onClose?: () => void;
 }
 
 const PANEL_STYLE: React.CSSProperties = {
-  position: "absolute",
-  right: 20,
-  top: 100,
-  width: 220,
-  padding: "16px",
+  marginTop: "12px",
+  width: "100%",
+  maxWidth: "320px",
+  padding: "14px 16px",
   backgroundColor: "#F3F4F6",
   borderRadius: 8,
-  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
   border: "1px solid #E5E7EB",
   fontFamily: "system-ui, sans-serif",
+  boxSizing: "border-box",
+};
+
+const HEADER_STYLE: React.CSSProperties = {
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  marginBottom: "6px",
 };
 
 const TITLE_STYLE: React.CSSProperties = {
-  margin: "0 0 8px",
+  margin: "0",
   fontSize: "15px",
   fontWeight: "bold",
   color: "#111827",
+};
+
+const CLOSE_BUTTON_STYLE: React.CSSProperties = {
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  color: "#9CA3AF",
+  fontSize: "20px",
+  lineHeight: "1",
+  padding: "0 0 0 8px",
+  flexShrink: 0,
 };
 
 const LABEL_STYLE: React.CSSProperties = {
@@ -39,13 +58,6 @@ const VALUE_STYLE: React.CSSProperties = {
   fontWeight: "500",
 };
 
-const PLACEHOLDER_STYLE: React.CSSProperties = {
-  fontSize: "13px",
-  color: "#9CA3AF",
-  margin: "0",
-  fontStyle: "italic",
-};
-
 const CHORD_TAG_STYLE: React.CSSProperties = {
   display: "inline-block",
   fontSize: "11px",
@@ -57,27 +69,34 @@ const CHORD_TAG_STYLE: React.CSSProperties = {
   fontWeight: "600",
 };
 
-export function ToneInfoPanel({ selectedTone }: ToneInfoPanelProps) {
+export function ToneInfoPanel({ selectedTone, onClose }: ToneInfoPanelProps) {
+  if (selectedTone === null) return null;
+
   return (
     <div style={PANEL_STYLE} aria-label="Tone information panel" aria-live="polite">
-      {selectedTone === null ? (
-        <p style={PLACEHOLDER_STYLE}>Click a chord vertex to inspect its tone.</p>
-      ) : (
-        <>
-          <h3 style={TITLE_STYLE}>{selectedTone.note.name}</h3>
-          <span style={CHORD_TAG_STYLE}>{selectedTone.chordLabel}</span>
-          <p style={LABEL_STYLE}>Role</p>
-          <p style={VALUE_STYLE}>{selectedTone.role}</p>
-          <p style={LABEL_STYLE}>Interval from root</p>
-          <p style={VALUE_STYLE}>
-            {selectedTone.interval === 0
-              ? "0 semitones (unison)"
-              : `+${selectedTone.interval} semitones`}
-          </p>
-          <p style={LABEL_STYLE}>Frequency</p>
-          <p style={VALUE_STYLE}>{selectedTone.frequency.toFixed(2)} Hz</p>
-        </>
-      )}
+      <div style={HEADER_STYLE}>
+        <h3 style={TITLE_STYLE}>{selectedTone.note.name}</h3>
+        {onClose && (
+          <button
+            style={CLOSE_BUTTON_STYLE}
+            onClick={onClose}
+            aria-label="Close tone info panel"
+          >
+            ×
+          </button>
+        )}
+      </div>
+      <span style={CHORD_TAG_STYLE}>{selectedTone.chordLabel}</span>
+      <p style={LABEL_STYLE}>Role</p>
+      <p style={VALUE_STYLE}>{selectedTone.role}</p>
+      <p style={LABEL_STYLE}>Interval from root</p>
+      <p style={VALUE_STYLE}>
+        {selectedTone.interval === 0
+          ? "0 semitones (unison)"
+          : `+${selectedTone.interval} semitones`}
+      </p>
+      <p style={LABEL_STYLE}>Frequency</p>
+      <p style={VALUE_STYLE}>{selectedTone.frequency.toFixed(2)} Hz</p>
     </div>
   );
 }
