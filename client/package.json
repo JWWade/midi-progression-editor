@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings=0",
     "preview": "vite preview",
-    "generate:api": "echo 'Generating types and client from OpenAPI spec (http://localhost:5110/swagger/v1/swagger.json)...' && openapi-typescript-fetch http://localhost:5110/swagger/v1/swagger.json --output src/api/generated/index.ts && echo 'API client generated successfully'"
+    "generate:api": "echo 'Generating types and client from OpenAPI spec (http://localhost:5110/swagger/v1/swagger.json)...' && openapi-typescript http://localhost:5110/swagger/v1/swagger.json --output src/api/generated/index.ts && echo 'API client generated successfully'"
   },
   "dependencies": {
     "react": "^19.2.0",
