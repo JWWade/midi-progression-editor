@@ -691,7 +691,7 @@ export function ChromaticCircle({
                 dominantBaseline="middle"
                 fontFamily={NOTE_FONT_FAMILY}
               >
-                F
+                ●
               </text>
             </g>
           );
@@ -735,7 +735,7 @@ export function ChromaticCircle({
                 dominantBaseline="middle"
                 fontFamily={NOTE_FONT_FAMILY}
               >
-                T
+                ○
               </text>
             </g>
           );
