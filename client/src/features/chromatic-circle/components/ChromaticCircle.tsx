@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
-import { useChromaticCircleData } from "../hooks/useChromaticCircleData";
 import { PITCH_CLASSES, getDiatonicIndices } from "../utils";
 import { getCircleColor } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
@@ -62,8 +61,6 @@ import {
 } from "@/features/color-language/utils/svgGradient";
 import type { Chord } from "@/features/current-chord";
 
-const PRIMARY_COLOR = "#4F46E5";
-const TO_CHORD_COLOR = "#059669";
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
 
@@ -83,13 +80,6 @@ function computeLabelPoint(
     y: cy - LABEL_DISTANCE * Math.cos(angle),
   };
 }
-
-const CHORD_SUMMARY_STYLE: React.CSSProperties = {
-  fontSize: "13px",
-  color: "#374151",
-  marginTop: "4px",
-  textAlign: "center",
-};
 
 interface ChromaticCircleProps {
   onCurrentChordChange?: (chord: Chord) => void;
@@ -126,8 +116,6 @@ export function ChromaticCircle({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
-  const { scaleNotes, isLoading, error } = useChromaticCircleData();
-
   const deselectTone = useCallback(() => setSelectedTone(null), []);
 
   useEffect(() => {
@@ -211,9 +199,6 @@ export function ChromaticCircle({
     CENTER,
     RING_RADIUS,
   );
-
-  const fromNoteNames = chordNotes.map((n) => n.name).join(", ");
-  const toNoteNames = toChordNotes.map((n) => n.name).join(", ");
 
   const circleColor = useMemo(
     () => getCircleColor(rootIndex, chordType),
@@ -673,24 +658,6 @@ export function ChromaticCircle({
         </svg>
       </div>
       <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
-      {isLoading && <p style={{ marginTop: "1rem" }}>Loading scale notes…</p>}
-      {error && <p style={{ marginTop: "1rem", color: "#888" }}>Scale notes unavailable.</p>}
-      {!isLoading && !error && scaleNotes.length > 0 && (
-        <p style={{ marginTop: "1rem" }}>
-          Scale notes: {scaleNotes.map((n) => n.name).join(", ")}
-        </p>
-      )}
-
-      {/* Chord summary */}
-      <p style={CHORD_SUMMARY_STYLE}>
-        <span style={{ color: PRIMARY_COLOR, fontWeight: "bold" }}>
-          From: {selectedChordName} ({fromNoteNames})
-        </span>
-        {" → "}
-        <span style={{ color: TO_CHORD_COLOR, fontWeight: "bold" }}>
-          To: {selectedToChordName} ({toNoteNames})
-        </span>
-      </p>
     </div>
   );
 }
