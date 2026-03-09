@@ -102,7 +102,8 @@ export function ChromaticCircle({
   showIntervals: propShowIntervals = false,
 }: ChromaticCircleProps) {
   const [selectedChordName] = useState("C");
-  const [selectedToChordName] = useState("F");
+  const [selectedToChordName] = useState<string | null>(null);
+  const hasToChord = selectedToChordName !== null;
   // Use props for visualization toggles (received from App)
   const selectedScale = propSelectedScale;
   const showVoiceLeads = propShowVoiceLeads;
@@ -134,7 +135,7 @@ export function ChromaticCircle({
   }, []);
 
   const { root: rootIndex, type: chordType } = CHORD_NAME_TO_DATA[selectedChordName];
-  const { root: toRootIndex, type: toChordType } = CHORD_NAME_TO_DATA[selectedToChordName];
+  const { root: toRootIndex, type: toChordType } = CHORD_NAME_TO_DATA[selectedToChordName ?? "C"];
 
   useEffect(() => {
     onCurrentChordChange?.({ root: rootIndex, quality: chordType });
@@ -285,7 +286,7 @@ export function ChromaticCircle({
         />
 
         {/* Voice lead lines (rendered below chord polygons) */}
-        {showVoiceLeads &&
+        {hasToChord && showVoiceLeads &&
           voiceLeads.map((lead, i) => (
             <line
               key={i}
@@ -328,17 +329,19 @@ export function ChromaticCircle({
 
         {/* To chord polygon */}
         {/* When showing extension for a seventh chord, this is the seventh polygon (background) */}
-        <polygon
-          points={toPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-          fill={toFillColor}
-          stroke={toStrokeColor}
-          strokeWidth={POLYGON_STROKE_WIDTH}
-          strokeLinejoin="round"
-          strokeDasharray={toStrokeDasharray}
-        />
+        {hasToChord && (
+          <polygon
+            points={toPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+            fill={toFillColor}
+            stroke={toStrokeColor}
+            strokeWidth={POLYGON_STROKE_WIDTH}
+            strokeLinejoin="round"
+            strokeDasharray={toStrokeDasharray}
+          />
+        )}
 
         {/* To chord triad polygon (foreground, only when extension is enabled) */}
-        {showExtension && toTriadPoints && (
+        {hasToChord && showExtension && toTriadPoints && (
           <polygon
             points={toTriadPoints.map((p) => `${p.x},${p.y}`).join(" ")}
             fill={toFillColor}
@@ -380,7 +383,7 @@ export function ChromaticCircle({
         )}
 
         {/* To chord centroid marker */}
-        {showCentroid && (
+        {hasToChord && showCentroid && (
           <g aria-label="To chord centroid">
             <line
               x1={toCentroid.x - CENTROID_CROSSHAIR_LENGTH}
@@ -429,7 +432,7 @@ export function ChromaticCircle({
           })}
 
         {/* To chord interval labels */}
-        {showIntervals &&
+        {hasToChord && showIntervals &&
           getIntervals(toChordIndices).map((semitones, i) => {
             const from = toPoints[i];
             const to = toPoints[(i + 1) % toPoints.length];
@@ -479,7 +482,7 @@ export function ChromaticCircle({
         })}
 
         {/* To chord clickable vertices */}
-        {toChordNotes.map((note, i) => {
+        {hasToChord && toChordNotes.map((note, i) => {
           const point = toPoints[i];
           const interval = toBaseIntervals[i];
           const isSelected =
@@ -521,7 +524,7 @@ export function ChromaticCircle({
         ))}
 
         {/* To chord vertex labels */}
-        {toChordNotes.map((note) => (
+        {hasToChord && toChordNotes.map((note) => (
           <ChordLabel
             key={`to-label-${note.index}`}
             point={computeLabelPoint(CENTER, CENTER, note.index)}
@@ -538,7 +541,7 @@ export function ChromaticCircle({
           // fall back to diatonic / chromatic styling.
           const noteStyle = chordIndices.includes(i)
             ? getNoteStyle(i, chordIndices, chordType, diatonicIndices, chordComplexity)
-            : toChordIndices.includes(i)
+            : (hasToChord && toChordIndices.includes(i))
             ? getNoteStyle(i, toChordIndices, toChordType, diatonicIndices, toChordComplexity)
             : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
           return (
@@ -613,7 +616,7 @@ export function ChromaticCircle({
         })}
 
         {/* To chord vertex badges (T) — inner ring */}
-        {toChordNotes.map((note, i) => {
+        {hasToChord && toChordNotes.map((note, i) => {
           const angle = (note.index / 12) * 2 * Math.PI;
           const badgeX = CENTER + (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.sin(angle);
           const badgeY = CENTER - (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.cos(angle);
