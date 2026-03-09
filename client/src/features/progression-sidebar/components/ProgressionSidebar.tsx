@@ -1,6 +1,10 @@
+import { useState, useRef, useEffect } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import { ChordTile } from "./ChordTile";
 import styles from "./ProgressionSidebar.module.css";
+
+/** Must match the `tileHighlight` animation duration in ChordTile.module.css */
+const HIGHLIGHT_ANIMATION_DURATION_MS = 300;
 
 interface ProgressionSidebarProps {
   chords: Chord[];
@@ -12,6 +16,35 @@ interface ProgressionSidebarProps {
 
 export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength }: ProgressionSidebarProps) {
   const isFull = chords.length >= maxLength;
+  const [newTileIndex, setNewTileIndex] = useState<number | null>(null);
+  const [prevLength, setPrevLength] = useState(chords.length);
+  const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Derive newTileIndex during render when the chord list changes (React-documented
+  // derived-state pattern; avoids setState-in-effect which the linter forbids).
+  if (chords.length !== prevLength) {
+    setPrevLength(chords.length);
+    if (chords.length > prevLength) {
+      setNewTileIndex(chords.length - 1);
+    } else {
+      // A chord was deleted; clear any stale highlight to avoid highlighting a
+      // different chord that now occupies the same index slot.
+      setNewTileIndex(null);
+    }
+  }
+
+  // Scroll to and focus the newly added tile
+  useEffect(() => {
+    if (newTileIndex === null) return;
+    const el = tileRefs.current[newTileIndex];
+    if (!el) return;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "nearest" });
+    const focusTimer = setTimeout(() => {
+      tileRefs.current[newTileIndex]?.focus();
+    }, HIGHLIGHT_ANIMATION_DURATION_MS);
+    return () => clearTimeout(focusTimer);
+  }, [newTileIndex]);
 
   return (
     <aside
@@ -37,13 +70,16 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
         {chords.map((chord, i) => (
           <ChordTile
             key={`${i}-${chord.root}-${chord.quality}`}
+            ref={(el) => { tileRefs.current[i] = el; }}
             chord={chord}
             index={i}
             isFirst={i === 0}
             isLast={i === chords.length - 1}
+            isNew={newTileIndex === i}
             onMoveUp={() => onMoveUp(i)}
             onMoveDown={() => onMoveDown(i)}
             onDelete={() => onDelete(i)}
+            onAnimationEnd={() => setNewTileIndex(null)}
           />
         ))}
       </div>
