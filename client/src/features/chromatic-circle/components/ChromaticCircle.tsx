@@ -17,6 +17,9 @@ import {
   VERTEX_RADIUS_SELECTED,
   VERTEX_SELECTED_FILL,
   VERTEX_SELECTED_STROKE,
+  VERTEX_BADGE_OFFSET,
+  VERTEX_BADGE_RADIUS,
+  VERTEX_BADGE_FONT_SIZE,
   CENTROID_RADIUS,
   CENTROID_CROSSHAIR_LENGTH,
   RING_STROKE_WIDTH,
@@ -645,6 +648,72 @@ export function ChromaticCircle({
                 fontWeight="bold"
               >
                 {label}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* From chord vertex badges (F) — outer ring */}
+        {chordNotes.map((note) => {
+          const angle = (note.index / 12) * 2 * Math.PI;
+          const badgeX = CENTER + (RING_RADIUS + VERTEX_BADGE_OFFSET) * Math.sin(angle);
+          const badgeY = CENTER - (RING_RADIUS + VERTEX_BADGE_OFFSET) * Math.cos(angle);
+          return (
+            <g
+              key={`from-badge-${note.index}`}
+              style={{ pointerEvents: "none" }}
+            >
+              <circle
+                cx={badgeX}
+                cy={badgeY}
+                r={VERTEX_BADGE_RADIUS}
+                fill="white"
+                opacity={0.9}
+              />
+              <text
+                x={badgeX}
+                y={badgeY}
+                fontSize={VERTEX_BADGE_FONT_SIZE}
+                fontWeight="bold"
+                fill={strokeColor}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontFamily={NOTE_FONT_FAMILY}
+              >
+                F
+              </text>
+            </g>
+          );
+        })}
+
+        {/* To chord vertex badges (T) — inner ring */}
+        {toChordNotes.map((note) => {
+          const angle = (note.index / 12) * 2 * Math.PI;
+          const badgeX = CENTER + (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.sin(angle);
+          const badgeY = CENTER - (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.cos(angle);
+          return (
+            <g
+              key={`to-badge-${note.index}`}
+              style={{ pointerEvents: "none" }}
+            >
+              <circle
+                cx={badgeX}
+                cy={badgeY}
+                r={VERTEX_BADGE_RADIUS}
+                fill="white"
+                opacity={0.9}
+              />
+              <text
+                x={badgeX}
+                y={badgeY}
+                fontSize={VERTEX_BADGE_FONT_SIZE}
+                fontWeight="bold"
+                fill={toStrokeColor}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontFamily={NOTE_FONT_FAMILY}
+              >
+                T
               </text>
             </g>
           );
