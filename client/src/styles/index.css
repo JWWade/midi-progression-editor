@@ -3,14 +3,69 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Light theme (default) ───────────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  color: #213547;
+  background-color: #ffffff;
+
+  --color-bg-page: #fafbfc;
+  --color-bg-surface: #ffffff;
+  --color-bg-header: #f9fafb;
+  --color-bg-sidebar: #f3f4f6;
+  --color-border: #e5e7eb;
+  --color-border-subtle: rgba(0, 0, 0, 0.08);
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-disabled-bg: #d1d5db;
+  --color-disabled-text: #9ca3af;
+  --color-tile-bg: rgba(0, 0, 0, 0.03);
+  --color-tile-bg-hover: rgba(0, 0, 0, 0.07);
+  --color-tile-name: #111827;
+  --color-control-btn: #6b7280;
+  --color-control-btn-hover-bg: rgba(0, 0, 0, 0.08);
+  --color-control-btn-hover: #111827;
+  --color-delete-btn: #dc2626;
+  --color-delete-btn-hover-bg: rgba(220, 38, 38, 0.1);
+  --color-delete-btn-hover: #b91c1c;
+  --color-scrollbar: rgba(0, 0, 0, 0.15);
+}
+
+/* ── Dark theme ──────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  --color-bg-page: #18181b;
+  --color-bg-surface: #1e1e2e;
+  --color-bg-header: #1a1a24;
+  --color-bg-sidebar: #1c1c24;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-text-primary: #e5e7eb;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-disabled-bg: #374151;
+  --color-disabled-text: #6b7280;
+  --color-tile-bg: rgba(255, 255, 255, 0.04);
+  --color-tile-bg-hover: rgba(255, 255, 255, 0.09);
+  --color-tile-name: #e5e7eb;
+  --color-control-btn: #9ca3af;
+  --color-control-btn-hover-bg: rgba(255, 255, 255, 0.12);
+  --color-control-btn-hover: #e5e7eb;
+  --color-delete-btn: #f87171;
+  --color-delete-btn-hover-bg: rgba(248, 113, 113, 0.15);
+  --color-delete-btn-hover: #fca5a5;
+  --color-scrollbar: rgba(255, 255, 255, 0.15);
 }
 
 #root {
@@ -51,27 +106,10 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
