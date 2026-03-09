@@ -33,10 +33,12 @@ export function CurrentChordPanel({
   const noteIndices = chord ? getChordNoteIndices(chord.root, chord.quality) : [];
   const isDisabled = chord === null || isProgressionFull;
   const [pressing, setPressing] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const handleClick = useCallback(() => {
     if (isDisabled) return;
     onAddChord();
+    setIsAnimating(true);
   }, [isDisabled, onAddChord]);
 
   const handlePointerDown = useCallback(() => {
@@ -45,6 +47,10 @@ export function CurrentChordPanel({
 
   const handlePointerUp = useCallback(() => {
     setPressing(false);
+  }, []);
+
+  const handleAnimationEnd = useCallback(() => {
+    setIsAnimating(false);
   }, []);
 
   const panelBg = chord
@@ -59,6 +65,7 @@ export function CurrentChordPanel({
     styles.addButton,
     isDisabled ? styles.addButtonDisabled : "",
     !isDisabled && pressing ? styles.addButtonActive : "",
+    !isDisabled && isAnimating ? styles.addButtonAnimating : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -113,6 +120,7 @@ export function CurrentChordPanel({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
+        onAnimationEnd={handleAnimationEnd}
         disabled={isDisabled}
         aria-disabled={isDisabled}
         aria-label={buttonAriaLabel}

@@ -49,7 +49,7 @@ export default function App() {
 
   return (
     <div className={styles.layout}>
-      <main className={styles.circleArea}>
+      <header className={styles.header}>
         <CurrentChordPanel
           chord={currentChord}
           onAddChord={handleAddChord}
@@ -58,15 +58,17 @@ export default function App() {
           progressionLength={chords.length}
           maxProgressionLength={MAX_PROGRESSION_LENGTH}
         />
+        <ProgressionSidebar
+          chords={chords}
+          onMoveUp={(i) => moveChord(i, 'up')}
+          onMoveDown={(i) => moveChord(i, 'down')}
+          onDelete={deleteChord}
+          maxLength={MAX_PROGRESSION_LENGTH}
+        />
+      </header>
+      <main className={styles.circleArea}>
         <ChromaticCircle onCurrentChordChange={handleCurrentChordChange} onKeyScaleChange={handleKeyScaleChange} />
       </main>
-      <ProgressionSidebar
-        chords={chords}
-        onMoveUp={(i) => moveChord(i, 'up')}
-        onMoveDown={(i) => moveChord(i, 'down')}
-        onDelete={deleteChord}
-        maxLength={MAX_PROGRESSION_LENGTH}
-      />
     </div>
   );
 }
