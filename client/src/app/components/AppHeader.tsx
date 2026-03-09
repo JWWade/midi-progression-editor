@@ -1,6 +1,6 @@
 import type { ScaleType } from '../../features/scale/types';
+import { SCALE_LABELS } from '../../features/scale/types';
 import styles from './AppHeader.module.css';
-import { SCALE_LABELS } from '../../features/scale/constants';
 
 interface AppHeaderProps {
   selectedScale: ScaleType;
