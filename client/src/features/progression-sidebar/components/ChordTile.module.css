@@ -94,26 +94,30 @@
   color: #fca5a5;
 }
 
-/* ── Enter animation ────────────────────────────────────────────────────── */
+/* ── Enter / highlight animation ─────────────────────────────────────────── */
 @keyframes tileHighlight {
   from {
-    box-shadow:
-      0 0 0 2px var(--accent-color),
-      0 0 16px 0 color-mix(in srgb, var(--accent-color) 45%, transparent);
+    background-color: color-mix(in srgb, var(--accent-color) 15%, transparent);
   }
   to {
-    box-shadow: none;
+    background-color: transparent;
   }
 }
 
-.entering {
-  animation: tileHighlight 600ms ease-out forwards;
+.tileHighlight {
+  animation: tileHighlight 300ms ease-out forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .entering {
+  .tileHighlight {
     animation: none;
   }
+}
+
+/* ── Keyboard focus indicator ────────────────────────────────────────────── */
+.tile:focus-visible {
+  outline: 2px solid var(--accent-color, #4f46e5);
+  outline-offset: 2px;
 }
 
 /* ── Light color scheme overrides ───────────────────────────────────────── */
