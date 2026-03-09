@@ -5,6 +5,7 @@ import { getDiatonicIndices } from '../features/chromatic-circle/utils';
 import { ProgressionSidebar } from '../features/progression-sidebar';
 import { useProgression } from '../features/progression-sidebar/hooks/useProgression';
 import { MAX_PROGRESSION_LENGTH } from '../features/progression-sidebar/constants/progressionConfig';
+import { AppHeader } from './components/AppHeader';
 import type { ScaleType } from '../features/scale/types';
 import styles from './App.module.css';
 
@@ -12,6 +13,13 @@ export default function App() {
   const [currentChord, setCurrentChord] = useState<Chord | null>(null);
   const [keyRoot, setKeyRoot] = useState<number>(0);
   const [keyScale, setKeyScale] = useState<ScaleType>("major");
+
+  // Visualization toggles and scale selector (lifted from ChromaticCircle)
+  const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
+  const [showVoiceLeads, setShowVoiceLeads] = useState(false);
+  const [showExtension, setShowExtension] = useState(false);
+  const [showCentroid, setShowCentroid] = useState(false);
+  const [showIntervals, setShowIntervals] = useState(false);
 
   const { chords, addChord, moveChord, deleteChord } = useProgression();
   // Guard ref to prevent duplicate progression entries from rapid double-clicks.
@@ -49,24 +57,67 @@ export default function App() {
 
   return (
     <div className={styles.layout}>
-      <main className={styles.circleArea}>
-        <CurrentChordPanel
-          chord={currentChord}
-          onAddChord={handleAddChord}
-          diatonicIndices={diatonicIndices}
-          isProgressionFull={isProgressionFull}
-          progressionLength={chords.length}
-          maxProgressionLength={MAX_PROGRESSION_LENGTH}
-        />
-        <ChromaticCircle onCurrentChordChange={handleCurrentChordChange} onKeyScaleChange={handleKeyScaleChange} />
-      </main>
-      <ProgressionSidebar
-        chords={chords}
-        onMoveUp={(i) => moveChord(i, 'up')}
-        onMoveDown={(i) => moveChord(i, 'down')}
-        onDelete={deleteChord}
-        maxLength={MAX_PROGRESSION_LENGTH}
+      <AppHeader
+        selectedScale={selectedScale}
+        onScaleChange={setSelectedScale}
+        showVoiceLeads={showVoiceLeads}
+        onVoiceLeadsChange={setShowVoiceLeads}
+        showExtension={showExtension}
+        onExtensionChange={setShowExtension}
+        showCentroid={showCentroid}
+        onCentroidChange={setShowCentroid}
+        showIntervals={showIntervals}
+        onIntervalsChange={setShowIntervals}
       />
+      <div className={styles.primaryFlowContainer}>
+        {/* Chromatic Circle - Left */}
+        <section
+          className={styles.circleArea}
+          role="region"
+          aria-label="Chromatic Circle - Select from and to chords"
+        >
+          <ChromaticCircle
+            onCurrentChordChange={handleCurrentChordChange}
+            onKeyScaleChange={handleKeyScaleChange}
+            selectedScale={selectedScale}
+            showVoiceLeads={showVoiceLeads}
+            showExtension={showExtension}
+            showCentroid={showCentroid}
+            showIntervals={showIntervals}
+          />
+        </section>
+
+        {/* Current Chord Panel - Center */}
+        <section
+          className={styles.panelArea}
+          role="region"
+          aria-label="Current Chord - Add to progression"
+        >
+          <CurrentChordPanel
+            chord={currentChord}
+            onAddChord={handleAddChord}
+            diatonicIndices={diatonicIndices}
+            isProgressionFull={isProgressionFull}
+            progressionLength={chords.length}
+            maxProgressionLength={MAX_PROGRESSION_LENGTH}
+          />
+        </section>
+
+        {/* Progression Sidebar - Right */}
+        <section
+          className={styles.sidebarArea}
+          role="region"
+          aria-label="Chord Progression - View and manage added chords"
+        >
+          <ProgressionSidebar
+            chords={chords}
+            onMoveUp={(i) => moveChord(i, 'up')}
+            onMoveDown={(i) => moveChord(i, 'down')}
+            onDelete={deleteChord}
+            maxLength={MAX_PROGRESSION_LENGTH}
+          />
+        </section>
+      </div>
     </div>
   );
 }

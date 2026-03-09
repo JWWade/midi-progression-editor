@@ -1,32 +1,94 @@
-/* ── Two-column app layout ──────────────────────────────────────────────── */
+/* ── Three-row app grid ──────────────────────────────────────────────────── */
 .layout {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr;
   min-height: 100vh;
   width: 100%;
-}
-
-/* ── Left column: circle + chord panel ─────────────────────────────────── */
-.circleArea {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  padding: 2rem 1rem;
-  min-width: 0;
   box-sizing: border-box;
 }
 
-/* ── Responsive: stack below circle on small screens ───────────────────── */
-@media (max-width: 640px) {
-  .layout {
-    flex-direction: column;
+/* ── Primary flow container: three-column grid (Circle | Panel | Sidebar) ──── */
+.primaryFlowContainer {
+  display: grid;
+  grid-template-columns: minmax(380px, 2fr) 360px minmax(280px, 420px);
+  gap: 24px;
+  padding: 24px;
+  min-width: 0;
+  box-sizing: border-box;
+  background-color: #fafbfc;
+}
+
+/* ── Primary flow areas with ARIA landmarks ────────────────────────────────── */
+.circleArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  border-radius: 8px;
+  background-color: white;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.panelArea {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-width: 0;
+  border-radius: 8px;
+  background-color: white;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.sidebarArea {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-width: 0;
+  border-radius: 8px;
+  background-color: white;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+/* ── Responsive: single-column stack on small screens ────────────────────── */
+@media (max-width: 900px) {
+  .primaryFlowContainer {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
   }
 
-  .circleArea {
-    flex: none;
+  .circleArea,
+  .panelArea,
+  .sidebarArea {
+    padding: 12px;
+  }
+
+  .sidebarArea {
+    max-height: auto;
   }
 }
+
+@media (max-width: 640px) {
+  .primaryFlowContainer {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .circleArea,
+  .panelArea,
+  .sidebarArea {
+    padding: 8px;
+  }
+}
+

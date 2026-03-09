@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { forwardRef } from "react";
 import { ChordThumbnail } from "@/features/current-chord/components/ChordThumbnail";
 import { getChordName } from "@/features/chord/data/chordNames";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
@@ -11,13 +11,15 @@ interface ChordTileProps {
   index: number;
   isFirst: boolean;
   isLast: boolean;
+  isNew?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onDelete: () => void;
+  onAnimationEnd?: () => void;
 }
 
-export function ChordTile({ chord, index, isFirst, isLast, onMoveUp, onMoveDown, onDelete }: ChordTileProps) {
-  const [isEntering, setIsEntering] = useState(true);
+export const ChordTile = forwardRef<HTMLDivElement, ChordTileProps>(
+  function ChordTile({ chord, index, isFirst, isLast, isNew = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
   const noteIndices = getChordNoteIndices(chord.root, chord.quality);
   const complexity = getChordComplexity(chord);
   const accentColor = getChordColor(chord.quality, complexity);
@@ -25,10 +27,12 @@ export function ChordTile({ chord, index, isFirst, isLast, onMoveUp, onMoveDown,
 
   return (
     <div
-      className={`${styles.tile}${isEntering ? ` ${styles.entering}` : ""}`}
+      ref={ref}
+      className={`${styles.tile}${isNew ? ` ${styles.tileHighlight}` : ""}`}
       style={{ "--accent-color": accentColor } as React.CSSProperties}
-      aria-label={`Chord ${index + 1}: ${chordName}`}
-      onAnimationEnd={() => setIsEntering(false)}
+      aria-label={`${chordName}, position ${index + 1}`}
+      tabIndex={0}
+      onAnimationEnd={onAnimationEnd}
     >
       <div className={styles.thumbnail}>
         <ChordThumbnail
@@ -71,4 +75,5 @@ export function ChordTile({ chord, index, isFirst, isLast, onMoveUp, onMoveDown,
       </div>
     </div>
   );
-}
+});
+

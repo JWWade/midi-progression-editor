@@ -17,6 +17,9 @@ import {
   VERTEX_RADIUS_SELECTED,
   VERTEX_SELECTED_FILL,
   VERTEX_SELECTED_STROKE,
+  VERTEX_BADGE_OFFSET,
+  VERTEX_BADGE_RADIUS,
+  VERTEX_BADGE_FONT_SIZE,
   CENTROID_RADIUS,
   CENTROID_CROSSHAIR_LENGTH,
   RING_STROKE_WIDTH,
@@ -30,14 +33,11 @@ import {
 } from "@/features/chord/utils/transpose";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
-import { CHORD_NAME_TO_DATA, CHORD_TYPE_ORDER, getChordName } from "@/features/chord/data/chordNames";
-import { ChordSelector } from "@/features/chord/components/ChordSelector";
+import { CHORD_NAME_TO_DATA } from "@/features/chord/data/chordNames";
 import { ChordLabel } from "@/features/chord/components/ChordLabel";
 import type { ScaleType } from "@/features/scale/types";
-import { SCALE_LABELS } from "@/features/scale/types";
 import { calculateVoiceLeads } from "@/features/voice-leading";
 import { useChordMorphing } from "@/features/chord-animation";
-import { useAudioPlayback } from "@/features/audio";
 import {
   ToneInfoPanel,
   getToneRole,
@@ -84,70 +84,6 @@ function computeLabelPoint(
   };
 }
 
-const CONTROLS_STYLE: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "12px",
-  alignItems: "center",
-  marginBottom: "12px",
-};
-
-const ROOT_SELECTOR_STYLE: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-};
-
-const SELECT_STYLE: React.CSSProperties = {
-  padding: "4px 8px",
-  borderRadius: "4px",
-  border: `2px solid ${PRIMARY_COLOR}`,
-  color: PRIMARY_COLOR,
-  fontWeight: "bold",
-  cursor: "pointer",
-  backgroundColor: "transparent",
-};
-
-const LABEL_STYLE: React.CSSProperties = {
-  fontWeight: "bold",
-};
-
-
-const CHORD_TYPE_LABELS: Record<ChordType, string> = {
-  major: "Major",
-  minor: "Minor",
-  dim:   "Diminished",
-  aug:   "Augmented",
-  dom7: "Dom 7",
-  maj7: "Maj 7",
-  min7: "Min 7",
-  halfdim7: "Half-dim 7",
-};
-
-const CHORD_SELECTOR_STYLE: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "6px",
-  alignItems: "center",
-  padding: "8px 12px",
-  border: "1px solid #e5e7eb",
-  borderRadius: "6px",
-};
-
-const VOICE_LEAD_ROW_STYLE: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  justifyContent: "center",
-  flexWrap: "wrap",
-};
-
-const ARROW_STYLE: React.CSSProperties = {
-  fontSize: "20px",
-  color: "#6B7280",
-  fontWeight: "bold",
-};
-
 const CHORD_SUMMARY_STYLE: React.CSSProperties = {
   fontSize: "13px",
   color: "#374151",
@@ -155,36 +91,34 @@ const CHORD_SUMMARY_STYLE: React.CSSProperties = {
   textAlign: "center",
 };
 
-function playButtonStyle(color: string, disabled: boolean): React.CSSProperties {
-  return {
-    padding: "4px 12px",
-    borderRadius: "4px",
-    border: `2px solid ${color}`,
-    color: disabled ? "#9CA3AF" : color,
-    fontWeight: "bold",
-    cursor: disabled ? "not-allowed" : "pointer",
-    backgroundColor: "transparent",
-    borderColor: disabled ? "#9CA3AF" : color,
-    fontSize: "13px",
-    marginTop: "4px",
-  };
+interface ChromaticCircleProps {
+  onCurrentChordChange?: (chord: Chord) => void;
+  /** Called whenever the key root or scale mode changes. */
+  onKeyScaleChange?: (root: number, scale: ScaleType) => void;
+  selectedScale?: ScaleType;
+  showVoiceLeads?: boolean;
+  showExtension?: boolean;
+  showCentroid?: boolean;
+  showIntervals?: boolean;
 }
 
 export function ChromaticCircle({
   onCurrentChordChange,
   onKeyScaleChange,
-}: {
-  onCurrentChordChange?: (chord: Chord) => void;
-  /** Called whenever the key root or scale mode changes. */
-  onKeyScaleChange?: (root: number, scale: ScaleType) => void;
-}) {
-  const [selectedChordName, setSelectedChordName] = useState("C");
-  const [selectedToChordName, setSelectedToChordName] = useState("F");
-  const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
-  const [showVoiceLeads, setShowVoiceLeads] = useState(false);
-  const [showExtension, setShowExtension] = useState(false);
-  const [showCentroid, setShowCentroid] = useState(false);
-  const [showIntervals, setShowIntervals] = useState(false);
+  selectedScale: propSelectedScale = "major",
+  showVoiceLeads: propShowVoiceLeads = false,
+  showExtension: propShowExtension = false,
+  showCentroid: propShowCentroid = false,
+  showIntervals: propShowIntervals = false,
+}: ChromaticCircleProps) {
+  const [selectedChordName] = useState("C");
+  const [selectedToChordName] = useState("F");
+  // Use props for visualization toggles (received from App)
+  const selectedScale = propSelectedScale;
+  const showVoiceLeads = propShowVoiceLeads;
+  const showExtension = propShowExtension;
+  const showCentroid = propShowCentroid;
+  const showIntervals = propShowIntervals;
   const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const [selectedTone, setSelectedTone] = useState<ToneInfo | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(
@@ -193,8 +127,6 @@ export function ChromaticCircle({
       window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const { scaleNotes, isLoading, error } = useChromaticCircleData();
-  const fromAudio = useAudioPlayback();
-  const toAudio = useAudioPlayback();
 
   const deselectTone = useCallback(() => setSelectedTone(null), []);
 
@@ -282,7 +214,6 @@ export function ChromaticCircle({
 
   const fromNoteNames = chordNotes.map((n) => n.name).join(", ");
   const toNoteNames = toChordNotes.map((n) => n.name).join(", ");
-  const anyPlaying = fromAudio.isPlaying || toAudio.isPlaying;
 
   const circleColor = useMemo(
     () => getCircleColor(rootIndex, chordType),
@@ -297,188 +228,11 @@ export function ChromaticCircle({
   const circleTransition = prefersReducedMotion ? undefined : "fill 0.4s ease";
 
   return (
-    <div style={{ position: "relative", maxWidth: "100%" }}>
-      <div style={CONTROLS_STYLE}>
-        {/* Voice lead chord selectors */}
-        <div style={VOICE_LEAD_ROW_STYLE}>
-          {/* From Chord */}
-          <div style={CHORD_SELECTOR_STYLE}>
-            <label style={{ ...LABEL_STYLE, color: PRIMARY_COLOR }}>
-              From Chord
-            </label>
-            {/* Combined chord name dropdown */}
-            <ChordSelector
-              id="from-chord-select"
-              value={selectedChordName}
-              onChange={setSelectedChordName}
-              style={{ ...SELECT_STYLE }}
-              aria-label="From chord"
-            />
-            {/* Separate root-note selector */}
-            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-              <label htmlFor="from-root-select" style={{ ...LABEL_STYLE, fontSize: "12px" }}>
-                Root:
-              </label>
-              <select
-                id="from-root-select"
-                value={rootIndex}
-                onChange={(e) =>
-                  setSelectedChordName(getChordName(Number(e.target.value), chordType))
-                }
-                style={SELECT_STYLE}
-                aria-label="From chord root note"
-              >
-                {PITCH_CLASSES.map((label, i) => (
-                  <option key={i} value={i}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              {/* Separate chord-type selector */}
-              <label htmlFor="from-type-select" style={{ ...LABEL_STYLE, fontSize: "12px" }}>
-                Type:
-              </label>
-              <select
-                id="from-type-select"
-                value={chordType}
-                onChange={(e) =>
-                  setSelectedChordName(getChordName(rootIndex, e.target.value as ChordType))
-                }
-                style={SELECT_STYLE}
-                aria-label="From chord type"
-              >
-                {CHORD_TYPE_ORDER.map((type) => (
-                  <option key={type} value={type}>
-                    {CHORD_TYPE_LABELS[type]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              style={playButtonStyle(PRIMARY_COLOR, anyPlaying)}
-              disabled={anyPlaying}
-              onClick={() => void fromAudio.play(chordNotes)}
-              aria-label={`Play ${selectedChordName} chord`}
-            >
-              ▶ Play
-            </button>
-          </div>
-
-          <span style={ARROW_STYLE}>→</span>
-
-          {/* To Chord */}
-          <div style={{ ...CHORD_SELECTOR_STYLE, borderColor: TO_CHORD_COLOR }}>
-            <label htmlFor="to-chord-select" style={{ ...LABEL_STYLE, color: TO_CHORD_COLOR }}>
-              To Chord
-            </label>
-            <ChordSelector
-              id="to-chord-select"
-              value={selectedToChordName}
-              onChange={setSelectedToChordName}
-              style={{ ...SELECT_STYLE, borderColor: TO_CHORD_COLOR, color: TO_CHORD_COLOR }}
-            />
-            <button
-              style={playButtonStyle(TO_CHORD_COLOR, anyPlaying)}
-              disabled={anyPlaying}
-              onClick={() => void toAudio.play(toChordNotes)}
-              aria-label={`Play ${selectedToChordName} chord`}
-            >
-              ▶ Play
-            </button>
-          </div>
-        </div>
-
-        {/* Show Voice Leads toggle */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="show-voice-leads" style={LABEL_STYLE}>
-            Show Voice Leads:
-          </label>
-          <input
-            id="show-voice-leads"
-            type="checkbox"
-            checked={showVoiceLeads}
-            onChange={(e) => setShowVoiceLeads(e.target.checked)}
-            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-          />
-        </div>
-
-        {/* Show Extension toggle */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="show-extension" style={LABEL_STYLE}>
-            Show Extension:
-          </label>
-          <input
-            id="show-extension"
-            type="checkbox"
-            checked={showExtension}
-            onChange={(e) => setShowExtension(e.target.checked)}
-            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-          />
-        </div>
-
-        {/* Show Centroid toggle */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="show-centroid" style={LABEL_STYLE}>
-            Show Centroid:
-          </label>
-          <input
-            id="show-centroid"
-            type="checkbox"
-            checked={showCentroid}
-            onChange={(e) => setShowCentroid(e.target.checked)}
-            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-          />
-        </div>
-
-        {/* Show Intervals toggle */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="show-intervals" style={LABEL_STYLE}>
-            Show Intervals:
-          </label>
-          <input
-            id="show-intervals"
-            type="checkbox"
-            checked={showIntervals}
-            onChange={(e) => setShowIntervals(e.target.checked)}
-            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-          />
-        </div>
-
-        {/* Scale selector */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="scale-select" style={LABEL_STYLE}>
-            Scale:
-          </label>
-          <select
-            id="scale-select"
-            value={selectedScale}
-            onChange={(e) => setSelectedScale(e.target.value as ScaleType)}
-            style={SELECT_STYLE}
-          >
-            {(Object.keys(SCALE_LABELS) as ScaleType[]).map((scale) => (
-              <option key={scale} value={scale}>
-                {SCALE_LABELS[scale]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Chord summary */}
-      <p style={CHORD_SUMMARY_STYLE}>
-        <span style={{ color: PRIMARY_COLOR, fontWeight: "bold" }}>
-          From: {selectedChordName} ({fromNoteNames})
-        </span>
-        {" → "}
-        <span style={{ color: TO_CHORD_COLOR, fontWeight: "bold" }}>
-          To: {selectedToChordName} ({toNoteNames})
-        </span>
-      </p>
-
+    <div style={{ position: "relative", maxWidth: "100%", width: "100%" }}>
       <div
         style={{
           width: "100%",
-          maxWidth: VIEWBOX_SIZE + CIRCLE_PADDING * 2,
+          maxWidth: 550,
           margin: "0 auto",
           padding: `0 ${CIRCLE_PADDING}px`,
           boxSizing: "border-box",
@@ -491,6 +245,7 @@ export function ChromaticCircle({
           style={{
             display: "block",
             width: "100%",
+            maxHeight: 550,
             cursor: "default",
           }}
         >
@@ -800,7 +555,7 @@ export function ChromaticCircle({
             ? getNoteStyle(i, toChordIndices, toChordType, diatonicIndices, toChordComplexity)
             : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
           return (
-            <g key={label}>
+            <g key={label} style={{ pointerEvents: "none" }}>
               <circle
                 cx={x}
                 cy={y}
@@ -825,9 +580,97 @@ export function ChromaticCircle({
             </g>
           );
         })}
+
+        {/* From chord vertex badges (F) — outer ring */}
+        {chordNotes.map((note, i) => {
+          const angle = (note.index / 12) * 2 * Math.PI;
+          const badgeX = CENTER + (RING_RADIUS + VERTEX_BADGE_OFFSET) * Math.sin(angle);
+          const badgeY = CENTER - (RING_RADIUS + VERTEX_BADGE_OFFSET) * Math.cos(angle);
+          const interval = baseIntervals[i];
+          return (
+            <g
+              key={`from-badge-${note.index}`}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedTone({
+                  note,
+                  role: getToneRole(interval, chordType),
+                  interval,
+                  frequency: noteIndexToFrequency(note.index),
+                  chordLabel: "From Chord",
+                });
+              }}
+            >
+              <circle
+                cx={badgeX}
+                cy={badgeY}
+                r={VERTEX_BADGE_RADIUS}
+                fill="white"
+                opacity={0.9}
+              />
+              <text
+                x={badgeX}
+                y={badgeY}
+                fontSize={VERTEX_BADGE_FONT_SIZE}
+                fontWeight="bold"
+                fill={strokeColor}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontFamily={NOTE_FONT_FAMILY}
+              >
+                ●
+              </text>
+            </g>
+          );
+        })}
+
+        {/* To chord vertex badges (T) — inner ring */}
+        {toChordNotes.map((note, i) => {
+          const angle = (note.index / 12) * 2 * Math.PI;
+          const badgeX = CENTER + (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.sin(angle);
+          const badgeY = CENTER - (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.cos(angle);
+          const interval = toBaseIntervals[i];
+          return (
+            <g
+              key={`to-badge-${note.index}`}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedTone({
+                  note,
+                  role: getToneRole(interval, toChordType),
+                  interval,
+                  frequency: noteIndexToFrequency(note.index),
+                  chordLabel: "To Chord",
+                });
+              }}
+            >
+              <circle
+                cx={badgeX}
+                cy={badgeY}
+                r={VERTEX_BADGE_RADIUS}
+                fill="white"
+                opacity={0.9}
+              />
+              <text
+                x={badgeX}
+                y={badgeY}
+                fontSize={VERTEX_BADGE_FONT_SIZE}
+                fontWeight="bold"
+                fill={toStrokeColor}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontFamily={NOTE_FONT_FAMILY}
+              >
+                ○
+              </text>
+            </g>
+          );
+        })}
         </svg>
       </div>
-      <ToneInfoPanel selectedTone={selectedTone} />
+      <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
       {isLoading && <p style={{ marginTop: "1rem" }}>Loading scale notes…</p>}
       {error && <p style={{ marginTop: "1rem", color: "#888" }}>Scale notes unavailable.</p>}
       {!isLoading && !error && scaleNotes.length > 0 && (
@@ -835,6 +678,17 @@ export function ChromaticCircle({
           Scale notes: {scaleNotes.map((n) => n.name).join(", ")}
         </p>
       )}
+
+      {/* Chord summary */}
+      <p style={CHORD_SUMMARY_STYLE}>
+        <span style={{ color: PRIMARY_COLOR, fontWeight: "bold" }}>
+          From: {selectedChordName} ({fromNoteNames})
+        </span>
+        {" → "}
+        <span style={{ color: TO_CHORD_COLOR, fontWeight: "bold" }}>
+          To: {selectedToChordName} ({toNoteNames})
+        </span>
+      </p>
     </div>
   );
 }

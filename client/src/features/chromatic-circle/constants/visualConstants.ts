@@ -49,6 +49,15 @@ export const VERTEX_SELECTED_FILL = "#FCD34D";
 /** Stroke colour of a selected polygon vertex. */
 export const VERTEX_SELECTED_STROKE = "#D97706";
 
+/** Radial offset for badge labels (F/T indicators) from the ring. */
+export const VERTEX_BADGE_OFFSET = 18;
+
+/** Radius of the background circle for vertex badge labels. */
+export const VERTEX_BADGE_RADIUS = 5;
+
+/** Font size of vertex badge label text (F/T). */
+export const VERTEX_BADGE_FONT_SIZE = 8;
+
 // ─── Centroid marker ─────────────────────────────────────────────────────────
 
 /** Radius of the centroid dot. */
