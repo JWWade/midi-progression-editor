@@ -58,7 +58,6 @@ const CHORD_TAG_STYLE: React.CSSProperties = {
 };
 
 export function ToneInfoPanel({ selectedTone }: ToneInfoPanelProps) {
-  console.log("[DEBUG] ToneInfoPanel rendered with selectedTone:", selectedTone);
   return (
     <div style={PANEL_STYLE} aria-label="Tone information panel" aria-live="polite">
       {selectedTone === null ? (

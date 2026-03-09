@@ -547,7 +547,6 @@ export function ChromaticCircle({
               style={{ cursor: "pointer" }}
               aria-label={`${note.name} in From Chord`}
               onClick={(e) => {
-                console.log("[DEBUG] From vertex clicked:", note.name, { note, interval, chordType });
                 e.stopPropagation();
                 setSelectedTone({
                   note,
@@ -580,7 +579,6 @@ export function ChromaticCircle({
               style={{ cursor: "pointer" }}
               aria-label={`${note.name} in To Chord`}
               onClick={(e) => {
-                console.log("[DEBUG] To vertex clicked:", note.name, { note, interval, toChordType });
                 e.stopPropagation();
                 setSelectedTone({
                   note,
@@ -626,7 +624,7 @@ export function ChromaticCircle({
             ? getNoteStyle(i, toChordIndices, toChordType, diatonicIndices, toChordComplexity)
             : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
           return (
-            <g key={label}>
+            <g key={label} style={{ pointerEvents: "none" }}>
               <circle
                 cx={x}
                 cy={y}
