@@ -297,188 +297,11 @@ export function ChromaticCircle({
   const circleTransition = prefersReducedMotion ? undefined : "fill 0.4s ease";
 
   return (
-    <div style={{ position: "relative", maxWidth: "100%" }}>
-      <div style={CONTROLS_STYLE}>
-        {/* Voice lead chord selectors */}
-        <div style={VOICE_LEAD_ROW_STYLE}>
-          {/* From Chord */}
-          <div style={CHORD_SELECTOR_STYLE}>
-            <label style={{ ...LABEL_STYLE, color: PRIMARY_COLOR }}>
-              From Chord
-            </label>
-            {/* Combined chord name dropdown */}
-            <ChordSelector
-              id="from-chord-select"
-              value={selectedChordName}
-              onChange={setSelectedChordName}
-              style={{ ...SELECT_STYLE }}
-              aria-label="From chord"
-            />
-            {/* Separate root-note selector */}
-            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-              <label htmlFor="from-root-select" style={{ ...LABEL_STYLE, fontSize: "12px" }}>
-                Root:
-              </label>
-              <select
-                id="from-root-select"
-                value={rootIndex}
-                onChange={(e) =>
-                  setSelectedChordName(getChordName(Number(e.target.value), chordType))
-                }
-                style={SELECT_STYLE}
-                aria-label="From chord root note"
-              >
-                {PITCH_CLASSES.map((label, i) => (
-                  <option key={i} value={i}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              {/* Separate chord-type selector */}
-              <label htmlFor="from-type-select" style={{ ...LABEL_STYLE, fontSize: "12px" }}>
-                Type:
-              </label>
-              <select
-                id="from-type-select"
-                value={chordType}
-                onChange={(e) =>
-                  setSelectedChordName(getChordName(rootIndex, e.target.value as ChordType))
-                }
-                style={SELECT_STYLE}
-                aria-label="From chord type"
-              >
-                {CHORD_TYPE_ORDER.map((type) => (
-                  <option key={type} value={type}>
-                    {CHORD_TYPE_LABELS[type]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              style={playButtonStyle(PRIMARY_COLOR, anyPlaying)}
-              disabled={anyPlaying}
-              onClick={() => void fromAudio.play(chordNotes)}
-              aria-label={`Play ${selectedChordName} chord`}
-            >
-              ▶ Play
-            </button>
-          </div>
-
-          <span style={ARROW_STYLE}>→</span>
-
-          {/* To Chord */}
-          <div style={{ ...CHORD_SELECTOR_STYLE, borderColor: TO_CHORD_COLOR }}>
-            <label htmlFor="to-chord-select" style={{ ...LABEL_STYLE, color: TO_CHORD_COLOR }}>
-              To Chord
-            </label>
-            <ChordSelector
-              id="to-chord-select"
-              value={selectedToChordName}
-              onChange={setSelectedToChordName}
-              style={{ ...SELECT_STYLE, borderColor: TO_CHORD_COLOR, color: TO_CHORD_COLOR }}
-            />
-            <button
-              style={playButtonStyle(TO_CHORD_COLOR, anyPlaying)}
-              disabled={anyPlaying}
-              onClick={() => void toAudio.play(toChordNotes)}
-              aria-label={`Play ${selectedToChordName} chord`}
-            >
-              ▶ Play
-            </button>
-          </div>
-        </div>
-
-        {/* Show Voice Leads toggle */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="show-voice-leads" style={LABEL_STYLE}>
-            Show Voice Leads:
-          </label>
-          <input
-            id="show-voice-leads"
-            type="checkbox"
-            checked={showVoiceLeads}
-            onChange={(e) => setShowVoiceLeads(e.target.checked)}
-            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-          />
-        </div>
-
-        {/* Show Extension toggle */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="show-extension" style={LABEL_STYLE}>
-            Show Extension:
-          </label>
-          <input
-            id="show-extension"
-            type="checkbox"
-            checked={showExtension}
-            onChange={(e) => setShowExtension(e.target.checked)}
-            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-          />
-        </div>
-
-        {/* Show Centroid toggle */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="show-centroid" style={LABEL_STYLE}>
-            Show Centroid:
-          </label>
-          <input
-            id="show-centroid"
-            type="checkbox"
-            checked={showCentroid}
-            onChange={(e) => setShowCentroid(e.target.checked)}
-            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-          />
-        </div>
-
-        {/* Show Intervals toggle */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="show-intervals" style={LABEL_STYLE}>
-            Show Intervals:
-          </label>
-          <input
-            id="show-intervals"
-            type="checkbox"
-            checked={showIntervals}
-            onChange={(e) => setShowIntervals(e.target.checked)}
-            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-          />
-        </div>
-
-        {/* Scale selector */}
-        <div style={ROOT_SELECTOR_STYLE}>
-          <label htmlFor="scale-select" style={LABEL_STYLE}>
-            Scale:
-          </label>
-          <select
-            id="scale-select"
-            value={selectedScale}
-            onChange={(e) => setSelectedScale(e.target.value as ScaleType)}
-            style={SELECT_STYLE}
-          >
-            {(Object.keys(SCALE_LABELS) as ScaleType[]).map((scale) => (
-              <option key={scale} value={scale}>
-                {SCALE_LABELS[scale]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Chord summary */}
-      <p style={CHORD_SUMMARY_STYLE}>
-        <span style={{ color: PRIMARY_COLOR, fontWeight: "bold" }}>
-          From: {selectedChordName} ({fromNoteNames})
-        </span>
-        {" → "}
-        <span style={{ color: TO_CHORD_COLOR, fontWeight: "bold" }}>
-          To: {selectedToChordName} ({toNoteNames})
-        </span>
-      </p>
-
+    <div style={{ position: "relative", maxWidth: "100%", width: "100%" }}>
       <div
         style={{
           width: "100%",
-          maxWidth: VIEWBOX_SIZE + CIRCLE_PADDING * 2,
+          maxWidth: 550,
           margin: "0 auto",
           padding: `0 ${CIRCLE_PADDING}px`,
           boxSizing: "border-box",
@@ -491,6 +314,7 @@ export function ChromaticCircle({
           style={{
             display: "block",
             width: "100%",
+            maxHeight: 550,
             cursor: "default",
           }}
         >
@@ -835,6 +659,184 @@ export function ChromaticCircle({
           Scale notes: {scaleNotes.map((n) => n.name).join(", ")}
         </p>
       )}
+
+      {/* Chord summary */}
+      <p style={CHORD_SUMMARY_STYLE}>
+        <span style={{ color: PRIMARY_COLOR, fontWeight: "bold" }}>
+          From: {selectedChordName} ({fromNoteNames})
+        </span>
+        {" → "}
+        <span style={{ color: TO_CHORD_COLOR, fontWeight: "bold" }}>
+          To: {selectedToChordName} ({toNoteNames})
+        </span>
+      </p>
+
+      {/* Controls footer */}
+      <div style={CONTROLS_STYLE}>
+        {/* Voice lead chord selectors */}
+        <div style={VOICE_LEAD_ROW_STYLE}>
+          {/* From Chord */}
+          <div style={CHORD_SELECTOR_STYLE}>
+            <label style={{ ...LABEL_STYLE, color: PRIMARY_COLOR }}>
+              From Chord
+            </label>
+            {/* Combined chord name dropdown */}
+            <ChordSelector
+              id="from-chord-select"
+              value={selectedChordName}
+              onChange={setSelectedChordName}
+              style={{ ...SELECT_STYLE }}
+              aria-label="From chord"
+            />
+            {/* Separate root-note selector */}
+            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              <label htmlFor="from-root-select" style={{ ...LABEL_STYLE, fontSize: "12px" }}>
+                Root:
+              </label>
+              <select
+                id="from-root-select"
+                value={rootIndex}
+                onChange={(e) =>
+                  setSelectedChordName(getChordName(Number(e.target.value), chordType))
+                }
+                style={SELECT_STYLE}
+                aria-label="From chord root note"
+              >
+                {PITCH_CLASSES.map((label, i) => (
+                  <option key={i} value={i}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              {/* Separate chord-type selector */}
+              <label htmlFor="from-type-select" style={{ ...LABEL_STYLE, fontSize: "12px" }}>
+                Type:
+              </label>
+              <select
+                id="from-type-select"
+                value={chordType}
+                onChange={(e) =>
+                  setSelectedChordName(getChordName(rootIndex, e.target.value as ChordType))
+                }
+                style={SELECT_STYLE}
+                aria-label="From chord type"
+              >
+                {CHORD_TYPE_ORDER.map((type) => (
+                  <option key={type} value={type}>
+                    {CHORD_TYPE_LABELS[type]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              style={playButtonStyle(PRIMARY_COLOR, anyPlaying)}
+              disabled={anyPlaying}
+              onClick={() => void fromAudio.play(chordNotes)}
+              aria-label={`Play ${selectedChordName} chord`}
+            >
+              ▶ Play
+            </button>
+          </div>
+
+          <span style={ARROW_STYLE}>→</span>
+
+          {/* To Chord */}
+          <div style={{ ...CHORD_SELECTOR_STYLE, borderColor: TO_CHORD_COLOR }}>
+            <label htmlFor="to-chord-select" style={{ ...LABEL_STYLE, color: TO_CHORD_COLOR }}>
+              To Chord
+            </label>
+            <ChordSelector
+              id="to-chord-select"
+              value={selectedToChordName}
+              onChange={setSelectedToChordName}
+              style={{ ...SELECT_STYLE, borderColor: TO_CHORD_COLOR, color: TO_CHORD_COLOR }}
+            />
+            <button
+              style={playButtonStyle(TO_CHORD_COLOR, anyPlaying)}
+              disabled={anyPlaying}
+              onClick={() => void toAudio.play(toChordNotes)}
+              aria-label={`Play ${selectedToChordName} chord`}
+            >
+              ▶ Play
+            </button>
+          </div>
+        </div>
+
+        {/* Show Voice Leads toggle */}
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="show-voice-leads" style={LABEL_STYLE}>
+            Show Voice Leads:
+          </label>
+          <input
+            id="show-voice-leads"
+            type="checkbox"
+            checked={showVoiceLeads}
+            onChange={(e) => setShowVoiceLeads(e.target.checked)}
+            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+          />
+        </div>
+
+        {/* Show Extension toggle */}
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="show-extension" style={LABEL_STYLE}>
+            Show Extension:
+          </label>
+          <input
+            id="show-extension"
+            type="checkbox"
+            checked={showExtension}
+            onChange={(e) => setShowExtension(e.target.checked)}
+            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+          />
+        </div>
+
+        {/* Show Centroid toggle */}
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="show-centroid" style={LABEL_STYLE}>
+            Show Centroid:
+          </label>
+          <input
+            id="show-centroid"
+            type="checkbox"
+            checked={showCentroid}
+            onChange={(e) => setShowCentroid(e.target.checked)}
+            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+          />
+        </div>
+
+        {/* Show Intervals toggle */}
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="show-intervals" style={LABEL_STYLE}>
+            Show Intervals:
+          </label>
+          <input
+            id="show-intervals"
+            type="checkbox"
+            checked={showIntervals}
+            onChange={(e) => setShowIntervals(e.target.checked)}
+            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+          />
+        </div>
+
+        {/* Scale selector */}
+        <div style={ROOT_SELECTOR_STYLE}>
+          <label htmlFor="scale-select" style={LABEL_STYLE}>
+            Scale:
+          </label>
+          <select
+            id="scale-select"
+            value={selectedScale}
+            onChange={(e) => setSelectedScale(e.target.value as ScaleType)}
+            style={SELECT_STYLE}
+          >
+            {(Object.keys(SCALE_LABELS) as ScaleType[]).map((scale) => (
+              <option key={scale} value={scale}>
+                {SCALE_LABELS[scale]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
     </div>
   );
 }
