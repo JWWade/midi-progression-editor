@@ -654,14 +654,25 @@ export function ChromaticCircle({
         })}
 
         {/* From chord vertex badges (F) — outer ring */}
-        {chordNotes.map((note) => {
+        {chordNotes.map((note, i) => {
           const angle = (note.index / 12) * 2 * Math.PI;
           const badgeX = CENTER + (RING_RADIUS + VERTEX_BADGE_OFFSET) * Math.sin(angle);
           const badgeY = CENTER - (RING_RADIUS + VERTEX_BADGE_OFFSET) * Math.cos(angle);
+          const interval = baseIntervals[i];
           return (
             <g
               key={`from-badge-${note.index}`}
-              style={{ pointerEvents: "none" }}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedTone({
+                  note,
+                  role: getToneRole(interval, chordType),
+                  interval,
+                  frequency: noteIndexToFrequency(note.index),
+                  chordLabel: "From Chord",
+                });
+              }}
             >
               <circle
                 cx={badgeX}
@@ -687,14 +698,25 @@ export function ChromaticCircle({
         })}
 
         {/* To chord vertex badges (T) — inner ring */}
-        {toChordNotes.map((note) => {
+        {toChordNotes.map((note, i) => {
           const angle = (note.index / 12) * 2 * Math.PI;
           const badgeX = CENTER + (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.sin(angle);
           const badgeY = CENTER - (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.cos(angle);
+          const interval = toBaseIntervals[i];
           return (
             <g
               key={`to-badge-${note.index}`}
-              style={{ pointerEvents: "none" }}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedTone({
+                  note,
+                  role: getToneRole(interval, toChordType),
+                  interval,
+                  frequency: noteIndexToFrequency(note.index),
+                  chordLabel: "To Chord",
+                });
+              }}
             >
               <circle
                 cx={badgeX}
