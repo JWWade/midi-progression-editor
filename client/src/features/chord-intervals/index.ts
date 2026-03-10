@@ -1,2 +1,2 @@
 export { IntervalLabel } from "./components/IntervalLabel";
-export { getIntervalName, getIntervals } from "./utils/intervalNames";
+export { getIntervalName, getIntervals, getRootIntervals } from "./utils/intervalNames";
