@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import { PITCH_CLASSES, getDiatonicIndices } from "../utils";
 import { getCircleColor } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
@@ -11,7 +12,6 @@ import {
   NATURAL_LABEL_FONT_SIZE,
   ACCIDENTAL_LABEL_FONT_SIZE,
   NOTE_FONT_FAMILY,
-  LABEL_DISTANCE,
   VERTEX_RADIUS,
   VERTEX_RADIUS_SELECTED,
   VERTEX_SELECTED_FILL,
@@ -30,10 +30,10 @@ import {
   getChordTriad,
   CHORD_INTERVALS,
 } from "@/features/chord/utils/transpose";
+import { findNearestChord } from "@/features/chord/utils/findNearestChord";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import { CHORD_NAME_TO_DATA } from "@/features/chord/data/chordNames";
-import { ChordLabel } from "@/features/chord/components/ChordLabel";
 import { ChordSelector } from "@/features/chord/components/ChordSelector";
 import type { ScaleType } from "@/features/scale/types";
 import { calculateVoiceLeads } from "@/features/voice-leading";
@@ -61,25 +61,15 @@ import {
   createRadialGradientDef,
 } from "@/features/color-language/utils/svgGradient";
 import type { Chord } from "@/features/current-chord";
+import type { CursorMode } from "@/shared/types/CursorMode";
 
 const VOICE_LEAD_COLOR = "#D1D5DB";
 const VOICE_LEAD_HOVER_COLOR = "#6B7280";
+const DRAG_THRESHOLD_PX = 8;
 
 /** Returns the SVG `<radialGradient>` `id` used for a chord polygon fill. */
 function chordPolygonGradientId(quality: ChordType, complexity: ChordComplexity): string {
   return `chord-polygon-${quality}-${complexity}`;
-}
-
-function computeLabelPoint(
-  cx: number,
-  cy: number,
-  noteIndex: number,
-): { x: number; y: number } {
-  const angle = (noteIndex / 12) * 2 * Math.PI;
-  return {
-    x: cx + LABEL_DISTANCE * Math.sin(angle),
-    y: cy - LABEL_DISTANCE * Math.cos(angle),
-  };
 }
 
 interface ChromaticCircleProps {
@@ -91,6 +81,12 @@ interface ChromaticCircleProps {
   showExtension?: boolean;
   showCentroid?: boolean;
   showIntervals?: boolean;
+  /** Current cursor interaction mode (info or select) */
+  cursorMode?: CursorMode;
+  /** Set of currently selected note names (for selection mode) */
+  selectedNotes?: Set<string>;
+  /** Called when selected notes change in selection mode */
+  onSelectedNotesChange?: (notes: Set<string>) => void;
 }
 
 export function ChromaticCircle({
@@ -101,10 +97,23 @@ export function ChromaticCircle({
   showExtension: propShowExtension = false,
   showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
+  cursorMode = 'info',
+  selectedNotes = new Set(),
+  onSelectedNotesChange,
 }: ChromaticCircleProps) {
   const [selectedChordName, setSelectedChordName] = useState("C");
   const [selectedToChordName, setSelectedToChordName] = useState<string | null>(null);
   const hasToChord = selectedToChordName !== null;
+  
+  // Drag state for note moving in select mode
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedNoteIndex, setDraggedNoteIndex] = useState<number | null>(null);
+  const [dragTargetIndex, setDragTargetIndex] = useState<number | null>(null);
+  const [dragStartPoint, setDragStartPoint] = useState<{ x: number; y: number } | null>(null);
+  const [didDrag, setDidDrag] = useState(false);
+  const [suppressNextClick, setSuppressNextClick] = useState(false);
+  const [moveAnnouncement, setMoveAnnouncement] = useState("");
+  const [customFromChord, setCustomFromChord] = useState<{ root: number; quality: ChordType; customNotes: number[] } | null>(null);
   // Use props for visualization toggles (received from App)
   const selectedScale = propSelectedScale;
   const showVoiceLeads = propShowVoiceLeads;
@@ -120,6 +129,140 @@ export function ChromaticCircle({
   );
   const deselectTone = useCallback(() => setSelectedTone(null), []);
 
+  /**
+   * Mode-aware click handler for note vertices and badges.
+   * In info mode: displays the note's details.
+   * In select mode: toggles the note in the selection set.
+   */
+  const handleNoteClick = useCallback(
+    (noteName: string, toneInfo: ToneInfo) => {
+      if (cursorMode === 'info') {
+        setSelectedTone(toneInfo);
+      } else if (cursorMode === 'select' && onSelectedNotesChange) {
+        const newSelected = new Set(selectedNotes);
+        if (newSelected.has(noteName)) {
+          newSelected.delete(noteName);
+        } else {
+          newSelected.add(noteName);
+        }
+        onSelectedNotesChange(newSelected);
+      }
+    },
+    [cursorMode, selectedNotes, onSelectedNotesChange],
+  );
+
+  /**
+   * Start dragging a note in select mode.
+   * Only allows dragging notes that are currently in the From chord.
+   */
+  const handleNoteDragStart = useCallback((noteIndex: number, e: ReactPointerEvent) => {
+    if (cursorMode !== 'select') return;
+    
+    // Get current chord indices (from custom or named chord)
+    const currentChordIndices = customFromChord?.customNotes ?? 
+      transposeChord(CHORD_INTERVALS[CHORD_NAME_TO_DATA[selectedChordName].type], CHORD_NAME_TO_DATA[selectedChordName].root).map(n => n.index);
+    
+    // Only allow dragging notes that are IN the From chord
+    if (!currentChordIndices.includes(noteIndex)) return;
+    
+    e.stopPropagation();
+    setIsDragging(true);
+    setDidDrag(false);
+    setDraggedNoteIndex(noteIndex);
+    setDragTargetIndex(noteIndex);
+    setDragStartPoint({ x: e.clientX, y: e.clientY });
+    
+    // Capture pointer for smooth drag
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [cursorMode, customFromChord, selectedChordName]);
+
+  /**
+   * Update the drag target position as pointer moves.
+   * Converts pointer coords to nearest circle position (0-11).
+   */
+  const handleNoteDragMove = useCallback((e: ReactPointerEvent) => {
+    if (!isDragging || draggedNoteIndex === null || dragStartPoint === null) return;
+
+    // Require a minimum move distance so normal clicks don't become drags.
+    const dx = e.clientX - dragStartPoint.x;
+    const dy = e.clientY - dragStartPoint.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance < DRAG_THRESHOLD_PX) return;
+    if (!didDrag) setDidDrag(true);
+    
+    // Convert pointer coords to nearest circle position (0-11)
+    const svgElement = (e.currentTarget as SVGGElement).ownerSVGElement;
+    if (!svgElement) return;
+    const rect = svgElement.getBoundingClientRect();
+    const x = e.clientX - rect.left - CENTER;
+    const y = e.clientY - rect.top - CENTER;
+    const angle = Math.atan2(x, -y);
+    const normalizedAngle = ((angle + 2 * Math.PI) % (2 * Math.PI));
+    const index = Math.round((normalizedAngle / (2 * Math.PI)) * 12) % 12;
+    
+    setDragTargetIndex(index);
+  }, [isDragging, draggedNoteIndex, dragStartPoint, didDrag]);
+
+  /**
+   * Complete the drag operation and update the chord.
+   * Creates a custom chord with the moved note.
+   */
+  const handleNoteDragEnd = useCallback(() => {
+    const resetDragState = () => {
+      setIsDragging(false);
+      setDidDrag(false);
+      setDraggedNoteIndex(null);
+      setDragTargetIndex(null);
+      setDragStartPoint(null);
+    };
+
+    if (!isDragging || draggedNoteIndex === null || dragTargetIndex === null) {
+      resetDragState();
+      return;
+    }
+
+    // Treat below-threshold motion as click, not drag.
+    if (!didDrag) {
+      resetDragState();
+      return;
+    }
+    
+    // If target is the same as source, cancel drag
+    if (dragTargetIndex === draggedNoteIndex) {
+      setSuppressNextClick(true);
+      resetDragState();
+      return;
+    }
+    
+    // Get current chord indices
+    const currentChordIndices = customFromChord?.customNotes ?? 
+      transposeChord(CHORD_INTERVALS[CHORD_NAME_TO_DATA[selectedChordName].type], CHORD_NAME_TO_DATA[selectedChordName].root).map(n => n.index);
+    
+    // Build new custom note set by replacing the dragged note
+    const newNotes = currentChordIndices.map(idx => 
+      idx === draggedNoteIndex ? dragTargetIndex : idx
+    );
+    
+    // Find nearest chord match for "best fit" root/quality
+    const { root: bestRoot, quality: bestQuality } = findNearestChord(newNotes);
+    
+    // Create custom chord and update state
+    const newChord: { root: number; quality: ChordType; customNotes: number[] } = {
+      root: bestRoot,
+      quality: bestQuality,
+      customNotes: newNotes,
+    };
+    
+    setCustomFromChord(newChord);
+    onCurrentChordChange?.(newChord);
+
+    setMoveAnnouncement(`Moved ${PITCH_CLASSES[draggedNoteIndex]} to ${PITCH_CLASSES[dragTargetIndex]}`);
+    setSuppressNextClick(true);
+    
+    // Reset drag state
+    resetDragState();
+  }, [isDragging, didDrag, draggedNoteIndex, dragTargetIndex, customFromChord, selectedChordName, onCurrentChordChange]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") deselectTone();
@@ -129,18 +272,33 @@ export function ChromaticCircle({
   }, [deselectTone]);
 
   useEffect(() => {
+    if (!moveAnnouncement) return;
+    const timeoutId = window.setTimeout(() => setMoveAnnouncement(""), 1500);
+    return () => window.clearTimeout(timeoutId);
+  }, [moveAnnouncement]);
+
+  useEffect(() => {
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
     mql.addEventListener("change", handler);
     return () => mql.removeEventListener("change", handler);
   }, []);
 
-  const { root: rootIndex, type: chordType } = CHORD_NAME_TO_DATA[selectedChordName];
   const { root: toRootIndex, type: toChordType } = CHORD_NAME_TO_DATA[selectedToChordName ?? "C"];
 
+  // Priority: Custom chord overrides selected chord name
+  const effectiveRoot = customFromChord?.root ?? CHORD_NAME_TO_DATA[selectedChordName].root;
+  const effectiveQuality = customFromChord?.quality ?? CHORD_NAME_TO_DATA[selectedChordName].type;
+  const rootIndex = effectiveRoot;
+  const chordType = effectiveQuality;
+
   useEffect(() => {
-    onCurrentChordChange?.({ root: rootIndex, quality: chordType });
-  }, [rootIndex, chordType, onCurrentChordChange]);
+    // Only fire onCurrentChordChange if we're not in a custom chord state
+    // (custom chords fire their own updates in handleNoteDragEnd)
+    if (!customFromChord) {
+      onCurrentChordChange?.({ root: rootIndex, quality: chordType });
+    }
+  }, [rootIndex, chordType, onCurrentChordChange, customFromChord]);
 
   useEffect(() => {
     onKeyScaleChange?.(rootIndex, selectedScale);
@@ -150,7 +308,11 @@ export function ChromaticCircle({
   const isToSeventhChord = SEVENTH_CHORD_TYPES.has(toChordType);
   const baseIntervals = CHORD_INTERVALS[chordType];
   const toBaseIntervals = CHORD_INTERVALS[toChordType];
-  const chordNotes = transposeChord(baseIntervals, rootIndex);
+  
+  // Use custom notes if available, otherwise calculate from root + quality
+  const chordNotes = customFromChord?.customNotes
+    ? customFromChord.customNotes.map(idx => ({ index: idx, name: PITCH_CLASSES[idx], role: "root" as const }))
+    : transposeChord(baseIntervals, rootIndex);
   const toChordNotes = transposeChord(toBaseIntervals, toRootIndex);
   const chordIndices = chordNotes.map((n) => n.index);
   const toChordIndices = toChordNotes.map((n) => n.index);
@@ -457,28 +619,42 @@ export function ChromaticCircle({
           const isSelected =
             selectedTone?.chordLabel === "From Chord" &&
             selectedTone?.note.index === note.index;
+          const isSelectedInSelectMode = selectedNotes.has(note.name);
           return point !== undefined ? (
-            <circle
-              key={`from-vertex-${note.index}`}
-              cx={point.x}
-              cy={point.y}
-              r={isSelected ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS}
-              fill={isSelected ? VERTEX_SELECTED_FILL : strokeColor}
-              stroke={isSelected ? VERTEX_SELECTED_STROKE : "none"}
-              strokeWidth={isSelected ? 2 : 0}
-              style={{ cursor: "pointer" }}
-              aria-label={`${note.name} in From Chord`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTone({
-                  note,
-                  role: getToneRole(interval, chordType),
-                  interval,
-                  frequency: noteIndexToFrequency(note.index),
-                  chordLabel: "From Chord",
-                });
-              }}
-            />
+            <g key={`from-vertex-${note.index}`}>
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={isSelected ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS}
+                fill={isSelected ? VERTEX_SELECTED_FILL : strokeColor}
+                stroke={isSelected ? VERTEX_SELECTED_STROKE : "none"}
+                strokeWidth={isSelected ? 2 : 0}
+                style={{ cursor: "pointer" }}
+                aria-label={`${note.name} in From Chord`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNoteClick(note.name, {
+                    note,
+                    role: getToneRole(interval, chordType),
+                    interval,
+                    frequency: noteIndexToFrequency(note.index),
+                    chordLabel: "From Chord",
+                  });
+                }}
+              />
+              {/* Selection indicator ring for select mode */}
+              {isSelectedInSelectMode && cursorMode === 'select' && (
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={VERTEX_RADIUS + 6}
+                  fill="none"
+                  stroke={strokeColor}
+                  strokeWidth={2}
+                  opacity={0.6}
+                />
+              )}
+            </g>
           ) : null;
         })}
 
@@ -489,51 +665,46 @@ export function ChromaticCircle({
           const isSelected =
             selectedTone?.chordLabel === "To Chord" &&
             selectedTone?.note.index === note.index;
+          const isSelectedInSelectMode = selectedNotes.has(note.name);
           return point !== undefined ? (
-            <circle
-              key={`to-vertex-${note.index}`}
-              cx={point.x}
-              cy={point.y}
-              r={isSelected ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS}
-              fill={isSelected ? VERTEX_SELECTED_FILL : toStrokeColor}
-              stroke={isSelected ? VERTEX_SELECTED_STROKE : "none"}
-              strokeWidth={isSelected ? 2 : 0}
-              style={{ cursor: "pointer" }}
-              aria-label={`${note.name} in To Chord`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTone({
-                  note,
-                  role: getToneRole(interval, toChordType),
-                  interval,
-                  frequency: noteIndexToFrequency(note.index),
-                  chordLabel: "To Chord",
-                });
-              }}
-            />
+            <g key={`to-vertex-${note.index}`}>
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={isSelected ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS}
+                fill={isSelected ? VERTEX_SELECTED_FILL : toStrokeColor}
+                stroke={isSelected ? VERTEX_SELECTED_STROKE : "none"}
+                strokeWidth={isSelected ? 2 : 0}
+                style={{ cursor: "pointer" }}
+                aria-label={`${note.name} in To Chord`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNoteClick(note.name, {
+                    note,
+                    role: getToneRole(interval, toChordType),
+                    interval,
+                    frequency: noteIndexToFrequency(note.index),
+                    chordLabel: "To Chord",
+                  });
+                }}
+              />
+              {/* Selection indicator ring for select mode */}
+              {isSelectedInSelectMode && cursorMode === 'select' && (
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={VERTEX_RADIUS + 6}
+                  fill="none"
+                  stroke={toStrokeColor}
+                  strokeWidth={2}
+                  opacity={0.6}
+                />
+              )}
+            </g>
           ) : null;
         })}
 
-        {/* From chord vertex labels */}
-        {chordNotes.map((note) => (
-          <ChordLabel
-            key={`from-label-${note.index}`}
-            point={computeLabelPoint(CENTER, CENTER, note.index)}
-            noteName={note.name}
-            fill={strokeColor}
-          />
-        ))}
-
-        {/* To chord vertex labels */}
-        {hasToChord && toChordNotes.map((note) => (
-          <ChordLabel
-            key={`to-label-${note.index}`}
-            point={computeLabelPoint(CENTER, CENTER, note.index)}
-            noteName={note.name}
-            fill={toStrokeColor}
-          />
-        ))}
-
+        {/* Outer ring note labels — single source of truth for note names */}
         {PITCH_CLASSES.map((label, i) => {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
           const x = CENTER + RING_RADIUS * Math.cos(angle);
@@ -545,8 +716,54 @@ export function ChromaticCircle({
             : (hasToChord && toChordIndices.includes(i))
             ? getNoteStyle(i, toChordIndices, toChordType, diatonicIndices, toChordComplexity)
             : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
+          
+          const isInFromChord = chordIndices.includes(i);
+          const isInToChord = hasToChord && toChordIndices.includes(i);
+          const isSelectedInSelectMode = selectedNotes.has(label);
+          
           return (
-            <g key={label} style={{ pointerEvents: "none" }}>
+            <g
+              key={`pitch-${i}-${label}`}
+              style={{ 
+                cursor: cursorMode === 'select' 
+                  ? (isInFromChord ? "grab" : "pointer") 
+                  : "pointer" 
+              }}
+              onPointerDown={(e) => handleNoteDragStart(i, e)}
+              onPointerMove={handleNoteDragMove}
+              onPointerUp={handleNoteDragEnd}
+              onPointerCancel={handleNoteDragEnd}
+              onPointerLeave={handleNoteDragEnd}
+              onClick={(e) => {
+                if (suppressNextClick) {
+                  setSuppressNextClick(false);
+                  return;
+                }
+                if (isDragging) return; // Don't fire click during drag
+                e.stopPropagation();
+                const note = { index: i, name: label, role: "root" as const };
+                // Calculate interval: semitones from C (index 0)
+                const interval = i;
+                // Determine chord label context
+                let chordLabel: "From Chord" | "To Chord" | "Scale" = "Scale";
+                if (isInFromChord) {
+                  chordLabel = "From Chord";
+                } else if (isInToChord) {
+                  chordLabel = "To Chord";
+                }
+                handleNoteClick(label, {
+                  note,
+                  role: isInFromChord 
+                    ? getToneRole(interval, chordType)
+                    : isInToChord
+                    ? getToneRole(interval, toChordType)
+                    : "Note",
+                  interval,
+                  frequency: noteIndexToFrequency(i),
+                  chordLabel,
+                });
+              }}
+            >
               <circle
                 cx={x}
                 cy={y}
@@ -568,6 +785,31 @@ export function ChromaticCircle({
               >
                 {label}
               </text>
+              {/* Selection indicator ring for select mode */}
+              {isSelectedInSelectMode && cursorMode === 'select' && (
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={NODE_RADIUS + 6}
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth={3}
+                  opacity={1}
+                />
+              )}
+              {/* Drag preview ring - shows where note will be dropped */}
+              {isDragging && dragTargetIndex === i && (
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={NODE_RADIUS + 8}
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  opacity={0.8}
+                  pointerEvents="none"
+                />
+              )}
             </g>
           );
         })}
@@ -579,39 +821,40 @@ export function ChromaticCircle({
           const badgeY = CENTER - (RING_RADIUS + VERTEX_BADGE_OFFSET) * Math.cos(angle);
           const interval = baseIntervals[i];
           return (
-            <g
-              key={`from-badge-${note.index}`}
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTone({
-                  note,
-                  role: getToneRole(interval, chordType),
-                  interval,
-                  frequency: noteIndexToFrequency(note.index),
-                  chordLabel: "From Chord",
-                });
-              }}
-            >
-              <circle
-                cx={badgeX}
-                cy={badgeY}
-                r={VERTEX_BADGE_RADIUS}
-                fill="white"
-                opacity={0.9}
-              />
-              <text
-                x={badgeX}
-                y={badgeY}
-                fontSize={VERTEX_BADGE_FONT_SIZE}
-                fontWeight="bold"
-                fill={strokeColor}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontFamily={NOTE_FONT_FAMILY}
+            <g key={`from-badge-${note.index}`}>
+              <g
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNoteClick(note.name, {
+                    note,
+                    role: getToneRole(interval, chordType),
+                    interval,
+                    frequency: noteIndexToFrequency(note.index),
+                    chordLabel: "From Chord",
+                  });
+                }}
               >
-                ●
-              </text>
+                <circle
+                  cx={badgeX}
+                  cy={badgeY}
+                  r={VERTEX_BADGE_RADIUS}
+                  fill="white"
+                  opacity={0.9}
+                />
+                <text
+                  x={badgeX}
+                  y={badgeY}
+                  fontSize={VERTEX_BADGE_FONT_SIZE}
+                  fontWeight="bold"
+                  fill={strokeColor}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontFamily={NOTE_FONT_FAMILY}
+                >
+                  ●
+                </text>
+              </g>
             </g>
           );
         })}
@@ -623,49 +866,75 @@ export function ChromaticCircle({
           const badgeY = CENTER - (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.cos(angle);
           const interval = toBaseIntervals[i];
           return (
-            <g
-              key={`to-badge-${note.index}`}
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTone({
-                  note,
-                  role: getToneRole(interval, toChordType),
-                  interval,
-                  frequency: noteIndexToFrequency(note.index),
-                  chordLabel: "To Chord",
-                });
-              }}
-            >
-              <circle
-                cx={badgeX}
-                cy={badgeY}
-                r={VERTEX_BADGE_RADIUS}
-                fill="white"
-                opacity={0.9}
-              />
-              <text
-                x={badgeX}
-                y={badgeY}
-                fontSize={VERTEX_BADGE_FONT_SIZE}
-                fontWeight="bold"
-                fill={toStrokeColor}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontFamily={NOTE_FONT_FAMILY}
+            <g key={`to-badge-${note.index}`}>
+              <g
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNoteClick(note.name, {
+                    note,
+                    role: getToneRole(interval, toChordType),
+                    interval,
+                    frequency: noteIndexToFrequency(note.index),
+                    chordLabel: "To Chord",
+                  });
+                }}
               >
-                ○
-              </text>
+                <circle
+                  cx={badgeX}
+                  cy={badgeY}
+                  r={VERTEX_BADGE_RADIUS}
+                  fill="white"
+                  opacity={0.9}
+                />
+                <text
+                  x={badgeX}
+                  y={badgeY}
+                  fontSize={VERTEX_BADGE_FONT_SIZE}
+                  fontWeight="bold"
+                  fill={toStrokeColor}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontFamily={NOTE_FONT_FAMILY}
+                >
+                  ○
+                </text>
+              </g>
             </g>
           );
         })}
         </svg>
       </div>
-      <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
+      <div
+        role="status"
+        aria-live="polite"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: "hidden",
+          clip: "rect(0, 0, 0, 0)",
+          border: 0,
+        }}
+      >
+        {moveAnnouncement}
+      </div>
+      {/* Only show ToneInfoPanel in info mode */}
+      {cursorMode === 'info' && <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />}
       <div style={{ display: "flex", gap: 12, marginTop: 12, justifyContent: "center", flexWrap: "wrap" }}>
         <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af" }}>
           From
-          <ChordSelector value={selectedChordName} onChange={setSelectedChordName} aria-label="From chord" />
+          <ChordSelector 
+            value={selectedChordName} 
+            onChange={(name) => {
+              setSelectedChordName(name);
+              setCustomFromChord(null); // Clear custom chord when user selects a named chord
+            }}
+            customChord={customFromChord}
+            aria-label="From chord" 
+          />
         </label>
         <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af" }}>
           To

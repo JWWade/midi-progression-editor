@@ -8,6 +8,7 @@ import { ChordColors } from "@/features/color-language/constants/chordColors";
 import { getChordComplexity, getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import { ChordThumbnail } from "./ChordThumbnail";
 import styles from "./CurrentChordPanel.module.css";
+import { isCustomChord } from "../utils/chordTypeGuards";
 
 interface CurrentChordPanelProps {
   chord: Chord | null;
@@ -30,7 +31,9 @@ export function CurrentChordPanel({
   progressionLength = 0,
   maxProgressionLength = 8,
 }: CurrentChordPanelProps) {
-  const noteIndices = chord ? getChordNoteIndices(chord.root, chord.quality) : [];
+  const noteIndices = chord
+    ? (isCustomChord(chord) ? chord.customNotes : getChordNoteIndices(chord.root, chord.quality))
+    : [];
   const isDisabled = chord === null || isProgressionFull;
   const [pressing, setPressing] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -107,10 +110,17 @@ export function CurrentChordPanel({
         <span className={styles.placeholder}>No chord selected</span>
       ) : (
         <>
-          <span className={styles.chordName}>{formatChordName(chord)}</span>
+          <span className={styles.chordName}>
+            {isCustomChord(chord) 
+              ? chord.customNotes.map(i => PITCH_CLASSES[i]).join(" ")
+              : formatChordName(chord)
+            }
+          </span>
           <div className={styles.rootQualityRow}>
             <span className={styles.root}>{PITCH_CLASSES[chord.root]}</span>
-            <span className={styles.quality}>{CHORD_QUALITY_LABELS[chord.quality]}</span>
+            <span className={styles.quality}>
+              {isCustomChord(chord) ? "(custom)" : CHORD_QUALITY_LABELS[chord.quality]}
+            </span>
           </div>
         </>
       )}
