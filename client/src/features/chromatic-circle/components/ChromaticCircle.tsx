@@ -45,7 +45,7 @@ import {
 } from "@/features/chord-inspection";
 import type { ToneInfo } from "@/features/chord-inspection";
 import { calculateCentroid } from "@/features/chord-geometry";
-import { IntervalLabel, getIntervals, getIntervalName } from "@/features/chord-intervals";
+import { IntervalLabel, getIntervalName, getRootIntervals } from "@/features/chord-intervals";
 import {
   getNoteStyle,
   CHORD_TONE_FILLS,
@@ -584,7 +584,8 @@ export function ChromaticCircle({
 
         {/* From chord interval labels */}
         {showIntervals &&
-          getIntervals(chordIndices).map((semitones, i) => {
+          getRootIntervals(chordIndices).map((semitones, i) => {
+            if (semitones === null) return null;
             const from = fromMorphedPoints[i];
             const to = fromMorphedPoints[(i + 1) % fromMorphedPoints.length];
             if (!from || !to) return null;
@@ -602,7 +603,8 @@ export function ChromaticCircle({
 
         {/* To chord interval labels */}
         {hasToChord && showIntervals &&
-          getIntervals(toChordIndices).map((semitones, i) => {
+          getRootIntervals(toChordIndices).map((semitones, i) => {
+            if (semitones === null) return null;
             const from = toPoints[i];
             const to = toPoints[(i + 1) % toPoints.length];
             if (!from || !to) return null;
