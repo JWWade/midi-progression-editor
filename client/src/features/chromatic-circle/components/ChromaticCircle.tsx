@@ -942,6 +942,26 @@ export function ChromaticCircle({
             aria-label="From chord" 
           />
         </label>
+        <div style={{ display: "flex", alignItems: "flex-end", paddingBottom: 2 }}>
+          <button
+            type="button"
+            onClick={() => setSelectedToChordName(selectedChordName)}
+            title="Copy from-chord to to-chord"
+            aria-label="Copy from-chord to to-chord"
+            style={{
+              padding: "4px 10px",
+              fontSize: 16,
+              cursor: "pointer",
+              background: "#fff",
+              border: "1px solid #d1d5db",
+              borderRadius: 4,
+              color: "#6b7280",
+              lineHeight: 1,
+            }}
+          >
+            →
+          </button>
+        </div>
         <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af" }}>
           To
           <ChordSelector value={selectedToChordName ?? ""} onChange={(v) => setSelectedToChordName(v || null)} aria-label="To chord" />
