@@ -33,7 +33,7 @@ import {
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
-import { CHORD_NAME_TO_DATA } from "@/features/chord/data/chordNames";
+import { CHORD_NAME_TO_DATA, getChordName } from "@/features/chord/data/chordNames";
 import { ChordSelector } from "@/features/chord/components/ChordSelector";
 import type { ScaleType } from "@/features/scale/types";
 import { calculateVoiceLeads } from "@/features/voice-leading";
@@ -244,17 +244,23 @@ export function ChromaticCircle({
     );
     
     // Find nearest chord match for "best fit" root/quality
-    const { root: bestRoot, quality: bestQuality } = findNearestChord(newNotes);
-    
-    // Create custom chord and update state
-    const newChord: { root: number; quality: ChordType; customNotes: number[] } = {
-      root: bestRoot,
-      quality: bestQuality,
-      customNotes: newNotes,
-    };
-    
-    setCustomFromChord(newChord);
-    onCurrentChordChange?.(newChord);
+    const { root: bestRoot, quality: bestQuality, matchScore } = findNearestChord(newNotes);
+
+    if (matchScore === 1) {
+      // Perfect match: treat as a named chord, not a custom one
+      setCustomFromChord(null);
+      setSelectedChordName(getChordName(bestRoot, bestQuality));
+      onCurrentChordChange?.({ root: bestRoot, quality: bestQuality });
+    } else {
+      // Create custom chord and update state
+      const newChord: { root: number; quality: ChordType; customNotes: number[] } = {
+        root: bestRoot,
+        quality: bestQuality,
+        customNotes: newNotes,
+      };
+      setCustomFromChord(newChord);
+      onCurrentChordChange?.(newChord);
+    }
 
     setMoveAnnouncement(`Moved ${PITCH_CLASSES[draggedNoteIndex]} to ${PITCH_CLASSES[dragTargetIndex]}`);
     setSuppressNextClick(true);
