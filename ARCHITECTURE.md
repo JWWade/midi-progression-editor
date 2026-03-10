@@ -77,9 +77,12 @@ client/
 │   ├── app/                              # Application bootstrap
 │   │   ├── App.tsx                      # Root component
 │   │   ├── main.tsx                     # Entry point
-│   │   ├── providers/                   # Context providers (future)
-│   │   ├── routes/                      # Routing configuration (future)
-│   │   └── store/                       # Global state (future)
+│   │   ├── components/
+│   │   │   └── AppHeader.tsx            # Header: visualization toggles, scale selector, cursor modes, theme
+│   │   └── providers/                   # Context providers
+│   │       ├── ThemeContext.ts          # Theme type and context definition
+│   │       ├── ThemeProvider.tsx        # Persistent dark/light theme (localStorage)
+│   │       └── useTheme.ts              # useTheme() hook
 │   │
 │   ├── features/                         # Feature modules (feature-based architecture)
 │   │   ├── audio/                        # In-browser chord audio playback
@@ -132,14 +135,14 @@ client/
 │   │   │
 │   │   ├── progression-sidebar/          # Chord progression sidebar
 │   │   │   ├── components/              # ProgressionSidebar, chord tile components
-│   │   │   ├── constants/               # MAX_PROGRESSION_LENGTH, etc.
+│   │   │   ├── constants/               # MAX_PROGRESSION_LENGTH (8), etc.
 │   │   │   └── hooks/                   # useProgression (session-only state)
 │   │   │
 │   │   ├── scale/                        # Scale generation & display
 │   │   │   ├── api/                     # POST /Scale/from-root wrapper
 │   │   │   ├── components/              # Scale display components
 │   │   │   ├── hooks/                   # useScale hook
-│   │   │   ├── types/                   # Scale types
+│   │   │   ├── types/                   # ScaleType (8 modes), SCALE_INTERVALS, SCALE_LABELS
 │   │   │   └── utils/                   # Scale helpers
 │   │   │
 │   │   └── voice-leading/                # Voice-leading path utilities
@@ -148,7 +151,8 @@ client/
 │   ├── shared/                           # Shared across features
 │   │   ├── components/                  # Reusable components
 │   │   ├── hooks/                       # Reusable hooks
-│   │   ├── types/                       # Global types
+│   │   ├── types/
+│   │   │   └── CursorMode.ts            # 'info' | 'select' cursor interaction modes
 │   │   └── utils/                       # Helper functions
 │   │
 │   ├── assets/                           # Static assets (images, etc.)
@@ -237,10 +241,15 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 - ✅ **Chord Animation**: Smooth 350 ms easeInOutQuad polygon morphing on chord changes
 - ✅ **Color Language**: Quality-based colour grammar (major → amber, minor → blue, dim → purple, aug → orange, dom7 → red-orange) with radial gradient fills
 - ✅ **Current-Chord Panel**: Displays chord identity, stylised geometric thumbnail, and add-to-progression button
-- ✅ **Progression Sidebar**: Right-hand vertical sidebar with chord tiles, thumbnails, add/remove controls, finite length limit, and session-only persistence
+- ✅ **Progression Sidebar**: Right-hand vertical sidebar with chord tiles, thumbnails, add/remove controls, maximum 8 chords, session-only persistence
 - ✅ **Voice Leading**: Utility functions for calculating voice-leading paths between consecutive chords
 - ✅ **Audio Playback**: In-browser chord audio playback
-- ✅ **Scale Integration**: Scale generation via backend API with diatonic highlighting on the circle
+- ✅ **Scale Modes**: 8 scale types supported client-side (Major, Natural Minor, Harmonic Minor, Melodic Minor, Dorian, Phrygian, Lydian, Mixolydian); diatonic highlighting computed locally via `SCALE_INTERVALS`
+- ✅ **Scale Integration**: Scale generation via backend API (`/Scale/from-root`) available; diatonic circle highlighting uses client-side `SCALE_INTERVALS` for all 8 modes
+- ✅ **Chord Inspection**: `ToneInfoPanel` displays note name, chord role, interval from root, and frequency when a note is clicked in Info mode
+- ✅ **Cursor Modes**: Info mode (click a note to inspect it) and Select mode (click notes to toggle a custom selection); keyboard shortcuts `I` / `S`
+- ✅ **AppHeader**: Visualization toggles (Voice Leads, Extension, Centroid, Intervals), scale mode selector, cursor mode buttons, and theme toggle
+- ✅ **Dark/Light Theme**: Persistent theme toggle stored in `localStorage`; applied via `data-theme` attribute on `<html>`
 - ✅ **Structure**: Feature-based architecture across 13 modules
 
 ---
@@ -334,7 +343,8 @@ public enum Note { C=0, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B
 [Display(Name = "Major", Description = "Major scale (Ionian mode)")]
 public enum ScaleType { Major, Minor }
 ```
-- Currently only Major is implemented
+- Backend enum used by `/Scale/from-root`; only `Major` is fully implemented server-side
+- The frontend defines its own `ScaleType` with 8 modes (`major`, `naturalMinor`, `harmonicMinor`, `melodicMinor`, `dorian`, `phrygian`, `lydian`, `mixolydian`) and computes diatonic notes client-side via `SCALE_INTERVALS`
 
 **NoteInfo DTO**
 ```csharp
@@ -698,7 +708,7 @@ dotnet test
 - [ ] Add frontend unit tests (Vitest)
 - [ ] Add state management (Zustand or Redux)
 - [ ] Implement client-side routing
-- [ ] Support for minor scales in the UI (backend already supports it)
+- [ ] Expand backend scale support to match all 8 frontend modes
 - [ ] MIDI export functionality
 - [ ] Cross-platform dev script (shell version)
 - [ ] Docker configuration
@@ -715,4 +725,4 @@ dotnet test
 
 ---
 
-**Last Updated**: March 7, 2026
+**Last Updated**: March 10, 2026
