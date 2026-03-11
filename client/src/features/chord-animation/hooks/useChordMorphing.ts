@@ -64,6 +64,10 @@ export function useChordMorphing(currentPoints: Point[]) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentKey]);
 
-  const morphedPoints = morphPoints(fromPoints, currentPoints, morphProgress);
+  // When point counts differ (triad <-> seventh), snap to destination points
+  // at animation end so the final rendered polygon includes all vertices.
+  const morphedPoints = morphProgress >= 1
+    ? currentPoints
+    : morphPoints(fromPoints, currentPoints, morphProgress);
   return { morphedPoints, morphProgress };
 }
