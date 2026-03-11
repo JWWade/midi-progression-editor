@@ -6,13 +6,14 @@ interface ChordSelectorProps {
   value: string;
   onChange: (chordName: string) => void;
   customChord?: { root: number; quality: ChordType; customNotes: number[] } | null;
+  disabled?: boolean;
   id?: string;
   style?: React.CSSProperties;
   "aria-label"?: string;
 }
 
 export function ChordSelector({ 
-  value, onChange, customChord, id, style, "aria-label": ariaLabel 
+  value, onChange, customChord, disabled = false, id, style, "aria-label": ariaLabel 
 }: ChordSelectorProps) {
   // Display custom chord as read-only pill with reset button
   if (customChord?.customNotes) {
@@ -32,13 +33,15 @@ export function ChordSelector({
         <button
           type="button"
           onClick={() => onChange(value)}
+          disabled={disabled}
           style={{ 
             padding: "2px 6px", 
             fontSize: 11, 
-            cursor: "pointer",
+            cursor: disabled ? "not-allowed" : "pointer",
             background: "#fff",
             border: "1px solid #d1d5db",
             borderRadius: 3,
+            opacity: disabled ? 0.6 : 1,
           }}
           title="Reset to named chord"
           aria-label="Reset to named chord"
@@ -55,6 +58,7 @@ export function ChordSelector({
       id={id}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
       style={style}
       aria-label={ariaLabel}
     >

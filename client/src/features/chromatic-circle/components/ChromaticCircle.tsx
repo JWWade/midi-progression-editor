@@ -16,9 +16,6 @@ import {
   VERTEX_RADIUS_SELECTED,
   VERTEX_SELECTED_FILL,
   VERTEX_SELECTED_STROKE,
-  VERTEX_BADGE_OFFSET,
-  VERTEX_BADGE_RADIUS,
-  VERTEX_BADGE_FONT_SIZE,
   CENTROID_RADIUS,
   CENTROID_CROSSHAIR_LENGTH,
   RING_STROKE_WIDTH,
@@ -34,9 +31,8 @@ import { findNearestChord } from "@/features/chord/utils/findNearestChord";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import { CHORD_NAME_TO_DATA, getChordName } from "@/features/chord/data/chordNames";
-import { ChordSelector } from "@/features/chord/components/ChordSelector";
+import { ChordGrid } from "@/features/chord/components/ChordGrid";
 import type { ScaleType } from "@/features/scale/types";
-import { calculateVoiceLeads } from "@/features/voice-leading";
 import { useChordMorphing } from "@/features/chord-animation";
 import {
   ToneInfoPanel,
@@ -63,8 +59,6 @@ import {
 import type { Chord } from "@/features/current-chord";
 import type { CursorMode } from "@/shared/types/CursorMode";
 
-const VOICE_LEAD_COLOR = "#D1D5DB";
-const VOICE_LEAD_HOVER_COLOR = "#6B7280";
 const DRAG_THRESHOLD_PX = 8;
 
 /** Returns the SVG `<radialGradient>` `id` used for a chord polygon fill. */
@@ -77,7 +71,6 @@ interface ChromaticCircleProps {
   /** Called whenever the key root or scale mode changes. */
   onKeyScaleChange?: (root: number, scale: ScaleType) => void;
   selectedScale?: ScaleType;
-  showVoiceLeads?: boolean;
   showExtension?: boolean;
   showCentroid?: boolean;
   showIntervals?: boolean;
@@ -93,7 +86,6 @@ export function ChromaticCircle({
   onCurrentChordChange,
   onKeyScaleChange,
   selectedScale: propSelectedScale = "major",
-  showVoiceLeads: propShowVoiceLeads = false,
   showExtension: propShowExtension = false,
   showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
@@ -101,9 +93,9 @@ export function ChromaticCircle({
   selectedNotes = new Set(),
   onSelectedNotesChange,
 }: ChromaticCircleProps) {
+  type CustomChordState = { root: number; quality: ChordType; customNotes: number[] };
+
   const [selectedChordName, setSelectedChordName] = useState("C");
-  const [selectedToChordName, setSelectedToChordName] = useState<string | null>(null);
-  const hasToChord = selectedToChordName !== null;
   
   // Drag state for note moving in select mode
   const [isDragging, setIsDragging] = useState(false);
@@ -113,14 +105,12 @@ export function ChromaticCircle({
   const [didDrag, setDidDrag] = useState(false);
   const [suppressNextClick, setSuppressNextClick] = useState(false);
   const [moveAnnouncement, setMoveAnnouncement] = useState("");
-  const [customFromChord, setCustomFromChord] = useState<{ root: number; quality: ChordType; customNotes: number[] } | null>(null);
+  const [customFromChord, setCustomFromChord] = useState<CustomChordState | null>(null);
   // Use props for visualization toggles (received from App)
   const selectedScale = propSelectedScale;
-  const showVoiceLeads = propShowVoiceLeads;
   const showExtension = propShowExtension;
   const showCentroid = propShowCentroid;
   const showIntervals = propShowIntervals;
-  const [hoveredLeadIndex, setHoveredLeadIndex] = useState<number | null>(null);
   const [selectedTone, setSelectedTone] = useState<ToneInfo | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(
     () =>
@@ -253,7 +243,7 @@ export function ChromaticCircle({
       onCurrentChordChange?.({ root: bestRoot, quality: bestQuality });
     } else {
       // Create custom chord and update state
-      const newChord: { root: number; quality: ChordType; customNotes: number[] } = {
+      const newChord: CustomChordState = {
         root: bestRoot,
         quality: bestQuality,
         customNotes: newNotes,
@@ -290,8 +280,6 @@ export function ChromaticCircle({
     return () => mql.removeEventListener("change", handler);
   }, []);
 
-  const { root: toRootIndex, type: toChordType } = CHORD_NAME_TO_DATA[selectedToChordName ?? "C"];
-
   // Priority: Custom chord overrides selected chord name
   const effectiveRoot = customFromChord?.root ?? CHORD_NAME_TO_DATA[selectedChordName].root;
   const effectiveQuality = customFromChord?.quality ?? CHORD_NAME_TO_DATA[selectedChordName].type;
@@ -311,20 +299,15 @@ export function ChromaticCircle({
   }, [rootIndex, selectedScale, onKeyScaleChange]);
 
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
-  const isToSeventhChord = SEVENTH_CHORD_TYPES.has(toChordType);
   const baseIntervals = CHORD_INTERVALS[chordType];
-  const toBaseIntervals = CHORD_INTERVALS[toChordType];
-  
+
   // Use custom notes if available, otherwise calculate from root + quality
   const chordNotes = customFromChord?.customNotes
     ? customFromChord.customNotes.map(idx => ({ index: idx, name: PITCH_CLASSES[idx], role: "root" as const }))
     : transposeChord(baseIntervals, rootIndex);
-  const toChordNotes = transposeChord(toBaseIntervals, toRootIndex);
   const chordIndices = chordNotes.map((n) => n.index);
-  const toChordIndices = toChordNotes.map((n) => n.index);
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
-  const toPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, toChordIndices);
 
   // Triad subset points for seventh chords (used when showExtension is enabled)
   const fromTriadIntervals = getChordTriad(chordType);
@@ -335,40 +318,18 @@ export function ChromaticCircle({
     ? calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, fromTriadNotes.map((n) => n.index))
     : null;
 
-  const toTriadIntervals = getChordTriad(toChordType);
-  const toTriadNotes = toTriadIntervals
-    ? transposeChord(toTriadIntervals, toRootIndex)
-    : null;
-  const toTriadPoints = toTriadNotes
-    ? calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, toTriadNotes.map((n) => n.index))
-    : null;
-
   const { morphedPoints: fromMorphedPoints, morphProgress } = useChordMorphing(fromPoints);
   const isAnimating = morphProgress > 0 && morphProgress < 1;
 
   const fromCentroid = calculateCentroid(fromMorphedPoints);
-  const toCentroid = calculateCentroid(toPoints);
 
   const chordComplexity: ChordComplexity = getChordComplexity({ root: rootIndex, quality: chordType });
-  const toChordComplexity: ChordComplexity = getChordComplexity({ root: toRootIndex, quality: toChordType });
 
   const strokeColor = getChordColor(chordType, chordComplexity);
   const strokeDasharray = isSeventhChord ? "5,5" : undefined;
   const fillColor = `url(#${chordPolygonGradientId(chordType, chordComplexity)})`;
 
-  const toStrokeColor = getChordColor(toChordType, toChordComplexity);
-  const toStrokeDasharray = isToSeventhChord ? "5,5" : undefined;
-  const toFillColor = `url(#${chordPolygonGradientId(toChordType, toChordComplexity)})`;
-
   const fromPolygonOpacity = isAnimating ? 0.75 : 1;
-
-  const voiceLeads = calculateVoiceLeads(
-    chordNotes,
-    toChordNotes,
-    CENTER,
-    CENTER,
-    RING_RADIUS,
-  );
 
   const circleColor = useMemo(
     () => getCircleColor(rootIndex, chordType),
@@ -454,23 +415,6 @@ export function ChromaticCircle({
           strokeWidth={RING_STROKE_WIDTH}
         />
 
-        {/* Voice lead lines (rendered below chord polygons) */}
-        {hasToChord && showVoiceLeads &&
-          voiceLeads.map((lead, i) => (
-            <line
-              key={i}
-              x1={lead.from.x}
-              y1={lead.from.y}
-              x2={lead.to.x}
-              y2={lead.to.y}
-              stroke={hoveredLeadIndex === i ? VOICE_LEAD_HOVER_COLOR : VOICE_LEAD_COLOR}
-              strokeWidth={hoveredLeadIndex === i ? 3 : 2}
-              strokeLinecap="round"
-              style={{ cursor: "pointer" }}
-              onMouseEnter={() => setHoveredLeadIndex(i)}
-              onMouseLeave={() => setHoveredLeadIndex(null)}
-            />
-          ))}
 
         {/* From chord polygon — uses morphed points for smooth auto-animation */}
         {/* When showing extension for a seventh chord, this is the seventh polygon (background) */}
@@ -496,29 +440,6 @@ export function ChromaticCircle({
           />
         )}
 
-        {/* To chord polygon */}
-        {/* When showing extension for a seventh chord, this is the seventh polygon (background) */}
-        {hasToChord && (
-          <polygon
-            points={toPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-            fill={toFillColor}
-            stroke={toStrokeColor}
-            strokeWidth={POLYGON_STROKE_WIDTH}
-            strokeLinejoin="round"
-            strokeDasharray={toStrokeDasharray}
-          />
-        )}
-
-        {/* To chord triad polygon (foreground, only when extension is enabled) */}
-        {hasToChord && showExtension && toTriadPoints && (
-          <polygon
-            points={toTriadPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-            fill={toFillColor}
-            stroke={toStrokeColor}
-            strokeWidth={POLYGON_STROKE_WIDTH}
-            strokeLinejoin="round"
-          />
-        )}
 
         {/* From chord centroid marker */}
         {showCentroid && (
@@ -551,36 +472,6 @@ export function ChromaticCircle({
           </g>
         )}
 
-        {/* To chord centroid marker */}
-        {hasToChord && showCentroid && (
-          <g aria-label="To chord centroid">
-            <line
-              x1={toCentroid.x - CENTROID_CROSSHAIR_LENGTH}
-              y1={toCentroid.y}
-              x2={toCentroid.x + CENTROID_CROSSHAIR_LENGTH}
-              y2={toCentroid.y}
-              stroke={toStrokeColor}
-              strokeWidth={RING_STROKE_WIDTH}
-              opacity={0.5}
-            />
-            <line
-              x1={toCentroid.x}
-              y1={toCentroid.y - CENTROID_CROSSHAIR_LENGTH}
-              x2={toCentroid.x}
-              y2={toCentroid.y + CENTROID_CROSSHAIR_LENGTH}
-              stroke={toStrokeColor}
-              strokeWidth={RING_STROKE_WIDTH}
-              opacity={0.5}
-            />
-            <circle
-              cx={toCentroid.x}
-              cy={toCentroid.y}
-              r={CENTROID_RADIUS}
-              fill={toStrokeColor}
-              opacity={0.7}
-            />
-          </g>
-        )}
 
         {/* From chord interval labels */}
         {showIntervals &&
@@ -601,24 +492,6 @@ export function ChromaticCircle({
             );
           })}
 
-        {/* To chord interval labels */}
-        {hasToChord && showIntervals &&
-          getRootIntervals(toChordIndices).map((semitones, i) => {
-            if (semitones === null) return null;
-            const from = toPoints[i];
-            const to = toPoints[(i + 1) % toPoints.length];
-            if (!from || !to) return null;
-            return (
-              <IntervalLabel
-                key={`to-interval-${i}`}
-                from={from}
-                to={to}
-                intervalName={getIntervalName(semitones)}
-                centerX={CENTER}
-                centerY={CENTER}
-              />
-            );
-          })}
 
         {/* From chord clickable vertices */}
         {chordNotes.map((note, i) => {
@@ -666,67 +539,16 @@ export function ChromaticCircle({
           ) : null;
         })}
 
-        {/* To chord clickable vertices */}
-        {hasToChord && toChordNotes.map((note, i) => {
-          const point = toPoints[i];
-          const interval = toBaseIntervals[i];
-          const isSelected =
-            selectedTone?.chordLabel === "To Chord" &&
-            selectedTone?.note.index === note.index;
-          const isSelectedInSelectMode = selectedNotes.has(note.name);
-          return point !== undefined ? (
-            <g key={`to-vertex-${note.index}`}>
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r={isSelected ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS}
-                fill={isSelected ? VERTEX_SELECTED_FILL : toStrokeColor}
-                stroke={isSelected ? VERTEX_SELECTED_STROKE : "none"}
-                strokeWidth={isSelected ? 2 : 0}
-                style={{ cursor: "pointer" }}
-                aria-label={`${note.name} in To Chord`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNoteClick(note.name, {
-                    note,
-                    role: getToneRole(interval, toChordType),
-                    interval,
-                    frequency: noteIndexToFrequency(note.index),
-                    chordLabel: "To Chord",
-                  });
-                }}
-              />
-              {/* Selection indicator ring for select mode */}
-              {isSelectedInSelectMode && cursorMode === 'select' && (
-                <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r={VERTEX_RADIUS + 6}
-                  fill="none"
-                  stroke={toStrokeColor}
-                  strokeWidth={2}
-                  opacity={0.6}
-                />
-              )}
-            </g>
-          ) : null;
-        })}
 
         {/* Outer ring note labels — single source of truth for note names */}
         {PITCH_CLASSES.map((label, i) => {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
           const x = CENTER + RING_RADIUS * Math.cos(angle);
           const y = CENTER + RING_RADIUS * Math.sin(angle);
-          // From-chord tones take priority over to-chord tones; non-chord notes
-          // fall back to diatonic / chromatic styling.
-          const noteStyle = chordIndices.includes(i)
-            ? getNoteStyle(i, chordIndices, chordType, diatonicIndices, chordComplexity)
-            : (hasToChord && toChordIndices.includes(i))
-            ? getNoteStyle(i, toChordIndices, toChordType, diatonicIndices, toChordComplexity)
-            : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
-          
           const isInFromChord = chordIndices.includes(i);
-          const isInToChord = hasToChord && toChordIndices.includes(i);
+          const noteStyle = isInFromChord
+            ? getNoteStyle(i, chordIndices, chordType, diatonicIndices, chordComplexity)
+            : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
           const isSelectedInSelectMode = selectedNotes.has(label);
           
           return (
@@ -750,25 +572,14 @@ export function ChromaticCircle({
                 if (isDragging) return; // Don't fire click during drag
                 e.stopPropagation();
                 const note = { index: i, name: label, role: "root" as const };
-                // Calculate interval: semitones from C (index 0)
-                const interval = i;
-                // Determine chord label context
-                let chordLabel: "From Chord" | "To Chord" | "Scale" = "Scale";
-                if (isInFromChord) {
-                  chordLabel = "From Chord";
-                } else if (isInToChord) {
-                  chordLabel = "To Chord";
-                }
+                // Interval relative to chord root (0–11 semitones)
+                const interval = (i - rootIndex + 12) % 12;
                 handleNoteClick(label, {
                   note,
-                  role: isInFromChord 
-                    ? getToneRole(interval, chordType)
-                    : isInToChord
-                    ? getToneRole(interval, toChordType)
-                    : "Note",
+                  role: isInFromChord ? getToneRole(interval, chordType) : "Note",
                   interval,
                   frequency: noteIndexToFrequency(i),
-                  chordLabel,
+                  chordLabel: isInFromChord ? "From Chord" : "Scale",
                 });
               }}
             >
@@ -822,95 +633,6 @@ export function ChromaticCircle({
           );
         })}
 
-        {/* From chord vertex badges (F) — outer ring */}
-        {chordNotes.map((note, i) => {
-          const angle = (note.index / 12) * 2 * Math.PI;
-          const badgeX = CENTER + (RING_RADIUS + VERTEX_BADGE_OFFSET) * Math.sin(angle);
-          const badgeY = CENTER - (RING_RADIUS + VERTEX_BADGE_OFFSET) * Math.cos(angle);
-          const interval = baseIntervals[i];
-          return (
-            <g key={`from-badge-${note.index}`}>
-              <g
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNoteClick(note.name, {
-                    note,
-                    role: getToneRole(interval, chordType),
-                    interval,
-                    frequency: noteIndexToFrequency(note.index),
-                    chordLabel: "From Chord",
-                  });
-                }}
-              >
-                <circle
-                  cx={badgeX}
-                  cy={badgeY}
-                  r={VERTEX_BADGE_RADIUS}
-                  fill="white"
-                  opacity={0.9}
-                />
-                <text
-                  x={badgeX}
-                  y={badgeY}
-                  fontSize={VERTEX_BADGE_FONT_SIZE}
-                  fontWeight="bold"
-                  fill={strokeColor}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontFamily={NOTE_FONT_FAMILY}
-                >
-                  ●
-                </text>
-              </g>
-            </g>
-          );
-        })}
-
-        {/* To chord vertex badges (T) — inner ring */}
-        {hasToChord && toChordNotes.map((note, i) => {
-          const angle = (note.index / 12) * 2 * Math.PI;
-          const badgeX = CENTER + (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.sin(angle);
-          const badgeY = CENTER - (RING_RADIUS - VERTEX_BADGE_OFFSET) * Math.cos(angle);
-          const interval = toBaseIntervals[i];
-          return (
-            <g key={`to-badge-${note.index}`}>
-              <g
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNoteClick(note.name, {
-                    note,
-                    role: getToneRole(interval, toChordType),
-                    interval,
-                    frequency: noteIndexToFrequency(note.index),
-                    chordLabel: "To Chord",
-                  });
-                }}
-              >
-                <circle
-                  cx={badgeX}
-                  cy={badgeY}
-                  r={VERTEX_BADGE_RADIUS}
-                  fill="white"
-                  opacity={0.9}
-                />
-                <text
-                  x={badgeX}
-                  y={badgeY}
-                  fontSize={VERTEX_BADGE_FONT_SIZE}
-                  fontWeight="bold"
-                  fill={toStrokeColor}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontFamily={NOTE_FONT_FAMILY}
-                >
-                  ○
-                </text>
-              </g>
-            </g>
-          );
-        })}
         </svg>
       </div>
       <div
@@ -931,43 +653,16 @@ export function ChromaticCircle({
       </div>
       {/* Only show ToneInfoPanel in info mode */}
       {cursorMode === 'info' && <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />}
-      <div style={{ display: "flex", gap: 12, marginTop: 12, justifyContent: "center", flexWrap: "wrap" }}>
-        <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af" }}>
-          From
-          <ChordSelector 
-            value={selectedChordName} 
-            onChange={(name) => {
-              setSelectedChordName(name);
-              setCustomFromChord(null); // Clear custom chord when user selects a named chord
-            }}
-            customChord={customFromChord}
-            aria-label="From chord" 
-          />
-        </label>
-        <div style={{ display: "flex", alignItems: "flex-end", paddingBottom: 2 }}>
-          <button
-            type="button"
-            onClick={() => setSelectedToChordName(selectedChordName)}
-            title="Copy from-chord to to-chord"
-            aria-label="Copy from-chord to to-chord"
-            style={{
-              padding: "4px 10px",
-              fontSize: 16,
-              cursor: "pointer",
-              background: "#fff",
-              border: "1px solid #d1d5db",
-              borderRadius: 4,
-              color: "#6b7280",
-              lineHeight: 1,
-            }}
-          >
-            →
-          </button>
-        </div>
-        <label style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af" }}>
-          To
-          <ChordSelector value={selectedToChordName ?? ""} onChange={(v) => setSelectedToChordName(v || null)} aria-label="To chord" />
-        </label>
+      <div style={{ display: "flex", marginTop: 12, justifyContent: "center" }}>
+        <ChordGrid
+          value={selectedChordName}
+          onChange={(name) => {
+            setSelectedChordName(name);
+            setCustomFromChord(null); // Clear custom chord when user selects a named chord
+          }}
+          customChord={customFromChord}
+          aria-label="Chord"
+        />
       </div>
     </div>
   );

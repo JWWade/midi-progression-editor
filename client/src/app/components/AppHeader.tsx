@@ -9,8 +9,6 @@ interface AppHeaderProps {
   onCursorModeChange: (mode: CursorMode) => void;
   selectedScale: ScaleType;
   onScaleChange: (scale: ScaleType) => void;
-  showVoiceLeads: boolean;
-  onVoiceLeadsChange: (show: boolean) => void;
   showExtension: boolean;
   onExtensionChange: (show: boolean) => void;
   showCentroid: boolean;
@@ -24,8 +22,6 @@ export function AppHeader({
   onCursorModeChange,
   selectedScale,
   onScaleChange,
-  showVoiceLeads,
-  onVoiceLeadsChange,
   showExtension,
   onExtensionChange,
   showCentroid,
@@ -38,19 +34,6 @@ export function AppHeader({
   return (
     <header className={styles.header}>
       <div className={styles.toggles}>
-        {/* Show Voice Leads toggle */}
-        <label htmlFor="show-voice-leads" className={styles.toggleLabel}>
-          <input
-            id="show-voice-leads"
-            type="checkbox"
-            checked={showVoiceLeads}
-            onChange={(e) => onVoiceLeadsChange(e.target.checked)}
-            className={styles.checkbox}
-            aria-label="Toggle voice leads"
-          />
-          Voice Leads
-        </label>
-
         {/* Show Extension toggle */}
         <label htmlFor="show-extension" className={styles.toggleLabel}>
           <input
