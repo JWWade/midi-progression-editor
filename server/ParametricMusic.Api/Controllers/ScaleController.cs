@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 [ApiController]
 [Route("[controller]")]
 [Tags("Scale")]
-[Produces("application/json")]
 public class ScaleController : ControllerBase
 {
     /// <summary>

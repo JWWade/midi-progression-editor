@@ -49,6 +49,44 @@ public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicatio
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    // ── Problem Details – content-type and schema ──────────────────────────────
+
+    [Fact]
+    public async Task PostAnalyze_ZeroChords_ReturnsProblemDetailsContentType()
+    {
+        var response = await PostAnalyzeAsync("""{"chords": []}""");
+
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task PostAnalyze_ZeroChords_ReturnsProblemDetailsSchema()
+    {
+        var response = await PostAnalyzeAsync("""{"chords": []}""");
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        Assert.True(doc.RootElement.TryGetProperty("status", out var statusProp));
+        Assert.Equal(400, statusProp.GetInt32());
+        Assert.True(doc.RootElement.TryGetProperty("detail", out _));
+    }
+
+    [Fact]
+    public async Task PostAnalyze_InvalidRootNote_ReturnsProblemDetailsContentType()
+    {
+        var response = await PostAnalyzeAsync("""{"chords": [{"root":"Z","quality":"Major"}]}""");
+
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task PostAnalyze_InvalidPrimitiveShape_ReturnsProblemDetailsContentType()
+    {
+        var response = await PostAnalyzeAsync("""{"chords": [{"root":"C","quality":"Major","primitiveShape":"hexagon"}]}""");
+
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
     // ── 200 OK – boundary values ──────────────────────────────────────────────
 
     [Fact]

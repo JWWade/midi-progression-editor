@@ -145,6 +145,50 @@ public class ChordControllerIntegrationTests : IClassFixture<WebApplicationFacto
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    // ── Problem Details – content-type and schema ──────────────────────────────
+
+    [Fact]
+    public async Task PostChordFromRoot_InvalidNote_ReturnsProblemDetailsContentType()
+    {
+        var response = await PostChordAsync("Z", "Major");
+
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task PostChordFromRoot_InvalidNote_ReturnsProblemDetailsSchema()
+    {
+        var response = await PostChordAsync("Z", "Major");
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        Assert.True(doc.RootElement.TryGetProperty("status", out var statusProp));
+        Assert.Equal(400, statusProp.GetInt32());
+        Assert.True(doc.RootElement.TryGetProperty("title", out _));
+    }
+
+    [Fact]
+    public async Task PostChordFromRoot_InvalidQuality_ReturnsProblemDetailsContentType()
+    {
+        var body = """{"quality": "InvalidQuality"}""";
+        var response = await _client.PostAsync(
+            "/Chord/from-root?note=C",
+            new StringContent(body, Encoding.UTF8, "application/json"));
+
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task PostChordFromRoot_InvalidPrimitiveShape_ReturnsProblemDetailsContentType()
+    {
+        var body = """{"quality": "Major", "primitiveShape": "hexagon"}""";
+        var response = await _client.PostAsync(
+            "/Chord/from-root?note=C",
+            new StringContent(body, Encoding.UTF8, "application/json"));
+
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private Task<HttpResponseMessage> PostChordAsync(string note, string quality)
