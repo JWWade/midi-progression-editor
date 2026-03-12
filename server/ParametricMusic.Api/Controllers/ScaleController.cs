@@ -4,14 +4,15 @@ using System.ComponentModel.DataAnnotations;
 [ApiController]
 [Route("[controller]")]
 [Tags("Scale")]
+[Produces("application/json")]
 public class ScaleController : ControllerBase
 {
     /// <summary>
     /// Generate a musical scale from a root note with specified options.
     /// </summary>
     [HttpPost("from-root")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(NoteInfo[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public IActionResult BuildScale(
         [FromQuery]
         [Display(Name = "Root Note", Description = "Select the root note for the scale")]

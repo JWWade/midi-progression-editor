@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 [ApiController]
 [Route("[controller]")]
 [Tags("Chord")]
+[Produces("application/json")]
 public class ChordController : ControllerBase
 {
     /// <summary>
@@ -11,7 +12,7 @@ public class ChordController : ControllerBase
     /// </summary>
     [HttpPost("from-root")]
     [ProducesResponseType(typeof(ChordDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public IActionResult BuildChord(
         [FromQuery]
         [Display(Name = "Root Note", Description = "Select the root note for the chord")]
