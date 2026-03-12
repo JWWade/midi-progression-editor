@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { ChromaticCircle } from '../features/chromatic-circle';
 import { CurrentChordPanel, type Chord } from '../features/current-chord';
 import { getDiatonicIndices } from '../features/chromatic-circle/utils';
@@ -7,17 +7,12 @@ import { useProgression } from '../features/progression-sidebar/hooks/useProgres
 import { MAX_PROGRESSION_LENGTH } from '../features/progression-sidebar/constants/progressionConfig';
 import { AppHeader } from './components/AppHeader';
 import type { ScaleType } from '../features/scale/types';
-import type { CursorMode } from '../shared/types/CursorMode';
 import styles from './App.module.css';
 
 export default function App() {
   const [currentChord, setCurrentChord] = useState<Chord | null>(null);
   const [keyRoot, setKeyRoot] = useState<number>(0);
   const [keyScale, setKeyScale] = useState<ScaleType>("major");
-
-  // Cursor mode and selection state (for multi-mode interaction)
-  const [cursorMode, setCursorMode] = useState<CursorMode>('info');
-  const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
 
   // Visualization toggles and scale selector (lifted from ChromaticCircle)
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
@@ -59,37 +54,9 @@ export default function App() {
 
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 
-  // Keyboard shortcuts for mode switching
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Only respond to I and S keys when focus is not in a form control
-      const activeElement = document.activeElement as HTMLElement;
-      const isInFormControl = activeElement && (
-        activeElement.tagName === 'INPUT' ||
-        activeElement.tagName === 'SELECT' ||
-        activeElement.tagName === 'TEXTAREA'
-      );
-
-      if (isInFormControl) return;
-
-      if (e.key.toLowerCase() === 'i' && cursorMode !== 'info') {
-        e.preventDefault();
-        setCursorMode('info');
-      } else if (e.key.toLowerCase() === 's' && cursorMode !== 'select') {
-        e.preventDefault();
-        setCursorMode('select');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cursorMode]);
-
   return (
     <div className={styles.layout}>
       <AppHeader
-        cursorMode={cursorMode}
-        onCursorModeChange={setCursorMode}
         selectedScale={selectedScale}
         onScaleChange={setSelectedScale}
         showExtension={showExtension}
@@ -113,9 +80,6 @@ export default function App() {
             showExtension={showExtension}
             showCentroid={showCentroid}
             showIntervals={showIntervals}
-            cursorMode={cursorMode}
-            selectedNotes={selectedNotes}
-            onSelectedNotesChange={setSelectedNotes}
           />
         </section>
 

@@ -1,5 +1,6 @@
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { ChordNoteInfo, ChordType } from "../types";
+import type { PrimitiveShape } from "@/features/current-chord/types";
 
 export const MAJOR_INTERVALS = [0, 4, 7] as const;
 export const MINOR_INTERVALS = [0, 3, 7] as const;
@@ -9,6 +10,10 @@ export const MAJ7_INTERVALS = [0, 4, 7, 11] as const;
 export const MIN7_INTERVALS = [0, 3, 7, 10] as const;
 export const DOM7_INTERVALS = [0, 4, 7, 10] as const;
 export const HALFDIM7_INTERVALS = [0, 3, 6, 10] as const;
+export const EQUILATERAL_TRIANGLE_INTERVALS = [0, 4, 8] as const;
+export const SUSPENDED_TRIANGLE_INTERVALS = [0, 5, 7] as const;
+export const SQUARE_INTERVALS = [0, 3, 6, 9] as const;
+export const RECTANGLE_INTERVALS = [0, 4, 6, 10] as const;
 
 const ROLES: ChordNoteInfo["role"][] = ["root", "third", "fifth", "seventh"];
 
@@ -68,4 +73,41 @@ export const CHORD_INTERVALS: Readonly<Record<ChordType, readonly number[]>> = {
  */
 export function getChordNoteIndices(root: number, quality: ChordType): number[] {
   return transposeChord(CHORD_INTERVALS[quality], root).map((n) => n.index);
+}
+
+/**
+ * Rotates a set of pitch classes by the given number of semitones.
+ * Positive values move clockwise on the chromatic circle.
+ */
+export function rotateChordNotes(noteIndices: number[], semitones: number): number[] {
+  return noteIndices.map((index) => ((index + semitones) % 12 + 12) % 12);
+}
+
+/**
+ * Returns a wrapped root index after semitone rotation.
+ */
+export function rotateNamedChordRoot(root: number, semitones: number): number {
+  return ((root + semitones) % 12 + 12) % 12;
+}
+
+/**
+ * Removes duplicate pitch classes while preserving first-seen order.
+ */
+export function dedupePitchClasses(noteIndices: number[]): number[] {
+  return [...new Set(noteIndices)];
+}
+
+/**
+ * Returns chromatic note indices for a primitive geometric shape anchored to a root.
+ */
+export function getPrimitiveNoteIndices(root: number, shape: PrimitiveShape): number[] {
+  const intervals =
+    shape === "equilateral-triangle"
+      ? EQUILATERAL_TRIANGLE_INTERVALS
+      : shape === "suspended-triangle"
+        ? SUSPENDED_TRIANGLE_INTERVALS
+        : shape === "rectangle"
+          ? RECTANGLE_INTERVALS
+          : SQUARE_INTERVALS;
+  return intervals.map((interval) => (root + interval) % 12);
 }

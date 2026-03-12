@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import type { Chord } from "../types";
-import { formatChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
+import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
 import { getCircleColor } from "@/features/chromatic-circle/utils/circleColors";
@@ -111,15 +111,27 @@ export function CurrentChordPanel({
       ) : (
         <>
           <span className={styles.chordName}>
-            {isCustomChord(chord) 
-              ? chord.customNotes.map(i => PITCH_CLASSES[i]).join(" ")
+            {isCustomChord(chord)
+              ? (chord.primitiveShape === "equilateral-triangle"
+                ? formatChordName(chord)
+                : chord.primitiveShape
+                  ? formatPrimitiveChordName(chord)
+                : chord.customNotes.map(i => PITCH_CLASSES[i]).join(" "))
               : formatChordName(chord)
             }
           </span>
           <div className={styles.rootQualityRow}>
             <span className={styles.root}>{PITCH_CLASSES[chord.root]}</span>
             <span className={styles.quality}>
-              {isCustomChord(chord) ? "(custom)" : CHORD_QUALITY_LABELS[chord.quality]}
+              {isCustomChord(chord)
+                ? (chord.primitiveShape === "equilateral-triangle"
+                  ? CHORD_QUALITY_LABELS[chord.quality]
+                  : chord.primitiveShape === "suspended-triangle"
+                    ? "sus4"
+                  : chord.primitiveShape
+                    ? CHORD_QUALITY_LABELS[chord.quality]
+                    : "(custom)")
+                : CHORD_QUALITY_LABELS[chord.quality]}
             </span>
           </div>
         </>

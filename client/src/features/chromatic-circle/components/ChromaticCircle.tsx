@@ -26,6 +26,10 @@ import {
   transposeChord,
   getChordTriad,
   CHORD_INTERVALS,
+  rotateChordNotes,
+  rotateNamedChordRoot,
+  dedupePitchClasses,
+  getPrimitiveNoteIndices,
 } from "@/features/chord/utils/transpose";
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
 import type { ChordType } from "@/features/chord/types";
@@ -56,8 +60,7 @@ import { ChordQualityColors } from "@/features/chord/constants/chordQualityColor
 import {
   createRadialGradientDef,
 } from "@/features/color-language/utils/svgGradient";
-import type { Chord } from "@/features/current-chord";
-import type { CursorMode } from "@/shared/types/CursorMode";
+import type { Chord, PrimitiveShape } from "@/features/current-chord";
 
 const DRAG_THRESHOLD_PX = 8;
 
@@ -74,12 +77,6 @@ interface ChromaticCircleProps {
   showExtension?: boolean;
   showCentroid?: boolean;
   showIntervals?: boolean;
-  /** Current cursor interaction mode (info or select) */
-  cursorMode?: CursorMode;
-  /** Set of currently selected note names (for selection mode) */
-  selectedNotes?: Set<string>;
-  /** Called when selected notes change in selection mode */
-  onSelectedNotesChange?: (notes: Set<string>) => void;
 }
 
 export function ChromaticCircle({
@@ -89,15 +86,17 @@ export function ChromaticCircle({
   showExtension: propShowExtension = false,
   showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
-  cursorMode = 'info',
-  selectedNotes = new Set(),
-  onSelectedNotesChange,
 }: ChromaticCircleProps) {
-  type CustomChordState = { root: number; quality: ChordType; customNotes: number[] };
+  type CustomChordState = {
+    root: number;
+    quality: ChordType;
+    customNotes: number[];
+    primitiveShape?: PrimitiveShape;
+  };
 
   const [selectedChordName, setSelectedChordName] = useState("C");
   
-  // Drag state for note moving in select mode
+  // Drag state for direct note movement
   const [isDragging, setIsDragging] = useState(false);
   const [draggedNoteIndex, setDraggedNoteIndex] = useState<number | null>(null);
   const [dragTargetIndex, setDragTargetIndex] = useState<number | null>(null);
@@ -119,35 +118,19 @@ export function ChromaticCircle({
   );
   const deselectTone = useCallback(() => setSelectedTone(null), []);
 
-  /**
-   * Mode-aware click handler for note vertices and badges.
-   * In info mode: displays the note's details.
-   * In select mode: toggles the note in the selection set.
-   */
+  /** Displays tone details for clicked notes. */
   const handleNoteClick = useCallback(
-    (noteName: string, toneInfo: ToneInfo) => {
-      if (cursorMode === 'info') {
-        setSelectedTone(toneInfo);
-      } else if (cursorMode === 'select' && onSelectedNotesChange) {
-        const newSelected = new Set(selectedNotes);
-        if (newSelected.has(noteName)) {
-          newSelected.delete(noteName);
-        } else {
-          newSelected.add(noteName);
-        }
-        onSelectedNotesChange(newSelected);
-      }
+    (_noteName: string, toneInfo: ToneInfo) => {
+      setSelectedTone(toneInfo);
     },
-    [cursorMode, selectedNotes, onSelectedNotesChange],
+    [],
   );
 
   /**
-   * Start dragging a note in select mode.
+   * Start dragging a note.
    * Only allows dragging notes that are currently in the From chord.
    */
   const handleNoteDragStart = useCallback((noteIndex: number, e: ReactPointerEvent) => {
-    if (cursorMode !== 'select') return;
-    
     // Get current chord indices (from custom or named chord)
     const currentChordIndices = customFromChord?.customNotes ?? 
       transposeChord(CHORD_INTERVALS[CHORD_NAME_TO_DATA[selectedChordName].type], CHORD_NAME_TO_DATA[selectedChordName].root).map(n => n.index);
@@ -164,7 +147,7 @@ export function ChromaticCircle({
     
     // Capture pointer for smooth drag
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [cursorMode, customFromChord, selectedChordName]);
+  }, [customFromChord, selectedChordName]);
 
   /**
    * Update the drag target position as pointer moves.
@@ -259,13 +242,122 @@ export function ChromaticCircle({
     resetDragState();
   }, [isDragging, didDrag, draggedNoteIndex, dragTargetIndex, customFromChord, selectedChordName, onCurrentChordChange]);
 
+  const handleRotateChord = useCallback(
+    (direction: "clockwise" | "counterclockwise") => {
+      const semitones = direction === "clockwise" ? 1 : -1;
+
+      if (customFromChord) {
+        const rotatedCustomNotes = dedupePitchClasses(
+          rotateChordNotes(customFromChord.customNotes, semitones),
+        );
+        if (rotatedCustomNotes.length === 0) return;
+
+        const rotatedRoot = rotateNamedChordRoot(customFromChord.root, semitones);
+
+        // Preserve primitive preset intent while rotating.
+        if (customFromChord.primitiveShape) {
+          const newChord: CustomChordState = {
+            root: rotatedRoot,
+            quality: customFromChord.quality,
+            customNotes: rotatedCustomNotes,
+            primitiveShape: customFromChord.primitiveShape,
+          };
+          setCustomFromChord(newChord);
+          onCurrentChordChange?.(newChord);
+          setMoveAnnouncement(`Rotated ${direction} by one semitone`);
+          return;
+        }
+
+        const { root: bestRoot, quality: bestQuality, matchScore } = findNearestChord(rotatedCustomNotes);
+
+        if (matchScore === 1) {
+          // Promote back to a named chord when the rotated set is an exact match.
+          setCustomFromChord(null);
+          setSelectedChordName(getChordName(bestRoot, bestQuality));
+        } else {
+          const newChord: CustomChordState = {
+            root: bestRoot,
+            quality: bestQuality,
+            customNotes: rotatedCustomNotes,
+          };
+          setCustomFromChord(newChord);
+          onCurrentChordChange?.(newChord);
+        }
+      } else {
+        const { root, type } = CHORD_NAME_TO_DATA[selectedChordName];
+        const rotatedRoot = rotateNamedChordRoot(root, semitones);
+        setSelectedChordName(getChordName(rotatedRoot, type));
+      }
+
+      setMoveAnnouncement(`Rotated ${direction} by one semitone`);
+    },
+    [customFromChord, selectedChordName, onCurrentChordChange],
+  );
+
+  const handleSelectPrimitiveShape = useCallback(
+    (shape: PrimitiveShape) => {
+      const root = customFromChord?.root ?? CHORD_NAME_TO_DATA[selectedChordName].root;
+      const quality: ChordType =
+        shape === "equilateral-triangle"
+          ? "aug"
+          : shape === "suspended-triangle"
+            ? "major"
+            : shape === "rectangle"
+              ? "dom7"
+              : "dim";
+      const customNotes = getPrimitiveNoteIndices(root, shape);
+      const newChord: CustomChordState = {
+        root,
+        quality,
+        customNotes,
+        primitiveShape: shape,
+      };
+
+      setCustomFromChord(newChord);
+      onCurrentChordChange?.(newChord);
+      setMoveAnnouncement(
+        `Selected ${
+          shape === "equilateral-triangle"
+            ? "equilateral triangle"
+            : shape === "suspended-triangle"
+              ? "sus4 triangle"
+              : shape === "rectangle"
+                ? "rectangle"
+                : "square"
+        }`,
+      );
+    },
+    [customFromChord, selectedChordName, onCurrentChordChange],
+  );
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") deselectTone();
+      if (e.key === "Escape") {
+        deselectTone();
+        return;
+      }
+
+      const activeElement = document.activeElement as HTMLElement | null;
+      const isInFormControl =
+        !!activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "SELECT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.isContentEditable);
+
+      if (isInFormControl || !e.ctrlKey) return;
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        handleRotateChord("clockwise");
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        handleRotateChord("counterclockwise");
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [deselectTone]);
+  }, [deselectTone, handleRotateChord]);
 
   useEffect(() => {
     if (!moveAnnouncement) return;
@@ -318,7 +410,10 @@ export function ChromaticCircle({
     ? calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, fromTriadNotes.map((n) => n.index))
     : null;
 
-  const { morphedPoints: fromMorphedPoints, morphProgress } = useChordMorphing(fromPoints);
+  const { morphedPoints: fromMorphedPoints, morphProgress } = useChordMorphing(
+    fromPoints,
+    prefersReducedMotion ? 1 : undefined,
+  );
   const isAnimating = morphProgress > 0 && morphProgress < 1;
 
   const fromCentroid = calculateCentroid(fromMorphedPoints);
@@ -363,6 +458,8 @@ export function ChromaticCircle({
             width: "100%",
             maxHeight: 550,
             cursor: "default",
+            userSelect: "none",
+            WebkitUserSelect: "none",
           }}
         >
         {/* Radial gradient fills for chord-tone note nodes (one per quality × complexity)
@@ -500,7 +597,6 @@ export function ChromaticCircle({
           const isSelected =
             selectedTone?.chordLabel === "From Chord" &&
             selectedTone?.note.index === note.index;
-          const isSelectedInSelectMode = selectedNotes.has(note.name);
           return point !== undefined ? (
             <g key={`from-vertex-${note.index}`}>
               <circle
@@ -523,18 +619,6 @@ export function ChromaticCircle({
                   });
                 }}
               />
-              {/* Selection indicator ring for select mode */}
-              {isSelectedInSelectMode && cursorMode === 'select' && (
-                <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r={VERTEX_RADIUS + 6}
-                  fill="none"
-                  stroke={strokeColor}
-                  strokeWidth={2}
-                  opacity={0.6}
-                />
-              )}
             </g>
           ) : null;
         })}
@@ -549,21 +633,17 @@ export function ChromaticCircle({
           const noteStyle = isInFromChord
             ? getNoteStyle(i, chordIndices, chordType, diatonicIndices, chordComplexity)
             : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
-          const isSelectedInSelectMode = selectedNotes.has(label);
           
           return (
             <g
               key={`pitch-${i}-${label}`}
               style={{ 
-                cursor: cursorMode === 'select' 
-                  ? (isInFromChord ? "grab" : "pointer") 
-                  : "pointer" 
+                cursor: isInFromChord ? "grab" : "pointer",
               }}
               onPointerDown={(e) => handleNoteDragStart(i, e)}
               onPointerMove={handleNoteDragMove}
               onPointerUp={handleNoteDragEnd}
               onPointerCancel={handleNoteDragEnd}
-              onPointerLeave={handleNoteDragEnd}
               onClick={(e) => {
                 if (suppressNextClick) {
                   setSuppressNextClick(false);
@@ -601,21 +681,11 @@ export function ChromaticCircle({
                 fill={noteStyle.textFill}
                 fontFamily={NOTE_FONT_FAMILY}
                 fontWeight="bold"
+                pointerEvents="none"
+                style={{ userSelect: "none", WebkitUserSelect: "none" }}
               >
                 {label}
               </text>
-              {/* Selection indicator ring for select mode */}
-              {isSelectedInSelectMode && cursorMode === 'select' && (
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={NODE_RADIUS + 6}
-                  fill="none"
-                  stroke="#f59e0b"
-                  strokeWidth={3}
-                  opacity={1}
-                />
-              )}
               {/* Drag preview ring - shows where note will be dropped */}
               {isDragging && dragTargetIndex === i && (
                 <circle
@@ -651,9 +721,162 @@ export function ChromaticCircle({
       >
         {moveAnnouncement}
       </div>
-      {/* Only show ToneInfoPanel in info mode */}
-      {cursorMode === 'info' && <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />}
-      <div style={{ display: "flex", marginTop: 12, justifyContent: "center" }}>
+      <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
+      <div style={{ display: "flex", flexDirection: "column", marginTop: 12, alignItems: "center", gap: 10 }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => handleRotateChord("counterclockwise")}
+            title="Rotate counterclockwise by one semitone (Ctrl+Left)"
+            aria-label="Rotate chord counterclockwise"
+            style={{
+              width: 36,
+              height: 32,
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+              lineHeight: 1,
+              color: "#374151",
+              cursor: "pointer",
+              background: "#fff",
+              border: "1.5px solid #d1d5db",
+              borderRadius: 6,
+              fontWeight: 600,
+            }}
+          >
+            ↺
+          </button>
+          <button
+            type="button"
+            onClick={() => handleRotateChord("clockwise")}
+            title="Rotate clockwise by one semitone (Ctrl+Right)"
+            aria-label="Rotate chord clockwise"
+            style={{
+              width: 36,
+              height: 32,
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+              lineHeight: 1,
+              color: "#374151",
+              cursor: "pointer",
+              background: "#fff",
+              border: "1.5px solid #d1d5db",
+              borderRadius: 6,
+              fontWeight: 600,
+            }}
+          >
+            ↻
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectPrimitiveShape("equilateral-triangle")}
+            title="Select equilateral triangle primitive"
+            aria-label="Select equilateral triangle primitive"
+            style={{
+              width: 36,
+              height: 32,
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+              lineHeight: 1,
+              color: customFromChord?.primitiveShape === "equilateral-triangle" ? "#111827" : "#6b7280",
+              cursor: "pointer",
+              background: "#fff",
+              border: customFromChord?.primitiveShape === "equilateral-triangle"
+                ? "2px solid #111827"
+                : "1.5px solid #d1d5db",
+              borderRadius: 6,
+              fontWeight: 700,
+            }}
+          >
+            △
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectPrimitiveShape("suspended-triangle")}
+            title="Select sus4 triangle primitive"
+            aria-label="Select sus4 triangle primitive"
+            style={{
+              width: 36,
+              height: 32,
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+              lineHeight: 1,
+              color: customFromChord?.primitiveShape === "suspended-triangle" ? "#111827" : "#6b7280",
+              cursor: "pointer",
+              background: "#fff",
+              border: customFromChord?.primitiveShape === "suspended-triangle"
+                ? "2px solid #111827"
+                : "1.5px solid #d1d5db",
+              borderRadius: 6,
+              fontWeight: 700,
+            }}
+          >
+            ◬
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectPrimitiveShape("square")}
+            title="Select square primitive"
+            aria-label="Select square primitive"
+            style={{
+              width: 36,
+              height: 32,
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+              lineHeight: 1,
+              color: customFromChord?.primitiveShape === "square" ? "#111827" : "#6b7280",
+              cursor: "pointer",
+              background: "#fff",
+              border: customFromChord?.primitiveShape === "square"
+                ? "2px solid #111827"
+                : "1.5px solid #d1d5db",
+              borderRadius: 6,
+              fontWeight: 700,
+            }}
+          >
+            □
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSelectPrimitiveShape("rectangle")}
+            title="Select rectangle primitive"
+            aria-label="Select rectangle primitive"
+            style={{
+              width: 36,
+              height: 32,
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+              lineHeight: 1,
+              color: customFromChord?.primitiveShape === "rectangle" ? "#111827" : "#6b7280",
+              cursor: "pointer",
+              background: "#fff",
+              border: customFromChord?.primitiveShape === "rectangle"
+                ? "2px solid #111827"
+                : "1.5px solid #d1d5db",
+              borderRadius: 6,
+              fontWeight: 700,
+            }}
+          >
+            ▭
+          </button>
+        </div>
         <ChordGrid
           value={selectedChordName}
           onChange={(name) => {

@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import type { Point } from "@/features/chromatic-circle/utils/geometry";
 import { morphPoints } from "@/features/chord-morphing/utils/morphing";
 
-const MORPH_DURATION_MS = 350;
+export const DEFAULT_MORPH_DURATION_MS = 260;
 
-function easeInOutQuad(t: number): number {
-  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
 function pointsToKey(points: Point[]): string {
@@ -20,39 +20,55 @@ function pointsToKey(points: Point[]): string {
  * Overlapping changes use Option A: the running animation is cancelled and a
  * new one starts immediately from the last "destination" position.
  */
-export function useChordMorphing(currentPoints: Point[]) {
+export function useChordMorphing(
+  currentPoints: Point[],
+  durationMs: number = DEFAULT_MORPH_DURATION_MS,
+) {
   const [fromPoints, setFromPoints] = useState<Point[]>(currentPoints);
+  const [toPoints, setToPoints] = useState<Point[]>(currentPoints);
   const [morphProgress, setMorphProgress] = useState(1);
 
-  // Tracks the most-recent "to" position so overlapping changes start from there
-  const prevPointsRef = useRef<Point[]>(currentPoints);
+  // Tracks active animation endpoints so overlapping changes resume in-flight.
+  const fromPointsRef = useRef<Point[]>(currentPoints);
+  const toPointsRef = useRef<Point[]>(currentPoints);
+  const progressRef = useRef(1);
   const prevKeyRef = useRef(pointsToKey(currentPoints));
   const animationIdRef = useRef<number>(0);
 
   const currentKey = pointsToKey(currentPoints);
+  const safeDurationMs = Math.max(1, durationMs);
 
   useEffect(() => {
     if (currentKey === prevKeyRef.current) return;
 
-    // Capture the previous destination as the new "from"
-    const capturedFrom = prevPointsRef.current;
-    prevPointsRef.current = currentPoints;
+    const capturedFrom =
+      progressRef.current >= 1
+        ? toPointsRef.current
+        : morphPoints(fromPointsRef.current, toPointsRef.current, progressRef.current);
+    const nextTo = currentPoints;
+
+    fromPointsRef.current = capturedFrom;
+    toPointsRef.current = nextTo;
     prevKeyRef.current = currentKey;
 
-    // Cancel any in-progress animation (Option A)
+    // Cancel any in-progress animation and continue from the currently rendered shape.
     cancelAnimationFrame(animationIdRef.current);
-
-    // Snap "from" to last destination and reset progress to 0
-    setFromPoints(capturedFrom);
-    setMorphProgress(0);
+    progressRef.current = 0;
 
     let startTime = 0;
 
     const animate = (now: number) => {
-      if (startTime === 0) startTime = now;
+      if (startTime === 0) {
+        startTime = now;
+        setFromPoints(capturedFrom);
+        setToPoints(nextTo);
+        setMorphProgress(0);
+      }
       const elapsed = now - startTime;
-      const linear = Math.min(elapsed / MORPH_DURATION_MS, 1);
-      setMorphProgress(easeInOutQuad(linear));
+      const linear = Math.min(elapsed / safeDurationMs, 1);
+      const eased = easeInOutCubic(linear);
+      progressRef.current = eased;
+      setMorphProgress(eased);
       if (linear < 1) {
         animationIdRef.current = requestAnimationFrame(animate);
       }
@@ -60,14 +76,15 @@ export function useChordMorphing(currentPoints: Point[]) {
 
     animationIdRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationIdRef.current);
-    // currentKey encodes all changes in currentPoints; both listed to satisfy exhaustive-deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentKey]);
+  // `currentKey` fully captures point changes; excluding raw `currentPoints`
+  // prevents cancel/restart loops caused by new array identities each render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentKey, safeDurationMs]);
 
   // When point counts differ (triad <-> seventh), snap to destination points
   // at animation end so the final rendered polygon includes all vertices.
   const morphedPoints = morphProgress >= 1
-    ? currentPoints
-    : morphPoints(fromPoints, currentPoints, morphProgress);
+    ? toPoints
+    : morphPoints(fromPoints, toPoints, morphProgress);
   return { morphedPoints, morphProgress };
 }

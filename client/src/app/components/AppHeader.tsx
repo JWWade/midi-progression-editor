@@ -1,12 +1,9 @@
 import type { ScaleType } from '../../features/scale/types';
 import { SCALE_LABELS } from '../../features/scale/types';
-import type { CursorMode } from '../../shared/types/CursorMode';
 import { useTheme } from '../providers/useTheme';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
-  cursorMode: CursorMode;
-  onCursorModeChange: (mode: CursorMode) => void;
   selectedScale: ScaleType;
   onScaleChange: (scale: ScaleType) => void;
   showExtension: boolean;
@@ -18,8 +15,6 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({
-  cursorMode,
-  onCursorModeChange,
   selectedScale,
   onScaleChange,
   showExtension,
@@ -75,28 +70,6 @@ export function AppHeader({
       </div>
 
       <div className={styles.rightControls}>
-        {/* Cursor Mode Toggle */}
-        <div className={styles.modeToggle} role="group" aria-label="Cursor Mode">
-          <button
-            type="button"
-            className={`${styles.modeButton} ${cursorMode === 'info' ? styles.modeButtonActive : ''}`}
-            onClick={() => onCursorModeChange('info')}
-            aria-pressed={cursorMode === 'info'}
-            title="Info mode (I key) - Click notes to view their details"
-          >
-            ℹ Info
-          </button>
-          <button
-            type="button"
-            className={`${styles.modeButton} ${cursorMode === 'select' ? styles.modeButtonActive : ''}`}
-            onClick={() => onCursorModeChange('select')}
-            aria-pressed={cursorMode === 'select'}
-            title="Selection mode (S key) - Click notes to select/deselect"
-          >
-            ✓ Select
-          </button>
-        </div>
-
         {/* Scale selector */}
         <div className={styles.scaleSelector}>
           <label htmlFor="scale-select" className={styles.scaleLabel}>
