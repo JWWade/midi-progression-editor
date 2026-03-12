@@ -1,294 +1,502 @@
-# Epic 3 - From Prototype to Product-Ready Sequencer
+# Epic 3 - Agent-Ready Implementation Backlog
 
 ## Purpose
 
-Epic 3 defines the next stage of work based on the codebase as it exists today.
-It does not depend on Epics 1 or 2. This epic starts from the current implementation and closes the highest-value gaps between frontend capabilities and backend/API capabilities.
+This version of Epic 3 is written for direct execution by GitHub Copilot coding agents.
+Each issue includes:
+- explicit scope,
+- concrete contracts,
+- files to touch,
+- deterministic validation commands,
+- acceptance tests.
+
+This document is grounded in the repository as it exists now.
 
 ---
 
-## Verified Baseline (Current Code)
+## Current Baseline (Verified)
 
-### Frontend (implemented)
+### Backend currently implemented
 
-- React 19 + TypeScript + Vite feature-modular client.
-- Core circle workflow is implemented in `client/src/features/chromatic-circle/components/ChromaticCircle.tsx`.
-- Chord morph animation is implemented in `client/src/features/chord-animation/hooks/useChordMorphing.ts` with default duration `260ms`.
-- Current chord panel and progression sidebar are implemented and wired in `client/src/app/App.tsx`.
-- Primitive custom geometry presets are implemented:
-  - `equilateral-triangle`
-  - `suspended-triangle` (sus4)
-  - `square`
-  - `rectangle`
-  - Source of truth: `client/src/features/current-chord/types/index.ts`.
-- Progression sidebar supports add/reorder/delete with max length constraints.
-- Tone inspection, interval labels, centroid, extension overlays, and chord rotation controls are all present.
-- Frontend lint is enforced with zero warnings.
+- `GET /Health`
+- `POST /Scale/from-root`
+- `ScaleType` currently has only:
+  - `Major`
+  - `Minor`
+- `ScaleGenerator` currently returns only major intervals regardless of options.
 
-### Backend (implemented)
+### Frontend currently implemented
 
-- ASP.NET Core Web API on .NET 10.
-- Controllers currently exposed:
-  - `GET /Health`
-  - `POST /Scale/from-root`
-- CORS local-dev policy is configured in `server/ParametricMusic.Api/Program.cs`.
-- Swagger is enabled in development.
-- `ScaleGenerator` currently computes major-scale intervals only.
+- Chromatic circle, progression UI, primitive templates, and chord behavior are implemented client-side.
+- Frontend scale modes currently include 8 values (`major`, `naturalMinor`, `harmonicMinor`, `melodicMinor`, `dorian`, `phrygian`, `lydian`, `mixolydian`).
 
-### Current Architecture Reality
+### Build/test commands (must be used by agents)
 
-The frontend has rich chord/geometry/progression behavior while backend scope is still narrow (health + scale endpoint). Epic 3 therefore focuses on backend parity, API contracts, and reliability for the features users already have in the UI.
+- Backend build: `dotnet build server/ParametricMusic.Api`
+- Backend tests: `dotnet test server/ParametricMusic.Tests`
+- Frontend lint: `npm run lint` (from `client/`)
+- Frontend build: `npm run build` (from `client/`)
+- API generation: `npm run generate:api` (from `client/`, backend running on `http://localhost:5110`)
 
 ---
 
-## Epic Goals
+## Execution Order (Required)
 
-1. Bring backend/API capabilities up to the level of the existing frontend chord workflow.
-2. Make API contracts explicit and stable for generated client usage.
-3. Add sufficient automated testing for both frontend-critical utilities and backend HTTP behavior.
-4. Prepare the system for export and persistence without disrupting current UX.
-
----
-
-## Milestone 1 - Backend Parity for Chords and Progressions
-
-### ISSUE-E3-01 - Add Chord Construction Endpoint
-
-**Summary**
-Add an API endpoint to return chord tones from root + quality so frontend chord logic can be shared with backend consumers.
-
-**Requirements**
-- Add chord DTOs and request DTO.
-- Add `POST /Chord/from-root`.
-- Support current frontend chord qualities:
-  - `major`, `minor`, `dim`, `aug`, `dom7`, `maj7`, `min7`, `halfdim7`.
-- Return pitch classes and note labels.
-
-**Acceptance Criteria**
-- [ ] Endpoint returns correct notes for all supported qualities.
-- [ ] Invalid quality returns 400 with structured error payload.
-- [ ] Swagger schema documents request/response.
+1. E3-04
+2. E3-05
+3. E3-01
+4. E3-03
+5. E3-02
+6. E3-09
+7. E3-06
+8. E3-08
+9. E3-07
+10. E3-10
+11. E3-11 (optional/follow-up)
 
 ---
 
-### ISSUE-E3-02 - Add Progression Analysis Endpoint
+## E3-04 - Align /Scale/from-root with requested scale mode
 
-**Summary**
-Expose progression-level analysis so sidebar sequences can be evaluated server-side.
+### Objective
+Make backend `POST /Scale/from-root` honor `ScaleOptionsDto.ScaleType` instead of always returning major.
 
-**Requirements**
-- Add `POST /Progression/analyze`.
-- Input supports 1..8 chords (matching sidebar max).
-- Return at least:
-  - per-step voice motion summary,
-  - continuity score,
-  - tension/complexity trend.
+### Contract
 
-**Acceptance Criteria**
-- [ ] Valid progression returns a typed analysis response.
-- [ ] Empty progression returns 400.
-- [ ] More than 8 chords returns 400.
+- Endpoint remains: `POST /Scale/from-root?note={Note}`
+- Request body:
+```json
+{ "scaleType": "Major" }
+```
+- Response body remains `NoteInfo[]`.
 
----
+### Required backend enum alignment
 
-### ISSUE-E3-03 - Add Primitive Shape Payload Support
+Backend `ScaleType` must support these values (PascalCase names):
+- `Major`
+- `NaturalMinor`
+- `HarmonicMinor`
+- `MelodicMinor`
+- `Dorian`
+- `Phrygian`
+- `Lydian`
+- `Mixolydian`
 
-**Summary**
-Allow backend to understand primitive chord selections created in the circle UI.
+### Files to edit
 
-**Requirements**
-- Add optional primitive metadata field in chord request models.
-- Supported values:
-  - `equilateral-triangle`,
-  - `suspended-triangle`,
-  - `square`,
-  - `rectangle`.
-- Ensure backend analysis paths do not drop primitive metadata.
+- `server/ParametricMusic.Api/ScaleType.cs`
+- `server/ParametricMusic.Api/ScaleGenerator.cs`
+- `server/ParametricMusic.Api/Controllers/ScaleController.cs` (only if needed)
 
-**Acceptance Criteria**
-- [ ] Primitive values round-trip in API payloads.
-- [ ] Unknown primitive value returns 400.
-- [ ] OpenAPI enum includes all four primitive values.
+### Implementation notes
 
----
+- Keep enum JSON serialization as strings (already configured in `Program.cs`).
+- Add interval tables for all 8 modes in `ScaleGenerator`.
+- Keep response model as `NoteInfo[]`.
 
-## Milestone 2 - Scale API Alignment
+### Acceptance tests
 
-### ISSUE-E3-04 - Align /Scale/from-root with Requested Scale Type
+- For root C:
+  - Major -> `[0,2,4,5,7,9,11]`
+  - NaturalMinor -> `[0,2,3,5,7,8,10]`
+  - HarmonicMinor -> `[0,2,3,5,7,8,11]`
+  - MelodicMinor -> `[0,2,3,5,7,9,11]`
+  - Dorian -> `[0,2,3,5,7,9,10]`
+  - Phrygian -> `[0,1,3,5,7,8,10]`
+  - Lydian -> `[0,2,4,6,7,9,11]`
+  - Mixolydian -> `[0,2,4,5,7,9,10]`
+- Non-C roots transpose correctly modulo 12.
 
-**Summary**
-`ScaleController` currently accepts options but always returns major intervals. Implement true scale-type behavior.
+### Verification commands
 
-**Requirements**
-- Respect requested scale type in `ScaleOptionsDto`.
-- Support all client scale modes currently exposed in UI:
-  - major,
-  - natural minor,
-  - harmonic minor,
-  - melodic minor,
-  - dorian,
-  - phrygian,
-  - lydian,
-  - mixolydian.
-
-**Acceptance Criteria**
-- [ ] Each scale mode returns correct interval pattern for root C.
-- [ ] Non-C roots transpose correctly.
-- [ ] Existing major behavior remains unchanged.
+- `dotnet build server/ParametricMusic.Api`
 
 ---
 
-### ISSUE-E3-05 - Add Scale Contract Tests
+## E3-05 - Add scale unit + API contract tests
 
-**Summary**
-Expand backend tests beyond major-only assumptions and verify HTTP contract behavior.
+### Objective
+Add deterministic test coverage for all scale modes and HTTP contract behavior.
 
-**Requirements**
-- Add unit tests for all supported scale modes.
-- Add API-level tests for `/Scale/from-root` happy path and invalid payload path.
+### Files to edit
 
-**Acceptance Criteria**
-- [ ] Mode coverage exists for all 8 scale types.
-- [ ] Tests assert stable response shape (pitch class + note name).
-- [ ] Test suite passes in CI.
+- `server/ParametricMusic.Tests/ScaleGeneratorTests.cs`
+- Add new integration test file(s), for example:
+  - `server/ParametricMusic.Tests/ScaleControllerIntegrationTests.cs`
 
----
+### Required package update
 
-## Milestone 3 - Contract Stability and Client Generation
+If missing, add:
+- `Microsoft.AspNetCore.Mvc.Testing` to `server/ParametricMusic.Tests/ParametricMusic.Tests.csproj`
 
-### ISSUE-E3-06 - OpenAPI Contract Hardening
+### Acceptance tests
 
-**Summary**
-Ensure OpenAPI remains the single source of truth for typed frontend integration.
+- Unit tests assert expected pitch-class outputs for all 8 modes at root C.
+- Unit tests assert transposition for at least 2 non-C roots.
+- Integration test asserts:
+  - 200 for valid request,
+  - response shape includes `index` and `name`,
+  - 400 for invalid enum value in body.
 
-**Requirements**
-- Add explicit response annotations on controllers.
-- Ensure enums serialize as strings consistently.
-- Add error response schemas for 400-level outcomes.
+### Verification commands
 
-**Acceptance Criteria**
-- [ ] Swagger shows full schemas for all active endpoints.
-- [ ] Generated TypeScript client has no manual patch requirements.
-- [ ] Breaking schema changes are documented in PR notes.
+- `dotnet test server/ParametricMusic.Tests`
 
 ---
 
-### ISSUE-E3-07 - Regenerate and Validate Frontend API Client
+## E3-01 - Add chord construction endpoint
 
-**Summary**
-Regenerate client types/functions after backend changes and verify app compile/lint.
+### Objective
+Introduce backend chord construction parity for frontend chord qualities.
 
-**Requirements**
-- Run client generation from live OpenAPI.
-- Update generated files only via generation script.
-- Validate with frontend build and lint.
+### API contract
 
-**Acceptance Criteria**
-- [ ] Generated client includes new endpoints and DTOs.
-- [ ] `npm run build` passes.
-- [ ] `npm run lint` passes with max warnings 0.
+- Endpoint: `POST /Chord/from-root?note={Note}`
+- Request body:
+```json
+{ "quality": "Major" }
+```
+- Response body:
+```json
+{
+  "root": "C",
+  "quality": "Major",
+  "displayName": "C Major",
+  "pitchClasses": [0,4,7],
+  "noteNames": ["C","E","G"]
+}
+```
 
----
+### Supported qualities (backend enum values)
 
-## Milestone 4 - Reliability and UX Safety Nets
+- `Major`
+- `Minor`
+- `Diminished`
+- `Augmented`
+- `Dominant7`
+- `Major7`
+- `Minor7`
+- `HalfDiminished7`
 
-### ISSUE-E3-08 - Add End-to-End Backend Integration Tests
+### Files to add/edit
 
-**Summary**
-Add HTTP-level tests for all public endpoints.
+- Add:
+  - `server/ParametricMusic.Api/ChordQuality.cs`
+  - `server/ParametricMusic.Api/ChordFromRootRequestDto.cs`
+  - `server/ParametricMusic.Api/ChordDto.cs`
+  - `server/ParametricMusic.Api/ChordGenerator.cs` (or similarly named service)
+  - `server/ParametricMusic.Api/Controllers/ChordController.cs`
+- Tests:
+  - `server/ParametricMusic.Tests/ChordGeneratorTests.cs`
+  - `server/ParametricMusic.Tests/ChordControllerIntegrationTests.cs`
 
-**Requirements**
-- Use `WebApplicationFactory<Program>`.
-- Cover happy paths and validation failures for:
-  - Health,
-  - Scale,
-  - Chord (new),
-  - Progression (new).
+### Acceptance tests
 
-**Acceptance Criteria**
-- [ ] Integration suite runs without external server process.
-- [ ] Validation failures assert content type and payload shape.
-- [ ] Total test runtime remains practical for PR checks.
+- Root C returns expected pitch classes for each quality.
+- Root B wrap-around works.
+- Invalid quality returns 400 with structured payload.
 
----
+### Verification commands
 
-### ISSUE-E3-09 - Introduce Consistent Problem Details Responses
-
-**Summary**
-Standardize error payloads for predictable frontend handling.
-
-**Requirements**
-- Configure Problem Details for model-validation and unhandled exceptions.
-- Keep response schema consistent across controllers.
-
-**Acceptance Criteria**
-- [ ] Invalid payloads return `application/problem+json`.
-- [ ] Errors include machine-parseable fields used by frontend.
-- [ ] No raw exception details leak in production responses.
-
----
-
-## Milestone 5 - Export and Persistence Foundations
-
-### ISSUE-E3-10 - Add MIDI Export Endpoint (Initial Version)
-
-**Summary**
-Provide backend MIDI export for current progression sidebar flow.
-
-**Requirements**
-- Add `POST /Export/midi`.
-- Accept progression chords and export options (tempo + beats per chord minimum).
-- Return downloadable MIDI bytes.
-
-**Acceptance Criteria**
-- [ ] Valid request returns binary MIDI file payload.
-- [ ] Header bytes match MIDI file signature.
-- [ ] Invalid progression/options return 400.
+- `dotnet build server/ParametricMusic.Api`
+- `dotnet test server/ParametricMusic.Tests`
 
 ---
 
-### ISSUE-E3-11 - Add Session Persistence API (Optional in Epic)
+## E3-03 - Add primitive shape payload support
 
-**Summary**
-Define a minimal API for storing and loading progression sessions.
+### Objective
+Allow primitive shape metadata to be accepted and returned by chord/progression endpoints.
 
-**Requirements**
-- If implemented in this epic, keep scope minimal:
-  - save progression,
-  - list sessions,
-  - load by id.
-- If deferred, capture schema and endpoint contracts for next epic.
+### API contract extension
 
-**Acceptance Criteria**
-- [ ] Clear decision recorded: implemented vs deferred.
-- [ ] If implemented, frontend can round-trip a progression.
-- [ ] If deferred, API contract draft is checked in.
+Primitive shape enum values (JSON strings):
+- `equilateral-triangle`
+- `suspended-triangle`
+- `square`
+- `rectangle`
 
----
+Extend chord payloads with optional property:
+```json
+"primitiveShape": "rectangle"
+```
 
-## Non-Goals for Epic 3
+### Files to add/edit
 
-- No redesign of the existing chromatic circle interaction model.
-- No removal or rewrite of primitive shape UX already in production.
-- No frontend framework migration.
+- DTOs introduced in E3-01/E3-02 where chord objects are represented.
+- OpenAPI-visible models must include enum schema.
 
----
+### Acceptance tests
 
-## Dependencies and Sequencing
+- Primitive shape round-trips on successful responses.
+- Unknown primitive string returns 400.
 
-1. `ISSUE-E3-04` (scale alignment) should happen early because existing scale endpoint is already in use.
-2. `ISSUE-E3-01` and `ISSUE-E3-02` unlock most backend parity value.
-3. `ISSUE-E3-06` and `ISSUE-E3-07` follow any API-surface changes.
-4. `ISSUE-E3-08` and `ISSUE-E3-09` harden quality before export work.
-5. `ISSUE-E3-10` and `ISSUE-E3-11` are last because they depend on stabilized chord/progression contracts.
+### Verification commands
+
+- `dotnet build server/ParametricMusic.Api`
+- `dotnet test server/ParametricMusic.Tests`
 
 ---
 
-## Definition of Done (Epic)
+## E3-02 - Add progression analysis endpoint
 
-- [ ] Backend exposes chord + progression endpoints aligned to current frontend domain model.
-- [ ] Scale endpoint behavior matches selected scale mode.
-- [ ] OpenAPI-generated client compiles cleanly in frontend.
-- [ ] Integration tests cover all public endpoints and validation paths.
-- [ ] At least initial MIDI export path is available.
-- [ ] Documentation reflects actual architecture at the time of completion.
+### Objective
+Provide backend analysis for progression sequences used in sidebar.
+
+### API contract
+
+- Endpoint: `POST /Progression/analyze`
+- Request body:
+```json
+{
+  "chords": [
+    { "root": "C", "quality": "Major" },
+    { "root": "G", "quality": "Major" }
+  ]
+}
+```
+
+- Response body minimum:
+```json
+{
+  "steps": [
+    {
+      "from": { "root": "C", "quality": "Major" },
+      "to": { "root": "G", "quality": "Major" },
+      "motion": 3
+    }
+  ],
+  "continuityScore": 0.75,
+  "tensionTrend": [0.2, 0.3]
+}
+```
+
+### Deterministic algorithm requirements
+
+- `motion` per step: sum of minimum cyclic semitone distance between sorted pitch classes.
+- `continuityScore`: `1 - normalizedAverageMotion`, clamp to `[0,1]`.
+- `tensionTrend`: per chord value in `[0,1]`, defined from interval roughness count.
+
+### Files to add/edit
+
+- Add:
+  - `server/ParametricMusic.Api/ProgressionAnalyzeRequestDto.cs`
+  - `server/ParametricMusic.Api/ProgressionAnalyzeResponseDto.cs`
+  - `server/ParametricMusic.Api/ProgressionAnalyzer.cs`
+  - `server/ParametricMusic.Api/Controllers/ProgressionController.cs`
+- Tests:
+  - `server/ParametricMusic.Tests/ProgressionAnalyzerTests.cs`
+  - `server/ParametricMusic.Tests/ProgressionControllerIntegrationTests.cs`
+
+### Acceptance tests
+
+- Request with 0 chords -> 400.
+- Request with >8 chords -> 400.
+- Deterministic fixture progression returns exact known response values.
+
+### Verification commands
+
+- `dotnet build server/ParametricMusic.Api`
+- `dotnet test server/ParametricMusic.Tests`
+
+---
+
+## E3-09 - Standardize Problem Details responses
+
+### Objective
+Ensure all error responses are predictable for clients.
+
+### Required behavior
+
+- Validation failures return `application/problem+json`.
+- Unhandled exceptions produce non-leaking 500 Problem Details in non-development.
+
+### Files to edit
+
+- `server/ParametricMusic.Api/Program.cs`
+- Controllers as needed for consistent behavior.
+
+### Acceptance tests
+
+- Integration tests assert content type and schema for 400 paths.
+
+### Verification commands
+
+- `dotnet test server/ParametricMusic.Tests`
+
+---
+
+## E3-06 - OpenAPI contract hardening
+
+### Objective
+Make Swagger/OpenAPI an unambiguous source for client generation.
+
+### Requirements
+
+- Add explicit `[ProducesResponseType]` models on active endpoints.
+- Ensure enum display/serialization consistency.
+- Ensure all new DTO schemas are visible.
+
+### Files to edit
+
+- Controllers and DTOs added by E3-01/E3-02/E3-03.
+- `server/ParametricMusic.Api/Program.cs` if swagger config updates are needed.
+
+### Acceptance tests
+
+- OpenAPI includes all endpoint request/response schemas.
+- 400 schemas represented for invalid payloads.
+
+### Verification commands
+
+- Run backend, inspect Swagger UI.
+- `dotnet build server/ParametricMusic.Api`
+
+---
+
+## E3-08 - Add full backend integration test coverage
+
+### Objective
+Cover all public API endpoints through HTTP tests.
+
+### Scope
+
+Happy path + one failure path each for:
+- `GET /Health`
+- `POST /Scale/from-root`
+- `POST /Chord/from-root`
+- `POST /Progression/analyze`
+
+### Files to add/edit
+
+- Add/expand `*IntegrationTests.cs` under `server/ParametricMusic.Tests`.
+
+### Acceptance tests
+
+- Tests run with `WebApplicationFactory<Program>`.
+- No external running server required.
+
+### Verification commands
+
+- `dotnet test server/ParametricMusic.Tests`
+
+---
+
+## E3-07 - Regenerate frontend API client after API work
+
+### Objective
+Sync generated TypeScript client with final backend OpenAPI contract.
+
+### Prerequisites
+
+- E3-01, E3-02, E3-03, E3-06 complete.
+- Backend running locally at `http://localhost:5110`.
+
+### Files to edit
+
+- Generated only:
+  - `client/src/api/generated/index.ts`
+
+### Acceptance tests
+
+- Generated client includes new endpoints and DTO shapes.
+- Frontend builds and lints without manual generated-file edits.
+
+### Verification commands
+
+- `npm run generate:api` (in `client/`)
+- `npm run build` (in `client/`)
+- `npm run lint` (in `client/`)
+
+---
+
+## E3-10 - Add initial MIDI export endpoint
+
+### Objective
+Allow exporting a progression as MIDI bytes.
+
+### API contract
+
+- Endpoint: `POST /Export/midi`
+- Request body minimum:
+```json
+{
+  "progression": {
+    "chords": [
+      { "root": "C", "quality": "Major" },
+      { "root": "G", "quality": "Major" }
+    ]
+  },
+  "tempoBpm": 120,
+  "beatsPerChord": 4
+}
+```
+
+- Response:
+  - `200` binary (`application/octet-stream`)
+  - first 4 bytes `4D 54 68 64` (`MThd`)
+
+### Files to add/edit
+
+- Add:
+  - `server/ParametricMusic.Api/MidiExportRequestDto.cs`
+  - `server/ParametricMusic.Api/MidiExporter.cs`
+  - `server/ParametricMusic.Api/Controllers/ExportController.cs`
+- Tests:
+  - `server/ParametricMusic.Tests/MidiExporterTests.cs`
+  - `server/ParametricMusic.Tests/ExportControllerIntegrationTests.cs`
+
+### Acceptance tests
+
+- Valid request returns MIDI bytes with header signature.
+- Invalid progression/options returns 400.
+
+### Verification commands
+
+- `dotnet build server/ParametricMusic.Api`
+- `dotnet test server/ParametricMusic.Tests`
+
+---
+
+## E3-11 - Session persistence API (optional follow-up)
+
+### Objective
+Decide and document minimal persistence contract, optionally implement.
+
+### Option A (implement)
+
+- `POST /Sessions`
+- `GET /Sessions`
+- `GET /Sessions/{id}`
+
+### Option B (defer)
+
+- Add contract draft doc only (`docs/session-api-draft.md`) with JSON schemas.
+
+### Acceptance
+
+- A clear recorded decision is committed.
+- If implemented, round-trip a progression.
+
+---
+
+## Agent Operating Rules (apply to every issue)
+
+1. Do not modify generated files except E3-07.
+2. Prefer smallest-scope edits per issue.
+3. Every issue PR must include:
+   - code changes,
+   - tests,
+   - verification command output summary,
+   - brief schema summary.
+4. If acceptance criteria cannot be met, agent must stop and report blocker explicitly.
+
+---
+
+## Epic Definition of Done
+
+- Backend supports scale modes used by the frontend.
+- Chord and progression APIs exist with tested contracts.
+- Problem Details and integration tests are in place.
+- Frontend generated client is in sync.
+- Initial MIDI export is available and tested.
