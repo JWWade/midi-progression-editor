@@ -107,6 +107,44 @@ public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicatio
         Assert.Equal(0.0, dto.TensionTrend[1]);
     }
 
+    // ── Primitive shape round-trip ────────────────────────────────────────────
+
+    [Theory]
+    [InlineData("equilateral-triangle")]
+    [InlineData("suspended-triangle")]
+    [InlineData("square")]
+    [InlineData("rectangle")]
+    public async Task PostAnalyze_WithPrimitiveShape_RoundTripsShapeInSteps(string shape)
+    {
+        var body = $$"""
+        {
+            "chords": [
+                { "root": "C", "quality": "Major", "primitiveShape": "{{shape}}" },
+                { "root": "G", "quality": "Major" }
+            ]
+        }
+        """;
+
+        var response = await PostAnalyzeAsync(body);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        var fromShape = doc.RootElement
+            .GetProperty("steps")[0]
+            .GetProperty("from")
+            .GetProperty("primitiveShape")
+            .GetString();
+        Assert.Equal(shape, fromShape);
+    }
+
+    [Fact]
+    public async Task PostAnalyze_InvalidPrimitiveShape_Returns400()
+    {
+        var response = await PostAnalyzeAsync("""{"chords": [{"root":"C","quality":"Major","primitiveShape":"hexagon"}]}""");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private Task<HttpResponseMessage> PostAnalyzeAsync(string body)
