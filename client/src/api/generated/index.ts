@@ -4,6 +4,59 @@
  */
 
 export interface paths {
+    "/Chord/from-root": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Build a chord from a root note and chord quality. */
+        post: {
+            parameters: {
+                query?: {
+                    note?: "C" | "CSharp" | "D" | "DSharp" | "E" | "F" | "FSharp" | "G" | "GSharp" | "A" | "ASharp" | "B";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChordFromRootRequestDto"];
+                    "text/json": components["schemas"]["ChordFromRootRequestDto"];
+                    "application/*+json": components["schemas"]["ChordFromRootRequestDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChordDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/Health": {
         parameters: {
             query?: never;
@@ -11,6 +64,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Returns the current health status of the API. */
         get: {
             parameters: {
                 query?: never;
@@ -25,12 +79,65 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["HealthResponse"];
+                    };
                 };
             };
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/Progression/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Analyze a chord progression, returning voice-leading motion, continuity score, and tension trend. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProgressionAnalyzeRequestDto"];
+                    "text/json": components["schemas"]["ProgressionAnalyzeRequestDto"];
+                    "application/*+json": components["schemas"]["ProgressionAnalyzeRequestDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProgressionAnalyzeResponseDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -46,10 +153,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Generate a musical scale from a root note with specified options. */
         post: {
             parameters: {
                 query?: {
-                    note?: components["schemas"]["Note"];
+                    note?: "C" | "CSharp" | "D" | "DSharp" | "E" | "F" | "FSharp" | "G" | "GSharp" | "A" | "ASharp" | "B";
                 };
                 header?: never;
                 path?: never;
@@ -68,7 +176,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["NoteInfo"][];
+                    };
                 };
                 /** @description Bad Request */
                 400: {
@@ -76,9 +186,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
                     };
                 };
             };
@@ -93,8 +201,38 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @enum {string} */
-        Note: "C" | "CSharp" | "D" | "DSharp" | "E" | "F" | "FSharp" | "G" | "GSharp" | "A" | "ASharp" | "B";
+        ChordDto: {
+            root?: string | null;
+            /** @enum {string} */
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7";
+            displayName?: string | null;
+            pitchClasses?: number[] | null;
+            noteNames?: string[] | null;
+            /** @enum {string|null} */
+            primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
+        };
+        ChordFromRootRequestDto: {
+            /** @enum {string} */
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7";
+            /** @enum {string|null} */
+            primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
+        };
+        ChordRef: {
+            root?: string | null;
+            quality?: string | null;
+            /** @enum {string|null} */
+            primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
+        };
+        HealthResponse: {
+            status?: string | null;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        NoteInfo: {
+            /** Format: int32 */
+            index?: number;
+            name?: string | null;
+        };
         ProblemDetails: {
             type?: string | null;
             title?: string | null;
@@ -105,11 +243,38 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        ScaleOptionsDto: {
-            scaleType?: components["schemas"]["ScaleType"];
+        ProgressionAnalyzeRequestDto: {
+            chords?: components["schemas"]["ChordRef"][] | null;
         };
-        /** @enum {string} */
-        ScaleType: "Major" | "Minor";
+        ProgressionAnalyzeResponseDto: {
+            steps?: components["schemas"]["ProgressionStep"][] | null;
+            /** Format: double */
+            continuityScore?: number;
+            tensionTrend?: number[] | null;
+        };
+        ProgressionStep: {
+            from?: components["schemas"]["ChordRef"];
+            to?: components["schemas"]["ChordRef"];
+            /** Format: int32 */
+            motion?: number;
+        };
+        ScaleOptionsDto: {
+            /** @enum {string} */
+            scaleType?: "Major" | "NaturalMinor" | "HarmonicMinor" | "MelodicMinor" | "Dorian" | "Phrygian" | "Lydian" | "Mixolydian";
+        };
+        ValidationProblemDetails: {
+            type?: string | null;
+            title?: string | null;
+            /** Format: int32 */
+            status?: number | null;
+            detail?: string | null;
+            instance?: string | null;
+            errors?: {
+                [key: string]: string[];
+            } | null;
+        } & {
+            [key: string]: unknown;
+        };
     };
     responses: never;
     parameters: never;
