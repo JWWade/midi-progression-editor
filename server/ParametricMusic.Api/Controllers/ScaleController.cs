@@ -22,6 +22,6 @@ public class ScaleController : ControllerBase
     {
         ArgumentNullException.ThrowIfNull(options, nameof(options));
 
-        return Ok(ScaleGenerator.BuildMajorScale((int)note));
+        return Ok(ScaleGenerator.BuildScale((int)note, options.ScaleType));
     }
 }
