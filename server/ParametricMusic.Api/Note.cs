@@ -66,7 +66,7 @@ public static class NoteExtensions
             "A" => Note.A,
             "A#" or "AS" => Note.ASharp,
             "B" => Note.B,
-            _ => 0
+            _ => (Note)(-1)
         };
 
         return Enum.IsDefined(typeof(Note), result);
