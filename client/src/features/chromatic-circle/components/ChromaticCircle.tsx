@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { PITCH_CLASSES, getDiatonicIndices } from "../utils";
-import { getCircleColor } from "../utils/circleColors";
+import { getCircleColorForTheme } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
 import {
   VIEWBOX_SIZE,
@@ -61,6 +61,7 @@ import {
   createRadialGradientDef,
 } from "@/features/color-language/utils/svgGradient";
 import type { Chord, PrimitiveShape } from "@/features/current-chord";
+import { useTheme } from "@/app/providers/useTheme";
 
 const DRAG_THRESHOLD_PX = 8;
 
@@ -87,6 +88,8 @@ export function ChromaticCircle({
   showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
 }: ChromaticCircleProps) {
+  const { theme } = useTheme();
+
   type CustomChordState = {
     root: number;
     quality: ChordType;
@@ -427,8 +430,8 @@ export function ChromaticCircle({
   const fromPolygonOpacity = isAnimating ? 0.75 : 1;
 
   const circleColor = useMemo(
-    () => getCircleColor(rootIndex, chordType),
-    [rootIndex, chordType],
+    () => getCircleColorForTheme(rootIndex, chordType, theme, "circle"),
+    [rootIndex, chordType, theme],
   );
 
   const diatonicIndices = useMemo(
@@ -723,159 +726,200 @@ export function ChromaticCircle({
       </div>
       <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
       <div style={{ display: "flex", flexDirection: "column", marginTop: 12, alignItems: "center", gap: 10 }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-          <button
-            type="button"
-            onClick={() => handleRotateChord("counterclockwise")}
-            title="Rotate counterclockwise by one semitone (Ctrl+Left)"
-            aria-label="Rotate chord counterclockwise"
-            style={{
-              width: 36,
-              height: 32,
-              padding: 0,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 16,
-              lineHeight: 1,
-              color: "#374151",
-              cursor: "pointer",
-              background: "#fff",
-              border: "1.5px solid #d1d5db",
-              borderRadius: 6,
-              fontWeight: 600,
-            }}
-          >
-            ↺
-          </button>
-          <button
-            type="button"
-            onClick={() => handleRotateChord("clockwise")}
-            title="Rotate clockwise by one semitone (Ctrl+Right)"
-            aria-label="Rotate chord clockwise"
-            style={{
-              width: 36,
-              height: 32,
-              padding: 0,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 16,
-              lineHeight: 1,
-              color: "#374151",
-              cursor: "pointer",
-              background: "#fff",
-              border: "1.5px solid #d1d5db",
-              borderRadius: 6,
-              fontWeight: 600,
-            }}
-          >
-            ↻
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSelectPrimitiveShape("equilateral-triangle")}
-            title="Select equilateral triangle primitive"
-            aria-label="Select equilateral triangle primitive"
-            style={{
-              width: 36,
-              height: 32,
-              padding: 0,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 16,
-              lineHeight: 1,
-              color: customFromChord?.primitiveShape === "equilateral-triangle" ? "#111827" : "#6b7280",
-              cursor: "pointer",
-              background: "#fff",
-              border: customFromChord?.primitiveShape === "equilateral-triangle"
-                ? "2px solid #111827"
-                : "1.5px solid #d1d5db",
-              borderRadius: 6,
-              fontWeight: 700,
-            }}
-          >
-            △
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSelectPrimitiveShape("suspended-triangle")}
-            title="Select sus4 triangle primitive"
-            aria-label="Select sus4 triangle primitive"
-            style={{
-              width: 36,
-              height: 32,
-              padding: 0,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 16,
-              lineHeight: 1,
-              color: customFromChord?.primitiveShape === "suspended-triangle" ? "#111827" : "#6b7280",
-              cursor: "pointer",
-              background: "#fff",
-              border: customFromChord?.primitiveShape === "suspended-triangle"
-                ? "2px solid #111827"
-                : "1.5px solid #d1d5db",
-              borderRadius: 6,
-              fontWeight: 700,
-            }}
-          >
-            ◬
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSelectPrimitiveShape("square")}
-            title="Select square primitive"
-            aria-label="Select square primitive"
-            style={{
-              width: 36,
-              height: 32,
-              padding: 0,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 16,
-              lineHeight: 1,
-              color: customFromChord?.primitiveShape === "square" ? "#111827" : "#6b7280",
-              cursor: "pointer",
-              background: "#fff",
-              border: customFromChord?.primitiveShape === "square"
-                ? "2px solid #111827"
-                : "1.5px solid #d1d5db",
-              borderRadius: 6,
-              fontWeight: 700,
-            }}
-          >
-            □
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSelectPrimitiveShape("rectangle")}
-            title="Select rectangle primitive"
-            aria-label="Select rectangle primitive"
-            style={{
-              width: 36,
-              height: 32,
-              padding: 0,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 16,
-              lineHeight: 1,
-              color: customFromChord?.primitiveShape === "rectangle" ? "#111827" : "#6b7280",
-              cursor: "pointer",
-              background: "#fff",
-              border: customFromChord?.primitiveShape === "rectangle"
-                ? "2px solid #111827"
-                : "1.5px solid #d1d5db",
-              borderRadius: 6,
-              fontWeight: 700,
-            }}
-          >
-            ▭
-          </button>
+        <div style={{ display: "inline-flex", alignItems: "stretch", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                fontSize: 11,
+                color: "var(--color-text-secondary)",
+                textTransform: "uppercase",
+                letterSpacing: 0.6,
+                fontWeight: 600,
+              }}
+            >
+              Transform
+            </span>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => handleRotateChord("counterclockwise")}
+                title="Rotate counterclockwise by one semitone (Ctrl+Left)"
+                aria-label="Rotate chord counterclockwise"
+                style={{
+                  width: 36,
+                  height: 32,
+                  padding: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  lineHeight: 1,
+                  color: "var(--color-text-primary)",
+                  cursor: "pointer",
+                  background: "var(--color-bg-surface)",
+                  border: "1.5px solid var(--color-border)",
+                  borderRadius: 6,
+                  fontWeight: 600,
+                }}
+              >
+                ↺
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRotateChord("clockwise")}
+                title="Rotate clockwise by one semitone (Ctrl+Right)"
+                aria-label="Rotate chord clockwise"
+                style={{
+                  width: 36,
+                  height: 32,
+                  padding: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  lineHeight: 1,
+                  color: "var(--color-text-primary)",
+                  cursor: "pointer",
+                  background: "var(--color-bg-surface)",
+                  border: "1.5px solid var(--color-border)",
+                  borderRadius: 6,
+                  fontWeight: 600,
+                }}
+              >
+                ↻
+              </button>
+            </div>
+          </div>
+
+          <div aria-hidden="true" style={{ width: 1, background: "var(--color-border)", borderRadius: 999 }} />
+
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                fontSize: 11,
+                color: "var(--color-text-secondary)",
+                textTransform: "uppercase",
+                letterSpacing: 0.6,
+                fontWeight: 600,
+              }}
+            >
+              Templates
+            </span>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => handleSelectPrimitiveShape("equilateral-triangle")}
+                title="Select equilateral triangle primitive"
+                aria-label="Select equilateral triangle primitive"
+                style={{
+                  width: 36,
+                  height: 32,
+                  padding: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  lineHeight: 1,
+                  color: customFromChord?.primitiveShape === "equilateral-triangle"
+                    ? "var(--color-text-primary)"
+                    : "var(--color-text-secondary)",
+                  cursor: "pointer",
+                  background: "var(--color-bg-surface)",
+                  border: customFromChord?.primitiveShape === "equilateral-triangle"
+                    ? "2px solid var(--color-text-primary)"
+                    : "1.5px solid var(--color-border)",
+                  borderRadius: 6,
+                  fontWeight: 700,
+                }}
+              >
+                △
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectPrimitiveShape("suspended-triangle")}
+                title="Select sus4 triangle primitive"
+                aria-label="Select sus4 triangle primitive"
+                style={{
+                  width: 36,
+                  height: 32,
+                  padding: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  lineHeight: 1,
+                  color: customFromChord?.primitiveShape === "suspended-triangle"
+                    ? "var(--color-text-primary)"
+                    : "var(--color-text-secondary)",
+                  cursor: "pointer",
+                  background: "var(--color-bg-surface)",
+                  border: customFromChord?.primitiveShape === "suspended-triangle"
+                    ? "2px solid var(--color-text-primary)"
+                    : "1.5px solid var(--color-border)",
+                  borderRadius: 6,
+                  fontWeight: 700,
+                }}
+              >
+                ◬
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectPrimitiveShape("square")}
+                title="Select square primitive"
+                aria-label="Select square primitive"
+                style={{
+                  width: 36,
+                  height: 32,
+                  padding: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  lineHeight: 1,
+                  color: customFromChord?.primitiveShape === "square"
+                    ? "var(--color-text-primary)"
+                    : "var(--color-text-secondary)",
+                  cursor: "pointer",
+                  background: "var(--color-bg-surface)",
+                  border: customFromChord?.primitiveShape === "square"
+                    ? "2px solid var(--color-text-primary)"
+                    : "1.5px solid var(--color-border)",
+                  borderRadius: 6,
+                  fontWeight: 700,
+                }}
+              >
+                □
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectPrimitiveShape("rectangle")}
+                title="Select rectangle primitive"
+                aria-label="Select rectangle primitive"
+                style={{
+                  width: 36,
+                  height: 32,
+                  padding: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  lineHeight: 1,
+                  color: customFromChord?.primitiveShape === "rectangle"
+                    ? "var(--color-text-primary)"
+                    : "var(--color-text-secondary)",
+                  cursor: "pointer",
+                  background: "var(--color-bg-surface)",
+                  border: customFromChord?.primitiveShape === "rectangle"
+                    ? "2px solid var(--color-text-primary)"
+                    : "1.5px solid var(--color-border)",
+                  borderRadius: 6,
+                  fontWeight: 700,
+                }}
+              >
+                ▭
+              </button>
+            </div>
+          </div>
         </div>
         <ChordGrid
           value={selectedChordName}

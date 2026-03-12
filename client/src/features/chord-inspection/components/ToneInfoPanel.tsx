@@ -10,10 +10,10 @@ const PANEL_STYLE: React.CSSProperties = {
   width: "100%",
   maxWidth: "320px",
   padding: "14px 16px",
-  backgroundColor: "#F3F4F6",
+  backgroundColor: "var(--color-bg-surface)",
   borderRadius: 8,
   boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--color-border)",
   fontFamily: "system-ui, sans-serif",
   boxSizing: "border-box",
 };
@@ -29,14 +29,14 @@ const TITLE_STYLE: React.CSSProperties = {
   margin: "0",
   fontSize: "15px",
   fontWeight: "bold",
-  color: "#111827",
+  color: "var(--color-text-primary)",
 };
 
 const CLOSE_BUTTON_STYLE: React.CSSProperties = {
   background: "none",
   border: "none",
   cursor: "pointer",
-  color: "#9CA3AF",
+  color: "var(--color-text-muted)",
   fontSize: "20px",
   lineHeight: "1",
   padding: "0 0 0 8px",
@@ -45,7 +45,7 @@ const CLOSE_BUTTON_STYLE: React.CSSProperties = {
 
 const LABEL_STYLE: React.CSSProperties = {
   fontSize: "12px",
-  color: "#6B7280",
+  color: "var(--color-text-secondary)",
   margin: "0",
   textTransform: "uppercase",
   letterSpacing: "0.05em",
@@ -53,7 +53,7 @@ const LABEL_STYLE: React.CSSProperties = {
 
 const VALUE_STYLE: React.CSSProperties = {
   fontSize: "14px",
-  color: "#1F2937",
+  color: "var(--color-text-primary)",
   margin: "0 0 10px",
   fontWeight: "500",
 };
@@ -63,8 +63,8 @@ const CHORD_TAG_STYLE: React.CSSProperties = {
   fontSize: "11px",
   padding: "1px 6px",
   borderRadius: "4px",
-  backgroundColor: "#E0E7FF",
-  color: "#4338CA",
+  backgroundColor: "var(--color-tile-bg)",
+  color: "var(--color-text-primary)",
   marginBottom: "10px",
   fontWeight: "600",
 };

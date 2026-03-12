@@ -23,7 +23,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #9ca3af;
+  color: #64748b;
   margin-bottom: 2px;
 }
 
@@ -41,7 +41,7 @@
 .placeholder {
   font-size: 16px;
   font-weight: 500;
-  color: #9ca3af;
+  color: #6b7280;
   font-style: italic;
 }
 
@@ -62,7 +62,7 @@
 .quality {
   font-size: 12px;
   font-weight: 400;
-  color: #6b7280;
+  color: #4b5563;
   letter-spacing: 0.02em;
 }
 
@@ -92,7 +92,7 @@
   border: none;
   border-radius: 8px;
   background-color: var(--chord-quality-base, #4f46e5);
-  color: #ffffff;
+  color: var(--chord-quality-text, #ffffff);
   font-size: 15px;
   font-weight: 600;
   font-family: inherit;
@@ -108,7 +108,7 @@
 
 .addButtonDisabled {
   background-color: #d1d5db;
-  color: #9ca3af;
+  color: var(--color-disabled-text);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -130,7 +130,31 @@
 .fullMessage {
   font-size: 11px;
   font-weight: 500;
-  color: #9ca3af;
+  color: #6b7280;
   letter-spacing: 0.02em;
   margin-top: 4px;
+}
+
+[data-theme="dark"] .sectionLabel {
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .chordName {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .placeholder {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .quality {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .fullMessage {
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .root {
+  color: var(--chord-quality-base, #f59e0b);
 }

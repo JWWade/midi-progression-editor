@@ -52,10 +52,10 @@
   --color-border: rgba(255, 255, 255, 0.1);
   --color-border-subtle: rgba(255, 255, 255, 0.08);
   --color-text-primary: #e5e7eb;
-  --color-text-secondary: #9ca3af;
-  --color-text-muted: #6b7280;
+  --color-text-secondary: #bcc4d2;
+  --color-text-muted: #97a0b1;
   --color-disabled-bg: #374151;
-  --color-disabled-text: #6b7280;
+  --color-disabled-text: #9aa3b5;
   --color-tile-bg: rgba(255, 255, 255, 0.04);
   --color-tile-bg-hover: rgba(255, 255, 255, 0.09);
   --color-tile-name: #e5e7eb;

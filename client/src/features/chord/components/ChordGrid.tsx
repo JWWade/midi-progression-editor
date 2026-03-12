@@ -67,11 +67,12 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
         <span
           style={{
             padding: "4px 8px",
-            background: "#f3f4f6",
+            background: "var(--color-bg-surface)",
             borderRadius: 4,
             fontSize: 13,
             fontWeight: 600,
-            border: "1px solid #d1d5db",
+            color: "var(--color-text-primary)",
+            border: "1px solid var(--color-border)",
           }}
         >
           {noteNames}
@@ -83,8 +84,9 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
             padding: "2px 6px",
             fontSize: 11,
             cursor: "pointer",
-            background: "#fff",
-            border: "1px solid #d1d5db",
+            color: "var(--color-text-primary)",
+            background: "var(--color-bg-surface)",
+            border: "1px solid var(--color-border)",
             borderRadius: 3,
           }}
           title="Reset to named chord"
@@ -118,14 +120,14 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
           fontWeight: 700,
           cursor: "pointer",
           borderRadius: 6,
-          background: "#fff",
+          background: "var(--color-bg-surface)",
           border: `1.5px solid ${qualityColor?.base ?? "#d1d5db"}`,
-          color: qualityColor?.dark ?? "#374151",
+          color: qualityColor?.dark ?? "var(--color-text-primary)",
           transition: "border-color 0.15s, color 0.15s",
         }}
       >
         <span>{value || "-"}</span>
-        <span style={{ fontSize: 9, opacity: 0.6, marginTop: 1 }}>v</span>
+        <span style={{ fontSize: 9, opacity: 0.75, marginTop: 1 }}>v</span>
       </button>
 
       {isOpen && (
@@ -138,8 +140,8 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1000,
-            background: "#fff",
-            border: "1px solid #e5e7eb",
+            background: "var(--color-bg-surface)",
+            border: "1px solid var(--color-border)",
             borderRadius: 10,
             boxShadow: "0 8px 28px rgba(0,0,0,0.16)",
             padding: "8px 10px",
@@ -178,7 +180,7 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
                   flexShrink: 0,
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#6b7280",
+                  color: "var(--color-text-secondary)",
                   textAlign: "right",
                   paddingRight: 5,
                 }}
@@ -206,7 +208,7 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
                       border: isSelected ? `1.5px solid ${color.base}` : "1px solid transparent",
                       borderRadius: 4,
                       background: isSelected ? color.light : "transparent",
-                      color: isSelected ? color.dark : "#374151",
+                      color: isSelected ? color.dark : "var(--color-text-primary)",
                       textAlign: "center",
                       padding: 0,
                       transition: "background 0.08s",
