@@ -20,7 +20,7 @@ public class ChordController : ControllerBase
         [Display(Name = "Chord Options")]
         ChordFromRootRequestDto body)
     {
-        var chord = ChordGenerator.BuildChord(note, body.Quality);
+        var chord = ChordGenerator.BuildChord(note, body.Quality, body.PrimitiveShape);
         return Ok(chord);
     }
 }

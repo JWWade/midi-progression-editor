@@ -82,7 +82,50 @@ public class ChordControllerIntegrationTests : IClassFixture<WebApplicationFacto
         Assert.Equal("C Major", dto!.DisplayName);
     }
 
-    // ── 400 Bad Request cases ─────────────────────────────────────────────────
+    // ── Primitive shape round-trip ────────────────────────────────────────────
+
+    [Theory]
+    [InlineData("equilateral-triangle")]
+    [InlineData("suspended-triangle")]
+    [InlineData("square")]
+    [InlineData("rectangle")]
+    public async Task PostChordFromRoot_WithPrimitiveShape_RoundTripsShape(string shape)
+    {
+        var body = $$"""{"quality": "Major", "primitiveShape": "{{shape}}"}""";
+        var response = await _client.PostAsync(
+            "/Chord/from-root?note=C",
+            new StringContent(body, Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        Assert.True(doc.RootElement.TryGetProperty("primitiveShape", out var shapeProp));
+        Assert.Equal(shape, shapeProp.GetString());
+    }
+
+    [Fact]
+    public async Task PostChordFromRoot_WithoutPrimitiveShape_OmitsPropertyFromResponse()
+    {
+        var response = await PostChordAsync("C", "Major");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        Assert.False(doc.RootElement.TryGetProperty("primitiveShape", out _));
+    }
+
+    [Fact]
+    public async Task PostChordFromRoot_InvalidPrimitiveShape_Returns400()
+    {
+        var body = """{"quality": "Major", "primitiveShape": "hexagon"}""";
+        var response = await _client.PostAsync(
+            "/Chord/from-root?note=C",
+            new StringContent(body, Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 
     [Fact]
     public async Task PostChordFromRoot_InvalidNote_Returns400()

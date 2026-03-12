@@ -7,6 +7,10 @@ public class ChordRef
 
     [JsonPropertyName("quality")]
     public string Quality { get; set; } = string.Empty;
+
+    [JsonPropertyName("primitiveShape")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public PrimitiveShape? PrimitiveShape { get; set; }
 }
 
 public class ProgressionAnalyzeRequestDto
