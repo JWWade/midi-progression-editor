@@ -22,10 +22,10 @@ export const RING_RADIUS = 110;
 
 /**
  * Distance from the circle centre to outer note-name labels.
- * The extra 28 px clears the node circle (r = NODE_RADIUS) with comfortable
- * reading space.
+ * The extra 42 px clears the node circle (r = NODE_RADIUS) with comfortable
+ * reading space and breathing room from chord vertices.
  */
-export const LABEL_DISTANCE = RING_RADIUS + 28;
+export const LABEL_DISTANCE = RING_RADIUS + 42;
 
 // ─── Note nodes ──────────────────────────────────────────────────────────────
 

@@ -1,12 +1,11 @@
 import type { ScaleType } from '../../features/scale/types';
 import { SCALE_LABELS } from '../../features/scale/types';
+import { useTheme } from '../providers/useTheme';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
   selectedScale: ScaleType;
   onScaleChange: (scale: ScaleType) => void;
-  showVoiceLeads: boolean;
-  onVoiceLeadsChange: (show: boolean) => void;
   showExtension: boolean;
   onExtensionChange: (show: boolean) => void;
   showCentroid: boolean;
@@ -18,8 +17,6 @@ interface AppHeaderProps {
 export function AppHeader({
   selectedScale,
   onScaleChange,
-  showVoiceLeads,
-  onVoiceLeadsChange,
   showExtension,
   onExtensionChange,
   showCentroid,
@@ -27,22 +24,11 @@ export function AppHeader({
   showIntervals,
   onIntervalsChange,
 }: AppHeaderProps) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header className={styles.header}>
       <div className={styles.toggles}>
-        {/* Show Voice Leads toggle */}
-        <label htmlFor="show-voice-leads" className={styles.toggleLabel}>
-          <input
-            id="show-voice-leads"
-            type="checkbox"
-            checked={showVoiceLeads}
-            onChange={(e) => onVoiceLeadsChange(e.target.checked)}
-            className={styles.checkbox}
-            aria-label="Toggle voice leads"
-          />
-          Voice Leads
-        </label>
-
         {/* Show Extension toggle */}
         <label htmlFor="show-extension" className={styles.toggleLabel}>
           <input
@@ -83,24 +69,37 @@ export function AppHeader({
         </label>
       </div>
 
-      {/* Scale selector */}
-      <div className={styles.scaleSelector}>
-        <label htmlFor="scale-select" className={styles.scaleLabel}>
-          Scale:
-        </label>
-        <select
-          id="scale-select"
-          value={selectedScale}
-          onChange={(e) => onScaleChange(e.target.value as ScaleType)}
-          className={styles.select}
-          aria-label="Select scale type"
+      <div className={styles.rightControls}>
+        {/* Scale selector */}
+        <div className={styles.scaleSelector}>
+          <label htmlFor="scale-select" className={styles.scaleLabel}>
+            Scale:
+          </label>
+          <select
+            id="scale-select"
+            value={selectedScale}
+            onChange={(e) => onScaleChange(e.target.value as ScaleType)}
+            className={styles.select}
+            aria-label="Select scale type"
+          >
+            {(Object.keys(SCALE_LABELS) as ScaleType[]).map((scale) => (
+              <option key={scale} value={scale}>
+                {SCALE_LABELS[scale]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Theme toggle */}
+        <button
+          type="button"
+          className={styles.themeToggle}
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
-          {(Object.keys(SCALE_LABELS) as ScaleType[]).map((scale) => (
-            <option key={scale} value={scale}>
-              {SCALE_LABELS[scale]}
-            </option>
-          ))}
-        </select>
+          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+        </button>
       </div>
     </header>
   );

@@ -6,6 +6,13 @@ import { DIATONIC_OPACITY, CHROMATIC_OPACITY } from "@/features/chromatic-circle
  * preserved; only the opacity is reduced to signal harmonic tension.
  */
 export const CHORD_TONE_CHROMATIC_OPACITY = 0.7;
+const CHORD_TONE_CHROMATIC_OPACITY_DARK = 0.84;
+const CHROMATIC_OPACITY_DARK = 0.55;
+
+function isDarkTheme(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.getAttribute("data-theme") === "dark";
+}
 
 // Re-export so callers can access all opacity constants from one import path.
 export { DIATONIC_OPACITY, CHROMATIC_OPACITY };
@@ -29,7 +36,11 @@ export function getHarmonyOpacity(
   diatonicIndices: Set<number>,
   isChordTone: boolean,
 ): number {
+  const darkTheme = isDarkTheme();
   const isDiatonic = diatonicIndices.has(noteIndex);
   if (isDiatonic) return DIATONIC_OPACITY;
-  return isChordTone ? CHORD_TONE_CHROMATIC_OPACITY : CHROMATIC_OPACITY;
+  if (isChordTone) {
+    return darkTheme ? CHORD_TONE_CHROMATIC_OPACITY_DARK : CHORD_TONE_CHROMATIC_OPACITY;
+  }
+  return darkTheme ? CHROMATIC_OPACITY_DARK : CHROMATIC_OPACITY;
 }

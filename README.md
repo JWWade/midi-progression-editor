@@ -5,12 +5,16 @@
 **MIDI Progression Editor** is a parametric MIDI sequencer for exploring and editing chord progressions. It combines an interactive React/TypeScript web interface with an ASP.NET Core Web API backend, enabling musicians to:
 
 - Visualize chord shapes on an interactive chromatic circle
-- Build chord progressions with a dedicated sidebar
+- Build chord progressions with a dedicated sidebar (up to 8 chords, session-only)
 - Explore triads and seventh chords across all root notes and qualities
 - Animate smooth transitions between chord shapes
 - Display scale degrees and diatonic transparency on the circle
+- Choose from 8 scale modes: Major, Natural Minor, Harmonic Minor, Melodic Minor, Dorian, Phrygian, Lydian, and Mixolydian
 - Identify voice-leading paths between consecutive chords
 - Color-coded chord quality system (major, minor, diminished, augmented, dominant 7th, etc.)
+- Inspect individual tones: view note name, chord role, interval from root, and frequency
+- Switch between **Info mode** (click a note to inspect it) and **Select mode** (click notes to build a custom selection)
+- Toggle dark/light theme with persistent preference (stored in localStorage)
 - Play back chords with in-browser audio
 - Generate scales from any root note via the backend API
 
@@ -117,7 +121,7 @@ Runs xUnit test suite for business logic.
 
 ### Frontend Tests
 
-Not yet implemented (planned for Epic 2).
+No frontend test framework is currently configured.
 
 ## Lint & Code Quality
 
@@ -146,21 +150,25 @@ midi-progression-editor/
  client/              # React + TypeScript + Vite (frontend)
     src/
        api/         # API client & generated types
+       app/         # Application root
+          components/     # AppHeader (toggles, scale selector, theme)
+          providers/      # ThemeContext, ThemeProvider, useTheme
        features/    # Feature modules
           audio/              # In-browser chord audio playback
           chord/              # Core chord data, types & utilities
           chord-animation/    # Animated chord shape transitions
           chord-geometry/     # Polygon vertex calculations
-          chord-inspection/   # Chord detail analysis panel
+          chord-inspection/   # Tone detail inspection panel (ToneInfoPanel)
           chord-intervals/    # Interval pattern visualisation
           chord-morphing/     # Smooth polygon morphing hooks
           chromatic-circle/   # Main 12-note circle visualisation
           color-language/     # Quality-based color system
           current-chord/      # Current-chord info panel
-          progression-sidebar/ # Chord progression sidebar
-          scale/              # Scale generation & display
+          progression-sidebar/ # Chord progression sidebar (max 8 chords)
+          scale/              # Scale generation & display (8 modes)
           voice-leading/      # Voice-leading path utilities
-       shared/      # Shared components & utilities
+       shared/      # Shared components, hooks, types & utilities
+          types/CursorMode.ts # 'info' | 'select' cursor modes
        App.tsx
     .env.example     # Environment variable template
     package.json

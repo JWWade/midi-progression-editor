@@ -4,6 +4,9 @@ import { getChordName } from "@/features/chord/data/chordNames";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
 import { getChordComplexity, getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import type { Chord } from "@/features/current-chord/types";
+import { isCustomChord } from "@/features/current-chord/utils/chordTypeGuards";
+import { formatPrimitiveChordName } from "@/features/current-chord/utils/chordName";
+import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import styles from "./ChordTile.module.css";
 
 interface ChordTileProps {
@@ -20,10 +23,18 @@ interface ChordTileProps {
 
 export const ChordTile = forwardRef<HTMLDivElement, ChordTileProps>(
   function ChordTile({ chord, index, isFirst, isLast, isNew = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
-  const noteIndices = getChordNoteIndices(chord.root, chord.quality);
+  const noteIndices = isCustomChord(chord) 
+    ? chord.customNotes 
+    : getChordNoteIndices(chord.root, chord.quality);
   const complexity = getChordComplexity(chord);
   const accentColor = getChordColor(chord.quality, complexity);
-  const chordName = getChordName(chord.root, chord.quality);
+  const chordName = isCustomChord(chord)
+    ? (chord.primitiveShape === "equilateral-triangle"
+      ? getChordName(chord.root, chord.quality)
+      : chord.primitiveShape
+        ? formatPrimitiveChordName(chord)
+        : chord.customNotes.map(i => PITCH_CLASSES[i]).join(" "))
+    : getChordName(chord.root, chord.quality);
 
   return (
     <div

@@ -2,17 +2,27 @@ import type { Point } from "@/features/chromatic-circle/utils/geometry";
 
 /**
  * Linearly interpolates between two arrays of SVG points.
- * When point counts differ, only the overlapping points are morphed.
+ * When point counts differ, the shorter set is padded by repeating its last
+ * point so vertex-count transitions remain visually continuous.
  */
 export function morphPoints(
   fromPoints: Point[],
   toPoints: Point[],
   progress: number,
 ): Point[] {
-  const len = Math.min(fromPoints.length, toPoints.length);
+  const len = Math.max(fromPoints.length, toPoints.length);
+  if (len === 0) return [];
+
+  const fallbackFrom = fromPoints[fromPoints.length - 1] ?? { x: 0, y: 0 };
+  const fallbackTo = toPoints[toPoints.length - 1] ?? { x: 0, y: 0 };
+
   return Array.from({ length: len }, (_, i) => ({
-    x: fromPoints[i].x + (toPoints[i].x - fromPoints[i].x) * progress,
-    y: fromPoints[i].y + (toPoints[i].y - fromPoints[i].y) * progress,
+    x:
+      (fromPoints[i] ?? fallbackFrom).x +
+      ((toPoints[i] ?? fallbackTo).x - (fromPoints[i] ?? fallbackFrom).x) * progress,
+    y:
+      (fromPoints[i] ?? fallbackFrom).y +
+      ((toPoints[i] ?? fallbackTo).y - (fromPoints[i] ?? fallbackFrom).y) * progress,
   }));
 }
 

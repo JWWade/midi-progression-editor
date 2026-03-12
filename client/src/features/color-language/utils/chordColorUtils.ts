@@ -66,3 +66,74 @@ export function getChordFillColor(quality: ChordType, complexity: ChordComplexit
   const solidColor = getChordColor(quality, complexity);
   return solidColor.replace(/^hsl\(/, "hsla(").replace(/\)$/, ", 0.12)");
 }
+
+function parseHsl(color: string): [number, number, number] | null {
+  const match = color.match(/hsl\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)/i);
+  if (!match) return null;
+  return [Number(match[1]), Number(match[2]) / 100, Number(match[3]) / 100];
+}
+
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const hh = h / 60;
+  const x = c * (1 - Math.abs((hh % 2) - 1));
+
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (hh >= 0 && hh < 1) {
+    r = c;
+    g = x;
+  } else if (hh < 2) {
+    r = x;
+    g = c;
+  } else if (hh < 3) {
+    g = c;
+    b = x;
+  } else if (hh < 4) {
+    g = x;
+    b = c;
+  } else if (hh < 5) {
+    r = x;
+    b = c;
+  } else {
+    r = c;
+    b = x;
+  }
+
+  const m = l - c / 2;
+  return [r + m, g + m, b + m];
+}
+
+function toLinear(v: number): number {
+  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+}
+
+function relativeLuminance(r: number, g: number, b: number): number {
+  const rl = toLinear(r);
+  const gl = toLinear(g);
+  const bl = toLinear(b);
+  return 0.2126 * rl + 0.7152 * gl + 0.0722 * bl;
+}
+
+/**
+ * Returns a text color with stronger contrast against a solid chord background.
+ * Uses WCAG contrast ratio against white and a near-black tone.
+ */
+export function getAccessibleTextColor(backgroundColor: string): string {
+  const parsed = parseHsl(backgroundColor);
+  if (!parsed) return "#111827";
+
+  const [h, s, l] = parsed;
+  const [r, g, b] = hslToRgb(h, s, l);
+  const bgLum = relativeLuminance(r, g, b);
+
+  const whiteLum = 1;
+  const darkLum = relativeLuminance(0x11 / 255, 0x18 / 255, 0x27 / 255);
+
+  const whiteContrast = (Math.max(bgLum, whiteLum) + 0.05) / (Math.min(bgLum, whiteLum) + 0.05);
+  const darkContrast = (Math.max(bgLum, darkLum) + 0.05) / (Math.min(bgLum, darkLum) + 0.05);
+
+  return darkContrast >= whiteContrast ? "#111827" : "#ffffff";
+}

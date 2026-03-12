@@ -16,7 +16,6 @@ export default function App() {
 
   // Visualization toggles and scale selector (lifted from ChromaticCircle)
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
-  const [showVoiceLeads, setShowVoiceLeads] = useState(false);
   const [showExtension, setShowExtension] = useState(false);
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
@@ -60,8 +59,6 @@ export default function App() {
       <AppHeader
         selectedScale={selectedScale}
         onScaleChange={setSelectedScale}
-        showVoiceLeads={showVoiceLeads}
-        onVoiceLeadsChange={setShowVoiceLeads}
         showExtension={showExtension}
         onExtensionChange={setShowExtension}
         showCentroid={showCentroid}
@@ -74,13 +71,12 @@ export default function App() {
         <section
           className={styles.circleArea}
           role="region"
-          aria-label="Chromatic Circle - Select from and to chords"
+          aria-label="Chromatic Circle - Select and inspect the current chord"
         >
           <ChromaticCircle
             onCurrentChordChange={handleCurrentChordChange}
             onKeyScaleChange={handleKeyScaleChange}
             selectedScale={selectedScale}
-            showVoiceLeads={showVoiceLeads}
             showExtension={showExtension}
             showCentroid={showCentroid}
             showIntervals={showIntervals}

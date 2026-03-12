@@ -1,20 +1,64 @@
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordName, CHORD_TYPE_ORDER } from "../data/chordNames";
+import type { ChordType } from "../types";
 
 interface ChordSelectorProps {
   value: string;
   onChange: (chordName: string) => void;
+  customChord?: { root: number; quality: ChordType; customNotes: number[] } | null;
+  disabled?: boolean;
   id?: string;
   style?: React.CSSProperties;
   "aria-label"?: string;
 }
 
-export function ChordSelector({ value, onChange, id, style, "aria-label": ariaLabel }: ChordSelectorProps) {
+export function ChordSelector({ 
+  value, onChange, customChord, disabled = false, id, style, "aria-label": ariaLabel 
+}: ChordSelectorProps) {
+  // Display custom chord as read-only pill with reset button
+  if (customChord?.customNotes) {
+    const noteNames = customChord.customNotes.map(i => PITCH_CLASSES[i]).join(" ");
+    return (
+      <div style={{ display: "flex", gap: 4, alignItems: "center", ...style }}>
+        <span style={{ 
+          padding: "4px 8px", 
+          background: "#f3f4f6", 
+          borderRadius: 4, 
+          fontSize: 13,
+          fontWeight: 600,
+          border: "1px solid #d1d5db",
+        }}>
+          {noteNames}
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange(value)}
+          disabled={disabled}
+          style={{ 
+            padding: "2px 6px", 
+            fontSize: 11, 
+            cursor: disabled ? "not-allowed" : "pointer",
+            background: "#fff",
+            border: "1px solid #d1d5db",
+            borderRadius: 3,
+            opacity: disabled ? 0.6 : 1,
+          }}
+          title="Reset to named chord"
+          aria-label="Reset to named chord"
+        >
+          ↻
+        </button>
+      </div>
+    );
+  }
+  
+  // Original dropdown for named chords
   return (
     <select
       id={id}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
       style={style}
       aria-label={ariaLabel}
     >

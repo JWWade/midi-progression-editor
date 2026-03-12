@@ -1,13 +1,15 @@
 import { useState, useCallback } from "react";
 import type { Chord } from "../types";
-import { formatChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
+import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
-import { getCircleColor } from "@/features/chromatic-circle/utils/circleColors";
+import { getCircleColorForTheme } from "@/features/chromatic-circle/utils/circleColors";
 import { ChordColors } from "@/features/color-language/constants/chordColors";
-import { getChordComplexity, getChordColor } from "@/features/color-language/utils/chordColorUtils";
+import { getChordComplexity, getChordColor, getAccessibleTextColor } from "@/features/color-language/utils/chordColorUtils";
 import { ChordThumbnail } from "./ChordThumbnail";
 import styles from "./CurrentChordPanel.module.css";
+import { isCustomChord } from "../utils/chordTypeGuards";
+import { useTheme } from "@/app/providers/useTheme";
 
 interface CurrentChordPanelProps {
   chord: Chord | null;
@@ -30,7 +32,11 @@ export function CurrentChordPanel({
   progressionLength = 0,
   maxProgressionLength = 8,
 }: CurrentChordPanelProps) {
-  const noteIndices = chord ? getChordNoteIndices(chord.root, chord.quality) : [];
+  const { theme } = useTheme();
+
+  const noteIndices = chord
+    ? (isCustomChord(chord) ? chord.customNotes : getChordNoteIndices(chord.root, chord.quality))
+    : [];
   const isDisabled = chord === null || isProgressionFull;
   const [pressing, setPressing] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -54,12 +60,13 @@ export function CurrentChordPanel({
   }, []);
 
   const panelBg = chord
-    ? getCircleColor(chord.root, chord.quality)
+    ? getCircleColorForTheme(chord.root, chord.quality, theme, "panel")
     : undefined;
 
   const complexity = chord ? getChordComplexity(chord) : "triad" as const;
   const qualityColors = chord ? ChordColors[chord.quality] : null;
   const qualityBase = chord ? getChordColor(chord.quality, complexity) : null;
+  const buttonTextColor = qualityBase ? getAccessibleTextColor(qualityBase) : "#ffffff";
 
   const buttonClassName = [
     styles.addButton,
@@ -75,6 +82,7 @@ export function CurrentChordPanel({
     ...(qualityBase ? {
       "--chord-quality-base": qualityBase,
       "--chord-quality-dark": qualityColors?.dark,
+      "--chord-quality-text": buttonTextColor,
     } : {}),
   } as React.CSSProperties;
 
@@ -107,10 +115,29 @@ export function CurrentChordPanel({
         <span className={styles.placeholder}>No chord selected</span>
       ) : (
         <>
-          <span className={styles.chordName}>{formatChordName(chord)}</span>
+          <span className={styles.chordName}>
+            {isCustomChord(chord)
+              ? (chord.primitiveShape === "equilateral-triangle"
+                ? formatChordName(chord)
+                : chord.primitiveShape
+                  ? formatPrimitiveChordName(chord)
+                : chord.customNotes.map(i => PITCH_CLASSES[i]).join(" "))
+              : formatChordName(chord)
+            }
+          </span>
           <div className={styles.rootQualityRow}>
             <span className={styles.root}>{PITCH_CLASSES[chord.root]}</span>
-            <span className={styles.quality}>{CHORD_QUALITY_LABELS[chord.quality]}</span>
+            <span className={styles.quality}>
+              {isCustomChord(chord)
+                ? (chord.primitiveShape === "equilateral-triangle"
+                  ? CHORD_QUALITY_LABELS[chord.quality]
+                  : chord.primitiveShape === "suspended-triangle"
+                    ? "sus4"
+                  : chord.primitiveShape
+                    ? CHORD_QUALITY_LABELS[chord.quality]
+                    : "(custom)")
+                : CHORD_QUALITY_LABELS[chord.quality]}
+            </span>
           </div>
         </>
       )}

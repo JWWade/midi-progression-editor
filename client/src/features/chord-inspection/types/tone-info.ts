@@ -5,5 +5,5 @@ export interface ToneInfo {
   role: string;
   interval: number; // semitones from root
   frequency: number;
-  chordLabel: string; // e.g. "From Chord" or "To Chord"
+  chordLabel: string; // e.g. "From Chord" or "Scale"
 }

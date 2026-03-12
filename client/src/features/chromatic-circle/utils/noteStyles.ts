@@ -19,6 +19,13 @@ export interface NoteStyle {
 const NOTE_DIATONIC_FILL = "#4F46E5";
 const NOTE_CHROMATIC_FILL = "#D1D5DB";
 const NOTE_CHROMATIC_TEXT = "#4B5563";
+const NOTE_CHROMATIC_FILL_DARK = "#5b6478";
+const NOTE_CHROMATIC_TEXT_DARK = "#e2e8f0";
+
+function isDarkTheme(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.getAttribute("data-theme") === "dark";
+}
 
 /**
  * Per-quality expressive fill colours for chord-tone nodes.
@@ -63,6 +70,7 @@ export function getNoteStyle(
   complexity: ChordComplexity = "triad",
 ): NoteStyle {
   const isChordTone = chordIndices.includes(index);
+  const darkTheme = isDarkTheme();
   const opacity = getHarmonyOpacity(index, diatonicIndices, isChordTone);
   if (isChordTone) {
     return {
@@ -79,8 +87,8 @@ export function getNoteStyle(
     };
   }
   return {
-    fill: NOTE_CHROMATIC_FILL,
+    fill: darkTheme ? NOTE_CHROMATIC_FILL_DARK : NOTE_CHROMATIC_FILL,
     opacity,
-    textFill: NOTE_CHROMATIC_TEXT,
+    textFill: darkTheme ? NOTE_CHROMATIC_TEXT_DARK : NOTE_CHROMATIC_TEXT,
   };
 }
