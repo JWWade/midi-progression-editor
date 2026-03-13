@@ -4,6 +4,7 @@ import { ChordQualityColors } from "../constants/chordQualityColors";
 import { CHORD_NAME_TO_DATA, CHORD_TYPE_ORDER, getChordName } from "../data/chordNames";
 import type { ChordType } from "../types";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
+import { ChordQualityIcon } from "./ChordQualityIcon";
 
 const QUALITY_LABELS: Record<ChordType, string> = {
   major: "maj",
@@ -159,19 +160,19 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
               <div
                 key={type}
                 role="columnheader"
+                title={QUALITY_LABELS[type]}
+                aria-label={QUALITY_LABELS[type]}
                 style={{
                   width: 46,
                   flexShrink: 0,
-                  textAlign: "center",
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: ChordQualityColors[type].dark,
-                  letterSpacing: "0.05em",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   paddingBottom: 3,
                   borderBottom: `2px solid ${ChordQualityColors[type].base}`,
                 }}
               >
-                {QUALITY_LABELS[type]}
+                <ChordQualityIcon quality={type} size={24} />
               </div>
             ))}
           </div>
