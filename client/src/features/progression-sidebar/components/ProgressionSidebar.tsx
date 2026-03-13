@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import { ChordTile } from "./ChordTile";
+import { MidiExportControls } from "@/features/midi-export/components/MidiExportControls";
 import styles from "./ProgressionSidebar.module.css";
 
 /** Must match the `tileHighlight` animation duration in ChordTile.module.css */
@@ -88,6 +89,7 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
           Maximum {maxLength} chords reached
         </div>
       )}
+      <MidiExportControls chords={chords} disabled={chords.length === 0} />
     </aside>
   );
 }

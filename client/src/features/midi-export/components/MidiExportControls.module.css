@@ -1,0 +1,65 @@
+/* ── MIDI export controls footer ────────────────────────────────────────── */
+.exportControls {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.input,
+.select {
+  width: 72px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background-color: var(--color-bg-canvas);
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+.input:focus,
+.select:focus {
+  outline: 2px solid var(--color-accent, #6366f1);
+  outline-offset: 1px;
+}
+
+.exportButton {
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background-color: var(--color-accent, #6366f1);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.exportButton:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.exportButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
