@@ -56,6 +56,7 @@ export default function App() {
 
   return (
     <div className={styles.layout}>
+      <h1 className={styles.visuallyHidden}>MIDI Progression Editor</h1>
       <AppHeader
         selectedScale={selectedScale}
         onScaleChange={setSelectedScale}
