@@ -1,0 +1,43 @@
+/* ── Wrapper ─────────────────────────────────────────────────────────────── */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.12s ease, transform 0.12s ease;
+  cursor: default;
+}
+
+/* ── Hover state ─────────────────────────────────────────────────────────── */
+.icon:hover {
+  filter: brightness(1.2);
+  transform: scale(1.05);
+}
+
+/* ── Selected state ──────────────────────────────────────────────────────── */
+.selected {
+  filter: brightness(0.8);
+}
+
+.selected:hover {
+  filter: brightness(0.9);
+}
+
+/* ── Disabled state ──────────────────────────────────────────────────────── */
+.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.disabled:hover {
+  filter: none;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon {
+    transition: none;
+  }
+  .icon:hover {
+    transform: none;
+  }
+}
