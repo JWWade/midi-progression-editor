@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { PITCH_CLASSES, getDiatonicIndices } from "../utils";
+import { getDiatonicIndices } from "../utils";
 import { getCircleColorForTheme } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
 import {
@@ -62,6 +62,7 @@ import {
 } from "@/features/color-language/utils/svgGradient";
 import type { Chord, PrimitiveShape } from "@/features/current-chord";
 import { useTheme } from "@/app/providers/useTheme";
+import { useEnharmonic } from "@/app/providers/useEnharmonic";
 
 const DRAG_THRESHOLD_PX = 8;
 
@@ -89,6 +90,7 @@ export function ChromaticCircle({
   showIntervals: propShowIntervals = false,
 }: ChromaticCircleProps) {
   const { theme } = useTheme();
+  const { pitchClasses } = useEnharmonic();
 
   type CustomChordState = {
     root: number;
@@ -238,12 +240,12 @@ export function ChromaticCircle({
       onCurrentChordChange?.(newChord);
     }
 
-    setMoveAnnouncement(`Moved ${PITCH_CLASSES[draggedNoteIndex]} to ${PITCH_CLASSES[dragTargetIndex]}`);
+    setMoveAnnouncement(`Moved ${pitchClasses[draggedNoteIndex]} to ${pitchClasses[dragTargetIndex]}`);
     setSuppressNextClick(true);
     
     // Reset drag state
     resetDragState();
-  }, [isDragging, didDrag, draggedNoteIndex, dragTargetIndex, customFromChord, selectedChordName, onCurrentChordChange]);
+  }, [isDragging, didDrag, draggedNoteIndex, dragTargetIndex, customFromChord, selectedChordName, onCurrentChordChange, pitchClasses]);
 
   const handleRotateChord = useCallback(
     (direction: "clockwise" | "counterclockwise") => {
@@ -398,8 +400,8 @@ export function ChromaticCircle({
 
   // Use custom notes if available, otherwise calculate from root + quality
   const chordNotes = customFromChord?.customNotes
-    ? customFromChord.customNotes.map(idx => ({ index: idx, name: PITCH_CLASSES[idx], role: "root" as const }))
-    : transposeChord(baseIntervals, rootIndex);
+    ? customFromChord.customNotes.map(idx => ({ index: idx, name: pitchClasses[idx], role: "root" as const }))
+    : transposeChord(baseIntervals, rootIndex, pitchClasses);
   const chordIndices = chordNotes.map((n) => n.index);
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
@@ -407,7 +409,7 @@ export function ChromaticCircle({
   // Triad subset points for seventh chords (used when showExtension is enabled)
   const fromTriadIntervals = getChordTriad(chordType);
   const fromTriadNotes = fromTriadIntervals
-    ? transposeChord(fromTriadIntervals, rootIndex)
+    ? transposeChord(fromTriadIntervals, rootIndex, pitchClasses)
     : null;
   const fromTriadPoints = fromTriadNotes
     ? calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, fromTriadNotes.map((n) => n.index))
@@ -628,7 +630,7 @@ export function ChromaticCircle({
 
 
         {/* Outer ring note labels — single source of truth for note names */}
-        {PITCH_CLASSES.map((label, i) => {
+        {pitchClasses.map((label, i) => {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
           const x = CENTER + RING_RADIUS * Math.cos(angle);
           const y = CENTER + RING_RADIUS * Math.sin(angle);

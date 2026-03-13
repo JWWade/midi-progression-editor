@@ -16,3 +16,18 @@ export const PITCH_CLASSES = [
   "A#",
   "B",
 ] as const;
+
+export const FLAT_PITCH_CLASSES = [
+  "C",
+  "Db",
+  "D",
+  "Eb",
+  "E",
+  "F",
+  "Gb",
+  "G",
+  "Ab",
+  "A",
+  "Bb",
+  "B",
+] as const;

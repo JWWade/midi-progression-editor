@@ -40,13 +40,14 @@ export function getChordTriad(chordType: ChordType): readonly number[] | undefin
 
 export function transposeChord(
   baseIntervals: readonly number[],
-  rootIndex: number
+  rootIndex: number,
+  pitchClasses: readonly string[] = PITCH_CLASSES,
 ): ChordNoteInfo[] {
   return baseIntervals.map((interval, i) => {
     const index = (interval + rootIndex) % 12;
     return {
       index,
-      name: PITCH_CLASSES[index],
+      name: pitchClasses[index],
       role: ROLES[i] ?? DEFAULT_ROLE,
     };
   });

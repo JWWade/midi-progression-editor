@@ -1,6 +1,7 @@
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordName, CHORD_TYPE_ORDER } from "../data/chordNames";
 import type { ChordType } from "../types";
+import { useEnharmonic } from "@/app/providers/useEnharmonic";
 
 interface ChordSelectorProps {
   value: string;
@@ -15,9 +16,10 @@ interface ChordSelectorProps {
 export function ChordSelector({ 
   value, onChange, customChord, disabled = false, id, style, "aria-label": ariaLabel 
 }: ChordSelectorProps) {
+  const { pitchClasses } = useEnharmonic();
   // Display custom chord as read-only pill with reset button
   if (customChord?.customNotes) {
-    const noteNames = customChord.customNotes.map(i => PITCH_CLASSES[i]).join(" ");
+    const noteNames = customChord.customNotes.map(i => pitchClasses[i]).join(" ");
     return (
       <div style={{ display: "flex", gap: 4, alignItems: "center", ...style }}>
         <span style={{ 
@@ -63,12 +65,13 @@ export function ChordSelector({
       aria-label={ariaLabel}
     >
       {PITCH_CLASSES.map((rootLabel, rootIndex) => (
-        <optgroup key={rootLabel} label={rootLabel}>
+        <optgroup key={rootLabel} label={pitchClasses[rootIndex]}>
           {CHORD_TYPE_ORDER.map((type) => {
             const name = getChordName(rootIndex, type);
+            const displayName = getChordName(rootIndex, type, pitchClasses);
             return (
               <option key={name} value={name}>
-                {name}
+                {displayName}
               </option>
             );
           })}

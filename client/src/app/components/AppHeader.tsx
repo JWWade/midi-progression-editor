@@ -1,6 +1,7 @@
 import type { ScaleType } from '../../features/scale/types';
 import { SCALE_LABELS } from '../../features/scale/types';
 import { useTheme } from '../providers/useTheme';
+import { useEnharmonic } from '../providers/useEnharmonic';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
@@ -25,6 +26,7 @@ export function AppHeader({
   onIntervalsChange,
 }: AppHeaderProps) {
   const { theme, toggleTheme } = useTheme();
+  const { useFlats, toggleEnharmonic } = useEnharmonic();
 
   return (
     <header className={styles.header}>
@@ -99,6 +101,17 @@ export function AppHeader({
           title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
           {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+        </button>
+
+        {/* Enharmonic toggle */}
+        <button
+          type="button"
+          className={styles.themeToggle}
+          onClick={toggleEnharmonic}
+          aria-label={`Switch to ${useFlats ? 'sharp' : 'flat'} notation`}
+          title={`Switch to ${useFlats ? 'sharp' : 'flat'} notation`}
+        >
+          {useFlats ? '♯ Sharps' : '♭ Flats'}
         </button>
       </div>
     </header>
