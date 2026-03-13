@@ -38,11 +38,12 @@
 ┌──────────────────▼──────────────────────────────────────────┐
 │              ASP.NET CORE WEB API                            │
 │  ┌───────────────────────────────────────────────────────┐  │
-│  │  Controllers (Health, Scale)                          │  │
+│  │  Controllers (Health, Chord, Scale, Progression)      │  │
 │  │  ↓                                                     │  │
-│  │  Business Logic (ScaleGenerator)                      │  │
+│  │  Business Logic (ChordGenerator, ScaleGenerator,      │  │
+│  │                  ProgressionAnalyzer)                  │  │
 │  │  ↓                                                     │  │
-│  │  DTOs & Models (Note enum, NoteInfo, etc.)           │  │
+│  │  DTOs & Models (Note enum, NoteInfo, ChordDto, etc.)  │  │
 │  │  ↓                                                     │  │
 │  │  Swagger (OpenAPI specification)                      │  │
 │  └───────────────────────────────────────────────────────┘  │
@@ -115,6 +116,11 @@ client/
 │   │   ├── chord-morphing/               # Smooth polygon morphing
 │   │   │   ├── hooks/                   # Morphing animation hooks
 │   │   │   └── utils/                   # Interpolation helpers
+│   │   │
+│   │   ├── midi-export/                  # MIDI file export
+│   │   │   ├── components/              # MidiExportControls (BPM, beats/chord, export button)
+│   │   │   ├── hooks/                   # useMidiExport (BPM/beats state, export trigger)
+│   │   │   └── utils/                   # midiBuilder (SMF binary construction)
 │   │   │
 │   │   ├── chromatic-circle/             # Main 12-note circle visualisation
 │   │   │   ├── api/                     # Scale API calls (getDiatonicNotes)
@@ -250,7 +256,8 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 - ✅ **Cursor Modes**: Info mode (click a note to inspect it) and Select mode (click notes to toggle a custom selection); keyboard shortcuts `I` / `S`
 - ✅ **AppHeader**: Visualization toggles (Voice Leads, Extension, Centroid, Intervals), scale mode selector, cursor mode buttons, and theme toggle
 - ✅ **Dark/Light Theme**: Persistent theme toggle stored in `localStorage`; applied via `data-theme` attribute on `<html>`
-- ✅ **Structure**: Feature-based architecture across 13 modules
+- ✅ **MIDI Export**: Export current chord progression as a standard MIDI file (`.mid`); configurable BPM (40–240) and beats-per-chord (1, 2, 4)
+- ✅ **Structure**: Feature-based architecture across 14 modules
 
 ---
 
@@ -262,16 +269,26 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 server/ParametricMusic.Api/
 ├── Controllers/
 │   ├── HealthController.cs               # GET /Health
-│   └── ScaleController.cs                # POST /Scale/from-root
+│   ├── ChordController.cs                # POST /Chord/from-root
+│   ├── ScaleController.cs                # POST /Scale/from-root
+│   └── ProgressionController.cs          # POST /Progression/analyze
 │
-├── Models & DTOs/
+├── Models/
 │   ├── Note.cs                           # Enum (C=0...B=11) + extensions
-│   ├── ScaleType.cs                      # Enum (Major, Minor)
+│   ├── ChordQuality.cs                   # Enum (Major, Minor, Diminished, Augmented, Dominant7, Major7, Minor7, HalfDiminished7)
+│   ├── ScaleType.cs                      # Enum (Major, NaturalMinor, HarmonicMinor, MelodicMinor, Dorian, Phrygian, Lydian, Mixolydian)
 │   ├── NoteInfo.cs                       # DTO (Index: int, Name: string)
-│   └── ScaleOptionsDto.cs                # DTO (ScaleType field)
+│   ├── ChordDto.cs                       # DTO (Root, Quality, DisplayName, PitchClasses, NoteNames)
+│   ├── ChordFromRootRequestDto.cs        # DTO (Quality: ChordQuality)
+│   ├── PrimitiveShape.cs                 # Enum (Triangle, Quadrilateral, etc.)
+│   ├── ScaleOptionsDto.cs                # DTO (ScaleType field)
+│   ├── ProgressionAnalyzeRequestDto.cs   # DTO (Chords list of ChordRef)
+│   └── ProgressionAnalyzeResponseDto.cs  # DTO (Steps, ContinuityScore, TensionTrend)
 │
-├── Business Logic/
-│   └── ScaleGenerator.cs                 # Scale generation logic
+├── Services/
+│   ├── ChordGenerator.cs                 # Chord construction from root + quality
+│   ├── ScaleGenerator.cs                 # Scale generation logic (all 8 modes)
+│   └── ProgressionAnalyzer.cs            # Progression motion, continuity, and tension
 │
 ├── Configuration/
 │   ├── Program.cs                        # App configuration, middleware setup
@@ -280,14 +297,19 @@ server/ParametricMusic.Api/
 │   ├── appsettings.json                  # Configuration
 │   └── appsettings.Development.json      # Development overrides
 │
-├── Tools/
-│   ├── ParametricMusic.Api.csproj        # Project file
-│   └── ParametricMusic.Api.http          # HTTP requests for testing
-│
-└── Tests/
-    └── ../ParametricMusic.Tests/
-        ├── ScaleGeneratorTests.cs        # xUnit tests for scale generation
-        └── ParametricMusic.Tests.csproj
+├── ParametricMusic.Api.csproj            # Project file
+└── ParametricMusic.Api.http              # HTTP requests for manual testing
+
+server/ParametricMusic.Tests/
+├── ChordGeneratorTests.cs                # Unit tests for ChordGenerator
+├── ScaleGeneratorTests.cs                # Unit tests for ScaleGenerator
+├── ProgressionAnalyzerTests.cs           # Unit tests for ProgressionAnalyzer
+├── HealthControllerIntegrationTests.cs   # Integration tests for /Health
+├── ChordControllerIntegrationTests.cs    # Integration tests for /Chord/from-root
+├── ScaleControllerIntegrationTests.cs    # Integration tests for /Scale/from-root
+├── ProgressionControllerIntegrationTests.cs # Integration tests for /Progression/analyze
+├── GlobalUsings.cs                       # Global xUnit usings
+└── ParametricMusic.Tests.csproj
 ```
 
 ### Architecture Pattern
@@ -295,11 +317,11 @@ server/ParametricMusic.Api/
 **Layered Architecture**:
 
 ```
-Controller Layer
+Controller Layer (HealthController, ChordController, ScaleController, ProgressionController)
     ↓
-Business Logic Layer (ScaleGenerator)
+Services Layer (ChordGenerator, ScaleGenerator, ProgressionAnalyzer)
     ↓
-DTOs & Models Layer (Note enum, NoteInfo, etc.)
+DTOs & Models Layer (Note, ChordQuality, ScaleType, NoteInfo, ChordDto, etc.)
 ```
 
 ### Key Components
@@ -312,21 +334,37 @@ DTOs & Models Layer (Note enum, NoteInfo, etc.)
 public IActionResult Get() => Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
 ```
 - Endpoint: `GET /Health`
-- Purpose: Simple health check
-- Response: Anonymous object with status and timestamp
+- Purpose: Simple liveness check
+- Response: `{ status: "healthy", timestamp: "<ISO 8601 UTC>" }`
+
+**ChordController**
+```csharp
+[HttpPost("from-root")]
+public IActionResult BuildChord([FromQuery] Note note, [FromBody] ChordFromRootRequestDto body)
+```
+- Endpoint: `POST /Chord/from-root`
+- Query: `note` (enum: C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B)
+- Body: `{ "quality": "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" }`
+- Response: `ChordDto` with root, quality, display name, pitch classes, and note names
 
 **ScaleController**
 ```csharp
 [HttpPost("from-root")]
-public IActionResult BuildScale([FromQuery] Note note, [FromBody] ScaleOptionsDto options)
+public IActionResult BuildScale([FromQuery] Note note, [FromBody] ScaleOptionsDto body)
 ```
 - Endpoint: `POST /Scale/from-root`
 - Query: `note` (enum: C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B)
-- Body:
-  ```json
-  { "scaleType": "major" | "minor" }
-  ```
-- Response: `NoteInfo[]` array with index and name for each note in scale
+- Body: `{ "scaleType": "Major" | "NaturalMinor" | "HarmonicMinor" | "MelodicMinor" | "Dorian" | "Phrygian" | "Lydian" | "Mixolydian" }`
+- Response: `NoteInfo[]` array with index and name for each scale tone
+
+**ProgressionController**
+```csharp
+[HttpPost("analyze")]
+public IActionResult Analyze([FromBody] ProgressionAnalyzeRequestDto body)
+```
+- Endpoint: `POST /Progression/analyze`
+- Body: `{ "chords": [{ "root": 0, "quality": "Major", ... }, ...] }` (1–8 chords)
+- Response: `ProgressionAnalyzeResponseDto` with step-by-step motion, continuity score, and tension trend
 
 #### Models & Enums
 
@@ -338,13 +376,30 @@ public enum Note { C=0, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B
 - Display attributes: `[Display(Name = "C#")]` etc.
 - Extensions: `GetDisplayName()`, `TryParse(string)`
 
+**ChordQuality Enum**
+```csharp
+public enum ChordQuality { Major, Minor, Diminished, Augmented, Dominant7, Major7, Minor7, HalfDiminished7 }
+```
+- 4 triads + 4 seventh chord qualities
+- Serialized as strings in JSON responses
+
 **ScaleType Enum**
 ```csharp
-[Display(Name = "Major", Description = "Major scale (Ionian mode)")]
-public enum ScaleType { Major, Minor }
+public enum ScaleType { Major, NaturalMinor, HarmonicMinor, MelodicMinor, Dorian, Phrygian, Lydian, Mixolydian }
 ```
-- Backend enum used by `/Scale/from-root`; only `Major` is fully implemented server-side
-- The frontend defines its own `ScaleType` with 8 modes (`major`, `naturalMinor`, `harmonicMinor`, `melodicMinor`, `dorian`, `phrygian`, `lydian`, `mixolydian`) and computes diatonic notes client-side via `SCALE_INTERVALS`
+- All 8 diatonic modes and common scales fully implemented server-side
+- Matches the frontend `ScaleType` values exactly (case-insensitive JSON binding)
+
+**ChordDto**
+```csharp
+public class ChordDto {
+    public string Root { get; init; }        // Root note display name (e.g., "C#")
+    public ChordQuality Quality { get; init; }
+    public string DisplayName { get; init; } // e.g., "C# Major"
+    public int[] PitchClasses { get; init; } // MIDI pitch classes (0-11)
+    public string[] NoteNames { get; init; } // Display names for each pitch class
+}
+```
 
 **NoteInfo DTO**
 ```csharp
@@ -354,35 +409,23 @@ public class NoteInfo {
 }
 ```
 
-**ScaleOptionsDto**
-```csharp
-public class ScaleOptionsDto {
-    [JsonPropertyName("scaleType")]
-    public ScaleType ScaleType { get; set; } = ScaleType.Major;
-}
-```
+#### Services
 
-#### Business Logic
+**ChordGenerator**
+- Static class; builds a `ChordDto` from a root `Note` and `ChordQuality`
+- Applies standard Western tertian harmony interval patterns (triads and seventh chords)
+- Throws `ArgumentOutOfRangeException` for unsupported quality values
 
 **ScaleGenerator**
-```csharp
-public static class ScaleGenerator {
-    private static readonly int[] MajorScaleIntervals = [0, 2, 4, 5, 7, 9, 11];
-    
-    public static NoteInfo[] BuildMajorScale(int root) {
-        return MajorScaleIntervals
-            .Select(interval => {
-                var noteIndex = (root + interval) % 12;
-                var note = (Note)noteIndex;
-                return new NoteInfo(noteIndex, note.GetDisplayName());
-            })
-            .ToArray();
-    }
-}
-```
-- Static utility class with music theory calculations
-- Returns rich DTO objects (not raw numbers)
-- Supports scale building from any root note
+- Static class; builds a `NoteInfo[]` from a root pitch-class index and `ScaleType`
+- Supports all 8 scale types via a lookup dictionary of interval arrays
+- Throws `ArgumentOutOfRangeException` for unsupported scale type values
+
+**ProgressionAnalyzer**
+- Static class; analyzes step-by-step voice motion, computes a normalized continuity score, and returns a per-chord tension trend
+- Continuity score formula: `1 − (averageMotion / 12)` (higher = smoother voice leading)
+- Tension trend: proportion of "rough" interval pairs (tritone, minor 2nd) per chord
+- Input limited to 1–8 chords
 
 ### Configuration
 
@@ -424,16 +467,17 @@ Port configuration in `launchSettings.json`:
 [Theory]
 [InlineData(0)]      // C major
 [InlineData(5)]      // F major (with wraparound)
-public void BuildMajorScale_ReturnsSevenNotes(int root) {
-    var result = ScaleGenerator.BuildMajorScale(root);
+public void BuildScale_ReturnsSevenNotes(int root) {
+    var result = ScaleGenerator.BuildScale(root, ScaleType.Major);
     Assert.Equal(7, result.Length);
 }
 ```
 
 Tests cover:
-- Correct number of notes returned (always 7)
-- Proper handling of note wraparound (e.g., B major)
-- Specific note sequences for known roots
+- `ChordGeneratorTests`: interval correctness for all 8 chord qualities, note name accuracy, wraparound behavior
+- `ScaleGeneratorTests`: seven-note output for all 8 scale types, pitch-class wraparound, note name accuracy
+- `ProgressionAnalyzerTests`: step motion values, continuity score formula, tension trend per chord
+- Integration tests for each controller: happy-path responses, enum validation, boundary conditions
 
 ---
 
@@ -486,16 +530,36 @@ The backend automatically generates an OpenAPI specification that describes all 
 | Method | Endpoint | Parameters | Response |
 |--------|----------|-----------|----------|
 | `GET` | `/Health` | None | `{ status: string, timestamp: string }` |
-| `POST` | `/Scale/from-root` | `note` (query), `{ scaleType: "major" \| "minor" }` (body) | `NoteInfo[]` |
+| `POST` | `/Chord/from-root` | `note` (query), `{ quality: ChordQuality }` (body) | `ChordDto` |
+| `POST` | `/Scale/from-root` | `note` (query), `{ scaleType: ScaleType }` (body) | `NoteInfo[]` |
+| `POST` | `/Progression/analyze` | `{ chords: ChordRef[] }` (body, 1–8 chords) | `ProgressionAnalyzeResponseDto` |
 
-**Example Request**:
+**Example Request (chord)**:
+```bash
+curl -X POST "http://localhost:5110/Chord/from-root?note=C" \
+  -H "Content-Type: application/json" \
+  -d '{"quality":"Major"}'
+```
+
+**Example Response (chord)**:
+```json
+{
+  "root": "C",
+  "quality": "Major",
+  "displayName": "C Major",
+  "pitchClasses": [0, 4, 7],
+  "noteNames": ["C", "E", "G"]
+}
+```
+
+**Example Request (scale)**:
 ```bash
 curl -X POST "http://localhost:5110/Scale/from-root?note=C" \
   -H "Content-Type: application/json" \
-  -d '{"scaleType":"major"}'
+  -d '{"scaleType":"Major"}'
 ```
 
-**Example Response**:
+**Example Response (scale)**:
 ```json
 [
   { "index": 0, "name": "C" },
@@ -691,7 +755,7 @@ cd server/ParametricMusic.Tests
 dotnet test
 ```
 
-**Frontend tests**: Not yet implemented (planned for Epic 2)
+**Frontend tests**: Vitest is configured; `midiBuilder.test.ts` covers MIDI file construction. Run with `cd client && npm test`.
 
 ---
 
@@ -705,14 +769,12 @@ dotnet test
 
 ### 🚀 Future Improvements
 
-- [ ] Add frontend unit tests (Vitest)
 - [ ] Add state management (Zustand or Redux)
 - [ ] Implement client-side routing
-- [ ] Expand backend scale support to match all 8 frontend modes
-- [ ] MIDI export functionality
-- [ ] Cross-platform dev script (shell version)
+- [ ] Cross-platform dev script (shell version for Linux/Mac)
 - [ ] Docker configuration
 - [ ] Performance monitoring
+- [ ] Expand frontend test coverage (components, hooks)
 
 ---
 
@@ -725,4 +787,4 @@ dotnet test
 
 ---
 
-**Last Updated**: March 10, 2026
+**Last Updated**: March 13, 2026
