@@ -10,12 +10,19 @@ export interface MidiExportOptions {
   beatsPerChord: number;
 }
 
-const DEFAULT_OPTIONS: MidiExportOptions = {
-  bpm: 120,
-  beatsPerChord: 2,
-};
-
+const MIN_BPM = 40;
+const MAX_BPM = 240;
+const VALID_BEATS_PER_CHORD = [1, 2, 4] as const;
+const DEFAULT_BPM = 120;
+const DEFAULT_BEATS_PER_CHORD = 2;
 const VELOCITY = 100;
+const MIDI_MAX_VELOCITY = 127;
+const SECONDS_PER_MINUTE = 60;
+
+const DEFAULT_OPTIONS: MidiExportOptions = {
+  bpm: DEFAULT_BPM,
+  beatsPerChord: DEFAULT_BEATS_PER_CHORD,
+};
 
 /**
  * Converts a chord progression into raw MIDI bytes.
@@ -30,18 +37,20 @@ export function buildMidiFile(
 ): Uint8Array {
   const { bpm, beatsPerChord } = { ...DEFAULT_OPTIONS, ...options };
 
-  if (bpm < 40 || bpm > 240) {
-    throw new RangeError(`bpm must be between 40 and 240, got ${bpm}`);
+  if (bpm < MIN_BPM || bpm > MAX_BPM) {
+    throw new RangeError(`bpm must be between ${MIN_BPM} and ${MAX_BPM}, got ${bpm}`);
   }
-  if (beatsPerChord !== 1 && beatsPerChord !== 2 && beatsPerChord !== 4) {
-    throw new RangeError(`beatsPerChord must be 1, 2, or 4, got ${beatsPerChord}`);
+  if (!(VALID_BEATS_PER_CHORD as readonly number[]).includes(beatsPerChord)) {
+    throw new RangeError(
+      `beatsPerChord must be one of ${VALID_BEATS_PER_CHORD.join(", ")}, got ${beatsPerChord}`,
+    );
   }
 
   const midi = new Midi();
   midi.header.setTempo(bpm);
 
   const track = midi.addTrack();
-  const secondsPerBeat = 60 / bpm;
+  const secondsPerBeat = SECONDS_PER_MINUTE / bpm;
   const chordDuration = beatsPerChord * secondsPerBeat;
 
   let prevMidi: number[] = [];
@@ -64,7 +73,7 @@ export function buildMidiFile(
         midi: note,
         time: startTime,
         duration: chordDuration,
-        velocity: VELOCITY / 127,
+        velocity: VELOCITY / MIDI_MAX_VELOCITY,
       });
     }
 
