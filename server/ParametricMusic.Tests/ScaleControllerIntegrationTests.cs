@@ -61,6 +61,39 @@ public class ScaleControllerIntegrationTests : IClassFixture<WebApplicationFacto
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    // ── Problem Details – content-type and schema ──────────────────────────────
+
+    [Fact]
+    public async Task PostScaleFromRoot_InvalidNote_ReturnsProblemDetailsContentType()
+    {
+        var response = await PostScaleAsync("Z", "Major");
+
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task PostScaleFromRoot_InvalidNote_ReturnsProblemDetailsSchema()
+    {
+        var response = await PostScaleAsync("Z", "Major");
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        Assert.True(doc.RootElement.TryGetProperty("status", out var statusProp));
+        Assert.Equal(400, statusProp.GetInt32());
+        Assert.True(doc.RootElement.TryGetProperty("title", out _));
+    }
+
+    [Fact]
+    public async Task PostScaleFromRoot_InvalidScaleType_ReturnsProblemDetailsContentType()
+    {
+        var body = """{"scaleType": "InvalidMode"}""";
+        var response = await _client.PostAsync(
+            "/Scale/from-root?note=C",
+            new StringContent(body, Encoding.UTF8, "application/json"));
+
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private Task<HttpResponseMessage> PostScaleAsync(string note, string scaleType)

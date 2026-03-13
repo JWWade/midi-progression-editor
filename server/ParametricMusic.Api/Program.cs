@@ -27,6 +27,8 @@ builder.Services.AddSwaggerGen(options =>
     options.UseInlineDefinitionsForEnums();
 });
 
+builder.Services.AddProblemDetails();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("LocalDev", policy =>
@@ -36,6 +38,11 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler();
+}
 
 app.UseCors("LocalDev");
 

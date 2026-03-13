@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 [ApiController]
 [Route("[controller]")]
 [Tags("Chord")]
-[Produces("application/json")]
 public class ChordController : ControllerBase
 {
     /// <summary>
