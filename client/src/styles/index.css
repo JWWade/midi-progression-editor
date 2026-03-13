@@ -23,10 +23,10 @@
   --color-border: #e5e7eb;
   --color-border-subtle: rgba(0, 0, 0, 0.08);
   --color-text-primary: #1f2937;
-  --color-text-secondary: #6b7280;
-  --color-text-muted: #9ca3af;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
   --color-disabled-bg: #d1d5db;
-  --color-disabled-text: #9ca3af;
+  --color-disabled-text: #6b7280;
   --color-tile-bg: rgba(0, 0, 0, 0.03);
   --color-tile-bg-hover: rgba(0, 0, 0, 0.07);
   --color-tile-name: #111827;

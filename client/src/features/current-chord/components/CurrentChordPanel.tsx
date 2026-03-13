@@ -100,7 +100,6 @@ export function CurrentChordPanel({
       className={styles.panel}
       style={panelStyle}
       aria-label="Current chord panel"
-      aria-live="polite"
     >
       <span className={styles.sectionLabel}>Current Chord</span>
       <div className={styles.thumbnail}>
@@ -113,10 +112,10 @@ export function CurrentChordPanel({
         />
       </div>
       {chord === null ? (
-        <span className={styles.placeholder}>No chord selected</span>
+        <span className={styles.placeholder} aria-live="polite" aria-atomic="true">No chord selected</span>
       ) : (
         <>
-          <span className={styles.chordName}>
+          <span className={styles.chordName} aria-live="polite" aria-atomic="true">
             {isCustomChord(chord)
               ? (chord.primitiveShape === "equilateral-triangle"
                 ? formatChordName(chord, pitchClasses)

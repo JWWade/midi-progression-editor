@@ -21,7 +21,7 @@ interface ChordTileProps {
   onAnimationEnd?: () => void;
 }
 
-export const ChordTile = forwardRef<HTMLDivElement, ChordTileProps>(
+export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
   function ChordTile({ chord, index, isFirst, isLast, isNew = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = isCustomChord(chord) 
@@ -38,7 +38,7 @@ export const ChordTile = forwardRef<HTMLDivElement, ChordTileProps>(
     : getChordName(chord.root, chord.quality, pitchClasses);
 
   return (
-    <div
+    <li
       ref={ref}
       className={`${styles.tile}${isNew ? ` ${styles.tileHighlight}` : ""}`}
       style={{ "--accent-color": accentColor } as React.CSSProperties}
@@ -85,7 +85,7 @@ export const ChordTile = forwardRef<HTMLDivElement, ChordTileProps>(
           ✕
         </button>
       </div>
-    </div>
+    </li>
   );
 });
 
