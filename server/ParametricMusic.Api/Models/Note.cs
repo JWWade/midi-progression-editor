@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace ParametricMusic.Api.Models;
+
 public enum Note
 {
     [Display(Name = "C")]

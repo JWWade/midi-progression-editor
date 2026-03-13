@@ -1,3 +1,7 @@
+using ParametricMusic.Api.Models;
+
+namespace ParametricMusic.Api.Services;
+
 public static class ChordGenerator
 {
     private static readonly Dictionary<ChordQuality, int[]> Intervals = new()

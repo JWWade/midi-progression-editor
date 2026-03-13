@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 
+namespace ParametricMusic.Api.Models;
+
 public class HealthResponse
 {
     [JsonPropertyName("status")]

@@ -1,4 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using ParametricMusic.Api.Models;
+using ParametricMusic.Api.Services;
+
+namespace ParametricMusic.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
