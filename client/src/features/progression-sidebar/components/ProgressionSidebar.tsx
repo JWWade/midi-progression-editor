@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import { ChordTile } from "./ChordTile";
+import { MidiExportControls } from "@/features/midi-export/components/MidiExportControls";
 import styles from "./ProgressionSidebar.module.css";
 
 /** Must match the `tileHighlight` animation duration in ChordTile.module.css */
@@ -18,7 +19,7 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
   const isFull = chords.length >= maxLength;
   const [newTileIndex, setNewTileIndex] = useState<number | null>(null);
   const [prevLength, setPrevLength] = useState(chords.length);
-  const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const tileRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   // Derive newTileIndex during render when the chord list changes (React-documented
   // derived-state pattern; avoids setState-in-effect which the linter forbids).
@@ -58,7 +59,7 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
         </span>
       </div>
       <p className={styles.resetNote}>Resets on page reload</p>
-      <div className={styles.chordList} aria-label="Chord list">
+      <ol className={styles.chordList} aria-label="Chord list">
         {chords.length === 0 && (
           <div className={styles.emptyState} aria-live="polite">
             <span className={styles.emptyIcon} aria-hidden="true">♩</span>
@@ -82,12 +83,13 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
             onAnimationEnd={() => setNewTileIndex(null)}
           />
         ))}
-      </div>
+      </ol>
       {isFull && (
         <div className={styles.fullIndicator} role="status" aria-live="polite">
           Maximum {maxLength} chords reached
         </div>
       )}
+      <MidiExportControls chords={chords} disabled={chords.length === 0} />
     </aside>
   );
 }

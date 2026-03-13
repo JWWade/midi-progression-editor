@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { PITCH_CLASSES, getDiatonicIndices } from "../utils";
+import { getDiatonicIndices } from "../utils";
 import { getCircleColorForTheme } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
 import {
@@ -62,6 +62,7 @@ import {
 } from "@/features/color-language/utils/svgGradient";
 import type { Chord, PrimitiveShape } from "@/features/current-chord";
 import { useTheme } from "@/app/providers/useTheme";
+import { useEnharmonic } from "@/app/providers/useEnharmonic";
 
 const DRAG_THRESHOLD_PX = 8;
 
@@ -89,6 +90,7 @@ export function ChromaticCircle({
   showIntervals: propShowIntervals = false,
 }: ChromaticCircleProps) {
   const { theme } = useTheme();
+  const { pitchClasses } = useEnharmonic();
 
   type CustomChordState = {
     root: number;
@@ -238,12 +240,12 @@ export function ChromaticCircle({
       onCurrentChordChange?.(newChord);
     }
 
-    setMoveAnnouncement(`Moved ${PITCH_CLASSES[draggedNoteIndex]} to ${PITCH_CLASSES[dragTargetIndex]}`);
+    setMoveAnnouncement(`Moved ${pitchClasses[draggedNoteIndex]} to ${pitchClasses[dragTargetIndex]}`);
     setSuppressNextClick(true);
     
     // Reset drag state
     resetDragState();
-  }, [isDragging, didDrag, draggedNoteIndex, dragTargetIndex, customFromChord, selectedChordName, onCurrentChordChange]);
+  }, [isDragging, didDrag, draggedNoteIndex, dragTargetIndex, customFromChord, selectedChordName, onCurrentChordChange, pitchClasses]);
 
   const handleRotateChord = useCallback(
     (direction: "clockwise" | "counterclockwise") => {
@@ -398,8 +400,8 @@ export function ChromaticCircle({
 
   // Use custom notes if available, otherwise calculate from root + quality
   const chordNotes = customFromChord?.customNotes
-    ? customFromChord.customNotes.map(idx => ({ index: idx, name: PITCH_CLASSES[idx], role: "root" as const }))
-    : transposeChord(baseIntervals, rootIndex);
+    ? customFromChord.customNotes.map(idx => ({ index: idx, name: pitchClasses[idx], role: "root" as const }))
+    : transposeChord(baseIntervals, rootIndex, pitchClasses);
   const chordIndices = chordNotes.map((n) => n.index);
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
@@ -407,7 +409,7 @@ export function ChromaticCircle({
   // Triad subset points for seventh chords (used when showExtension is enabled)
   const fromTriadIntervals = getChordTriad(chordType);
   const fromTriadNotes = fromTriadIntervals
-    ? transposeChord(fromTriadIntervals, rootIndex)
+    ? transposeChord(fromTriadIntervals, rootIndex, pitchClasses)
     : null;
   const fromTriadPoints = fromTriadNotes
     ? calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, fromTriadNotes.map((n) => n.index))
@@ -600,8 +602,32 @@ export function ChromaticCircle({
           const isSelected =
             selectedTone?.chordLabel === "From Chord" &&
             selectedTone?.note.index === note.index;
+          const handleActivate = (e: React.MouseEvent | React.KeyboardEvent) => {
+            e.stopPropagation();
+            handleNoteClick(note.name, {
+              note,
+              role: getToneRole(interval, chordType),
+              interval,
+              frequency: noteIndexToFrequency(note.index),
+              chordLabel: "From Chord",
+            });
+          };
           return point !== undefined ? (
-            <g key={`from-vertex-${note.index}`}>
+            <g
+              key={`from-vertex-${note.index}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`${note.name} in chord`}
+              aria-pressed={isSelected}
+              onClick={handleActivate}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleActivate(e);
+                }
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <circle
                 cx={point.x}
                 cy={point.y}
@@ -609,26 +635,27 @@ export function ChromaticCircle({
                 fill={isSelected ? VERTEX_SELECTED_FILL : strokeColor}
                 stroke={isSelected ? VERTEX_SELECTED_STROKE : "none"}
                 strokeWidth={isSelected ? 2 : 0}
-                style={{ cursor: "pointer" }}
-                aria-label={`${note.name} in From Chord`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNoteClick(note.name, {
-                    note,
-                    role: getToneRole(interval, chordType),
-                    interval,
-                    frequency: noteIndexToFrequency(note.index),
-                    chordLabel: "From Chord",
-                  });
-                }}
+                aria-hidden="true"
               />
+              {isSelected && (
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={VERTEX_RADIUS_SELECTED + 4}
+                  fill="none"
+                  stroke={VERTEX_SELECTED_STROKE}
+                  strokeWidth={2}
+                  opacity={0.6}
+                  aria-hidden="true"
+                />
+              )}
             </g>
           ) : null;
         })}
 
 
         {/* Outer ring note labels — single source of truth for note names */}
-        {PITCH_CLASSES.map((label, i) => {
+        {pitchClasses.map((label, i) => {
           const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
           const x = CENTER + RING_RADIUS * Math.cos(angle);
           const y = CENTER + RING_RADIUS * Math.sin(angle);
@@ -640,6 +667,10 @@ export function ChromaticCircle({
           return (
             <g
               key={`pitch-${i}-${label}`}
+              role="button"
+              tabIndex={0}
+              aria-label={label}
+              aria-pressed={isInFromChord && selectedTone?.note.index === i}
               style={{ 
                 cursor: isInFromChord ? "grab" : "pointer",
               }}
@@ -665,6 +696,21 @@ export function ChromaticCircle({
                   chordLabel: isInFromChord ? "From Chord" : "Scale",
                 });
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const note = { index: i, name: label, role: "root" as const };
+                  const interval = (i - rootIndex + 12) % 12;
+                  handleNoteClick(label, {
+                    note,
+                    role: isInFromChord ? getToneRole(interval, chordType) : "Note",
+                    interval,
+                    frequency: noteIndexToFrequency(i),
+                    chordLabel: isInFromChord ? "From Chord" : "Scale",
+                  });
+                }
+              }}
             >
               <circle
                 cx={x}
@@ -674,6 +720,7 @@ export function ChromaticCircle({
                 stroke="#fff"
                 strokeWidth={NODE_STROKE_WIDTH}
                 opacity={noteStyle.opacity}
+                aria-hidden="true"
               />
               <text
                 x={x}
@@ -686,6 +733,7 @@ export function ChromaticCircle({
                 fontWeight="bold"
                 pointerEvents="none"
                 style={{ userSelect: "none", WebkitUserSelect: "none" }}
+                aria-hidden="true"
               >
                 {label}
               </text>
@@ -700,6 +748,21 @@ export function ChromaticCircle({
                   strokeWidth={3}
                   opacity={0.8}
                   pointerEvents="none"
+                  aria-hidden="true"
+                />
+              )}
+              {/* Selected-state ring for keyboard and screen-reader users */}
+              {selectedTone?.note.index === i && selectedTone.chordLabel !== "From Chord" && (
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={NODE_RADIUS + 4}
+                  fill="none"
+                  stroke={noteStyle.fill}
+                  strokeWidth={2}
+                  opacity={0.7}
+                  pointerEvents="none"
+                  aria-hidden="true"
                 />
               )}
             </g>

@@ -1,4 +1,4 @@
-const PITCH_CLASSES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+import { useEnharmonic } from "@/app/providers/useEnharmonic";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -8,10 +8,11 @@ const NATURAL_FONT_SIZE = 11;
 const SHARP_FONT_SIZE = 9;
 
 export default function ChromaticCircle() {
+  const { pitchClasses } = useEnharmonic();
   return (
     <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} aria-label="Chromatic Circle">
       <circle cx={CENTER} cy={CENTER} r={RING_RADIUS} fill="none" stroke="#555" strokeWidth={1} />
-      {PITCH_CLASSES.map((label, i) => {
+      {pitchClasses.map((label, i) => {
         const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
         const x = CENTER + RING_RADIUS * Math.cos(angle);
         const y = CENTER + RING_RADIUS * Math.sin(angle);

@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using ParametricMusic.Api.Models;
+using ParametricMusic.Api.Services;
+
+namespace ParametricMusic.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -10,18 +14,18 @@ public class ScaleController : ControllerBase
     /// Generate a musical scale from a root note with specified options.
     /// </summary>
     [HttpPost("from-root")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(NoteInfo[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public IActionResult BuildScale(
         [FromQuery]
         [Display(Name = "Root Note", Description = "Select the root note for the scale")]
         Note note,
         [FromBody]
         [Display(Name = "Scale Options")]
-        ScaleOptionsDto options)
+        ScaleOptionsDto body)
     {
-        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        ArgumentNullException.ThrowIfNull(body, nameof(body));
 
-        return Ok(ScaleGenerator.BuildMajorScale((int)note));
+        return Ok(ScaleGenerator.BuildScale((int)note, body.ScaleType));
     }
 }

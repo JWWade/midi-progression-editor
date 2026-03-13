@@ -21,8 +21,11 @@ export const CHORD_QUALITY_LABELS: Record<ChordType, string> = {
   halfdim7: "Half-dim 7",
 };
 
-export function formatChordName(chord: Chord): string {
-  const root = PITCH_CLASSES[chord.root];
+export function formatChordName(
+  chord: Chord,
+  pitchClasses: readonly string[] = PITCH_CLASSES,
+): string {
+  const root = pitchClasses[chord.root];
   const quality = CHORD_QUALITY_LABELS[chord.quality];
   if (chord.extensions && chord.extensions.length > 0) {
     return `${root} ${quality} (${chord.extensions.join(", ")})`;
@@ -30,7 +33,10 @@ export function formatChordName(chord: Chord): string {
   return `${root} ${quality}`;
 }
 
-export function formatPrimitiveChordName(chord: Chord): string {
-  if (!chord.primitiveShape) return formatChordName(chord);
-  return `${PITCH_CLASSES[chord.root]} ${PRIMITIVE_SHAPE_LABELS[chord.primitiveShape]}`;
+export function formatPrimitiveChordName(
+  chord: Chord,
+  pitchClasses: readonly string[] = PITCH_CLASSES,
+): string {
+  if (!chord.primitiveShape) return formatChordName(chord, pitchClasses);
+  return `${pitchClasses[chord.root]} ${PRIMITIVE_SHAPE_LABELS[chord.primitiveShape]}`;
 }

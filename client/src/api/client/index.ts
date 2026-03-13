@@ -21,9 +21,13 @@ const baseUrl =
 export const client: Client<paths> = createClient<paths>({ baseUrl });
 
 export type HealthResponse = components["schemas"]["HealthResponse"];
+export type NoteInfo = components["schemas"]["NoteInfo"];
+
+// Note enum values (inline in OpenAPI paths, not a named schema)
+type Note = "C" | "CSharp" | "D" | "DSharp" | "E" | "F" | "FSharp" | "G" | "GSharp" | "A" | "ASharp" | "B";
 
 // Map MIDI note numbers to Note enum values
-const MIDI_TO_NOTE: Record<number, components["schemas"]["Note"]> = {
+const MIDI_TO_NOTE: Record<number, Note> = {
   0: "C",
   1: "CSharp",
   2: "D",
@@ -62,7 +66,7 @@ export async function getScaleFromRoot(midiRoot: number): Promise<number[]> {
   if (error !== undefined) {
     throw new Error(`Failed to fetch scale for root ${midiRoot}: ${String(error)}`);
   }
-  return data;
+  return (data ?? []).map((noteInfo) => noteInfo.index ?? 0);
 }
 
 // Re-export all generated types and operations

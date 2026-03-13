@@ -6,7 +6,7 @@ import { getChordComplexity, getChordColor } from "@/features/color-language/uti
 import type { Chord } from "@/features/current-chord/types";
 import { isCustomChord } from "@/features/current-chord/utils/chordTypeGuards";
 import { formatPrimitiveChordName } from "@/features/current-chord/utils/chordName";
-import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
+import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import styles from "./ChordTile.module.css";
 
 interface ChordTileProps {
@@ -21,8 +21,9 @@ interface ChordTileProps {
   onAnimationEnd?: () => void;
 }
 
-export const ChordTile = forwardRef<HTMLDivElement, ChordTileProps>(
+export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
   function ChordTile({ chord, index, isFirst, isLast, isNew = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
+  const { pitchClasses } = useEnharmonic();
   const noteIndices = isCustomChord(chord) 
     ? chord.customNotes 
     : getChordNoteIndices(chord.root, chord.quality);
@@ -30,14 +31,14 @@ export const ChordTile = forwardRef<HTMLDivElement, ChordTileProps>(
   const accentColor = getChordColor(chord.quality, complexity);
   const chordName = isCustomChord(chord)
     ? (chord.primitiveShape === "equilateral-triangle"
-      ? getChordName(chord.root, chord.quality)
+      ? getChordName(chord.root, chord.quality, pitchClasses)
       : chord.primitiveShape
-        ? formatPrimitiveChordName(chord)
-        : chord.customNotes.map(i => PITCH_CLASSES[i]).join(" "))
-    : getChordName(chord.root, chord.quality);
+        ? formatPrimitiveChordName(chord, pitchClasses)
+        : chord.customNotes.map(i => pitchClasses[i]).join(" "))
+    : getChordName(chord.root, chord.quality, pitchClasses);
 
   return (
-    <div
+    <li
       ref={ref}
       className={`${styles.tile}${isNew ? ` ${styles.tileHighlight}` : ""}`}
       style={{ "--accent-color": accentColor } as React.CSSProperties}
@@ -84,7 +85,7 @@ export const ChordTile = forwardRef<HTMLDivElement, ChordTileProps>(
           ✕
         </button>
       </div>
-    </div>
+    </li>
   );
 });
 

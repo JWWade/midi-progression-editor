@@ -16,6 +16,7 @@
 - Switch between **Info mode** (click a note to inspect it) and **Select mode** (click notes to build a custom selection)
 - Toggle dark/light theme with persistent preference (stored in localStorage)
 - Play back chords with in-browser audio
+- Export chord progressions as standard MIDI files (`.mid`) with configurable BPM and beats-per-chord
 - Generate scales from any root note via the backend API
 
 ## Prerequisites
@@ -117,11 +118,16 @@ cd server/ParametricMusic.Tests
 dotnet test
 ```
 
-Runs xUnit test suite for business logic.
+Runs xUnit test suite covering business logic and HTTP controller contracts.
 
 ### Frontend Tests
 
-No frontend test framework is currently configured.
+```bash
+cd client
+npm test
+```
+
+Runs Vitest in single-pass mode. Currently covers MIDI file construction utilities.
 
 ## Lint & Code Quality
 
@@ -164,6 +170,7 @@ midi-progression-editor/
           chromatic-circle/   # Main 12-note circle visualisation
           color-language/     # Quality-based color system
           current-chord/      # Current-chord info panel
+          midi-export/        # MIDI file export (BPM, beats/chord)
           progression-sidebar/ # Chord progression sidebar (max 8 chords)
           scale/              # Scale generation & display (8 modes)
           voice-leading/      # Voice-leading path utilities

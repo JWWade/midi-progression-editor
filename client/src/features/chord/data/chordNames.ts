@@ -28,8 +28,12 @@ const CHORD_TYPE_SUFFIXES: Record<ChordType, string> = {
   halfdim7: "ø7",
 };
 
-export function getChordName(root: number, type: ChordType): string {
-  return `${PITCH_CLASSES[root]}${CHORD_TYPE_SUFFIXES[type]}`;
+export function getChordName(
+  root: number,
+  type: ChordType,
+  pitchClasses: readonly string[] = PITCH_CLASSES,
+): string {
+  return `${pitchClasses[root]}${CHORD_TYPE_SUFFIXES[type]}`;
 }
 
 function buildChordData(): {
