@@ -1,3 +1,7 @@
+using ParametricMusic.Api.Models;
+
+namespace ParametricMusic.Api.Services;
+
 public static class ProgressionAnalyzer
 {
     private const double MaxMotionNormalization = 12.0;

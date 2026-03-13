@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace ParametricMusic.Api.Models;
+
 public enum ScaleType
 {
     [Display(Name = "Major", Description = "Major scale (Ionian mode)")]

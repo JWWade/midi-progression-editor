@@ -1,3 +1,5 @@
+namespace ParametricMusic.Api.Models;
+
 public class NoteInfo
 {
     public int Index { get; init; }

@@ -1,3 +1,7 @@
+using ParametricMusic.Api.Models;
+
+namespace ParametricMusic.Api.Services;
+
 public static class ScaleGenerator
 {
     private static readonly Dictionary<ScaleType, int[]> ScaleIntervals = new()

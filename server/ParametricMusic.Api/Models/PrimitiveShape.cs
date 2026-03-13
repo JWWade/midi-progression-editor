@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 
+namespace ParametricMusic.Api.Models;
+
 public enum PrimitiveShape
 {
     [JsonStringEnumMemberName("equilateral-triangle")]

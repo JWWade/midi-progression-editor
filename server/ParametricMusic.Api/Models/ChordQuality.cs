@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace ParametricMusic.Api.Models;
+
 public enum ChordQuality
 {
     [Display(Name = "Major", Description = "Major triad (root, major 3rd, perfect 5th)")]
