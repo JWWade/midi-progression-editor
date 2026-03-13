@@ -11,6 +11,7 @@
     "generate:api": "echo 'Generating types and client from OpenAPI spec (http://localhost:5110/swagger/v1/swagger.json)...' && openapi-typescript http://localhost:5110/swagger/v1/swagger.json --output src/api/generated/index.ts && echo 'API client generated successfully'"
   },
   "dependencies": {
+    "@tonejs/midi": "^2.0.28",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
