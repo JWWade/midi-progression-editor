@@ -3,6 +3,7 @@ import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { ChordQualityColors } from "../constants/chordQualityColors";
 import { CHORD_NAME_TO_DATA, CHORD_TYPE_ORDER, getChordName } from "../data/chordNames";
 import type { ChordType } from "../types";
+import { useEnharmonic } from "@/app/providers/useEnharmonic";
 
 const QUALITY_LABELS: Record<ChordType, string> = {
   major: "maj",
@@ -25,6 +26,7 @@ interface ChordGridProps {
 export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabel }: ChordGridProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { pitchClasses } = useEnharmonic();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -61,7 +63,7 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
   );
 
   if (customChord?.customNotes) {
-    const noteNames = customChord.customNotes.map((index) => PITCH_CLASSES[index]).join(" ");
+    const noteNames = customChord.customNotes.map((index) => pitchClasses[index]).join(" ");
     return (
       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
         <span
@@ -100,6 +102,9 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
 
   const selectedData = CHORD_NAME_TO_DATA[value];
   const qualityColor = selectedData ? ChordQualityColors[selectedData.type] : null;
+  const displayValue = selectedData
+    ? getChordName(selectedData.root, selectedData.type, pitchClasses)
+    : value;
 
   return (
     <div ref={containerRef} style={{ position: "relative", display: "inline-block" }}>
@@ -126,7 +131,7 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
           transition: "border-color 0.15s, color 0.15s",
         }}
       >
-        <span>{value || "-"}</span>
+        <span>{displayValue || "-"}</span>
         <span style={{ fontSize: 9, opacity: 0.75, marginTop: 1 }}>v</span>
       </button>
 
@@ -185,10 +190,11 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
                   paddingRight: 5,
                 }}
               >
-                {rootLabel}
+                {pitchClasses[rootIndex]}
               </div>
               {CHORD_TYPE_ORDER.map((type) => {
                 const chordName = getChordName(rootIndex, type);
+                const displayName = getChordName(rootIndex, type, pitchClasses);
                 const isSelected = chordName === value;
                 const color = ChordQualityColors[type];
                 return (
@@ -224,7 +230,7 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
                       }
                     }}
                   >
-                    {chordName}
+                    {displayName}
                   </button>
                 );
               })}

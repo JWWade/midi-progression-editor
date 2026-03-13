@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import type { Chord } from "../types";
 import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
-import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
 import { getCircleColorForTheme } from "@/features/chromatic-circle/utils/circleColors";
 import { ChordColors } from "@/features/color-language/constants/chordColors";
@@ -10,6 +9,7 @@ import { ChordThumbnail } from "./ChordThumbnail";
 import styles from "./CurrentChordPanel.module.css";
 import { isCustomChord } from "../utils/chordTypeGuards";
 import { useTheme } from "@/app/providers/useTheme";
+import { useEnharmonic } from "@/app/providers/useEnharmonic";
 
 interface CurrentChordPanelProps {
   chord: Chord | null;
@@ -33,6 +33,7 @@ export function CurrentChordPanel({
   maxProgressionLength = 8,
 }: CurrentChordPanelProps) {
   const { theme } = useTheme();
+  const { pitchClasses } = useEnharmonic();
 
   const noteIndices = chord
     ? (isCustomChord(chord) ? chord.customNotes : getChordNoteIndices(chord.root, chord.quality))
@@ -118,15 +119,15 @@ export function CurrentChordPanel({
           <span className={styles.chordName}>
             {isCustomChord(chord)
               ? (chord.primitiveShape === "equilateral-triangle"
-                ? formatChordName(chord)
+                ? formatChordName(chord, pitchClasses)
                 : chord.primitiveShape
-                  ? formatPrimitiveChordName(chord)
-                : chord.customNotes.map(i => PITCH_CLASSES[i]).join(" "))
-              : formatChordName(chord)
+                  ? formatPrimitiveChordName(chord, pitchClasses)
+                : chord.customNotes.map(i => pitchClasses[i]).join(" "))
+              : formatChordName(chord, pitchClasses)
             }
           </span>
           <div className={styles.rootQualityRow}>
-            <span className={styles.root}>{PITCH_CLASSES[chord.root]}</span>
+            <span className={styles.root}>{pitchClasses[chord.root]}</span>
             <span className={styles.quality}>
               {isCustomChord(chord)
                 ? (chord.primitiveShape === "equilateral-triangle"

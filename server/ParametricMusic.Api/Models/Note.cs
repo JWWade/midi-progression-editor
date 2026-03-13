@@ -57,16 +57,16 @@ public static class NoteExtensions
         result = normalizedInput switch
         {
             "C" => Note.C,
-            "C#" or "CS" => Note.CSharp,
+            "C#" or "CS" or "DB" => Note.CSharp,
             "D" => Note.D,
-            "D#" or "DS" => Note.DSharp,
+            "D#" or "DS" or "EB" => Note.DSharp,
             "E" => Note.E,
             "F" => Note.F,
-            "F#" or "FS" => Note.FSharp,
+            "F#" or "FS" or "GB" => Note.FSharp,
             "G" => Note.G,
-            "G#" or "GS" => Note.GSharp,
+            "G#" or "GS" or "AB" => Note.GSharp,
             "A" => Note.A,
-            "A#" or "AS" => Note.ASharp,
+            "A#" or "AS" or "BB" => Note.ASharp,
             "B" => Note.B,
             _ => (Note)(-1)
         };
