@@ -24,7 +24,7 @@ public static class ChordGenerator
         [ChordQuality.HalfDiminished7] = "Half-Diminished 7th",
     };
 
-    public static ChordDto BuildChord(Note root, ChordQuality quality, PrimitiveShape? primitiveShape = null)
+    public static ChordDto BuildChord(Note root, ChordQuality quality)
     {
         if (!Intervals.TryGetValue(quality, out var intervals))
             throw new ArgumentOutOfRangeException(nameof(quality), $"Unsupported chord quality: {quality}");
@@ -49,7 +49,6 @@ public static class ChordGenerator
             DisplayName = $"{rootName} {qualityLabel}",
             PitchClasses = pitchClasses,
             NoteNames   = noteNames,
-            PrimitiveShape = primitiveShape,
         };
     }
 }

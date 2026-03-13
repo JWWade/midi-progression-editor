@@ -208,14 +208,10 @@ export interface components {
             displayName?: string | null;
             pitchClasses?: number[] | null;
             noteNames?: string[] | null;
-            /** @enum {string|null} */
-            primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
         };
         ChordFromRootRequestDto: {
             /** @enum {string} */
             quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7";
-            /** @enum {string|null} */
-            primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
         };
         ChordRef: {
             root?: string | null;

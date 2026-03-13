@@ -16,8 +16,4 @@ public class ChordDto
 
     [JsonPropertyName("noteNames")]
     public string[] NoteNames { get; init; } = [];
-
-    [JsonPropertyName("primitiveShape")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public PrimitiveShape? PrimitiveShape { get; init; }
 }

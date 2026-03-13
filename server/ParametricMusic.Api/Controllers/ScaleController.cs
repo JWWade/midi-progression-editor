@@ -19,10 +19,10 @@ public class ScaleController : ControllerBase
         Note note,
         [FromBody]
         [Display(Name = "Scale Options")]
-        ScaleOptionsDto options)
+        ScaleOptionsDto body)
     {
-        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        ArgumentNullException.ThrowIfNull(body, nameof(body));
 
-        return Ok(ScaleGenerator.BuildScale((int)note, options.ScaleType));
+        return Ok(ScaleGenerator.BuildScale((int)note, body.ScaleType));
     }
 }
