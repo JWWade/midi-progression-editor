@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import type { Chord } from "../types";
 import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
-import { getChordNoteIndices } from "@/features/chord/utils/transpose";
+import { getChordNoteIndices, transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { getCircleColorForTheme } from "@/features/chromatic-circle/utils/circleColors";
 import { ChordColors } from "@/features/color-language/constants/chordColors";
 import { getChordComplexity, getChordColor, getAccessibleTextColor } from "@/features/color-language/utils/chordColorUtils";
@@ -10,6 +10,7 @@ import styles from "./CurrentChordPanel.module.css";
 import { isCustomChord } from "../utils/chordTypeGuards";
 import { useTheme } from "@/app/providers/useTheme";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
+import { useAudioPlayback } from "@/features/audio";
 
 interface CurrentChordPanelProps {
   chord: Chord | null;
@@ -34,6 +35,7 @@ export function CurrentChordPanel({
 }: CurrentChordPanelProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
+  const { isPlaying, play, stop } = useAudioPlayback();
 
   const noteIndices = chord
     ? (isCustomChord(chord) ? chord.customNotes : getChordNoteIndices(chord.root, chord.quality))
@@ -70,6 +72,22 @@ export function CurrentChordPanel({
     });
     setCopied(true);
   }, [chord, noteNames, setCopied]);
+
+  const handlePlay = useCallback(() => {
+    if (!chord) return;
+    if (isPlaying) {
+      stop();
+      return;
+    }
+    const notes = isCustomChord(chord)
+      ? chord.customNotes.map((idx) => ({
+          index: idx,
+          name: pitchClasses[idx],
+          role: "root" as const,
+        }))
+      : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses);
+    void play(notes);
+  }, [chord, isPlaying, stop, play, pitchClasses]);
 
   useEffect(() => {
     if (!copied) return;
@@ -156,15 +174,25 @@ export function CurrentChordPanel({
                 : CHORD_QUALITY_LABELS[chord.quality]}
             </span>
           </div>
-          <button
-            className={`${styles.copyButton}${copied ? ` ${styles.copyButtonCopied}` : ''}`}
-            onClick={handleCopy}
-            disabled={!chord}
-            aria-label="Copy note names to clipboard"
-            title="Copy notes as C-E-G format"
-          >
-            {copied ? '✓ Copied!' : 'Copy notes'}
-          </button>
+          <div className={styles.actionRow}>
+            <button
+              className={`${styles.playButton}${isPlaying ? ` ${styles.playButtonActive}` : ''}`}
+              onClick={handlePlay}
+              aria-label={isPlaying ? "Stop chord playback" : "Play chord"}
+              title={isPlaying ? "Stop" : "Play chord"}
+            >
+              {isPlaying ? '■ Stop' : '▶ Play'}
+            </button>
+            <button
+              className={`${styles.copyButton}${copied ? ` ${styles.copyButtonCopied}` : ''}`}
+              onClick={handleCopy}
+              disabled={!chord}
+              aria-label="Copy note names to clipboard"
+              title="Copy notes as C-E-G format"
+            >
+              {copied ? '✓ Copied!' : 'Copy notes'}
+            </button>
+          </div>
         </>
       )}
       <button
