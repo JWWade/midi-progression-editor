@@ -49,6 +49,15 @@ export function chordToneGradientId(quality: ChordType, complexity: ChordComplex
 }
 
 /**
+ * Returns the SVG `<radialGradient>` `id` used for a chord polygon fill of
+ * the given quality and complexity tier.  The matching gradient must be
+ * defined in the SVG `<defs>`.
+ */
+export function chordPolygonGradientId(quality: ChordType, complexity: ChordComplexity): string {
+  return `chord-polygon-${quality}-${complexity}`;
+}
+
+/**
  * Computes the visual style for a single note node on the chromatic circle.
  *
  * Priority:
