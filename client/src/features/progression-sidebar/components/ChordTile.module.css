@@ -94,6 +94,12 @@
   color: var(--color-delete-btn-hover);
 }
 
+/* ── Playback highlight ───────────────────────────────────────────────────── */
+.tilePlaying {
+  outline: 2px solid var(--accent-color);
+  background-color: color-mix(in srgb, var(--accent-color) 12%, transparent);
+}
+
 /* ── Enter / highlight animation ─────────────────────────────────────────── */
 @keyframes tileHighlight {
   from {

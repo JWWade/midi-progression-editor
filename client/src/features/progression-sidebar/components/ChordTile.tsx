@@ -15,6 +15,7 @@ interface ChordTileProps {
   isFirst: boolean;
   isLast: boolean;
   isNew?: boolean;
+  isPlaying?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onDelete: () => void;
@@ -22,7 +23,7 @@ interface ChordTileProps {
 }
 
 export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
-  function ChordTile({ chord, index, isFirst, isLast, isNew = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
+  function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = isCustomChord(chord) 
     ? chord.customNotes 
@@ -40,7 +41,7 @@ export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
   return (
     <li
       ref={ref}
-      className={`${styles.tile}${isNew ? ` ${styles.tileHighlight}` : ""}`}
+      className={`${styles.tile}${isNew ? ` ${styles.tileHighlight}` : ""}${isPlaying ? ` ${styles.tilePlaying}` : ""}`}
       style={{ "--accent-color": accentColor } as React.CSSProperties}
       aria-label={`${chordName}, position ${index + 1}`}
       tabIndex={0}
