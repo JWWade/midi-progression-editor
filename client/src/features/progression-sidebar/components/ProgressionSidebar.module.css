@@ -38,6 +38,36 @@
   color: var(--color-text-muted);
 }
 
+/* ── Play All button ────────────────────────────────────────────────────── */
+.playAllButton {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.playAllButton:hover:not(:disabled) {
+  background-color: var(--color-tile-bg-hover);
+  color: var(--color-text-primary, var(--color-text-secondary));
+}
+
+.playAllButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.playAllButton:focus-visible {
+  outline: 2px solid var(--accent-color, #4f46e5);
+  outline-offset: 2px;
+}
+
 /* ── Reset note ──────────────────────────────────────────────────────────── */
 .resetNote {
   flex-shrink: 0;

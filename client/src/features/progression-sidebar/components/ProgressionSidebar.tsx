@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import { ChordTile } from "./ChordTile";
 import { MidiExportControls } from "@/features/midi-export/components/MidiExportControls";
+import { useProgressionPlayback } from "@/features/audio";
 import styles from "./ProgressionSidebar.module.css";
 
 /** Must match the `tileHighlight` animation duration in ChordTile.module.css */
@@ -20,6 +21,7 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
   const [newTileIndex, setNewTileIndex] = useState<number | null>(null);
   const [prevLength, setPrevLength] = useState(chords.length);
   const tileRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const { isPlaying, playingIndex, play, stop } = useProgressionPlayback(chords);
 
   // Derive newTileIndex during render when the chord list changes (React-documented
   // derived-state pattern; avoids setState-in-effect which the linter forbids).
@@ -57,6 +59,14 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
         <span className={styles.count} aria-label={`${chords.length} of ${maxLength} chords`}>
           {chords.length}/{maxLength}
         </span>
+        <button
+          className={styles.playAllButton}
+          onClick={isPlaying ? stop : play}
+          disabled={chords.length === 0}
+          aria-label={isPlaying ? "Stop playback" : "Play all chords"}
+        >
+          {isPlaying ? "■ Stop" : "▶ Play All"}
+        </button>
       </div>
       <p className={styles.resetNote}>Resets on page reload</p>
       <ol className={styles.chordList} aria-label="Chord list">
@@ -77,6 +87,7 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
             isFirst={i === 0}
             isLast={i === chords.length - 1}
             isNew={newTileIndex === i}
+            isPlaying={playingIndex === i}
             onMoveUp={() => onMoveUp(i)}
             onMoveDown={() => onMoveDown(i)}
             onDelete={() => onDelete(i)}
