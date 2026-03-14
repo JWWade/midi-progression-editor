@@ -16,7 +16,6 @@ export default function App() {
 
   // Visualization toggles and scale selector (lifted from ChromaticCircle)
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
-  const [showExtension, setShowExtension] = useState(false);
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
 
@@ -60,8 +59,6 @@ export default function App() {
       <AppHeader
         selectedScale={selectedScale}
         onScaleChange={setSelectedScale}
-        showExtension={showExtension}
-        onExtensionChange={setShowExtension}
         showCentroid={showCentroid}
         onCentroidChange={setShowCentroid}
         showIntervals={showIntervals}
@@ -78,7 +75,6 @@ export default function App() {
             onCurrentChordChange={handleCurrentChordChange}
             onKeyScaleChange={handleKeyScaleChange}
             selectedScale={selectedScale}
-            showExtension={showExtension}
             showCentroid={showCentroid}
             showIntervals={showIntervals}
           />

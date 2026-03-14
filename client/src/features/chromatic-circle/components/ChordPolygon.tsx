@@ -15,10 +15,6 @@ interface ChordPolygonProps {
   strokeColor: string;
   strokeDasharray?: string;
   opacity: number;
-  /** Whether to show the triad sub-polygon for seventh-chord extension display. */
-  showExtension: boolean;
-  /** Pre-calculated triad points (only relevant when `showExtension` is true). */
-  triadPoints?: Point[] | null;
   showCentroid: boolean;
   centroid: Point;
   showIntervals: boolean;
@@ -36,8 +32,6 @@ export function ChordPolygon({
   strokeColor,
   strokeDasharray,
   opacity,
-  showExtension,
-  triadPoints,
   showCentroid,
   centroid,
   showIntervals,
@@ -55,18 +49,6 @@ export function ChordPolygon({
         strokeDasharray={strokeDasharray}
         opacity={opacity}
       />
-
-      {/* Triad sub-polygon (shown when extension display is enabled) */}
-      {showExtension && triadPoints && (
-        <polygon
-          points={triadPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-          fill={fillColor}
-          stroke={strokeColor}
-          strokeWidth={POLYGON_STROKE_WIDTH}
-          strokeLinejoin="round"
-          opacity={opacity}
-        />
-      )}
 
       {/* Centroid crosshair + dot */}
       {showCentroid && (

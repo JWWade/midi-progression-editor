@@ -9,7 +9,7 @@ import {
   RING_STROKE_WIDTH,
   CIRCLE_PADDING,
 } from "../constants/visualConstants";
-import { transposeChord, getChordTriad, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import type { ScaleType } from "@/features/scale/types";
@@ -42,7 +42,6 @@ interface ChromaticCircleProps {
   /** Called whenever the key root or scale mode changes. */
   onKeyScaleChange?: (root: number, scale: ScaleType) => void;
   selectedScale?: ScaleType;
-  showExtension?: boolean;
   showCentroid?: boolean;
   showIntervals?: boolean;
 }
@@ -51,7 +50,6 @@ export function ChromaticCircle({
   onCurrentChordChange,
   onKeyScaleChange,
   selectedScale: propSelectedScale = "major",
-  showExtension: propShowExtension = false,
   showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
 }: ChromaticCircleProps) {
@@ -144,14 +142,6 @@ export function ChromaticCircle({
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
 
-  const fromTriadIntervals = getChordTriad(chordType);
-  const fromTriadNotes = fromTriadIntervals
-    ? transposeChord(fromTriadIntervals, rootIndex, pitchClasses)
-    : null;
-  const fromTriadPoints = fromTriadNotes
-    ? calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, fromTriadNotes.map((n) => n.index))
-    : null;
-
   const { morphedPoints: fromMorphedPoints, morphProgress } = useChordMorphing(
     fromPoints,
     prefersReducedMotion ? 1 : undefined,
@@ -230,8 +220,6 @@ export function ChromaticCircle({
             strokeColor={strokeColor}
             strokeDasharray={strokeDasharray}
             opacity={polygonOpacity}
-            showExtension={propShowExtension}
-            triadPoints={fromTriadPoints}
             showCentroid={propShowCentroid}
             centroid={fromCentroid}
             showIntervals={propShowIntervals}

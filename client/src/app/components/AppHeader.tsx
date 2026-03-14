@@ -7,8 +7,6 @@ import styles from './AppHeader.module.css';
 interface AppHeaderProps {
   selectedScale: ScaleType;
   onScaleChange: (scale: ScaleType) => void;
-  showExtension: boolean;
-  onExtensionChange: (show: boolean) => void;
   showCentroid: boolean;
   onCentroidChange: (show: boolean) => void;
   showIntervals: boolean;
@@ -18,8 +16,6 @@ interface AppHeaderProps {
 export function AppHeader({
   selectedScale,
   onScaleChange,
-  showExtension,
-  onExtensionChange,
   showCentroid,
   onCentroidChange,
   showIntervals,
@@ -31,19 +27,6 @@ export function AppHeader({
   return (
     <header className={styles.header}>
       <div className={styles.toggles}>
-        {/* Show Extension toggle */}
-        <label htmlFor="show-extension" className={styles.toggleLabel}>
-          <input
-            id="show-extension"
-            type="checkbox"
-            checked={showExtension}
-            onChange={(e) => onExtensionChange(e.target.checked)}
-            className={styles.checkbox}
-            aria-label="Toggle extension display"
-          />
-          Extension
-        </label>
-
         {/* Show Centroid toggle */}
         <label htmlFor="show-centroid" className={styles.toggleLabel}>
           <input

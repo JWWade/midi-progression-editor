@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { Chord } from "../types";
 import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
 import { getChordNoteIndices } from "@/features/chord/utils/transpose";
@@ -41,24 +41,41 @@ export function CurrentChordPanel({
   const isDisabled = chord === null || isProgressionFull;
   const [pressing, setPressing] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const noteNames = noteIndices.map(i => pitchClasses[i]).join('-');
 
   const handleClick = useCallback(() => {
     if (isDisabled) return;
     onAddChord();
     setIsAnimating(true);
-  }, [isDisabled, onAddChord]);
+  }, [isDisabled, onAddChord, setIsAnimating]);
 
   const handlePointerDown = useCallback(() => {
     if (!isDisabled) setPressing(true);
-  }, [isDisabled]);
+  }, [isDisabled, setPressing]);
 
   const handlePointerUp = useCallback(() => {
     setPressing(false);
-  }, []);
+  }, [setPressing]);
 
   const handleAnimationEnd = useCallback(() => {
     setIsAnimating(false);
-  }, []);
+  }, [setIsAnimating]);
+
+  const handleCopy = useCallback(() => {
+    if (!chord) return;
+    navigator.clipboard.writeText(noteNames).catch(() => {
+      // Silently fail if clipboard write is denied
+    });
+    setCopied(true);
+  }, [chord, noteNames, setCopied]);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
   const panelBg = chord
     ? getCircleColorForTheme(chord.root, chord.quality, theme, "panel")
@@ -139,6 +156,15 @@ export function CurrentChordPanel({
                 : CHORD_QUALITY_LABELS[chord.quality]}
             </span>
           </div>
+          <button
+            className={`${styles.copyButton}${copied ? ` ${styles.copyButtonCopied}` : ''}`}
+            onClick={handleCopy}
+            disabled={!chord}
+            aria-label="Copy note names to clipboard"
+            title="Copy notes as C-E-G format"
+          >
+            {copied ? '✓ Copied!' : 'Copy notes'}
+          </button>
         </>
       )}
       <button
