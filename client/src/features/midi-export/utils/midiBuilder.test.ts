@@ -85,5 +85,18 @@ describe("buildMidiFile", () => {
     expect(Array.from(result.slice(0, 4))).toEqual(MIDI_HEADER);
     expect(countNotes(parseMidi(result))).toBe(0);
   });
+
+  it("exports first chord notes at the specified startOctave", () => {
+    // C3 = 48, E3 = 52, G3 = 55
+    const result = buildMidiFile([C_MAJOR], { startOctave: 3 });
+    const midi = parseMidi(result);
+    const pitches = midi.tracks.flatMap((t) => t.notes.map((n) => n.midi)).sort((a, b) => a - b);
+    expect(pitches).toEqual([48, 52, 55]);
+  });
+
+  it("throws RangeError when startOctave is out of range", () => {
+    expect(() => buildMidiFile([C_MAJOR], { startOctave: 1 })).toThrow(RangeError);
+    expect(() => buildMidiFile([C_MAJOR], { startOctave: 7 })).toThrow(RangeError);
+  });
 });
 
