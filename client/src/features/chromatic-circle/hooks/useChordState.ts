@@ -212,6 +212,24 @@ export function useChordState({
     [customFromChord, selectedChordName, onCurrentChordChange],
   );
 
+  const handleRandomChord = useCallback(() => {
+    const allIndices = Array.from({ length: 12 }, (_, i) => i);
+    for (let i = 0; i < 3; i++) {
+      const j = i + Math.floor(Math.random() * (12 - i));
+      [allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]];
+    }
+    const randomNotes = allIndices.slice(0, 3);
+    const { root: bestRoot, quality: bestQuality } = findNearestChord(randomNotes);
+    const newChord: CustomChordState = {
+      root: bestRoot,
+      quality: bestQuality,
+      customNotes: randomNotes,
+    };
+    setCustomFromChord(newChord);
+    onCurrentChordChange?.(newChord);
+    setMoveAnnouncement("Generated random chord");
+  }, [onCurrentChordChange]);
+
   const handleSelectPrimitiveShape = useCallback(
     (shape: PrimitiveShape) => {
       const root = customFromChord?.root ?? CHORD_NAME_TO_DATA[selectedChordName].root;
@@ -286,5 +304,6 @@ export function useChordState({
     handleNoteDragEnd,
     handleRotateChord,
     handleSelectPrimitiveShape,
+    handleRandomChord,
   };
 }
