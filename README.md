@@ -158,7 +158,9 @@ midi-progression-editor/
        api/         # API client & generated types
        app/         # Application root
           components/     # AppHeader (toggles, scale selector, theme)
-          providers/      # ThemeContext, ThemeProvider, useTheme
+          providers/      # ThemeContext, ThemeProvider, useTheme, EnharmonicContext, EnharmonicProvider, useEnharmonic
+          routes/         # Client-side routing (placeholder)
+          store/          # Global state management (placeholder)
        features/    # Feature modules
           audio/              # In-browser chord audio playback
           chord/              # Core chord data, types & utilities
@@ -182,8 +184,9 @@ midi-progression-editor/
 
  server/              # ASP.NET Core .NET 10 (backend)
      ParametricMusic.Api/
-         Controllers/
-         Models/
+         Controllers/     # HealthController, ChordController, ScaleController, ProgressionController
+         Models/          # DTOs and enums
+         Services/        # ChordGenerator, ScaleGenerator, ProgressionAnalyzer, QuartalChordGenerator
          Program.cs
          ParametricMusic.Api.csproj
 ```
