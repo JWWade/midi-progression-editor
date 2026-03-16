@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { ChromaticCircle } from '../features/chromatic-circle';
 import { CurrentChordPanel, type Chord } from '../features/current-chord';
 import { getDiatonicIndices } from '../features/chromatic-circle/utils';
@@ -31,6 +31,13 @@ export default function App() {
 
   const { isPlaying, playingIndex, play: onPlay, stop: onStop } = useProgressionPlayback(chords, audioParams);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
+
+  useEffect(() => {
+    if (isPlaying) {
+      onStop();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chords]);
 
   const diatonicIndices = useMemo(
     () => getDiatonicIndices(keyRoot, keyScale),
