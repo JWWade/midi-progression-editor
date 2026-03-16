@@ -21,6 +21,7 @@ This folder contains the ASP.NET Core backend for the MIDI Progression Editor. T
 | --- | --- | --- |
 | `HealthController` | `GET /Health` | Basic API health response with UTC timestamp |
 | `ChordController` | `POST /Chord/from-root?note={Note}` | Build a chord from a root note and chord quality |
+| `ChordController` | `POST /Chord/quartal/from-scale?note={Note}` | Build a diatonic quartal chord from a scale root, type, and degree |
 | `ScaleController` | `POST /Scale/from-root?note={Note}` | Generate a scale from a root note and scale type |
 | `ProgressionController` | `POST /Progression/analyze` | Analyze progression motion, continuity, and tension |
 
@@ -63,6 +64,16 @@ The progression endpoint currently returns:
 - a tension trend across the chord sequence
 
 Requests are limited to 1 through 8 chords.
+
+### Quartal chord generation
+
+The quartal endpoint builds a diatonic quartal chord by stacking diatonic fourths:
+
+```
+Q(i) = [ S[i], S[(i+3)%7], S[(i+6)%7], … ]
+```
+
+where `S[0..6]` is the 7-note scale and `i` is the 0-based degree index. Supports 2–7 voices and all 8 scale types.
 
 ## Local Development
 
@@ -109,6 +120,8 @@ dotnet build
 - CORS is configured for localhost development.
 - Swagger is enabled in development.
 - XML comments are included in generated OpenAPI when available.
+- `HealthController` returns a typed `HealthResponse` DTO (not an anonymous object).
+- `QuartalChordGenerator` is a static service alongside `ChordGenerator`, `ScaleGenerator`, and `ProgressionAnalyzer`.
 
 This keeps the backend simple, but it also means there is no service abstraction, persistence layer, authentication, or versioned application boundary yet.
 

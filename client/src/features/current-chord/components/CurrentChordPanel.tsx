@@ -191,14 +191,27 @@ export function CurrentChordPanel({
             >
               {isPlaying ? '■ Stop' : '▶ Play'}
             </button>
+          </div>
+          <div className={styles.notesRow}>
+            <span
+              className={styles.noteNames}
+              aria-label={`Chord notes: ${noteNames}`}
+            >
+              {noteIndices.map((i, idx) => (
+                <span key={i}>
+                  {idx > 0 && <span className={styles.noteSeparator}>·</span>}
+                  {pitchClasses[i]}
+                </span>
+              ))}
+            </span>
             <button
-              className={`${styles.copyButton}${copied ? ` ${styles.copyButtonCopied}` : ''}`}
+              className={`${styles.copyIconButton}${copied ? ` ${styles.copyIconButtonCopied}` : ''}`}
               onClick={handleCopy}
               disabled={!chord}
               aria-label="Copy note names to clipboard"
-              title="Copy notes as C-E-G format"
+              title={`Copy notes: ${noteNames}`}
             >
-              {copied ? '✓ Copied!' : 'Copy notes'}
+              {copied ? '✓' : '⎘'}
             </button>
           </div>
         </>

@@ -61,7 +61,9 @@ src/
 │   ├── App.tsx             # Root component
 │   ├── main.tsx            # Entry point
 │   ├── components/         # AppHeader (toggles, scale selector, cursor modes, theme)
-│   └── providers/          # ThemeProvider, EnharmonicProvider and their hooks/contexts
+│   ├── providers/          # ThemeProvider, EnharmonicProvider and their hooks/contexts
+│   ├── routes/             # Client-side routing (placeholder)
+│   └── store/              # Global state management (placeholder)
 │
 └── features/               # Feature modules (feature-based architecture)
     ├── audio/              # In-browser chord playback (Web Audio API)
