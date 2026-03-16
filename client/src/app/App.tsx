@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { ChromaticCircle } from '../features/chromatic-circle';
-import { CurrentChordPanel, type Chord } from '../features/current-chord';
+import { CurrentChordPanel, type Chord, formatChordName } from '../features/current-chord';
 import { getDiatonicIndices } from '../features/chromatic-circle/utils';
 import { ProgressionSidebar } from '../features/progression-sidebar';
 import { useProgression } from '../features/progression-sidebar/hooks/useProgression';
@@ -10,6 +10,7 @@ import type { AudioParams } from '../features/audio/constants/audioConfig';
 import { DEFAULT_AUDIO_PARAMS } from '../features/audio/constants/audioConfig';
 import { AppHeader } from './components/AppHeader';
 import type { ScaleType } from '../features/scale/types';
+import { useEnharmonic } from './providers/useEnharmonic';
 import styles from './App.module.css';
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
 
+  const { pitchClasses } = useEnharmonic();
   const { chords, addChord, moveChord, deleteChord } = useProgression();
   // Guard ref to prevent duplicate progression entries from rapid double-clicks.
   // Set synchronously when add is initiated; cleared after the current animation
@@ -32,6 +34,16 @@ export default function App() {
 
   const { isPlaying, playingIndex, play: onPlay, stop: onStop } = useProgressionPlayback(chords, audioParams, chordDurationMs);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
+
+  // ARIA live region: announce chord name on each playback step; clear when stopped.
+  const [liveRegionText, setLiveRegionText] = useState('');
+  useEffect(() => {
+    if (!isPlaying || playingChord === null) {
+      setLiveRegionText('');
+      return;
+    }
+    setLiveRegionText(formatChordName(playingChord, pitchClasses));
+  }, [isPlaying, playingChord, pitchClasses]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -71,6 +83,13 @@ export default function App() {
   return (
     <div className={styles.layout}>
       <h1 className={styles.visuallyHidden}>MIDI Progression Editor</h1>
+      <div
+        className={styles.visuallyHidden}
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {liveRegionText}
+      </div>
       <AppHeader
         selectedScale={selectedScale}
         onScaleChange={setSelectedScale}
