@@ -32,7 +32,7 @@ export default function App() {
   // frame so intentional subsequent adds still work.
   const addGuardRef = useRef(false);
 
-  const { isPlaying, playingIndex, play: onPlay, stop: onStop } = useProgressionPlayback(chords, audioParams, chordDurationMs);
+  const { isPlaying, playingIndex, loop, play: onPlay, stop: onStop, toggleLoop } = useProgressionPlayback(chords, audioParams, chordDurationMs);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
 
   // ARIA live region: announce chord name on each playback step; clear when stopped.
@@ -150,6 +150,8 @@ export default function App() {
             playingIndex={playingIndex}
             onPlay={onPlay}
             onStop={onStop}
+            loop={loop}
+            onToggleLoop={toggleLoop}
             chordDurationMs={chordDurationMs}
             onChordDurationChange={setChordDurationMs}
           />

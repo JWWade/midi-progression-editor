@@ -11,8 +11,10 @@ import type { ChordNoteInfo } from "@/features/chord/types";
 export interface UseProgressionPlaybackResult {
   isPlaying: boolean;
   playingIndex: number | null;
+  loop: boolean;
   play: () => void;
   stop: () => void;
+  toggleLoop: () => void;
 }
 
 export function useProgressionPlayback(
@@ -23,6 +25,7 @@ export function useProgressionPlayback(
   const { pitchClasses } = useEnharmonic();
   const [isPlaying, setIsPlaying] = useState(false);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [loop, setLoop] = useState(false);
   const cancelledRef = useRef(false);
   // Keep a ref so the running loop always reads the latest duration without
   // needing to restart playback when the user changes the value.
@@ -30,12 +33,22 @@ export function useProgressionPlayback(
   useEffect(() => {
     chordDurationMsRef.current = chordDurationMs;
   }, [chordDurationMs]);
+  // Keep a ref so the async run loop reads the latest loop value without
+  // needing to recreate the play callback.
+  const loopRef = useRef(loop);
+  useEffect(() => {
+    loopRef.current = loop;
+  }, [loop]);
 
   const stop = useCallback(() => {
     cancelledRef.current = true;
     stopChord();
     setIsPlaying(false);
     setPlayingIndex(null);
+  }, []);
+
+  const toggleLoop = useCallback(() => {
+    setLoop((prev) => !prev);
   }, []);
 
   const play = useCallback(() => {
@@ -45,19 +58,21 @@ export function useProgressionPlayback(
     setIsPlaying(true);
 
     const run = async () => {
-      for (let i = 0; i < chords.length; i++) {
-        if (cancelledRef.current) break;
+      do {
+        for (let i = 0; i < chords.length; i++) {
+          if (cancelledRef.current) break;
 
-        const chord = chords[i];
-        const notes: ChordNoteInfo[] = isCustomChord(chord)
-          ? chord.customNotes.map((idx) => ({ index: idx, name: pitchClasses[idx], role: "root" as const }))
-          : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses);
+          const chord = chords[i];
+          const notes: ChordNoteInfo[] = isCustomChord(chord)
+            ? chord.customNotes.map((idx) => ({ index: idx, name: pitchClasses[idx], role: "root" as const }))
+            : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses);
 
-        setPlayingIndex(i);
-        await playChord(notes, { duration: chordDurationMsRef.current, audioParams });
+          setPlayingIndex(i);
+          await playChord(notes, { duration: chordDurationMsRef.current, audioParams });
 
-        if (cancelledRef.current) break;
-      }
+          if (cancelledRef.current) break;
+        }
+      } while (!cancelledRef.current && loopRef.current);
 
       if (!cancelledRef.current) {
         setIsPlaying(false);
@@ -75,5 +90,5 @@ export function useProgressionPlayback(
     };
   }, []);
 
-  return { isPlaying, playingIndex, play, stop };
+  return { isPlaying, playingIndex, loop, play, stop, toggleLoop };
 }

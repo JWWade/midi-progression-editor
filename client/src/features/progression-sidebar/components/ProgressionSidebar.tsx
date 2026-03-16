@@ -21,6 +21,8 @@ interface ProgressionSidebarProps {
   playingIndex: number | null;
   onPlay: () => void;
   onStop: () => void;
+  loop: boolean;
+  onToggleLoop: () => void;
   chordDurationMs: number;
   onChordDurationChange: (ms: number) => void;
 }
@@ -28,7 +30,7 @@ interface ProgressionSidebarProps {
 const MIN_CHORD_DURATION_MS = 200;
 const MAX_CHORD_DURATION_MS = 4000;
 
-export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength, isPlaying, playingIndex, onPlay, onStop, chordDurationMs, onChordDurationChange }: ProgressionSidebarProps) {
+export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength, isPlaying, playingIndex, onPlay, onStop, loop, onToggleLoop, chordDurationMs, onChordDurationChange }: ProgressionSidebarProps) {
   const { pitchClasses } = useEnharmonic();
   const isFull = chords.length >= maxLength;
   const [newTileIndex, setNewTileIndex] = useState<number | null>(null);
@@ -118,6 +120,15 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
             aria-label={isPlaying ? "Stop playback" : "Play all chords"}
           >
             {isPlaying ? "■ Stop" : "▶ Play All"}
+          </button>
+          <button
+            className={`${styles.loopButton}${loop ? ` ${styles.loopButtonActive}` : ""}`}
+            onClick={onToggleLoop}
+            disabled={chords.length === 0}
+            aria-label={loop ? "Disable loop" : "Enable loop"}
+            aria-pressed={loop}
+          >
+            ↻ Loop
           </button>
         </div>
       </div>
