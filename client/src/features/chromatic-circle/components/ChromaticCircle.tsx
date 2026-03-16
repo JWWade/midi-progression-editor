@@ -36,6 +36,7 @@ import { ChordPolygon } from "./ChordPolygon";
 import { ChordVertex } from "./ChordVertex";
 import { NoteNode } from "./NoteNode";
 import { CircleControls } from "./CircleControls";
+import styles from "./ChromaticCircle.module.css";
 
 interface ChromaticCircleProps {
   onCurrentChordChange?: (chord: Chord) => void;
@@ -46,6 +47,8 @@ interface ChromaticCircleProps {
   showIntervals?: boolean;
   /** When non-null, overrides the user's internal chord selection for rendering and animation. */
   externalChord?: Chord | null;
+  /** When true, renders a pulsing ring to indicate active playback. */
+  isPlaybackActive?: boolean;
 }
 
 export function ChromaticCircle({
@@ -55,6 +58,7 @@ export function ChromaticCircle({
   showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
   externalChord,
+  isPlaybackActive = false,
 }: ChromaticCircleProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
@@ -217,6 +221,20 @@ export function ChromaticCircle({
             stroke="#555"
             strokeWidth={RING_STROKE_WIDTH}
           />
+
+          {/* Playback-active indicator: pulsing outer ring */}
+          {isPlaybackActive && (
+            <circle
+              cx={CENTER}
+              cy={CENTER}
+              r={RING_RADIUS + 16}
+              fill="none"
+              stroke="#555"
+              strokeWidth={2}
+              className={styles.playbackRing}
+              aria-hidden="true"
+            />
+          )}
 
           <ChordPolygon
             morphedPoints={fromMorphedPoints}

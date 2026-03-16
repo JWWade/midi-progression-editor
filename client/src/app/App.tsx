@@ -77,6 +77,7 @@ export default function App() {
         >
           <ChromaticCircle
             externalChord={playingChord}
+            isPlaybackActive={isPlaying}
             onCurrentChordChange={handleCurrentChordChange}
             onKeyScaleChange={handleKeyScaleChange}
             selectedScale={selectedScale}
