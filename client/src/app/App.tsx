@@ -6,6 +6,8 @@ import { ProgressionSidebar } from '../features/progression-sidebar';
 import { useProgression } from '../features/progression-sidebar/hooks/useProgression';
 import { MAX_PROGRESSION_LENGTH } from '../features/progression-sidebar/constants/progressionConfig';
 import { useProgressionPlayback } from '../features/audio';
+import type { AudioParams } from '../features/audio/constants/audioConfig';
+import { DEFAULT_AUDIO_PARAMS } from '../features/audio/constants/audioConfig';
 import { AppHeader } from './components/AppHeader';
 import type { ScaleType } from '../features/scale/types';
 import styles from './App.module.css';
@@ -14,6 +16,7 @@ export default function App() {
   const [currentChord, setCurrentChord] = useState<Chord | null>(null);
   const [keyRoot, setKeyRoot] = useState<number>(0);
   const [keyScale, setKeyScale] = useState<ScaleType>("major");
+  const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
 
   // Visualization toggles and scale selector (lifted from ChromaticCircle)
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
@@ -26,7 +29,7 @@ export default function App() {
   // frame so intentional subsequent adds still work.
   const addGuardRef = useRef(false);
 
-  const { isPlaying, playingIndex, play: onPlay, stop: onStop } = useProgressionPlayback(chords);
+  const { isPlaying, playingIndex, play: onPlay, stop: onStop } = useProgressionPlayback(chords, audioParams);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
 
   const diatonicIndices = useMemo(
@@ -99,6 +102,8 @@ export default function App() {
             isProgressionFull={isProgressionFull}
             progressionLength={chords.length}
             maxProgressionLength={MAX_PROGRESSION_LENGTH}
+            audioParams={audioParams}
+            onAudioParamsChange={setAudioParams}
           />
         </section>
 

@@ -11,6 +11,8 @@ import { isCustomChord } from "../utils/chordTypeGuards";
 import { useTheme } from "@/app/providers/useTheme";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import { useAudioPlayback } from "@/features/audio";
+import type { AudioParams } from "@/features/audio/constants/audioConfig";
+import { AudioDebugPanel } from "@/features/audio/components/AudioDebugPanel";
 
 interface CurrentChordPanelProps {
   chord: Chord | null;
@@ -23,6 +25,10 @@ interface CurrentChordPanelProps {
   progressionLength?: number;
   /** Maximum number of chords allowed in the progression. */
   maxProgressionLength?: number;
+  /** Audio playback parameters. */
+  audioParams?: AudioParams;
+  /** Callback fired when audio parameters change. */
+  onAudioParamsChange?: (params: AudioParams) => void;
 }
 
 export function CurrentChordPanel({
@@ -32,10 +38,12 @@ export function CurrentChordPanel({
   isProgressionFull = false,
   progressionLength = 0,
   maxProgressionLength = 8,
+  audioParams,
+  onAudioParamsChange,
 }: CurrentChordPanelProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
-  const { isPlaying, play, stop } = useAudioPlayback();
+  const { isPlaying, play, stop } = useAudioPlayback(audioParams);
 
   const noteIndices = chord
     ? (isCustomChord(chord) ? chord.customNotes : getChordNoteIndices(chord.root, chord.quality))
@@ -213,6 +221,9 @@ export function CurrentChordPanel({
         <span className={styles.fullMessage} role="status">
           Progression is full ({progressionLength}/{maxProgressionLength})
         </span>
+      )}
+      {audioParams && onAudioParamsChange && (
+        <AudioDebugPanel params={audioParams} onChange={onAudioParamsChange} />
       )}
     </div>
   );
