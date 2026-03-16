@@ -10,6 +10,7 @@ export const MAJ7_INTERVALS = [0, 4, 7, 11] as const;
 export const MIN7_INTERVALS = [0, 3, 7, 10] as const;
 export const DOM7_INTERVALS = [0, 4, 7, 10] as const;
 export const HALFDIM7_INTERVALS = [0, 3, 6, 10] as const;
+export const QUARTAL_INTERVALS = [0, 5, 10] as const;
 export const EQUILATERAL_TRIANGLE_INTERVALS = [0, 4, 8] as const;
 export const SUSPENDED_TRIANGLE_INTERVALS = [0, 5, 7] as const;
 export const SQUARE_INTERVALS = [0, 3, 6, 9] as const;
@@ -63,6 +64,7 @@ export const CHORD_INTERVALS: Readonly<Record<ChordType, readonly number[]>> = {
   min7:     MIN7_INTERVALS,
   dom7:     DOM7_INTERVALS,
   halfdim7: HALFDIM7_INTERVALS,
+  quartal:  QUARTAL_INTERVALS,
 };
 
 /**

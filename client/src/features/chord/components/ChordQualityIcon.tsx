@@ -18,6 +18,7 @@ import styles from "./ChordQualityIcon.module.css";
  * | halfdim7  | 0, 3, 6, 10   | Rectangle             |
  * | major     | 0, 4, 7       | Scalene triangle      |
  * | minor     | 0, 3, 7       | Scalene triangle      |
+ * | quartal   | 0, 5, 10      | Scalene triangle      |
  */
 const QUALITY_PITCH_CLASSES: Record<ChordType, readonly number[]> = {
   aug:      [0, 4, 8],
@@ -28,6 +29,7 @@ const QUALITY_PITCH_CLASSES: Record<ChordType, readonly number[]> = {
   halfdim7: [0, 3, 6, 10],
   major:    [0, 4, 7],
   minor:    [0, 3, 7],
+  quartal:  [0, 5, 10],
 };
 
 /**
@@ -42,6 +44,7 @@ const QUALITY_GLYPHS: Partial<Record<ChordType, string>> = {
   maj7:     "+7",
   min7:     "\u22127", // −7  (\u2212 = Unicode minus sign U+2212, followed by literal "7")
   halfdim7: "\u00f8",  // ø   (U+00F8)
+  quartal:  "4",
 };
 
 /** Compute the centroid (average of vertices) of a polygon. */
