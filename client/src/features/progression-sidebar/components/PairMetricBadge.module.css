@@ -1,0 +1,56 @@
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #f5f5f5;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  user-select: none;
+  outline: none;
+}
+
+.badge:hover {
+  background-color: #efefef;
+  border-color: #999;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.badge:focus {
+  outline: 2px solid #4a90e2;
+  outline-offset: 2px;
+}
+
+.badgeText {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.microBarContainer {
+  width: 24px;
+  height: 3px;
+  background-color: #e0e0e0;
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.microBarFill {
+  height: 100%;
+  background-color: #4a90e2;
+  border-radius: 1px;
+  transition: width 0.3s ease-out;
+}
+
+.percentage {
+  font-size: 9px;
+  color: #666;
+  font-weight: 500;
+}

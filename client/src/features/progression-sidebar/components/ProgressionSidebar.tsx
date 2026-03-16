@@ -1,7 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import { ChordTile } from "./ChordTile";
+import { PairMetricBadge } from "./PairMetricBadge";
+import { computeProgressionPairMetrics } from "../utils/pairMetrics";
 import { MidiExportControls } from "@/features/midi-export/components/MidiExportControls";
+import { getChordName } from "@/features/chord/data/chordNames";
+import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import styles from "./ProgressionSidebar.module.css";
 
 /** Must match the `tileHighlight` animation duration in ChordTile.module.css */
@@ -20,10 +24,14 @@ interface ProgressionSidebarProps {
 }
 
 export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength, isPlaying, playingIndex, onPlay, onStop }: ProgressionSidebarProps) {
+  const { pitchClasses } = useEnharmonic();
   const isFull = chords.length >= maxLength;
   const [newTileIndex, setNewTileIndex] = useState<number | null>(null);
   const [prevLength, setPrevLength] = useState(chords.length);
   const tileRefs = useRef<(HTMLLIElement | null)[]>([]);
+
+  // Compute pair metrics for the progression
+  const pairMetrics = useMemo(() => computeProgressionPairMetrics(chords), [chords]);
 
   // Derive newTileIndex during render when the chord list changes (React-documented
   // derived-state pattern; avoids setState-in-effect which the linter forbids).
@@ -80,22 +88,43 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
             </p>
           </div>
         )}
-        {chords.map((chord, i) => (
-          <ChordTile
-            key={`${i}-${chord.root}-${chord.quality}`}
-            ref={(el) => { tileRefs.current[i] = el; }}
-            chord={chord}
-            index={i}
-            isFirst={i === 0}
-            isLast={i === chords.length - 1}
-            isNew={newTileIndex === i}
-            isPlaying={playingIndex === i}
-            onMoveUp={() => onMoveUp(i)}
-            onMoveDown={() => onMoveDown(i)}
-            onDelete={() => onDelete(i)}
-            onAnimationEnd={() => setNewTileIndex(null)}
-          />
-        ))}
+        {chords.map((chord, i) => {
+          const elements: React.ReactElement[] = [];
+
+          // Render the chord tile
+          elements.push(
+            <ChordTile
+              key={`tile-${i}-${chord.root}-${chord.quality}`}
+              ref={(el) => { tileRefs.current[i] = el; }}
+              chord={chord}
+              index={i}
+              isFirst={i === 0}
+              isLast={i === chords.length - 1}
+              isNew={newTileIndex === i}
+              isPlaying={playingIndex === i}
+              onMoveUp={() => onMoveUp(i)}
+              onMoveDown={() => onMoveDown(i)}
+              onDelete={() => onDelete(i)}
+              onAnimationEnd={() => setNewTileIndex(null)}
+            />
+          );
+
+          // Render the pair metric badge after each tile (except the last)
+          if (i < chords.length - 1 && pairMetrics[i]) {
+            const metric = pairMetrics[i];
+            const chordAName = getChordName(chord.root, chord.quality, pitchClasses);
+            const chordBName = getChordName(chords[i + 1].root, chords[i + 1].quality, pitchClasses);
+            const ariaLabel = `${metric.sharedCount} notes in common between ${chordAName} and ${chordBName}, ${Math.round(metric.proportion * 100)} percent`;
+
+            elements.push(
+              <li key={`metric-${i}`} className={styles.metricListItem} role="presentation">
+                <PairMetricBadge metric={metric} ariaLabel={ariaLabel} />
+              </li>
+            );
+          }
+
+          return elements;
+        })}
       </ol>
       {isFull && (
         <div className={styles.fullIndicator} role="status" aria-live="polite">

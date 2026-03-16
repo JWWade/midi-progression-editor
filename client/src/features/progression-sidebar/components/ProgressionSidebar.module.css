@@ -134,6 +134,15 @@
   max-width: 200px;
 }
 
+/* ── Pair metric badge list item ────────────────────────────────────────── */
+.metricListItem {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  margin: -4px 0 0 0; /* Slight negative margin to visually nestle badges */
+  list-style: none;
+}
+
 /* ── Full indicator ──────────────────────────────────────────────────────── */
 .fullIndicator {
   flex-shrink: 0;
