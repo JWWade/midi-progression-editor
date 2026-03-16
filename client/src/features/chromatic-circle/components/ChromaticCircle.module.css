@@ -1,0 +1,14 @@
+@keyframes playbackPulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.playbackRing {
+  animation: playbackPulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
