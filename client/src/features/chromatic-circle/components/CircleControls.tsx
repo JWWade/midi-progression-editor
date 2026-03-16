@@ -36,6 +36,28 @@ function getShapeButtonStyle(isActive: boolean): React.CSSProperties {
   };
 }
 
+const ROTATE_ICON_STYLE: React.CSSProperties = {
+  display: "inline-block",
+};
+
+function TriangleShapeIcon({ label, fontSize }: { label: string; fontSize: number }) {
+  return (
+    <svg width="22" height="20" viewBox="0 0 22 20" fill="none" aria-hidden="true">
+      <polygon points="11,1.5 20.5,18.5 1.5,18.5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <text x="11" y="16" textAnchor="middle" fill="currentColor" fontSize={fontSize} fontWeight="700" fontFamily="sans-serif">{label}</text>
+    </svg>
+  );
+}
+
+function SquareShapeIcon({ label, fontSize, labelY }: { label: string; fontSize: number; labelY: number }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="1.5" y="1.5" width="17" height="17" stroke="currentColor" strokeWidth="2" />
+      <text x="10" y={labelY} textAnchor="middle" fill="currentColor" fontSize={fontSize} fontWeight="700" fontFamily="sans-serif">{label}</text>
+    </svg>
+  );
+}
+
 const SECTION_LABEL_STYLE: React.CSSProperties = {
   fontSize: 11,
   color: "var(--color-text-secondary)",
@@ -75,7 +97,7 @@ export function CircleControls({
               aria-label="Rotate chord counterclockwise"
               style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
             >
-              ↺
+              <span style={{ ...ROTATE_ICON_STYLE, transform: "rotate(-90deg)" }}>↺</span>
             </button>
             <button
               type="button"
@@ -84,7 +106,7 @@ export function CircleControls({
               aria-label="Rotate chord clockwise"
               style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
             >
-              ↻
+              <span style={{ ...ROTATE_ICON_STYLE, transform: "rotate(90deg)" }}>↻</span>
             </button>
           </div>
         </div>
@@ -102,7 +124,7 @@ export function CircleControls({
               aria-label="Select equilateral triangle primitive"
               style={getShapeButtonStyle(activeShape === "equilateral-triangle")}
             >
-              △
+              <TriangleShapeIcon label="a" fontSize={8} />
             </button>
             <button
               type="button"
@@ -111,7 +133,7 @@ export function CircleControls({
               aria-label="Select sus4 triangle primitive"
               style={getShapeButtonStyle(activeShape === "suspended-triangle")}
             >
-              ◬
+              <TriangleShapeIcon label="sus4" fontSize={5} />
             </button>
             <button
               type="button"
@@ -120,7 +142,7 @@ export function CircleControls({
               aria-label="Select square primitive"
               style={getShapeButtonStyle(activeShape === "square")}
             >
-              □
+              <SquareShapeIcon label="dim" fontSize={6.5} labelY={13.5} />
             </button>
             <button
               type="button"
@@ -129,14 +151,14 @@ export function CircleControls({
               aria-label="Select rectangle primitive"
               style={getShapeButtonStyle(activeShape === "rectangle")}
             >
-              ▭
+              <SquareShapeIcon label="7" fontSize={10} labelY={14} />
             </button>
             <button
               type="button"
               onClick={onRandomChord}
               title="Generate a random 3-note chord"
               aria-label="Generate random chord"
-              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
+              style={{ ...BASE_BUTTON_STYLE, fontSize: 22, color: "var(--color-text-primary)" }}
             >
               ⚄
             </button>
