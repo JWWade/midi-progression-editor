@@ -15,6 +15,7 @@ const QUALITY_LABELS: Record<ChordType, string> = {
   maj7: "maj7",
   min7: "m7",
   halfdim7: "m7b5",
+  quartal: "q",
 };
 
 interface ChordGridProps {

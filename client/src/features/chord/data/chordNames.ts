@@ -15,6 +15,7 @@ const CHORD_TYPE_ORDER: readonly ChordType[] = [
   "maj7",
   "min7",
   "halfdim7",
+  "quartal",
 ];
 
 const CHORD_TYPE_SUFFIXES: Record<ChordType, string> = {
@@ -26,6 +27,7 @@ const CHORD_TYPE_SUFFIXES: Record<ChordType, string> = {
   maj7: "maj7",
   min7: "m7",
   halfdim7: "ø7",
+  quartal: "q",
 };
 
 export function getChordName(

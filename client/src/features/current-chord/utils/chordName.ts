@@ -19,6 +19,7 @@ export const CHORD_QUALITY_LABELS: Record<ChordType, string> = {
   maj7: "Major 7",
   min7: "Minor 7",
   halfdim7: "Half-dim 7",
+  quartal: "Quartal",
 };
 
 export function formatChordName(

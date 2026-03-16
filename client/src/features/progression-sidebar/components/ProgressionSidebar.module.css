@@ -38,6 +38,112 @@
   color: var(--color-text-muted);
 }
 
+/* ── Play All button ────────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.durationLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  cursor: default;
+}
+
+.durationInput {
+  width: 56px;
+  padding: 3px 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px;
+  text-align: right;
+  /* Remove native number spinners */
+  appearance: textfield;
+}
+
+.durationInput::-webkit-inner-spin-button,
+.durationInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.durationInput:focus-visible {
+  outline: 2px solid var(--accent-color, #4f46e5);
+  outline-offset: 1px;
+}
+
+.playAllButton {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.playAllButton:hover:not(:disabled) {
+  background-color: var(--color-tile-bg-hover);
+  color: var(--color-text-primary, var(--color-text-secondary));
+}
+
+.playAllButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.playAllButton:focus-visible {
+  outline: 2px solid var(--accent-color, #4f46e5);
+  outline-offset: 2px;
+}
+
+/* ── Loop toggle button ─────────────────────────────────────────────────── */
+.loopButton {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.loopButton:hover:not(:disabled) {
+  background-color: var(--color-tile-bg-hover);
+  color: var(--color-text-primary, var(--color-text-secondary));
+}
+
+.loopButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.loopButton:focus-visible {
+  outline: 2px solid var(--accent-color, #4f46e5);
+  outline-offset: 2px;
+}
+
+.loopButtonActive {
+  border-color: var(--accent-color, #4f46e5);
+  color: var(--accent-color, #4f46e5);
+  background-color: color-mix(in srgb, var(--accent-color, #4f46e5) 10%, transparent);
+}
+
 /* ── Reset note ──────────────────────────────────────────────────────────── */
 .resetNote {
   flex-shrink: 0;
@@ -102,6 +208,15 @@
   color: var(--color-text-secondary);
   font-style: italic;
   max-width: 200px;
+}
+
+/* ── Pair metric badge list item ────────────────────────────────────────── */
+.metricListItem {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  margin: -4px 0 0 0; /* Slight negative margin to visually nestle badges */
+  list-style: none;
 }
 
 /* ── Full indicator ──────────────────────────────────────────────────────── */

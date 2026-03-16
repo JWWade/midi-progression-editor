@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { Chord } from "../types";
 import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
-import { getChordNoteIndices } from "@/features/chord/utils/transpose";
+import { getChordNoteIndices, transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { getCircleColorForTheme } from "@/features/chromatic-circle/utils/circleColors";
 import { ChordColors } from "@/features/color-language/constants/chordColors";
 import { getChordComplexity, getChordColor, getAccessibleTextColor } from "@/features/color-language/utils/chordColorUtils";
@@ -10,6 +10,9 @@ import styles from "./CurrentChordPanel.module.css";
 import { isCustomChord } from "../utils/chordTypeGuards";
 import { useTheme } from "@/app/providers/useTheme";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
+import { useAudioPlayback } from "@/features/audio";
+import type { AudioParams } from "@/features/audio/constants/audioConfig";
+import { AudioDebugPanel } from "@/features/audio/components/AudioDebugPanel";
 
 interface CurrentChordPanelProps {
   chord: Chord | null;
@@ -22,6 +25,10 @@ interface CurrentChordPanelProps {
   progressionLength?: number;
   /** Maximum number of chords allowed in the progression. */
   maxProgressionLength?: number;
+  /** Audio playback parameters. */
+  audioParams?: AudioParams;
+  /** Callback fired when audio parameters change. */
+  onAudioParamsChange?: (params: AudioParams) => void;
 }
 
 export function CurrentChordPanel({
@@ -31,9 +38,12 @@ export function CurrentChordPanel({
   isProgressionFull = false,
   progressionLength = 0,
   maxProgressionLength = 8,
+  audioParams,
+  onAudioParamsChange,
 }: CurrentChordPanelProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
+  const { isPlaying, play, stop } = useAudioPlayback(audioParams);
 
   const noteIndices = chord
     ? (isCustomChord(chord) ? chord.customNotes : getChordNoteIndices(chord.root, chord.quality))
@@ -41,24 +51,57 @@ export function CurrentChordPanel({
   const isDisabled = chord === null || isProgressionFull;
   const [pressing, setPressing] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const noteNames = noteIndices.map(i => pitchClasses[i]).join('-');
 
   const handleClick = useCallback(() => {
     if (isDisabled) return;
     onAddChord();
     setIsAnimating(true);
-  }, [isDisabled, onAddChord]);
+  }, [isDisabled, onAddChord, setIsAnimating]);
 
   const handlePointerDown = useCallback(() => {
     if (!isDisabled) setPressing(true);
-  }, [isDisabled]);
+  }, [isDisabled, setPressing]);
 
   const handlePointerUp = useCallback(() => {
     setPressing(false);
-  }, []);
+  }, [setPressing]);
 
   const handleAnimationEnd = useCallback(() => {
     setIsAnimating(false);
-  }, []);
+  }, [setIsAnimating]);
+
+  const handleCopy = useCallback(() => {
+    if (!chord) return;
+    navigator.clipboard.writeText(noteNames).catch(() => {
+      // Silently fail if clipboard write is denied
+    });
+    setCopied(true);
+  }, [chord, noteNames, setCopied]);
+
+  const handlePlay = useCallback(() => {
+    if (!chord) return;
+    if (isPlaying) {
+      stop();
+      return;
+    }
+    const notes = isCustomChord(chord)
+      ? chord.customNotes.map((idx) => ({
+          index: idx,
+          name: pitchClasses[idx],
+          role: "root" as const,
+        }))
+      : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses);
+    void play(notes);
+  }, [chord, isPlaying, stop, play, pitchClasses]);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
   const panelBg = chord
     ? getCircleColorForTheme(chord.root, chord.quality, theme, "panel")
@@ -139,6 +182,25 @@ export function CurrentChordPanel({
                 : CHORD_QUALITY_LABELS[chord.quality]}
             </span>
           </div>
+          <div className={styles.actionRow}>
+            <button
+              className={`${styles.playButton}${isPlaying ? ` ${styles.playButtonActive}` : ''}`}
+              onClick={handlePlay}
+              aria-label={isPlaying ? "Stop chord playback" : "Play chord"}
+              title={isPlaying ? "Stop" : "Play chord"}
+            >
+              {isPlaying ? '■ Stop' : '▶ Play'}
+            </button>
+            <button
+              className={`${styles.copyButton}${copied ? ` ${styles.copyButtonCopied}` : ''}`}
+              onClick={handleCopy}
+              disabled={!chord}
+              aria-label="Copy note names to clipboard"
+              title="Copy notes as C-E-G format"
+            >
+              {copied ? '✓ Copied!' : 'Copy notes'}
+            </button>
+          </div>
         </>
       )}
       <button
@@ -159,6 +221,9 @@ export function CurrentChordPanel({
         <span className={styles.fullMessage} role="status">
           Progression is full ({progressionLength}/{maxProgressionLength})
         </span>
+      )}
+      {audioParams && onAudioParamsChange && (
+        <AudioDebugPanel params={audioParams} onChange={onAudioParamsChange} />
       )}
     </div>
   );

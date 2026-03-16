@@ -1,0 +1,96 @@
+.container {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 12px;
+  margin-top: 12px;
+  background-color: #f9f9f9;
+  font-size: 13px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.header button:hover {
+  color: #333;
+}
+
+.controls {
+  display: grid;
+  gap: 10px;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.control label {
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.control label input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.control input[type="range"],
+.control select {
+  padding: 6px 4px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.control input[type="range"] {
+  padding: 4px;
+}
+
+.control select {
+  background-color: white;
+  padding: 6px 4px;
+}
+
+.toggleButton {
+  margin-top: 12px;
+}
+
+.toggleButton button {
+  padding: 8px 12px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  font-size: 12px;
+  color: #333;
+}
+
+.toggleButton button:hover {
+  background-color: #efefef;
+}

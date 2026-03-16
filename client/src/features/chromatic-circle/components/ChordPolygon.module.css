@@ -1,0 +1,18 @@
+@keyframes chordPulse {
+  0% {
+    opacity: 1;
+    filter: none;
+  }
+  40% {
+    opacity: 0.5;
+    filter: brightness(2.2);
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+.chordPulse {
+  animation: chordPulse 400ms ease-out;
+}
