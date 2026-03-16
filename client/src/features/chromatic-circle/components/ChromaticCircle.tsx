@@ -134,6 +134,18 @@ export function ChromaticCircle({
     return () => mql.removeEventListener("change", handler);
   }, []);
 
+  // Track chord onsets during playback and increment pulseCount to trigger the polygon
+  // pulse animation. requestAnimationFrame defers the state update out of the effect
+  // body, satisfying the react-hooks/set-state-in-effect lint rule.
+  const [pulseCount, setPulseCount] = useState(0);
+  useEffect(() => {
+    if (externalChord == null) return;
+    const id = requestAnimationFrame(() => {
+      setPulseCount((k) => k + 1);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [externalChord]);
+
   const rootIndex = externalChord?.root ?? effectiveRoot;
   const chordType: ChordType = externalChord?.quality ?? effectiveQuality;
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
@@ -246,6 +258,7 @@ export function ChromaticCircle({
             centroid={fromCentroid}
             showIntervals={propShowIntervals}
             chordIndices={chordIndices}
+            pulse={pulseCount}
           />
 
           {/* Chord polygon vertices */}

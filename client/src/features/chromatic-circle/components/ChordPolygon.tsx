@@ -7,6 +7,7 @@ import {
   POLYGON_STROKE_WIDTH,
   RING_STROKE_WIDTH,
 } from "../constants/visualConstants";
+import styles from "./ChordPolygon.module.css";
 
 interface ChordPolygonProps {
   /** Animated (morphed) polygon points — used for rendering the polygon outline. */
@@ -20,6 +21,11 @@ interface ChordPolygonProps {
   showIntervals: boolean;
   /** Chromatic indices of all notes in the current chord (used for interval labels). */
   chordIndices: number[];
+  /**
+   * Incrementing counter — each new value triggers a single-cycle pulse animation.
+   * Pass 0 (or omit) for no animation; increment on each chord onset during playback.
+   */
+  pulse?: number;
 }
 
 /**
@@ -36,11 +42,13 @@ export function ChordPolygon({
   centroid,
   showIntervals,
   chordIndices,
+  pulse = 0,
 }: ChordPolygonProps) {
   return (
     <>
-      {/* Main chord polygon */}
+      {/* Main chord polygon — key changes on each chord onset to re-trigger the CSS animation */}
       <polygon
+        key={pulse}
         points={morphedPoints.map((p) => `${p.x},${p.y}`).join(" ")}
         fill={fillColor}
         stroke={strokeColor}
@@ -48,6 +56,7 @@ export function ChordPolygon({
         strokeLinejoin="round"
         strokeDasharray={strokeDasharray}
         opacity={opacity}
+        className={pulse > 0 ? styles.chordPulse : undefined}
       />
 
       {/* Centroid crosshair + dot */}
