@@ -80,10 +80,15 @@ client/
 │   │   ├── main.tsx                     # Entry point
 │   │   ├── components/
 │   │   │   └── AppHeader.tsx            # Header: visualization toggles, scale selector, cursor modes, theme
-│   │   └── providers/                   # Context providers
-│   │       ├── ThemeContext.ts          # Theme type and context definition
-│   │       ├── ThemeProvider.tsx        # Persistent dark/light theme (localStorage)
-│   │       └── useTheme.ts              # useTheme() hook
+│   │   ├── providers/                   # Context providers
+│   │   │   ├── ThemeContext.ts          # Theme type and context definition
+│   │   │   ├── ThemeProvider.tsx        # Persistent dark/light theme (localStorage)
+│   │   │   ├── useTheme.ts              # useTheme() hook
+│   │   │   ├── EnharmonicContext.ts     # Enharmonic context (useFlats, pitchClasses, toggleEnharmonic)
+│   │   │   ├── EnharmonicProvider.tsx   # Enharmonic provider (sharp/flat toggle, pitch-class mapping)
+│   │   │   └── useEnharmonic.ts         # useEnharmonic() hook
+│   │   ├── routes/                      # Client-side routing (placeholder)
+│   │   └── store/                       # Global state management (placeholder)
 │   │
 │   ├── features/                         # Feature modules (feature-based architecture)
 │   │   ├── audio/                        # In-browser chord audio playback
@@ -257,6 +262,7 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 - ✅ **AppHeader**: Visualization toggles (Voice Leads, Extension, Centroid, Intervals), scale mode selector, cursor mode buttons, and theme toggle
 - ✅ **Dark/Light Theme**: Persistent theme toggle stored in `localStorage`; applied via `data-theme` attribute on `<html>`
 - ✅ **MIDI Export**: Export current chord progression as a standard MIDI file (`.mid`); configurable BPM (40–240) and beats-per-chord (1, 2, 4)
+- ✅ **Enharmonic Toggle**: Global sharp/flat notation switch via `EnharmonicProvider`; `useEnharmonic()` exposes `useFlats`, `pitchClasses`, and `toggleEnharmonic`
 - ✅ **Structure**: Feature-based architecture across 14 modules
 
 ---
@@ -269,7 +275,7 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 server/ParametricMusic.Api/
 ├── Controllers/
 │   ├── HealthController.cs               # GET /Health
-│   ├── ChordController.cs                # POST /Chord/from-root
+│   ├── ChordController.cs                # POST /Chord/from-root, POST /Chord/quartal/from-scale
 │   ├── ScaleController.cs                # POST /Scale/from-root
 │   └── ProgressionController.cs          # POST /Progression/analyze
 │
@@ -283,12 +289,16 @@ server/ParametricMusic.Api/
 │   ├── PrimitiveShape.cs                 # Enum (Triangle, Quadrilateral, etc.)
 │   ├── ScaleOptionsDto.cs                # DTO (ScaleType field)
 │   ├── ProgressionAnalyzeRequestDto.cs   # DTO (Chords list of ChordRef)
-│   └── ProgressionAnalyzeResponseDto.cs  # DTO (Steps, ContinuityScore, TensionTrend)
+│   ├── ProgressionAnalyzeResponseDto.cs  # DTO (Steps, ContinuityScore, TensionTrend)
+│   ├── HealthResponse.cs                 # DTO (Status: string, Timestamp: DateTime)
+│   ├── QuartalChordDto.cs                # DTO (Root, Quality, DisplayName, PitchClasses, NoteNames, Quartal metadata)
+│   └── DiatonicQuartalRequestDto.cs      # DTO (ScaleType, Degree 1–7, Size 2–7)
 │
 ├── Services/
 │   ├── ChordGenerator.cs                 # Chord construction from root + quality
 │   ├── ScaleGenerator.cs                 # Scale generation logic (all 8 modes)
-│   └── ProgressionAnalyzer.cs            # Progression motion, continuity, and tension
+│   ├── ProgressionAnalyzer.cs            # Progression motion, continuity, and tension
+│   └── QuartalChordGenerator.cs          # Diatonic quartal chord builder and identifier
 │
 ├── Configuration/
 │   ├── Program.cs                        # App configuration, middleware setup
@@ -331,21 +341,29 @@ DTOs & Models Layer (Note, ChordQuality, ScaleType, NoteInfo, ChordDto, etc.)
 **HealthController**
 ```csharp
 [HttpGet]
-public IActionResult Get() => Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
+public IActionResult Get() => Ok(new HealthResponse { Status = "healthy", Timestamp = DateTime.UtcNow });
 ```
 - Endpoint: `GET /Health`
 - Purpose: Simple liveness check
-- Response: `{ status: "healthy", timestamp: "<ISO 8601 UTC>" }`
+- Response: `HealthResponse` — `{ status: "healthy", timestamp: "<ISO 8601 UTC>" }`
 
 **ChordController**
 ```csharp
 [HttpPost("from-root")]
 public IActionResult BuildChord([FromQuery] Note note, [FromBody] ChordFromRootRequestDto body)
+
+[HttpPost("quartal/from-scale")]
+public IActionResult BuildQuartalChord([FromQuery] Note note, [FromBody] DiatonicQuartalRequestDto body)
 ```
 - Endpoint: `POST /Chord/from-root`
 - Query: `note` (enum: C, CSharp, D, DSharp, E, F, FSharp, G, GSharp, A, ASharp, B)
 - Body: `{ "quality": "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" }`
 - Response: `ChordDto` with root, quality, display name, pitch classes, and note names
+
+- Endpoint: `POST /Chord/quartal/from-scale`
+- Query: `note` (enum: C…B — scale root)
+- Body: `{ "scaleType": ScaleType, "degree": 1–7, "size": 2–7 }`
+- Response: `QuartalChordDto` with root, pitch classes, note names, and `quartal` metadata (isDiatonic, scaleRoot, scaleType, degree, size)
 
 **ScaleController**
 ```csharp
@@ -409,6 +427,46 @@ public class NoteInfo {
 }
 ```
 
+**HealthResponse DTO**
+```csharp
+public class HealthResponse {
+    public string Status { get; init; }    // e.g., "healthy"
+    public DateTime Timestamp { get; init; } // UTC timestamp
+}
+```
+
+**QuartalChordDto**
+```csharp
+public class QuartalChordDto {
+    public string Root { get; init; }          // Root note display name
+    public string Quality { get; init; }        // Always "Quartal"
+    public string DisplayName { get; init; }    // e.g., "C Quartal3 (I)"
+    public int[] PitchClasses { get; init; }   // MIDI pitch classes (size voices)
+    public string[] NoteNames { get; init; }   // Display names for each voice
+    public QuartalMetadata Quartal { get; init; } // Quartal-specific metadata
+}
+```
+
+**QuartalMetadata DTO**
+```csharp
+public class QuartalMetadata {
+    public bool IsDiatonic { get; init; }   // Always true for diatonic quartal
+    public string ScaleRoot { get; init; }  // Scale root note display name
+    public string ScaleType { get; init; }  // Scale type string (e.g., "Major")
+    public int Degree { get; init; }        // Scale degree (1–7)
+    public int Size { get; init; }          // Number of voices (default 3)
+}
+```
+
+**DiatonicQuartalRequestDto**
+```csharp
+public class DiatonicQuartalRequestDto {
+    public ScaleType ScaleType { get; set; }  // Scale type to derive diatonic fourths from
+    public int Degree { get; set; }            // Scale degree, 1-based (1..7)
+    public int Size { get; set; }              // Number of voices to stack (2..7, default 3)
+}
+```
+
 #### Services
 
 **ChordGenerator**
@@ -426,6 +484,12 @@ public class NoteInfo {
 - Continuity score formula: `1 − (averageMotion / 12)` (higher = smoother voice leading)
 - Tension trend: proportion of "rough" interval pairs (tritone, minor 2nd) per chord
 - Input limited to 1–8 chords
+
+**QuartalChordGenerator**
+- Static class; builds and identifies diatonic quartal chords for any 7-note scale
+- `BuildDiatonicQuartal(root, scaleType, degree, size)`: stacks diatonic fourths using `Q(i) = [S[i], S[(i+3)%7], S[(i+6)%7], …]`
+- `IdentifyDiatonicQuartal(root, scaleType, pitchClasses, size)`: searches all 7 scale degrees for a matching pitch-class set
+- Supports degree range 1–7 and voice stack size 2–7
 
 ### Configuration
 
@@ -529,8 +593,9 @@ The backend automatically generates an OpenAPI specification that describes all 
 
 | Method | Endpoint | Parameters | Response |
 |--------|----------|-----------|----------|
-| `GET` | `/Health` | None | `{ status: string, timestamp: string }` |
+| `GET` | `/Health` | None | `HealthResponse` — `{ status: string, timestamp: string }` |
 | `POST` | `/Chord/from-root` | `note` (query), `{ quality: ChordQuality }` (body) | `ChordDto` |
+| `POST` | `/Chord/quartal/from-scale` | `note` (query), `{ scaleType, degree, size }` (body) | `QuartalChordDto` |
 | `POST` | `/Scale/from-root` | `note` (query), `{ scaleType: ScaleType }` (body) | `NoteInfo[]` |
 | `POST` | `/Progression/analyze` | `{ chords: ChordRef[] }` (body, 1–8 chords) | `ProgressionAnalyzeResponseDto` |
 
@@ -769,12 +834,13 @@ dotnet test
 
 ### 🚀 Future Improvements
 
-- [ ] Add state management (Zustand or Redux)
-- [ ] Implement client-side routing
+- [ ] Add state management (Zustand or Redux) — `app/store/` directory is scaffolded
+- [ ] Implement client-side routing — `app/routes/` directory is scaffolded
 - [ ] Cross-platform dev script (shell version for Linux/Mac)
 - [ ] Docker configuration
 - [ ] Performance monitoring
 - [ ] Expand frontend test coverage (components, hooks)
+- [ ] Add quartal chord visualisation to the chromatic circle
 
 ---
 
@@ -787,4 +853,4 @@ dotnet test
 
 ---
 
-**Last Updated**: March 13, 2026
+**Last Updated**: March 16, 2026
