@@ -45,6 +45,11 @@ const TONE_ROLES: Record<ChordType, Record<number, string>> = {
     6: "Diminished Fifth",
     10: "Minor Seventh",
   },
+  quartal: {
+    0: "Root",
+    5: "Perfect Fourth",
+    10: "Minor Seventh",
+  },
 };
 
 /**
