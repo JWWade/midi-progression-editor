@@ -1,0 +1,101 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+jobs:
+  npm-audit:
+    name: npm audit (client)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Run npm audit (fail on high/critical)
+        working-directory: client
+        run: npm audit --audit-level=high
+
+  dotnet-vulnerable:
+    name: dotnet vulnerable packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore packages (Api)
+        working-directory: server/ParametricMusic.Api
+        run: dotnet restore
+
+      - name: Restore packages (Tests)
+        working-directory: server/ParametricMusic.Tests
+        run: dotnet restore
+
+      - name: Check for vulnerable packages (Api)
+        working-directory: server/ParametricMusic.Api
+        run: dotnet list package --vulnerable --include-transitive
+
+      - name: Check for vulnerable packages (Tests)
+        working-directory: server/ParametricMusic.Tests
+        run: dotnet list package --vulnerable --include-transitive
+
+  codeql:
+    name: CodeQL analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["javascript-typescript", "csharp"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      - name: Set up .NET (for C# autobuild)
+        if: matrix.language == 'csharp'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
