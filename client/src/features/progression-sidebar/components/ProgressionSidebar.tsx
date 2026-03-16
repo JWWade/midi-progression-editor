@@ -21,14 +21,26 @@ interface ProgressionSidebarProps {
   playingIndex: number | null;
   onPlay: () => void;
   onStop: () => void;
+  chordDurationMs: number;
+  onChordDurationChange: (ms: number) => void;
 }
 
-export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength, isPlaying, playingIndex, onPlay, onStop }: ProgressionSidebarProps) {
+const MIN_CHORD_DURATION_MS = 200;
+const MAX_CHORD_DURATION_MS = 4000;
+
+export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength, isPlaying, playingIndex, onPlay, onStop, chordDurationMs, onChordDurationChange }: ProgressionSidebarProps) {
   const { pitchClasses } = useEnharmonic();
   const isFull = chords.length >= maxLength;
   const [newTileIndex, setNewTileIndex] = useState<number | null>(null);
   const [prevLength, setPrevLength] = useState(chords.length);
   const tileRefs = useRef<(HTMLLIElement | null)[]>([]);
+  // Local string state so the input can be cleared/re-typed freely; sync on blur.
+  const [durationInputValue, setDurationInputValue] = useState(String(chordDurationMs));
+
+  // Keep the local display in sync when the parent value changes externally.
+  useEffect(() => {
+    setDurationInputValue(String(chordDurationMs));
+  }, [chordDurationMs]);
 
   // Compute pair metrics for the progression
   const pairMetrics = useMemo(() => computeProgressionPairMetrics(chords), [chords]);
@@ -69,14 +81,45 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
         <span className={styles.count} aria-label={`${chords.length} of ${maxLength} chords`}>
           {chords.length}/{maxLength}
         </span>
-        <button
-          className={styles.playAllButton}
-          onClick={isPlaying ? onStop : onPlay}
-          disabled={chords.length === 0}
-          aria-label={isPlaying ? "Stop playback" : "Play all chords"}
-        >
-          {isPlaying ? "■ Stop" : "▶ Play All"}
-        </button>
+        <div className={styles.controls}>
+          <label className={styles.durationLabel} htmlFor="chord-duration-input">
+            ms / chord
+          </label>
+          <input
+            id="chord-duration-input"
+            type="number"
+            className={styles.durationInput}
+            value={durationInputValue}
+            min={MIN_CHORD_DURATION_MS}
+            max={MAX_CHORD_DURATION_MS}
+            step={50}
+            aria-label="Chord duration in milliseconds"
+            onChange={(e) => {
+              setDurationInputValue(e.target.value);
+              const raw = parseInt(e.target.value, 10);
+              if (!isNaN(raw)) {
+                onChordDurationChange(Math.min(MAX_CHORD_DURATION_MS, Math.max(MIN_CHORD_DURATION_MS, raw)));
+              }
+            }}
+            onBlur={() => {
+              // On blur, clamp to valid range and reset display to match actual value.
+              const raw = parseInt(durationInputValue, 10);
+              const clamped = isNaN(raw)
+                ? chordDurationMs
+                : Math.min(MAX_CHORD_DURATION_MS, Math.max(MIN_CHORD_DURATION_MS, raw));
+              onChordDurationChange(clamped);
+              setDurationInputValue(String(clamped));
+            }}
+          />
+          <button
+            className={styles.playAllButton}
+            onClick={isPlaying ? onStop : onPlay}
+            disabled={chords.length === 0}
+            aria-label={isPlaying ? "Stop playback" : "Play all chords"}
+          >
+            {isPlaying ? "■ Stop" : "▶ Play All"}
+          </button>
+        </div>
       </div>
       <p className={styles.resetNote}>Resets on page reload</p>
       <ol className={styles.chordList} aria-label="Chord list">

@@ -17,6 +17,7 @@ export default function App() {
   const [keyRoot, setKeyRoot] = useState<number>(0);
   const [keyScale, setKeyScale] = useState<ScaleType>("major");
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
+  const [chordDurationMs, setChordDurationMs] = useState(1200);
 
   // Visualization toggles and scale selector (lifted from ChromaticCircle)
   const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
@@ -29,7 +30,7 @@ export default function App() {
   // frame so intentional subsequent adds still work.
   const addGuardRef = useRef(false);
 
-  const { isPlaying, playingIndex, play: onPlay, stop: onStop } = useProgressionPlayback(chords, audioParams);
+  const { isPlaying, playingIndex, play: onPlay, stop: onStop } = useProgressionPlayback(chords, audioParams, chordDurationMs);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
 
   useEffect(() => {
@@ -130,6 +131,8 @@ export default function App() {
             playingIndex={playingIndex}
             onPlay={onPlay}
             onStop={onStop}
+            chordDurationMs={chordDurationMs}
+            onChordDurationChange={setChordDurationMs}
           />
         </section>
       </div>
