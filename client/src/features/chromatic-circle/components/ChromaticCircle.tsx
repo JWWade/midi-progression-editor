@@ -44,6 +44,8 @@ interface ChromaticCircleProps {
   selectedScale?: ScaleType;
   showCentroid?: boolean;
   showIntervals?: boolean;
+  /** When non-null, overrides the user's internal chord selection for rendering and animation. */
+  externalChord?: Chord | null;
 }
 
 export function ChromaticCircle({
@@ -52,6 +54,7 @@ export function ChromaticCircle({
   selectedScale: propSelectedScale = "major",
   showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
+  externalChord,
 }: ChromaticCircleProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
@@ -127,8 +130,8 @@ export function ChromaticCircle({
     return () => mql.removeEventListener("change", handler);
   }, []);
 
-  const rootIndex = effectiveRoot;
-  const chordType: ChordType = effectiveQuality;
+  const rootIndex = externalChord?.root ?? effectiveRoot;
+  const chordType: ChordType = externalChord?.quality ?? effectiveQuality;
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
   const baseIntervals = CHORD_INTERVALS[chordType];
 

@@ -27,9 +27,7 @@ export default function App() {
   const addGuardRef = useRef(false);
 
   const { isPlaying, playingIndex, play: onPlay, stop: onStop } = useProgressionPlayback(chords);
-  // Defined here for E6-02; will be wired to ChromaticCircle in that issue.
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
-  void playingChord;
 
   const diatonicIndices = useMemo(
     () => getDiatonicIndices(keyRoot, keyScale),
@@ -78,6 +76,7 @@ export default function App() {
           aria-label="Chromatic Circle - Select and inspect the current chord"
         >
           <ChromaticCircle
+            externalChord={playingChord}
             onCurrentChordChange={handleCurrentChordChange}
             onKeyScaleChange={handleKeyScaleChange}
             selectedScale={selectedScale}
