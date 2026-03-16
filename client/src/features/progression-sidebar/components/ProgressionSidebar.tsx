@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import { ChordTile } from "./ChordTile";
 import { MidiExportControls } from "@/features/midi-export/components/MidiExportControls";
-import { useProgressionPlayback } from "@/features/audio";
 import styles from "./ProgressionSidebar.module.css";
 
 /** Must match the `tileHighlight` animation duration in ChordTile.module.css */
@@ -14,14 +13,17 @@ interface ProgressionSidebarProps {
   onMoveDown: (index: number) => void;
   onDelete: (index: number) => void;
   maxLength: number;
+  isPlaying: boolean;
+  playingIndex: number | null;
+  onPlay: () => void;
+  onStop: () => void;
 }
 
-export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength }: ProgressionSidebarProps) {
+export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength, isPlaying, playingIndex, onPlay, onStop }: ProgressionSidebarProps) {
   const isFull = chords.length >= maxLength;
   const [newTileIndex, setNewTileIndex] = useState<number | null>(null);
   const [prevLength, setPrevLength] = useState(chords.length);
   const tileRefs = useRef<(HTMLLIElement | null)[]>([]);
-  const { isPlaying, playingIndex, play, stop } = useProgressionPlayback(chords);
 
   // Derive newTileIndex during render when the chord list changes (React-documented
   // derived-state pattern; avoids setState-in-effect which the linter forbids).
@@ -61,7 +63,7 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
         </span>
         <button
           className={styles.playAllButton}
-          onClick={isPlaying ? stop : play}
+          onClick={isPlaying ? onStop : onPlay}
           disabled={chords.length === 0}
           aria-label={isPlaying ? "Stop playback" : "Play all chords"}
         >

@@ -5,6 +5,7 @@ import { getDiatonicIndices } from '../features/chromatic-circle/utils';
 import { ProgressionSidebar } from '../features/progression-sidebar';
 import { useProgression } from '../features/progression-sidebar/hooks/useProgression';
 import { MAX_PROGRESSION_LENGTH } from '../features/progression-sidebar/constants/progressionConfig';
+import { useProgressionPlayback } from '../features/audio';
 import { AppHeader } from './components/AppHeader';
 import type { ScaleType } from '../features/scale/types';
 import styles from './App.module.css';
@@ -24,6 +25,11 @@ export default function App() {
   // Set synchronously when add is initiated; cleared after the current animation
   // frame so intentional subsequent adds still work.
   const addGuardRef = useRef(false);
+
+  const { isPlaying, playingIndex, play: onPlay, stop: onStop } = useProgressionPlayback(chords);
+  // Defined here for E6-02; will be wired to ChromaticCircle in that issue.
+  const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
+  void playingChord;
 
   const diatonicIndices = useMemo(
     () => getDiatonicIndices(keyRoot, keyScale),
@@ -108,6 +114,10 @@ export default function App() {
             onMoveDown={(i) => moveChord(i, 'down')}
             onDelete={deleteChord}
             maxLength={MAX_PROGRESSION_LENGTH}
+            isPlaying={isPlaying}
+            playingIndex={playingIndex}
+            onPlay={onPlay}
+            onStop={onStop}
           />
         </section>
       </div>
