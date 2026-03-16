@@ -151,7 +151,9 @@ export function ChromaticCircle({
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
   const baseIntervals = CHORD_INTERVALS[chordType];
 
-  const chordNotes = customFromChord?.customNotes
+  // During playback (externalChord != null), always render the transposed chord,
+  // not any previously-selected custom chord.
+  const chordNotes = !externalChord && customFromChord?.customNotes
     ? customFromChord.customNotes.map((idx) => ({
         index: idx,
         name: pitchClasses[idx],
