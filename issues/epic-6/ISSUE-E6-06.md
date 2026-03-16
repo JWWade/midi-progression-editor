@@ -32,9 +32,15 @@ A short written recommendation (added to this issue or as a follow-up spike) cov
 None required. If a prototype implementation is produced during investigation, it should be isolated to a feature branch and not merged until a separate implementation issue is created.
 
 ## Acceptance Criteria
-- [ ] Jitter measurements at 1200 ms, 600 ms, and 300 ms chord durations are recorded.
-- [ ] A written recommendation exists covering the four scope areas above.
-- [ ] If implementation is recommended, a follow-up issue is created with effort estimate.
+- [x] Jitter measurements at 1200 ms, 600 ms, and 300 ms chord durations are recorded.
+- [x] A written recommendation exists covering the four scope areas above.
+- [x] If implementation is recommended, a follow-up issue is created with effort estimate.
+
+## Resolution
+
+Investigation complete. See `docs/spikes/SPIKE-audiocontext-currenttime-sequencing.md` for full findings.
+
+**Summary:** No code change is required at the current 1200 ms chord duration. `setTimeout` jitter (mean ~4 ms, max ~25 ms under load) is imperceptible against the 300 ms morph window. At 600 ms chords, jitter remains unlikely to be noticed. At 300 ms chords (where the morph window shrinks to ~75 ms), worst-case jitter of ~50 ms would be perceptible. The recommended approach — replacing `setTimeout` in `playChord` with a `requestAnimationFrame` + `AudioContext.currentTime` polling loop — is scoped to a single function change in `audioUtils.ts` and should be introduced only when chord durations ≤ 400 ms are added (via E6-05). Estimated effort: S (2–3 h). `MessageChannel` scheduling offers only marginal improvement over the `rAF` approach and is not recommended.
 
 ## Verification Commands
 ```bash
