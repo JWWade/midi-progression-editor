@@ -18,11 +18,18 @@ export interface UseProgressionPlaybackResult {
 export function useProgressionPlayback(
   chords: Chord[],
   audioParams: AudioParams = DEFAULT_AUDIO_PARAMS,
+  chordDurationMs: number = 1200,
 ): UseProgressionPlaybackResult {
   const { pitchClasses } = useEnharmonic();
   const [isPlaying, setIsPlaying] = useState(false);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const cancelledRef = useRef(false);
+  // Keep a ref so the running loop always reads the latest duration without
+  // needing to restart playback when the user changes the value.
+  const chordDurationMsRef = useRef(chordDurationMs);
+  useEffect(() => {
+    chordDurationMsRef.current = chordDurationMs;
+  }, [chordDurationMs]);
 
   const stop = useCallback(() => {
     cancelledRef.current = true;
@@ -47,7 +54,7 @@ export function useProgressionPlayback(
           : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses);
 
         setPlayingIndex(i);
-        await playChord(notes, { duration: 1200, audioParams });
+        await playChord(notes, { duration: chordDurationMsRef.current, audioParams });
 
         if (cancelledRef.current) break;
       }

@@ -39,6 +39,46 @@
 }
 
 /* ── Play All button ────────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.durationLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  cursor: default;
+}
+
+.durationInput {
+  width: 56px;
+  padding: 3px 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px;
+  text-align: right;
+  /* Remove native number spinners */
+  appearance: textfield;
+}
+
+.durationInput::-webkit-inner-spin-button,
+.durationInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.durationInput:focus-visible {
+  outline: 2px solid var(--accent-color, #4f46e5);
+  outline-offset: 1px;
+}
+
 .playAllButton {
   padding: 4px 10px;
   font-size: 11px;
