@@ -26,12 +26,32 @@
 }
 
 /* ── Chord name label ────────────────────────────────────────────────────── */
-.chordName {
+.chordInfo {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.chordName {
+  flex-shrink: 0;
   font-size: 14px;
   font-weight: 600;
   color: var(--color-tile-name);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.chordNotes {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
