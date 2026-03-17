@@ -107,7 +107,15 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 }
 
 function toLinear(v: number): number {
-  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  // sRGB IEC 61966-2-1 linearisation (gamma correction)
+  const SRGB_LINEAR_THRESHOLD = 0.04045;
+  const SRGB_LINEAR_DIVISOR   = 12.92;
+  const SRGB_GAMMA_OFFSET     = 0.055;
+  const SRGB_GAMMA_DIVISOR    = 1.055;
+  const SRGB_GAMMA_EXPONENT   = 2.4;
+  return v <= SRGB_LINEAR_THRESHOLD
+    ? v / SRGB_LINEAR_DIVISOR
+    : Math.pow((v + SRGB_GAMMA_OFFSET) / SRGB_GAMMA_DIVISOR, SRGB_GAMMA_EXPONENT);
 }
 
 function relativeLuminance(r: number, g: number, b: number): number {
@@ -130,7 +138,11 @@ export function getAccessibleTextColor(backgroundColor: string): string {
   const bgLum = relativeLuminance(r, g, b);
 
   const whiteLum = 1;
-  const darkLum = relativeLuminance(0x11 / 255, 0x18 / 255, 0x27 / 255);
+  // RGB byte values of the near-black reference tone used in contrast checks (#111827)
+  const DARK_TEXT_R = 0x11;
+  const DARK_TEXT_G = 0x18;
+  const DARK_TEXT_B = 0x27;
+  const darkLum = relativeLuminance(DARK_TEXT_R / 255, DARK_TEXT_G / 255, DARK_TEXT_B / 255);
 
   const whiteContrast = (Math.max(bgLum, whiteLum) + 0.05) / (Math.min(bgLum, whiteLum) + 0.05);
   const darkContrast = (Math.max(bgLum, darkLum) + 0.05) / (Math.min(bgLum, darkLum) + 0.05);

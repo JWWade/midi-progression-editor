@@ -15,6 +15,9 @@ import { useAudioPlayback } from "@/features/audio";
 import type { AudioParams } from "@/features/audio/constants/audioConfig";
 import { AudioDebugPanel } from "@/features/audio/components/AudioDebugPanel";
 
+/** Duration the "Copied!" feedback badge remains visible (milliseconds). */
+const COPY_FEEDBACK_DURATION_MS = 1500;
+
 interface CurrentChordPanelProps {
   chord: Chord | null;
   onAddChord: () => void;
@@ -98,7 +101,7 @@ export function CurrentChordPanel({
 
   useEffect(() => {
     if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 1500);
+    const timer = setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS);
     return () => clearTimeout(timer);
   }, [copied]);
 

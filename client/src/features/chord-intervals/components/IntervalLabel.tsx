@@ -1,4 +1,5 @@
 import type { Point } from "@/features/chromatic-circle/utils/geometry";
+import { INTERVAL_LABEL_TEXT_COLOR } from "@/features/chromatic-circle/constants/visualConstants";
 
 interface IntervalLabelProps {
   from: Point;
@@ -46,7 +47,7 @@ export function IntervalLabel({
         y={labelY}
         fontSize="11"
         fontWeight="600"
-        fill="#1F2937"
+        fill={INTERVAL_LABEL_TEXT_COLOR}
         textAnchor="middle"
         dominantBaseline="middle"
         fontFamily="sans-serif"

@@ -102,3 +102,18 @@ export const NOTE_FONT_FAMILY = "system-ui, sans-serif";
  * viewport edge on narrow screens.
  */
 export const CIRCLE_PADDING = 16;
+
+// ─── Interaction colors ───────────────────────────────────────────────────────
+
+/**
+ * Stroke color of the drag-target highlight ring shown on the note node that
+ * is currently being hovered over during a chord-vertex drag operation.
+ * Emerald-500 (#10b981) was chosen for high visibility against all chord colors.
+ */
+export const DRAG_TARGET_STROKE = "#10b981";
+
+/**
+ * Text fill color for interval-label badges rendered on the chromatic circle.
+ * Near-black (#1F2937) provides strong contrast against the white badge background.
+ */
+export const INTERVAL_LABEL_TEXT_COLOR = "#1F2937";
