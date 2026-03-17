@@ -20,8 +20,7 @@ export default function App() {
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
   const [chordDurationMs, setChordDurationMs] = useState(1200);
 
-  // Visualization toggles and scale selector (lifted from ChromaticCircle)
-  const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
+  // Visualization toggles (lifted from ChromaticCircle)
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
 
@@ -91,8 +90,6 @@ export default function App() {
         {liveRegionText}
       </div>
       <AppHeader
-        selectedScale={selectedScale}
-        onScaleChange={setSelectedScale}
         showCentroid={showCentroid}
         onCentroidChange={setShowCentroid}
         showIntervals={showIntervals}
@@ -110,7 +107,6 @@ export default function App() {
             isPlaybackActive={isPlaying}
             onCurrentChordChange={handleCurrentChordChange}
             onKeyScaleChange={handleKeyScaleChange}
-            selectedScale={selectedScale}
             showCentroid={showCentroid}
             showIntervals={showIntervals}
           />
