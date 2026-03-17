@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import type { Chord } from "../types";
 import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
-import { getChordNoteIndices, transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { getChordPitchClasses } from "@/features/chord/utils";
 import { getCircleColorForTheme } from "@/features/chromatic-circle/utils/circleColors";
 import { ChordColors } from "@/features/color-language/constants/chordColors";
 import { getChordComplexity, getChordColor, getAccessibleTextColor } from "@/features/color-language/utils/chordColorUtils";
@@ -45,9 +46,7 @@ export function CurrentChordPanel({
   const { pitchClasses } = useEnharmonic();
   const { isPlaying, play, stop } = useAudioPlayback(audioParams);
 
-  const noteIndices = chord
-    ? (isCustomChord(chord) ? chord.customNotes : getChordNoteIndices(chord.root, chord.quality))
-    : [];
+  const noteIndices = chord ? getChordPitchClasses(chord) : [];
   const isDisabled = chord === null || isProgressionFull;
   const [pressing, setPressing] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
