@@ -1,12 +1,8 @@
-import type { ScaleType } from '../../features/scale/types';
-import { SCALE_LABELS } from '../../features/scale/types';
 import { useTheme } from '../providers/useTheme';
 import { useEnharmonic } from '../providers/useEnharmonic';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
-  selectedScale: ScaleType;
-  onScaleChange: (scale: ScaleType) => void;
   showCentroid: boolean;
   onCentroidChange: (show: boolean) => void;
   showIntervals: boolean;
@@ -14,8 +10,6 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({
-  selectedScale,
-  onScaleChange,
   showCentroid,
   onCentroidChange,
   showIntervals,
@@ -55,26 +49,6 @@ export function AppHeader({
       </div>
 
       <div className={styles.rightControls}>
-        {/* Scale selector */}
-        <div className={styles.scaleSelector}>
-          <label htmlFor="scale-select" className={styles.scaleLabel}>
-            Scale:
-          </label>
-          <select
-            id="scale-select"
-            value={selectedScale}
-            onChange={(e) => onScaleChange(e.target.value as ScaleType)}
-            className={styles.select}
-            aria-label="Select scale type"
-          >
-            {(Object.keys(SCALE_LABELS) as ScaleType[]).map((scale) => (
-              <option key={scale} value={scale}>
-                {SCALE_LABELS[scale]}
-              </option>
-            ))}
-          </select>
-        </div>
-
         {/* Theme toggle */}
         <button
           type="button"
