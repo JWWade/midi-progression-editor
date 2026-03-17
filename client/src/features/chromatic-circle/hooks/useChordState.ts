@@ -10,6 +10,7 @@ import {
   rotateNamedChordRoot,
   dedupePitchClasses,
   getPrimitiveNoteIndices,
+  mirrorChordAboutRoot,
 } from "@/features/chord/utils/transpose";
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
 import { CHORD_NAME_TO_DATA, getChordName } from "@/features/chord/data/chordNames";
@@ -212,6 +213,57 @@ export function useChordState({
     [customFromChord, selectedChordName, onCurrentChordChange],
   );
 
+  const handleMirrorChord = useCallback(() => {
+    const applyMirroredNotes = (mirroredNotes: number[]) => {
+      const {
+        root: bestRoot,
+        quality: bestQuality,
+        matchScore,
+      } = findNearestChord(mirroredNotes);
+
+      if (matchScore === 1) {
+        setCustomFromChord(null);
+        setSelectedChordName(getChordName(bestRoot, bestQuality));
+        onCurrentChordChange?.({ root: bestRoot, quality: bestQuality });
+      } else {
+        const newChord: CustomChordState = {
+          root: bestRoot,
+          quality: bestQuality,
+          customNotes: mirroredNotes,
+        };
+        setCustomFromChord(newChord);
+        onCurrentChordChange?.(newChord);
+      }
+    };
+
+    if (customFromChord) {
+      const mirroredNotes = dedupePitchClasses(
+        mirrorChordAboutRoot(customFromChord.customNotes, customFromChord.root),
+      );
+      if (mirroredNotes.length === 0) return;
+
+      if (customFromChord.primitiveShape) {
+        const newChord: CustomChordState = {
+          root: customFromChord.root,
+          quality: customFromChord.quality,
+          customNotes: mirroredNotes,
+          primitiveShape: customFromChord.primitiveShape,
+        };
+        setCustomFromChord(newChord);
+        onCurrentChordChange?.(newChord);
+      } else {
+        applyMirroredNotes(mirroredNotes);
+      }
+    } else {
+      const { root, type } = CHORD_NAME_TO_DATA[selectedChordName];
+      const currentNotes = CHORD_INTERVALS[type].map((interval) => (root + interval) % 12);
+      const mirroredNotes = dedupePitchClasses(mirrorChordAboutRoot(currentNotes, root));
+      applyMirroredNotes(mirroredNotes);
+    }
+
+    setMoveAnnouncement("Mirrored chord about root");
+  }, [customFromChord, selectedChordName, onCurrentChordChange]);
+
   const handleRandomChord = useCallback(() => {
     const allIndices = Array.from({ length: 12 }, (_, i) => i);
     for (let i = 0; i < 3; i++) {
@@ -303,6 +355,7 @@ export function useChordState({
     handleNoteDragMove,
     handleNoteDragEnd,
     handleRotateChord,
+    handleMirrorChord,
     handleSelectPrimitiveShape,
     handleRandomChord,
   };

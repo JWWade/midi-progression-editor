@@ -4,6 +4,7 @@ import type { CustomChordState } from "../types";
 
 interface CircleControlsProps {
   onRotate: (direction: "clockwise" | "counterclockwise") => void;
+  onMirror: () => void;
   onSelectShape: (shape: PrimitiveShape) => void;
   onRandomChord: () => void;
   selectedChordName: string;
@@ -74,6 +75,7 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
  */
 export function CircleControls({
   onRotate,
+  onMirror,
   onSelectShape,
   onRandomChord,
   selectedChordName,
@@ -98,6 +100,15 @@ export function CircleControls({
               style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
             >
               <span style={{ ...ROTATE_ICON_STYLE, transform: "rotate(-90deg)" }}>↺</span>
+            </button>
+            <button
+              type="button"
+              onClick={onMirror}
+              title="Mirror chord about root"
+              aria-label="Mirror chord about root"
+              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)", fontSize: 14 }}
+            >
+              ⇌
             </button>
             <button
               type="button"

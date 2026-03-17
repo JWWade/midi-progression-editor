@@ -101,6 +101,19 @@ export function dedupePitchClasses(noteIndices: number[]): number[] {
 }
 
 /**
+ * Reflects each note's interval around the root note on the chromatic circle.
+ * A note at `root + i` semitones becomes `root - i` (mod 12).
+ * The root itself is always preserved.
+ *
+ * @example
+ * // C major [0, 4, 7] mirrored about C(0) → [0, 8, 5]  (C, Ab, F — an Fm chord)
+ * mirrorChordAboutRoot([0, 4, 7], 0) // → [0, 8, 5]
+ */
+export function mirrorChordAboutRoot(noteIndices: number[], root: number): number[] {
+  return noteIndices.map((note) => ((2 * root - note) % 12 + 12) % 12);
+}
+
+/**
  * Returns chromatic note indices for a primitive geometric shape anchored to a root.
  */
 export function getPrimitiveNoteIndices(root: number, shape: PrimitiveShape): number[] {
