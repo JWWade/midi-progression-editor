@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { ChordThumbnail } from "@/features/current-chord/components/ChordThumbnail";
 import { getChordName } from "@/features/chord/data/chordNames";
-import { getChordNoteIndices } from "@/features/chord/utils/transpose";
+import { getChordPitchClasses } from "@/features/chord/utils";
 import { getChordComplexity, getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import type { Chord } from "@/features/current-chord/types";
 import { isCustomChord } from "@/features/current-chord/utils/chordTypeGuards";
@@ -25,9 +25,7 @@ interface ChordTileProps {
 export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
   function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
   const { pitchClasses } = useEnharmonic();
-  const noteIndices = isCustomChord(chord) 
-    ? chord.customNotes 
-    : getChordNoteIndices(chord.root, chord.quality);
+  const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
   const accentColor = getChordColor(chord.quality, complexity);
   const chordName = isCustomChord(chord)

@@ -4,38 +4,39 @@
 
 import { describe, it, expect } from "vitest";
 import type { Chord } from "@/features/current-chord/types";
-import { getChordPitchClasses, computeSharedNotes, computeProgressionPairMetrics } from "./pairMetrics";
+import { getChordPitchClasses } from "@/features/chord/utils";
+import { computeSharedNotes, computeProgressionPairMetrics } from "./pairMetrics";
 
 describe("pairMetrics utilities", () => {
   describe("getChordPitchClasses", () => {
     it("returns pitch classes for a named major chord", () => {
       const chord: Chord = { root: 0, quality: "major" }; // C major: C, E, G
       const pitches = getChordPitchClasses(chord);
-      expect(pitches).toEqual(new Set([0, 4, 7])); // C, E, G
+      expect(pitches).toEqual([0, 4, 7]); // C, E, G
     });
 
     it("returns pitch classes for a named minor chord", () => {
       const chord: Chord = { root: 2, quality: "minor" }; // D minor: D, F, A
       const pitches = getChordPitchClasses(chord);
-      expect(pitches).toEqual(new Set([2, 5, 9])); // D, F, A
+      expect(pitches).toEqual([2, 5, 9]); // D, F, A
     });
 
     it("returns pitch classes for a 7th chord", () => {
       const chord: Chord = { root: 7, quality: "dom7" }; // G7: G, B, D, F
       const pitches = getChordPitchClasses(chord);
-      expect(pitches).toEqual(new Set([7, 11, 2, 5])); // G, B, D, F
+      expect(pitches).toEqual([7, 11, 2, 5]); // G, B, D, F
     });
 
     it("returns pitch classes for a custom chord", () => {
       const chord: Chord = { root: 0, quality: "major", customNotes: [0, 4, 7] };
       const pitches = getChordPitchClasses(chord);
-      expect(pitches).toEqual(new Set([0, 4, 7]));
+      expect(pitches).toEqual([0, 4, 7]);
     });
 
     it("handles pitch classes that wrap around the octave", () => {
       const chord: Chord = { root: 11, quality: "major" }; // B major: B, D#, F#
       const pitches = getChordPitchClasses(chord);
-      expect(pitches).toEqual(new Set([11, 3, 6])); // B, D#, F# (11, 11+4=15%12=3, 11+7=18%12=6)
+      expect(pitches).toEqual([11, 3, 6]); // B, D#, F# (11, 11+4=15%12=3, 11+7=18%12=6)
     });
   });
 

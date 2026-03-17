@@ -1,6 +1,6 @@
 import { Midi } from "@tonejs/midi";
 import type { Chord } from "@/features/current-chord/types";
-import { getChordNoteIndices } from "@/features/chord/utils/transpose";
+import { getChordPitchClasses } from "@/features/chord/utils";
 import { closeVoiceChord, minimalMotionVoicing } from "@/features/voice-leading";
 
 export interface MidiExportOptions {
@@ -67,10 +67,7 @@ export function buildMidiFile(
   let prevMidi: number[] = [];
 
   chords.forEach((chord, index) => {
-    const pitchClasses =
-      chord.customNotes && chord.customNotes.length > 0
-        ? chord.customNotes
-        : getChordNoteIndices(chord.root, chord.quality);
+    const pitchClasses = getChordPitchClasses(chord);
 
     const midiNotes =
       index === 0
