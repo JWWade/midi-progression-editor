@@ -11,6 +11,7 @@ import { DEFAULT_AUDIO_PARAMS } from '../features/audio/constants/audioConfig';
 import { AppHeader } from './components/AppHeader';
 import type { ScaleType } from '../features/scale/types';
 import { useEnharmonic } from './providers/useEnharmonic';
+import { VisualLegend } from '../features/legend';
 import styles from './App.module.css';
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
   // Visualization toggles (lifted from ChromaticCircle)
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   const { pitchClasses } = useEnharmonic();
   const { chords, addChord, moveChord, deleteChord } = useProgression();
@@ -94,6 +96,8 @@ export default function App() {
         onCentroidChange={setShowCentroid}
         showIntervals={showIntervals}
         onIntervalsChange={setShowIntervals}
+        showLegend={showLegend}
+        onLegendChange={setShowLegend}
       />
       <div className={styles.primaryFlowContainer}>
         {/* Chromatic Circle - Left */}
@@ -110,6 +114,7 @@ export default function App() {
             showCentroid={showCentroid}
             showIntervals={showIntervals}
           />
+          {showLegend && <VisualLegend />}
         </section>
 
         {/* Current Chord Panel - Center */}

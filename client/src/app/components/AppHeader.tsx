@@ -7,6 +7,8 @@ interface AppHeaderProps {
   onCentroidChange: (show: boolean) => void;
   showIntervals: boolean;
   onIntervalsChange: (show: boolean) => void;
+  showLegend: boolean;
+  onLegendChange: (show: boolean) => void;
 }
 
 export function AppHeader({
@@ -14,6 +16,8 @@ export function AppHeader({
   onCentroidChange,
   showIntervals,
   onIntervalsChange,
+  showLegend,
+  onLegendChange,
 }: AppHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { useFlats, toggleEnharmonic } = useEnharmonic();
@@ -45,6 +49,19 @@ export function AppHeader({
             aria-label="Toggle intervals display"
           />
           Intervals
+        </label>
+
+        {/* Show Legend toggle */}
+        <label htmlFor="show-legend" className={styles.toggleLabel}>
+          <input
+            id="show-legend"
+            type="checkbox"
+            checked={showLegend}
+            onChange={(e) => onLegendChange(e.target.checked)}
+            className={styles.checkbox}
+            aria-label="Toggle visual legend"
+          />
+          Legend
         </label>
       </div>
 
