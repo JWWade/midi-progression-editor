@@ -14,12 +14,15 @@ import { useEnharmonic } from './providers/useEnharmonic';
 import { VisualLegend } from '../features/legend';
 import styles from './App.module.css';
 
+/** Default chord duration used for progression playback (milliseconds). */
+const DEFAULT_CHORD_DURATION_MS = 1200;
+
 export default function App() {
   const [currentChord, setCurrentChord] = useState<Chord | null>(null);
   const [keyRoot, setKeyRoot] = useState<number>(0);
   const [keyScale, setKeyScale] = useState<ScaleType>("major");
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
-  const [chordDurationMs, setChordDurationMs] = useState(1200);
+  const [chordDurationMs, setChordDurationMs] = useState(DEFAULT_CHORD_DURATION_MS);
 
   // Visualization toggles (lifted from ChromaticCircle)
   const [showCentroid, setShowCentroid] = useState(false);

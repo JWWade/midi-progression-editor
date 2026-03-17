@@ -6,6 +6,7 @@ import {
   NODE_RADIUS,
   NODE_STROKE_WIDTH,
   NOTE_FONT_FAMILY,
+  DRAG_TARGET_STROKE,
 } from "../constants/visualConstants";
 
 interface NoteNodeProps {
@@ -97,7 +98,7 @@ export function NoteNode({
           cy={y}
           r={NODE_RADIUS + 8}
           fill="none"
-          stroke="#10b981"
+          stroke={DRAG_TARGET_STROKE}
           strokeWidth={3}
           opacity={0.8}
           pointerEvents="none"
