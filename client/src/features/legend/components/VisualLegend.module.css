@@ -28,59 +28,127 @@
   color: var(--color-text-secondary);
 }
 
-/* ── Color list (quality swatches in a wrapping grid) ─────────────────────── */
-.colorList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* ── Top two-column layout (Quality Spectrum + Opacity Gradient) ──────────── */
+.topRow {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 10px;
+  gap: 12px;
+  margin-bottom: 14px;
+  align-items: flex-start;
 }
 
-.colorItem {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+/* ── Quality Spectrum Column ──────────────────────────────────────────────── */
+.spectrumSection {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.colorSwatch {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.colorLabel {
-  font-size: 11.5px;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-}
-
-/* ── Shape list ───────────────────────────────────────────────────────────── */
-.shapeList {
+.spectrumList {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 }
 
-.shapeItem {
+.spectrumItem {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.shapeLabel {
-  font-size: 11.5px;
-  color: var(--color-text-primary);
-  line-height: 1.4;
+/** Colored band that contains the micro-polygon glyph. */
+.spectrumBand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 22px;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
 
-/* ── Intensity list ───────────────────────────────────────────────────────── */
+.spectrumLabel {
+  font-size: 11.5px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+/* ── Opacity Gradient Column ──────────────────────────────────────────────── */
+.opacitySection {
+  flex: 0 0 auto;
+}
+
+.opacityStrip {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+/** Narrow vertical bar that fades from opaque to translucent. */
+.opacityBar {
+  width: 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  /* height is driven by sibling content via align-items: stretch */
+  min-height: 60px;
+}
+
+.opacityNodes {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.opacityNodeRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.opacityNodeLabel {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+/* ── Cardinality Stack ────────────────────────────────────────────────────── */
+.cardinalityRow {
+  display: flex;
+  gap: 16px;
+}
+
+.cardinalityItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cardinalityLabel {
+  font-size: 11.5px;
+  color: var(--color-text-primary);
+}
+
+/* ── Visual Keys (centroid + interval icons) ──────────────────────────────── */
+.iconRow {
+  display: flex;
+  gap: 20px;
+}
+
+.iconItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iconLabel {
+  font-size: 11.5px;
+  color: var(--color-text-primary);
+}
+
+/* ── Color Intensity list ─────────────────────────────────────────────────── */
 .intensityList {
   list-style: none;
   margin: 0;
@@ -126,27 +194,6 @@
 }
 
 .nodeLabel {
-  font-size: 11.5px;
-  color: var(--color-text-primary);
-}
-
-/* ── Opacity list ─────────────────────────────────────────────────────────── */
-.opacityList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.opacityItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.opacityLabel {
   font-size: 11.5px;
   color: var(--color-text-primary);
 }
