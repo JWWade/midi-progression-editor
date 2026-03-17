@@ -79,10 +79,12 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
       aria-label="Chord progression"
     >
       <div className={styles.header}>
-        <h2 className={styles.heading}>Progression</h2>
-        <span className={styles.count} aria-label={`${chords.length} of ${maxLength} chords`}>
-          {chords.length}/{maxLength}
-        </span>
+        <div className={styles.titleRow}>
+          <h2 className={styles.heading}>Progression</h2>
+          <span className={styles.count} aria-label={`${chords.length} of ${maxLength} chords`}>
+            {chords.length}/{maxLength}
+          </span>
+        </div>
         <div className={styles.controls}>
           <label className={styles.durationLabel} htmlFor="chord-duration-input">
             ms / chord
