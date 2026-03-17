@@ -9,6 +9,7 @@ import { useProgressionPlayback } from '../features/audio';
 import type { AudioParams } from '../features/audio/constants/audioConfig';
 import { DEFAULT_AUDIO_PARAMS } from '../features/audio/constants/audioConfig';
 import { AppHeader } from './components/AppHeader';
+import { AppErrorBoundary } from './components/AppErrorBoundary';
 import type { ScaleType } from '../features/scale/types';
 import { useEnharmonic } from './providers/useEnharmonic';
 import { VisualLegend } from '../features/legend';
@@ -85,6 +86,7 @@ export default function App() {
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 
   return (
+    <AppErrorBoundary>
     <div className={styles.layout}>
       <h1 className={styles.visuallyHidden}>MIDI Progression Editor</h1>
       <div
@@ -162,5 +164,6 @@ export default function App() {
         </section>
       </div>
     </div>
+    </AppErrorBoundary>
   );
 }
