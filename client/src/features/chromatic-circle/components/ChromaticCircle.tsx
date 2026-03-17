@@ -151,15 +151,21 @@ export function ChromaticCircle({
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
   const baseIntervals = CHORD_INTERVALS[chordType];
 
-  // During playback (externalChord != null), always render the transposed chord,
-  // not any previously-selected custom chord.
-  const chordNotes = !externalChord && customFromChord?.customNotes
-    ? customFromChord.customNotes.map((idx) => ({
+  // Prioritize custom notes if present (either from externalChord during playback
+  // or from stored state). Only transpose standard intervals as a fallback.
+  const chordNotes = externalChord?.customNotes
+    ? externalChord.customNotes.map((idx) => ({
         index: idx,
         name: pitchClasses[idx],
         role: "root" as const,
       }))
-    : transposeChord(baseIntervals, rootIndex, pitchClasses);
+    : !externalChord && customFromChord?.customNotes
+      ? customFromChord.customNotes.map((idx) => ({
+          index: idx,
+          name: pitchClasses[idx],
+          role: "root" as const,
+        }))
+      : transposeChord(baseIntervals, rootIndex, pitchClasses);
   const chordIndices = chordNotes.map((n) => n.index);
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
