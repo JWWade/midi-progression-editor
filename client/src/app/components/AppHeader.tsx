@@ -68,10 +68,10 @@ export function AppHeader({
           type="button"
           className={styles.themeToggle}
           onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'retro' : 'light'} mode`}
+          title={`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'retro' : 'light'} mode`}
         >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+          {theme === 'light' ? '🌙 Dark' : theme === 'dark' ? '💾 Retro' : '☀️ Light'}
         </button>
 
         {/* Enharmonic toggle */}

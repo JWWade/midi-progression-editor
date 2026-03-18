@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -126,4 +128,94 @@ button:focus-visible {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ── Retro / 90s internet theme ──────────────────────────────────────────── */
+[data-theme="retro"] {
+  color-scheme: light;
+  font-family: "VT323", "Courier New", "Lucida Console", monospace;
+  color: #000000;
+  background-color: #008080;
+
+  --color-bg-page: #008080;
+  --color-bg-surface: #c0c0c0;
+  --color-bg-header: #000080;
+  --color-bg-sidebar: #c0c0c0;
+  --color-border: #808080;
+  --color-border-subtle: rgba(0, 0, 0, 0.3);
+  --color-text-primary: #000000;
+  --color-text-secondary: #000080;
+  --color-text-muted: #404040;
+  --color-disabled-bg: #a0a0a0;
+  --color-disabled-text: #606060;
+  --color-tile-bg: rgba(255, 255, 255, 0.4);
+  --color-tile-bg-hover: rgba(0, 0, 128, 0.15);
+  --color-tile-name: #000000;
+  --color-control-btn: #000000;
+  --color-control-btn-hover-bg: #000080;
+  --color-control-btn-hover: #ffffff;
+  --color-delete-btn: #cc0000;
+  --color-delete-btn-hover-bg: rgba(204, 0, 0, 0.15);
+  --color-delete-btn-hover: #990000;
+  --color-scrollbar: #808080;
+}
+
+/* ── Retro: Windows 95 title-bar header ────────────────────────────────── */
+[data-theme="retro"] header {
+  background: linear-gradient(to right, #000080, #1084d0);
+  border-bottom: 2px solid #000000;
+}
+
+[data-theme="retro"] header label,
+[data-theme="retro"] header span {
+  color: #ffffff;
+  font-family: "VT323", "Courier New", monospace;
+  font-size: 16px;
+}
+
+[data-theme="retro"] header input[type="checkbox"] {
+  accent-color: #ffff00;
+}
+
+/* ── Retro: Windows 95 raised-button style ─────────────────────────────── */
+[data-theme="retro"] button {
+  font-family: "VT323", "Courier New", monospace;
+  font-size: 15px;
+  border-radius: 0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  background-color: #c0c0c0;
+  color: #000000;
+  box-shadow: 1px 1px 0 #000000;
+  transition: none;
+  text-rendering: auto;
+  padding: 0.3em 0.9em;
+}
+
+[data-theme="retro"] button:hover {
+  background-color: #d0d0d0;
+}
+
+[data-theme="retro"] button:active {
+  border-color: #808080 #dfdfdf #dfdfdf #808080;
+  box-shadow: none;
+  transform: translate(1px, 1px);
+}
+
+[data-theme="retro"] button:focus-visible {
+  outline: 2px dotted #000000;
+  outline-offset: 1px;
+}
+
+/* ── Retro: Windows 95 inset panel borders ──────────────────────────────── */
+[data-theme="retro"] section[role="region"] {
+  border-radius: 0;
+  border: 2px solid;
+  border-color: #808080 #dfdfdf #dfdfdf #808080;
+  box-shadow: inset 1px 1px 0 #000000;
+}
+
+/* ── Retro: teal desktop background ────────────────────────────────────── */
+[data-theme="retro"] body {
+  background-color: #008080;
 }
