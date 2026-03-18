@@ -235,3 +235,39 @@
   color: var(--color-text-muted);
   text-align: center;
 }
+
+/* ── Retro theme overrides ───────────────────────────────────────────────── */
+[data-theme="retro"] .sidebar {
+  border-radius: 0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #404040 inset;
+}
+
+[data-theme="retro"] .header {
+  background-color: #000080;
+  border-bottom: 2px solid #ff00ff;
+}
+
+[data-theme="retro"] .heading {
+  color: #ffffff;
+  text-shadow: 0 0 8px #00ffff;
+}
+
+[data-theme="retro"] .count {
+  color: #ffff00;
+}
+
+[data-theme="retro"] .emptyMessage {
+  color: #ffff00;
+  text-shadow: 0 0 8px #ffff00;
+}
+
+[data-theme="retro"] .emptyIcon {
+  opacity: 0.8;
+  filter: drop-shadow(0 0 8px #ff00ff);
+}
+
+[data-theme="retro"] .resetNote {
+  color: #ff69b4;
+}

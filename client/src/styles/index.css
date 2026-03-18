@@ -114,6 +114,125 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* ── Retro / 90s internet theme ──────────────────────────────────────────── */
+[data-theme="retro"] {
+  color-scheme: dark;
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  color: #00ffff;
+  background-color: #000066;
+
+  --color-bg-page: #000033;
+  --color-bg-surface: #0a0a4a;
+  --color-bg-header: #000080;
+  --color-bg-sidebar: #0d0044;
+  --color-border: #ff00ff;
+  --color-border-subtle: rgba(255, 0, 255, 0.5);
+  --color-text-primary: #00ffff;
+  --color-text-secondary: #ffff00;
+  --color-text-muted: #ff69b4;
+  --color-disabled-bg: #222266;
+  --color-disabled-text: #6666aa;
+  --color-tile-bg: rgba(0, 255, 255, 0.06);
+  --color-tile-bg-hover: rgba(255, 0, 255, 0.18);
+  --color-tile-name: #00ffff;
+  --color-control-btn: #ffff00;
+  --color-control-btn-hover-bg: rgba(255, 255, 0, 0.18);
+  --color-control-btn-hover: #ffffff;
+  --color-delete-btn: #ff5555;
+  --color-delete-btn-hover-bg: rgba(255, 85, 85, 0.25);
+  --color-delete-btn-hover: #ff9999;
+  --color-scrollbar: rgba(255, 0, 255, 0.6);
+}
+
+/* ── Retro: starfield page background ───────────────────────────────────── */
+[data-theme="retro"] body {
+  background-color: #000033;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+  background-size: 120px 120px, 73px 73px;
+  background-position: 0 0, 43px 57px;
+}
+
+/* ── Retro: inherit Comic Sans everywhere ────────────────────────────────── */
+[data-theme="retro"],
+[data-theme="retro"] * {
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+}
+
+/* ── Retro: neon glow on primary text ────────────────────────────────────── */
+[data-theme="retro"] h1,
+[data-theme="retro"] h2,
+[data-theme="retro"] h3 {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+}
+
+/* ── Retro: Windows 95 raised button bevel ───────────────────────────────── */
+[data-theme="retro"] button {
+  border-radius: 0 !important;
+  border: 2px solid !important;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf !important;
+  background-color: #c0c0c0 !important;
+  color: #000000 !important;
+  box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #404040 inset !important;
+  transition: none !important;
+}
+
+[data-theme="retro"] button:hover:not(:disabled) {
+  background-color: #d4d4d4 !important;
+}
+
+[data-theme="retro"] button:active:not(:disabled) {
+  border-color: #808080 #dfdfdf #dfdfdf #808080 !important;
+  box-shadow: -1px -1px 0 #ffffff inset, 1px 1px 0 #404040 inset !important;
+}
+
+[data-theme="retro"] button:disabled {
+  background-color: #c0c0c0 !important;
+  color: #808080 !important;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf !important;
+  box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #404040 inset !important;
+}
+
+/* ── Retro: scrollbar styling ────────────────────────────────────────────── */
+[data-theme="retro"] ::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+  background-color: #c0c0c0;
+}
+
+[data-theme="retro"] ::-webkit-scrollbar-track {
+  background-color: #c0c0c0;
+  border: 1px solid #808080;
+}
+
+[data-theme="retro"] ::-webkit-scrollbar-thumb {
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  box-shadow: 1px 1px 0 #ffffff inset;
+}
+
+[data-theme="retro"] ::-webkit-scrollbar-button {
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  box-shadow: 1px 1px 0 #ffffff inset;
+  display: block;
+  height: 16px;
+}
+
+/* ── Retro: input / text field ───────────────────────────────────────────── */
+[data-theme="retro"] input[type="number"],
+[data-theme="retro"] input[type="text"] {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid;
+  border-color: #808080 #dfdfdf #dfdfdf #808080;
+  border-radius: 0;
+  box-shadow: -1px -1px 0 #404040 inset, 1px 1px 0 #ffffff inset;
+}
+
 /* ── Globally shared accessibility utility ───────────────────────────────── */
 /* Visually hides content while keeping it accessible to screen readers. */
 .sr-only {

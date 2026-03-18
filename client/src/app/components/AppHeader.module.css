@@ -157,3 +157,21 @@
     font-size: 12px;
   }
 }
+
+/* ── Retro theme: Windows 95 title-bar header ────────────────────────────── */
+[data-theme="retro"] .header {
+  background-color: var(--color-bg-header);
+  border-bottom: 2px solid;
+  border-color: #dfdfdf #404040 #404040 #dfdfdf;
+  box-shadow: 0 2px 0 #808080;
+}
+
+[data-theme="retro"] .toggleLabel {
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #000080;
+}
+
+[data-theme="retro"] .checkbox {
+  accent-color: #00ffff;
+  border: 2px solid #808080;
+}
