@@ -63,15 +63,27 @@ export function AppHeader({
       </div>
 
       <div className={styles.rightControls}>
-        {/* Theme toggle */}
+        {/* Theme toggle (cycles light → dark → retro → light) */}
         <button
           type="button"
           className={styles.themeToggle}
           onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          aria-label={
+            theme === 'light'
+              ? 'Switch to dark mode'
+              : theme === 'dark'
+              ? 'Switch to retro mode'
+              : 'Switch to light mode'
+          }
+          title={
+            theme === 'light'
+              ? 'Switch to dark mode'
+              : theme === 'dark'
+              ? 'Switch to retro mode'
+              : 'Switch to light mode'
+          }
         >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+          {theme === 'light' ? '🌙 Dark' : theme === 'dark' ? '💾 Retro' : '☀️ Light'}
         </button>
 
         {/* Enharmonic toggle */}

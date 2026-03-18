@@ -141,3 +141,19 @@
   }
 }
 
+/* ── Retro theme: Windows 95 raised panel borders ────────────────────────── */
+[data-theme="retro"] .circleArea,
+[data-theme="retro"] .panelArea,
+[data-theme="retro"] .sidebarArea {
+  border-radius: 0;
+  border: 2px solid;
+  border-color: #dfdfdf #404040 #404040 #dfdfdf;
+  box-shadow: 2px 2px 0 #808080, -1px -1px 0 #ffffff;
+  background-color: var(--color-bg-surface);
+}
+
+[data-theme="retro"] .primaryFlowContainer {
+  background-color: var(--color-bg-page);
+  gap: 16px;
+}
+

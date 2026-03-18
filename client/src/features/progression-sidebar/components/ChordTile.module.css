@@ -145,3 +145,26 @@
   outline: 2px solid var(--accent-color, #4f46e5);
   outline-offset: 2px;
 }
+
+/* ── Retro theme overrides ───────────────────────────────────────────────── */
+[data-theme="retro"] .tile {
+  border-radius: 0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  border-left: 4px solid #ff00ff;
+  box-shadow: 1px 1px 0 #ffffff inset;
+  background-color: #0a0a4a;
+}
+
+[data-theme="retro"] .tile:hover {
+  background-color: rgba(255, 0, 255, 0.15);
+}
+
+[data-theme="retro"] .chordName {
+  color: #00ffff;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+}
+
+[data-theme="retro"] .chordNotes {
+  color: #ffff00;
+}
