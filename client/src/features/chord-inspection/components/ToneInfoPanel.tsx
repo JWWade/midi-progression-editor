@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import type { ToneInfo } from "../types/tone-info";
 
 interface ToneInfoPanelProps {
@@ -58,18 +59,38 @@ const VALUE_STYLE: React.CSSProperties = {
   fontWeight: "500",
 };
 
-const CHORD_TAG_STYLE: React.CSSProperties = {
-  display: "inline-block",
+const COPY_BUTTON_STYLE: React.CSSProperties = {
+  background: "none",
+  border: "none",
+  padding: "0",
+  cursor: "pointer",
+  fontSize: "inherit",
+  fontWeight: "inherit",
+  color: "inherit",
+  fontFamily: "inherit",
+  textDecoration: "underline dotted",
+};
+
+const COPIED_LABEL_STYLE: React.CSSProperties = {
   fontSize: "11px",
-  padding: "1px 6px",
-  borderRadius: "4px",
-  backgroundColor: "var(--color-tile-bg)",
-  color: "var(--color-text-primary)",
-  marginBottom: "10px",
-  fontWeight: "600",
+  color: "var(--color-text-secondary)",
+  marginLeft: "4px",
 };
 
 export function ToneInfoPanel({ selectedTone, onClose }: ToneInfoPanelProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyFrequency = useCallback(() => {
+    if (selectedTone === null) return;
+    navigator.clipboard.writeText(selectedTone.frequency.toFixed(2)).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      },
+      () => { /* clipboard write failed silently */ },
+    );
+  }, [selectedTone]);
+
   if (selectedTone === null) return null;
 
   return (
@@ -86,17 +107,30 @@ export function ToneInfoPanel({ selectedTone, onClose }: ToneInfoPanelProps) {
           </button>
         )}
       </div>
-      <span style={CHORD_TAG_STYLE}>{selectedTone.chordLabel}</span>
-      <p style={LABEL_STYLE}>Role</p>
-      <p style={VALUE_STYLE}>{selectedTone.role}</p>
-      <p style={LABEL_STYLE}>Interval from root</p>
-      <p style={VALUE_STYLE}>
-        {selectedTone.interval === 0
-          ? "0 semitones (unison)"
-          : `+${selectedTone.interval} semitones`}
-      </p>
+      {selectedTone.enharmonicEquivalent !== undefined && (
+        <>
+          <p style={LABEL_STYLE}>Enharmonic Equivalent</p>
+          <p style={VALUE_STYLE}>{selectedTone.enharmonicEquivalent}</p>
+        </>
+      )}
+      {selectedTone.scaleDegree !== undefined && (
+        <>
+          <p style={LABEL_STYLE}>Scale Degree</p>
+          <p style={VALUE_STYLE}>{selectedTone.scaleDegree}</p>
+        </>
+      )}
       <p style={LABEL_STYLE}>Frequency</p>
-      <p style={VALUE_STYLE}>{selectedTone.frequency.toFixed(2)} Hz</p>
+      <p style={VALUE_STYLE}>
+        <button
+          style={COPY_BUTTON_STYLE}
+          onClick={handleCopyFrequency}
+          aria-label="Copy frequency value"
+          title="Click to copy"
+        >
+          {selectedTone.frequency.toFixed(2)}
+        </button>
+        {" "}Hz{copied && <span style={COPIED_LABEL_STYLE}>Copied!</span>}
+      </p>
     </div>
   );
 }
