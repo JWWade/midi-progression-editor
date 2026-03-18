@@ -6,4 +6,6 @@ export interface EnharmonicContextValue {
   toggleEnharmonic: () => void;
 }
 
-export const EnharmonicContext = createContext<EnharmonicContextValue | null>(null);
+export const MISSING_ENHARMONIC_PROVIDER = {} as EnharmonicContextValue;
+
+export const EnharmonicContext = createContext<EnharmonicContextValue>(MISSING_ENHARMONIC_PROVIDER);

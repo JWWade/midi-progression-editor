@@ -1,9 +1,11 @@
 import { useContext } from "react";
-import { ThemeContext } from "./ThemeContext";
+import { ThemeContext, MISSING_THEME_PROVIDER } from "./ThemeContext";
 import type { ThemeContextValue } from "./ThemeContext";
 
 export function useTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
+  if (ctx === MISSING_THEME_PROVIDER) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
   return ctx;
 }
