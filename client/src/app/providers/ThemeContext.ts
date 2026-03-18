@@ -7,4 +7,6 @@ export interface ThemeContextValue {
   toggleTheme: () => void;
 }
 
-export const ThemeContext = createContext<ThemeContextValue | null>(null);
+export const MISSING_THEME_PROVIDER = {} as ThemeContextValue;
+
+export const ThemeContext = createContext<ThemeContextValue>(MISSING_THEME_PROVIDER);
