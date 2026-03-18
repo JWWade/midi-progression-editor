@@ -21,7 +21,7 @@ midi-progression-editor/
     ├── ParametricMusic.Api/       # ASP.NET Core (.NET 10) Web API
     │   ├── Controllers/           # HealthController, ChordController, ScaleController, ProgressionController
     │   ├── Models/                # DTOs and enums
-    │   ├── Services/              # ChordGenerator, ScaleGenerator, ProgressionAnalyzer
+    │   ├── Services/              # ChordGenerator, ScaleGenerator, ProgressionAnalyzer, QuartalChordGenerator
     │   └── Program.cs
     └── ParametricMusic.Tests/     # xUnit test suite
 ```
@@ -151,6 +151,7 @@ The frontend follows a **feature-based architecture**. Each module under `client
 | `chromatic-circle` | Main 12-note SVG circle visualisation |
 | `color-language` | Quality-based color system (chord colors, harmony opacity) |
 | `current-chord` | Current-chord info panel |
+| `legend` | Visual legend (chord quality colour bands with polygon glyphs, note opacity levels) |
 | `midi-export` | MIDI file export (BPM, beats/chord) |
 | `progression-sidebar` | Chord progression sidebar (max 8 chords, session-only) |
 | `scale` | Scale generation & display (8 modes) |
@@ -158,7 +159,7 @@ The frontend follows a **feature-based architecture**. Each module under `client
 
 ## Domain Knowledge
 
-- **Chord types** (`ChordType`): `"major" | "minor" | "dim" | "aug" | "maj7" | "min7" | "dom7" | "halfdim7"`.
+- **Chord types** (`ChordType`): `"major" | "minor" | "dim" | "aug" | "maj7" | "min7" | "dom7" | "halfdim7" | "quartal"`.
 - **Pitch classes**: Integers 0–11 (C=0 … B=11). The chromatic circle has 12 nodes at 30° intervals.
 - **Scale modes** (8 supported): Major, Natural Minor, Harmonic Minor, Melodic Minor, Dorian, Phrygian, Lydian, Mixolydian.
 - **Chord shapes**: Triads → triangle, seventh chords → quadrilateral (see `CHORD_SHAPES` in `chord-geometry/utils/`).

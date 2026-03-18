@@ -144,6 +144,9 @@ client/
 │   │   │   ├── types/                   # Panel types
 │   │   │   └── utils/                   # Thumbnail geometry helpers
 │   │   │
+│   │   ├── legend/                       # Visual legend for chord quality colours and note opacity
+│   │   │   └── components/              # VisualLegend component
+│   │   │
 │   │   ├── progression-sidebar/          # Chord progression sidebar
 │   │   │   ├── components/              # ProgressionSidebar, chord tile components
 │   │   │   ├── constants/               # MAX_PROGRESSION_LENGTH (8), etc.
@@ -263,7 +266,8 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 - ✅ **Dark/Light Theme**: Persistent theme toggle stored in `localStorage`; applied via `data-theme` attribute on `<html>`
 - ✅ **MIDI Export**: Export current chord progression as a standard MIDI file (`.mid`); configurable BPM (40–240) and beats-per-chord (1, 2, 4)
 - ✅ **Enharmonic Toggle**: Global sharp/flat notation switch via `EnharmonicProvider`; `useEnharmonic()` exposes `useFlats`, `pitchClasses`, and `toggleEnharmonic`
-- ✅ **Structure**: Feature-based architecture across 14 modules
+- ✅ **Visual Legend**: `VisualLegend` component displays chord quality colour bands (with polygon glyphs) and note opacity levels (diatonic, chord-tone chromatic, chromatic)
+- ✅ **Structure**: Feature-based architecture across 15 modules
 
 ---
 
@@ -853,4 +857,4 @@ dotnet test
 
 ---
 
-**Last Updated**: March 16, 2026
+**Last Updated**: March 18, 2026
