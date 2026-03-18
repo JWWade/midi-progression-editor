@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint . --max-warnings=0",
     "preview": "vite preview",
     "generate:api": "echo 'Generating types and client from OpenAPI spec (http://localhost:5110/swagger/v1/swagger.json)...' && openapi-typescript http://localhost:5110/swagger/v1/swagger.json --output src/api/generated/index.ts && echo 'API client generated successfully'"
@@ -24,6 +26,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^10.0.3",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
