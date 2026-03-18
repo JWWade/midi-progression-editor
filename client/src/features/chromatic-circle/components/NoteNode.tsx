@@ -55,8 +55,8 @@ export function NoteNode({
     <g
       role="button"
       tabIndex={0}
-      aria-label={label}
-      aria-pressed={isInFromChord && isSelected}
+      aria-label={isInFromChord ? `${label}, chord tone` : label}
+      aria-pressed={isSelected}
       style={{ cursor: isInFromChord ? "grab" : "pointer" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

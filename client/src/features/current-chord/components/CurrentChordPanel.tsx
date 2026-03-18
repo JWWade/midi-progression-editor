@@ -213,6 +213,14 @@ export function CurrentChordPanel({
               {copied ? '✓' : '⎘'}
             </button>
           </div>
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="sr-only"
+          >
+            {copied ? 'Notes copied to clipboard' : ''}
+          </div>
         </>
       )}
       <button

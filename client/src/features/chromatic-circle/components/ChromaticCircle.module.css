@@ -12,3 +12,10 @@
   animation: playbackPulse 1.5s ease-in-out infinite;
   pointer-events: none;
 }
+
+/* Focus ring for interactive note nodes inside the SVG */
+.chromaticSvg g[role="button"]:focus-visible {
+  outline: 3px solid var(--color-text-primary, #1f2937);
+  outline-offset: 3px;
+  border-radius: 50%;
+}

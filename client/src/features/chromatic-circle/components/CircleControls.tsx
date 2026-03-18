@@ -183,6 +183,7 @@ export function CircleControls({
               onClick={() => onSelectShape("equilateral-triangle")}
               title="Select equilateral triangle primitive"
               aria-label="Select equilateral triangle primitive"
+              aria-pressed={activeShape === "equilateral-triangle"}
               style={getShapeButtonStyle(activeShape === "equilateral-triangle")}
             >
               <TemplateShapeIcon
@@ -197,6 +198,7 @@ export function CircleControls({
               onClick={() => onSelectShape("suspended-triangle")}
               title="Select sus4 triangle primitive"
               aria-label="Select sus4 triangle primitive"
+              aria-pressed={activeShape === "suspended-triangle"}
               style={getShapeButtonStyle(activeShape === "suspended-triangle")}
             >
               <TemplateShapeIcon
@@ -211,6 +213,7 @@ export function CircleControls({
               onClick={() => onSelectShape("square")}
               title="Select square primitive"
               aria-label="Select square primitive"
+              aria-pressed={activeShape === "square"}
               style={getShapeButtonStyle(activeShape === "square")}
             >
               <TemplateShapeIcon
@@ -225,6 +228,7 @@ export function CircleControls({
               onClick={() => onSelectShape("rectangle")}
               title="Select rectangle primitive"
               aria-label="Select rectangle primitive"
+              aria-pressed={activeShape === "rectangle"}
               style={getShapeButtonStyle(activeShape === "rectangle")}
             >
               <TemplateShapeIcon
