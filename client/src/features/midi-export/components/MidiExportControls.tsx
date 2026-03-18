@@ -68,6 +68,7 @@ export function MidiExportControls({ chords, disabled }: MidiExportControlsProps
         onClick={exportMidi}
         disabled={disabled}
         aria-disabled={disabled}
+        aria-label={disabled ? "Export as MIDI file (add chords first)" : "Export progression as MIDI file"}
         title={disabled ? "Add chords to export" : "Export as MIDI file"}
       >
         Export .mid

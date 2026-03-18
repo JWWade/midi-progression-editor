@@ -221,6 +221,7 @@ export function ChromaticCircle({
       >
         <svg
           viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
+          className={styles.chromaticSvg}
           aria-label="Chromatic Circle"
           onClick={deselectTone}
           style={{

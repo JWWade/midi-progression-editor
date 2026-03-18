@@ -33,7 +33,6 @@ export function AppHeader({
             checked={showCentroid}
             onChange={(e) => onCentroidChange(e.target.checked)}
             className={styles.checkbox}
-            aria-label="Toggle centroid display"
           />
           Centroid
         </label>
@@ -46,7 +45,6 @@ export function AppHeader({
             checked={showIntervals}
             onChange={(e) => onIntervalsChange(e.target.checked)}
             className={styles.checkbox}
-            aria-label="Toggle intervals display"
           />
           Intervals
         </label>
@@ -59,7 +57,6 @@ export function AppHeader({
             checked={showLegend}
             onChange={(e) => onLegendChange(e.target.checked)}
             className={styles.checkbox}
-            aria-label="Toggle visual legend"
           />
           Legend
         </label>

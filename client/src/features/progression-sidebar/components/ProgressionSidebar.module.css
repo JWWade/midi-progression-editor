@@ -1,6 +1,5 @@
 /* ── Sidebar container ──────────────────────────────────────────────────── */
-.sidebar {
-  display: flex;
+.sidebar {  display: flex;
   flex-direction: column;
   flex: 1;
   min-width: 240px;

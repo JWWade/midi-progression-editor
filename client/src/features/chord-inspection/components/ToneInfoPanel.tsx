@@ -7,6 +7,7 @@ interface ToneInfoPanelProps {
 }
 
 const PANEL_STYLE: React.CSSProperties = {
+  position: "relative",
   marginTop: "12px",
   width: "100%",
   maxWidth: "320px",
@@ -129,8 +130,16 @@ export function ToneInfoPanel({ selectedTone, onClose }: ToneInfoPanelProps) {
         >
           {selectedTone.frequency.toFixed(2)}
         </button>
-        {" "}Hz{copied && <span style={COPIED_LABEL_STYLE}>Copied!</span>}
+        {" "}Hz{copied && <span style={COPIED_LABEL_STYLE} aria-hidden="true">Copied!</span>}
       </p>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {copied ? "Frequency copied to clipboard" : ""}
+      </div>
     </div>
   );
 }

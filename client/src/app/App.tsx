@@ -88,6 +88,11 @@ export default function App() {
   return (
     <AppErrorBoundary>
     <div className={styles.layout}>
+      <nav className={styles.skipNav} aria-label="Skip navigation">
+        <a href="#chromatic-circle" className={styles.skipLink}>Skip to circle</a>
+        <a href="#current-chord" className={styles.skipLink}>Skip to chord panel</a>
+        <a href="#chord-progression" className={styles.skipLink}>Skip to progression</a>
+      </nav>
       <h1 className={styles.visuallyHidden}>MIDI Progression Editor</h1>
       <div
         className={styles.visuallyHidden}
@@ -107,6 +112,7 @@ export default function App() {
       <div className={styles.primaryFlowContainer}>
         {/* Chromatic Circle - Left */}
         <section
+          id="chromatic-circle"
           className={styles.circleArea}
           role="region"
           aria-label="Chromatic Circle - Select and inspect the current chord"
@@ -124,6 +130,7 @@ export default function App() {
 
         {/* Current Chord Panel - Center */}
         <section
+          id="current-chord"
           className={styles.panelArea}
           role="region"
           aria-label="Current Chord - Add to progression"
@@ -142,6 +149,7 @@ export default function App() {
 
         {/* Progression Sidebar - Right */}
         <section
+          id="chord-progression"
           className={styles.sidebarArea}
           role="region"
           aria-label="Chord Progression - View and manage added chords"
