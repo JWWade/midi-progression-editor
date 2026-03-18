@@ -199,11 +199,8 @@ export function CurrentChordPanel({
               className={styles.noteNames}
               aria-label={`Chord notes: ${noteNames}`}
             >
-              {noteIndices.map((i, idx) => (
-                <span key={i}>
-                  {idx > 0 && <span className={styles.noteSeparator}>·</span>}
-                  {pitchClasses[i]}
-                </span>
+              {noteIndices.map((i) => (
+                <span key={i}>{pitchClasses[i]}</span>
               ))}
             </span>
             <button
