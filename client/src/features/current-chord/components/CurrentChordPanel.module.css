@@ -247,7 +247,7 @@
 }
 
 [data-theme="dark"] .sectionLabel {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 [data-theme="dark"] .chordName {
@@ -268,6 +268,53 @@
 
 [data-theme="dark"] .root {
   color: var(--chord-quality-base, #f59e0b);
+}
+
+[data-theme="dark"] .noteNames {
+  color: var(--chord-quality-base, #818cf8);
+}
+
+[data-theme="dark"] .noteSeparator {
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .playButton {
+  border-color: var(--chord-quality-base, #818cf8);
+  color: var(--chord-quality-base, #818cf8);
+}
+
+[data-theme="dark"] .playButton:hover:not(:disabled) {
+  background-color: var(--chord-quality-base, #818cf8);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .playButton:focus-visible {
+  outline-color: var(--chord-quality-base, #818cf8);
+}
+
+[data-theme="dark"] .playButtonActive {
+  background-color: var(--chord-quality-base, #818cf8);
+  border-color: var(--chord-quality-base, #818cf8);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .copyIconButton {
+  border-color: var(--chord-quality-base, #818cf8);
+  color: var(--chord-quality-base, #818cf8);
+}
+
+[data-theme="dark"] .copyIconButton:hover:not(:disabled) {
+  background-color: var(--chord-quality-base, #818cf8);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .copyIconButton:focus-visible {
+  outline-color: var(--chord-quality-base, #818cf8);
+}
+
+[data-theme="dark"] .addButtonDisabled {
+  background-color: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
 }
 
 /* ── Retro theme overrides ───────────────────────────────────────────────── */

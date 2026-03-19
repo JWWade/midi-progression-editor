@@ -94,3 +94,43 @@
 .toggleButton button:hover {
   background-color: #efefef;
 }
+
+/* ── Dark theme overrides ────────────────────────────────────────────────── */
+[data-theme="dark"] .container {
+  background-color: var(--color-bg-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .header {
+  border-bottom-color: var(--color-border);
+}
+
+[data-theme="dark"] .header button {
+  color: var(--color-control-btn);
+}
+
+[data-theme="dark"] .header button:hover {
+  color: var(--color-control-btn-hover);
+}
+
+[data-theme="dark"] .control label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .control input[type="range"],
+[data-theme="dark"] .control select {
+  border-color: var(--color-border);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .toggleButton button {
+  background-color: var(--color-bg-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .toggleButton button:hover {
+  background-color: var(--color-tile-bg-hover);
+}
