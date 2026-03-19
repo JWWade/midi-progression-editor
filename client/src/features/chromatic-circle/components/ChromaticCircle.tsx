@@ -107,6 +107,7 @@ export function ChromaticCircle({
     handleMirrorChord,
     handleSelectPrimitiveShape,
     handleRandomChord,
+    handleMutateChord,
   } = useChordState({
     onCurrentChordChange,
     onKeyScaleChange,
@@ -399,6 +400,7 @@ export function ChromaticCircle({
       <CircleControls
         onRotate={handleRotateChord}
         onMirror={handleMirrorChord}
+        onMutate={handleMutateChord}
         onSelectShape={handleSelectPrimitiveShape}
         onRandomChord={handleRandomChord}
         selectedChordName={selectedChordName}
