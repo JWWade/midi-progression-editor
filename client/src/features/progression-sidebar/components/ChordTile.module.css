@@ -26,12 +26,32 @@
 }
 
 /* ── Chord name label ────────────────────────────────────────────────────── */
-.chordName {
+.chordInfo {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.chordName {
+  flex-shrink: 0;
   font-size: 14px;
   font-weight: 600;
   color: var(--color-tile-name);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.chordNotes {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -124,4 +144,27 @@
 .tile:focus-visible {
   outline: 2px solid var(--accent-color, #4f46e5);
   outline-offset: 2px;
+}
+
+/* ── Retro theme overrides ───────────────────────────────────────────────── */
+[data-theme="retro"] .tile {
+  border-radius: 0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  border-left: 4px solid #ff00ff;
+  box-shadow: 1px 1px 0 #ffffff inset;
+  background-color: #0a0a4a;
+}
+
+[data-theme="retro"] .tile:hover {
+  background-color: rgba(255, 0, 255, 0.15);
+}
+
+[data-theme="retro"] .chordName {
+  color: #00ffff;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+}
+
+[data-theme="retro"] .chordNotes {
+  color: #ffff00;
 }

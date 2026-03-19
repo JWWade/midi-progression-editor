@@ -144,6 +144,9 @@
 }
 
 .noteNames {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 13px;
   font-weight: 600;
   color: var(--chord-quality-dark, #4f46e5);
@@ -265,4 +268,48 @@
 
 [data-theme="dark"] .root {
   color: var(--chord-quality-base, #f59e0b);
+}
+
+/* ── Retro theme overrides ───────────────────────────────────────────────── */
+[data-theme="retro"] .panel {
+  border-radius: 0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #404040 inset;
+  background-color: #0a0a4a;
+}
+
+[data-theme="retro"] .sectionLabel {
+  color: #ff69b4;
+  text-shadow: 0 0 6px #ff69b4;
+  letter-spacing: 0.2em;
+}
+
+[data-theme="retro"] .chordName {
+  color: #00ffff;
+  text-shadow: 0 0 12px #00ffff, 0 0 24px rgba(0, 255, 255, 0.4);
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+}
+
+[data-theme="retro"] .placeholder {
+  color: #ffff00;
+  text-shadow: 0 0 8px #ffff00;
+}
+
+[data-theme="retro"] .quality {
+  color: #ffff00;
+  text-shadow: 0 0 6px #ffff00;
+}
+
+[data-theme="retro"] .root {
+  color: #ff69b4;
+  text-shadow: 0 0 8px #ff69b4;
+}
+
+[data-theme="retro"] .fullMessage {
+  color: #ff69b4;
+}
+
+[data-theme="retro"] .noteSeparator {
+  color: #ff00ff;
 }

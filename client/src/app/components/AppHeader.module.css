@@ -40,48 +40,11 @@
   accent-color: #f59e0b;
 }
 
-/* ── Right-side controls (scale + theme) ────────────────────────────────── */
+/* ── Right-side controls (theme) ────────────────────────────────────────── */
 .rightControls {
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-/* ── Scale selector ────────────────────────────────────────────────────── */
-.scaleSelector {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.scaleLabel {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-}
-
-.select {
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: 2px solid #f59e0b;
-  color: #f59e0b;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: transparent;
-  transition: all 150ms ease-in-out;
-}
-
-.select:hover {
-  border-color: #d97706;
-  color: #d97706;
-}
-
-.select:focus {
-  outline: none;
-  border-color: #d97706;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 /* ── Theme toggle button ─────────────────────────────────────────────────── */
@@ -190,12 +153,25 @@
     font-size: 13px;
   }
 
-  .scaleLabel,
-  .select {
-    font-size: 13px;
-  }
-
   .themeToggle {
     font-size: 12px;
   }
+}
+
+/* ── Retro theme: Windows 95 title-bar header ────────────────────────────── */
+[data-theme="retro"] .header {
+  background-color: var(--color-bg-header);
+  border-bottom: 2px solid;
+  border-color: #dfdfdf #404040 #404040 #dfdfdf;
+  box-shadow: 0 2px 0 #808080;
+}
+
+[data-theme="retro"] .toggleLabel {
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #000080;
+}
+
+[data-theme="retro"] .checkbox {
+  accent-color: #00ffff;
+  border: 2px solid #808080;
 }

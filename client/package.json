@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint . --max-warnings=0",
     "preview": "vite preview",
     "generate:api": "echo 'Generating types and client from OpenAPI spec (http://localhost:5110/swagger/v1/swagger.json)...' && openapi-typescript http://localhost:5110/swagger/v1/swagger.json --output src/api/generated/index.ts && echo 'API client generated successfully'"
@@ -17,19 +19,23 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^10.0.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^9.39.4",
+    "@vitest/coverage-v8": "^4.1.0",
+    "eslint": "^10.0.3",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "jsdom": "^29.0.0",
     "openapi-fetch": "^0.17.0",
     "openapi-typescript": "^7.13.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.57.0",
+    "typescript-eslint": "^8.57.1",
     "vite": "^8.0.0",
     "vitest": "^4.1.0"
   }

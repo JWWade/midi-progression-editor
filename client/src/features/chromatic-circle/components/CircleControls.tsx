@@ -1,9 +1,11 @@
 import type { PrimitiveShape } from "@/features/current-chord";
 import { ChordGrid } from "@/features/chord/components/ChordGrid";
+import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import type { CustomChordState } from "../types";
 
 interface CircleControlsProps {
   onRotate: (direction: "clockwise" | "counterclockwise") => void;
+  onMirror: () => void;
   onSelectShape: (shape: PrimitiveShape) => void;
   onRandomChord: () => void;
   selectedChordName: string;
@@ -40,20 +42,45 @@ const ROTATE_ICON_STYLE: React.CSSProperties = {
   display: "inline-block",
 };
 
-function TriangleShapeIcon({ label, fontSize }: { label: string; fontSize: number }) {
-  return (
-    <svg width="22" height="20" viewBox="0 0 22 20" fill="none" aria-hidden="true">
-      <polygon points="11,1.5 20.5,18.5 1.5,18.5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-      <text x="11" y="16" textAnchor="middle" fill="currentColor" fontSize={fontSize} fontWeight="700" fontFamily="sans-serif">{label}</text>
-    </svg>
-  );
-}
+/**
+ * Renders a colored polygon (no glyph) mapped from pitch-class geometry on the
+ * chromatic circle. Pitch class 0 = 12 o'clock, angle increases clockwise.
+ */
+function TemplateShapeIcon({
+  pitchClasses,
+  color,
+  fillColor,
+  isSelected,
+}: {
+  pitchClasses: readonly number[];
+  color: string;
+  fillColor: string;
+  isSelected: boolean;
+}): React.ReactElement {
+  const size = 20;
+  const center = size / 2;
+  const r = 8;
 
-function SquareShapeIcon({ label, fontSize, labelY }: { label: string; fontSize: number; labelY: number }) {
+  // Compute polygon vertices: map each pitch class to a point on the circle.
+  const points = pitchClasses.map((pc) => {
+    const angle = (pc / 12) * 2 * Math.PI;
+    return {
+      x: center + r * Math.sin(angle),
+      y: center - r * Math.cos(angle),
+    };
+  });
+
+  const polygonPoints = points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="1.5" y="1.5" width="17" height="17" stroke="currentColor" strokeWidth="2" />
-      <text x="10" y={labelY} textAnchor="middle" fill="currentColor" fontSize={fontSize} fontWeight="700" fontFamily="sans-serif">{label}</text>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none" aria-hidden="true">
+      <polygon
+        points={polygonPoints}
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="miter"
+        fill={isSelected ? fillColor : "none"}
+      />
     </svg>
   );
 }
@@ -74,6 +101,7 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
  */
 export function CircleControls({
   onRotate,
+  onMirror,
   onSelectShape,
   onRandomChord,
   selectedChordName,
@@ -81,6 +109,30 @@ export function CircleControls({
   customFromChord,
 }: CircleControlsProps) {
   const activeShape = customFromChord?.primitiveShape;
+
+  // Pitch-class geometries and colors for each template
+  const templateIconProps = {
+    equilateralTriangle: {
+      pitchClasses: [0, 4, 8] as const,
+      color: ChordQualityColors.aug.base,
+      fillColor: ChordQualityColors.aug.fill,
+    },
+    suspendedTriangle: {
+      pitchClasses: [0, 4, 7] as const,
+      color: ChordQualityColors.major.base,
+      fillColor: ChordQualityColors.major.fill,
+    },
+    square: {
+      pitchClasses: [0, 3, 6, 9] as const,
+      color: ChordQualityColors.dim.base,
+      fillColor: ChordQualityColors.dim.fill,
+    },
+    rectangle: {
+      pitchClasses: [0, 4, 7, 10] as const,
+      color: ChordQualityColors.dom7.base,
+      fillColor: ChordQualityColors.dom7.fill,
+    },
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", marginTop: 12, alignItems: "center", gap: 10 }}>
@@ -98,6 +150,15 @@ export function CircleControls({
               style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
             >
               <span style={{ ...ROTATE_ICON_STYLE, transform: "rotate(-90deg)" }}>↺</span>
+            </button>
+            <button
+              type="button"
+              onClick={onMirror}
+              title="Mirror chord about root"
+              aria-label="Mirror chord about root"
+              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)", fontSize: 14 }}
+            >
+              ⇌
             </button>
             <button
               type="button"
@@ -122,36 +183,60 @@ export function CircleControls({
               onClick={() => onSelectShape("equilateral-triangle")}
               title="Select equilateral triangle primitive"
               aria-label="Select equilateral triangle primitive"
+              aria-pressed={activeShape === "equilateral-triangle"}
               style={getShapeButtonStyle(activeShape === "equilateral-triangle")}
             >
-              <TriangleShapeIcon label="a" fontSize={8} />
+              <TemplateShapeIcon
+                pitchClasses={templateIconProps.equilateralTriangle.pitchClasses}
+                color={templateIconProps.equilateralTriangle.color}
+                fillColor={templateIconProps.equilateralTriangle.fillColor}
+                isSelected={activeShape === "equilateral-triangle"}
+              />
             </button>
             <button
               type="button"
               onClick={() => onSelectShape("suspended-triangle")}
               title="Select sus4 triangle primitive"
               aria-label="Select sus4 triangle primitive"
+              aria-pressed={activeShape === "suspended-triangle"}
               style={getShapeButtonStyle(activeShape === "suspended-triangle")}
             >
-              <TriangleShapeIcon label="sus4" fontSize={5} />
+              <TemplateShapeIcon
+                pitchClasses={templateIconProps.suspendedTriangle.pitchClasses}
+                color={templateIconProps.suspendedTriangle.color}
+                fillColor={templateIconProps.suspendedTriangle.fillColor}
+                isSelected={activeShape === "suspended-triangle"}
+              />
             </button>
             <button
               type="button"
               onClick={() => onSelectShape("square")}
               title="Select square primitive"
               aria-label="Select square primitive"
+              aria-pressed={activeShape === "square"}
               style={getShapeButtonStyle(activeShape === "square")}
             >
-              <SquareShapeIcon label="dim" fontSize={6.5} labelY={13.5} />
+              <TemplateShapeIcon
+                pitchClasses={templateIconProps.square.pitchClasses}
+                color={templateIconProps.square.color}
+                fillColor={templateIconProps.square.fillColor}
+                isSelected={activeShape === "square"}
+              />
             </button>
             <button
               type="button"
               onClick={() => onSelectShape("rectangle")}
               title="Select rectangle primitive"
               aria-label="Select rectangle primitive"
+              aria-pressed={activeShape === "rectangle"}
               style={getShapeButtonStyle(activeShape === "rectangle")}
             >
-              <SquareShapeIcon label="7" fontSize={10} labelY={14} />
+              <TemplateShapeIcon
+                pitchClasses={templateIconProps.rectangle.pitchClasses}
+                color={templateIconProps.rectangle.color}
+                fillColor={templateIconProps.rectangle.fillColor}
+                isSelected={activeShape === "rectangle"}
+              />
             </button>
             <button
               type="button"

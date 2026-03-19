@@ -79,10 +79,12 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
       aria-label="Chord progression"
     >
       <div className={styles.header}>
-        <h2 className={styles.heading}>Progression</h2>
-        <span className={styles.count} aria-label={`${chords.length} of ${maxLength} chords`}>
-          {chords.length}/{maxLength}
-        </span>
+        <div className={styles.titleRow}>
+          <h2 className={styles.heading}>Progression</h2>
+          <span className={styles.count} aria-label={`${chords.length} of ${maxLength} chords`}>
+            {chords.length}/{maxLength}
+          </span>
+        </div>
         <div className={styles.controls}>
           <label className={styles.durationLabel} htmlFor="chord-duration-input">
             ms / chord
@@ -96,6 +98,7 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
             max={MAX_CHORD_DURATION_MS}
             step={50}
             aria-label="Chord duration in milliseconds"
+            aria-describedby="chord-duration-hint"
             onChange={(e) => {
               setDurationInputValue(e.target.value);
               const raw = parseInt(e.target.value, 10);
@@ -113,6 +116,9 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
               setDurationInputValue(String(clamped));
             }}
           />
+          <span id="chord-duration-hint" className="sr-only">
+            Range: {MIN_CHORD_DURATION_MS} to {MAX_CHORD_DURATION_MS} milliseconds
+          </span>
           <button
             className={styles.playAllButton}
             onClick={isPlaying ? onStop : onPlay}

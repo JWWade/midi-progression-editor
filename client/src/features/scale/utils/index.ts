@@ -1,1 +1,1 @@
-export { getScaleNotes } from "./scaleUtils";
+export { getScaleNotes, getDiatonicIndices } from "./scaleUtils";

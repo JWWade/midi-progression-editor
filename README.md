@@ -172,6 +172,7 @@ midi-progression-editor/
           chromatic-circle/   # Main 12-note circle visualisation
           color-language/     # Quality-based color system
           current-chord/      # Current-chord info panel
+          legend/             # Visual legend (chord quality colours, note opacity levels)
           midi-export/        # MIDI file export (BPM, beats/chord)
           progression-sidebar/ # Chord progression sidebar (max 8 chords)
           scale/              # Scale generation & display (8 modes)

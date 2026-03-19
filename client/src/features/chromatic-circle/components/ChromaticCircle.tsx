@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { getDiatonicIndices } from "../utils";
+import { getDiatonicIndices, PITCH_CLASSES, FLAT_PITCH_CLASSES } from "../utils";
 import { getCircleColorForTheme } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
 import {
@@ -51,6 +51,18 @@ interface ChromaticCircleProps {
   isPlaybackActive?: boolean;
 }
 
+/**
+ * Returns the enharmonic spelling of a note if one exists, otherwise undefined.
+ * @param noteIndex - Pitch class index (0=C … 11=B)
+ * @param currentName - The note label currently shown in the UI (sharp or flat spelling)
+ */
+function getEnharmonicEquivalent(noteIndex: number, currentName: string): string | undefined {
+  const sharpName = PITCH_CLASSES[noteIndex];
+  const flatName = FLAT_PITCH_CLASSES[noteIndex];
+  if (sharpName === flatName) return undefined;
+  return currentName === sharpName ? flatName : sharpName;
+}
+
 export function ChromaticCircle({
   onCurrentChordChange,
   onKeyScaleChange,
@@ -92,6 +104,7 @@ export function ChromaticCircle({
     handleNoteDragMove,
     handleNoteDragEnd,
     handleRotateChord,
+    handleMirrorChord,
     handleSelectPrimitiveShape,
     handleRandomChord,
   } = useChordState({
@@ -151,15 +164,21 @@ export function ChromaticCircle({
   const isSeventhChord = SEVENTH_CHORD_TYPES.has(chordType);
   const baseIntervals = CHORD_INTERVALS[chordType];
 
-  // During playback (externalChord != null), always render the transposed chord,
-  // not any previously-selected custom chord.
-  const chordNotes = !externalChord && customFromChord?.customNotes
-    ? customFromChord.customNotes.map((idx) => ({
+  // Prioritize custom notes if present (either from externalChord during playback
+  // or from stored state). Only transpose standard intervals as a fallback.
+  const chordNotes = externalChord?.customNotes
+    ? externalChord.customNotes.map((idx) => ({
         index: idx,
         name: pitchClasses[idx],
         role: "root" as const,
       }))
-    : transposeChord(baseIntervals, rootIndex, pitchClasses);
+    : !externalChord && customFromChord?.customNotes
+      ? customFromChord.customNotes.map((idx) => ({
+          index: idx,
+          name: pitchClasses[idx],
+          role: "root" as const,
+        }))
+      : transposeChord(baseIntervals, rootIndex, pitchClasses);
   const chordIndices = chordNotes.map((n) => n.index);
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
@@ -202,6 +221,7 @@ export function ChromaticCircle({
       >
         <svg
           viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
+          className={styles.chromaticSvg}
           aria-label="Chromatic Circle"
           onClick={deselectTone}
           style={{
@@ -268,7 +288,7 @@ export function ChromaticCircle({
             const point = fromPoints[i];
             const interval = baseIntervals[i];
             const isSelected =
-              selectedTone?.chordLabel === "From Chord" &&
+              selectedTone?.isChordVertex === true &&
               selectedTone?.note.index === note.index;
             if (point === undefined) return null;
             return (
@@ -282,10 +302,10 @@ export function ChromaticCircle({
                   e.stopPropagation();
                   handleNoteClick(note.name, {
                     note,
-                    role: getToneRole(interval, chordType),
-                    interval,
                     frequency: noteIndexToFrequency(note.index),
-                    chordLabel: "From Chord",
+                    enharmonicEquivalent: getEnharmonicEquivalent(note.index, note.name),
+                    scaleDegree: getToneRole(interval, chordType),
+                    isChordVertex: true,
                   });
                 }}
               />
@@ -302,7 +322,7 @@ export function ChromaticCircle({
               ? getNoteStyle(i, chordIndices, chordType, diatonicIndices, chordComplexity)
               : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
             const isSelected =
-              selectedTone?.note.index === i && selectedTone.chordLabel !== "From Chord";
+              selectedTone?.note.index === i && selectedTone.isChordVertex !== true;
 
             return (
               <NoteNode
@@ -331,10 +351,9 @@ export function ChromaticCircle({
                   const interval = (i - rootIndex + 12) % 12;
                   handleNoteClick(label, {
                     note,
-                    role: isInFromChord ? getToneRole(interval, chordType) : "Note",
-                    interval,
                     frequency: noteIndexToFrequency(i),
-                    chordLabel: isInFromChord ? "From Chord" : "Scale",
+                    enharmonicEquivalent: getEnharmonicEquivalent(i, label),
+                    scaleDegree: isInFromChord ? getToneRole(interval, chordType) : undefined,
                   });
                 }}
                 onKeyDown={(e) => {
@@ -345,10 +364,9 @@ export function ChromaticCircle({
                     const interval = (i - rootIndex + 12) % 12;
                     handleNoteClick(label, {
                       note,
-                      role: isInFromChord ? getToneRole(interval, chordType) : "Note",
-                      interval,
                       frequency: noteIndexToFrequency(i),
-                      chordLabel: isInFromChord ? "From Chord" : "Scale",
+                      enharmonicEquivalent: getEnharmonicEquivalent(i, label),
+                      scaleDegree: isInFromChord ? getToneRole(interval, chordType) : undefined,
                     });
                   }
                 }}
@@ -380,6 +398,7 @@ export function ChromaticCircle({
 
       <CircleControls
         onRotate={handleRotateChord}
+        onMirror={handleMirrorChord}
         onSelectShape={handleSelectPrimitiveShape}
         onRandomChord={handleRandomChord}
         selectedChordName={selectedChordName}

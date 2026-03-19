@@ -9,21 +9,26 @@ import { useProgressionPlayback } from '../features/audio';
 import type { AudioParams } from '../features/audio/constants/audioConfig';
 import { DEFAULT_AUDIO_PARAMS } from '../features/audio/constants/audioConfig';
 import { AppHeader } from './components/AppHeader';
+import { AppErrorBoundary } from './components/AppErrorBoundary';
 import type { ScaleType } from '../features/scale/types';
 import { useEnharmonic } from './providers/useEnharmonic';
+import { VisualLegend } from '../features/legend';
 import styles from './App.module.css';
+
+/** Default chord duration used for progression playback (milliseconds). */
+const DEFAULT_CHORD_DURATION_MS = 1200;
 
 export default function App() {
   const [currentChord, setCurrentChord] = useState<Chord | null>(null);
   const [keyRoot, setKeyRoot] = useState<number>(0);
   const [keyScale, setKeyScale] = useState<ScaleType>("major");
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
-  const [chordDurationMs, setChordDurationMs] = useState(1200);
+  const [chordDurationMs, setChordDurationMs] = useState(DEFAULT_CHORD_DURATION_MS);
 
-  // Visualization toggles and scale selector (lifted from ChromaticCircle)
-  const [selectedScale, setSelectedScale] = useState<ScaleType>("major");
+  // Visualization toggles (lifted from ChromaticCircle)
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   const { pitchClasses } = useEnharmonic();
   const { chords, addChord, moveChord, deleteChord } = useProgression();
@@ -81,7 +86,13 @@ export default function App() {
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 
   return (
+    <AppErrorBoundary>
     <div className={styles.layout}>
+      <nav className={styles.skipNav} aria-label="Skip navigation">
+        <a href="#chromatic-circle" className={styles.skipLink}>Skip to circle</a>
+        <a href="#current-chord" className={styles.skipLink}>Skip to chord panel</a>
+        <a href="#chord-progression" className={styles.skipLink}>Skip to progression</a>
+      </nav>
       <h1 className={styles.visuallyHidden}>MIDI Progression Editor</h1>
       <div
         className={styles.visuallyHidden}
@@ -91,16 +102,17 @@ export default function App() {
         {liveRegionText}
       </div>
       <AppHeader
-        selectedScale={selectedScale}
-        onScaleChange={setSelectedScale}
         showCentroid={showCentroid}
         onCentroidChange={setShowCentroid}
         showIntervals={showIntervals}
         onIntervalsChange={setShowIntervals}
+        showLegend={showLegend}
+        onLegendChange={setShowLegend}
       />
       <div className={styles.primaryFlowContainer}>
         {/* Chromatic Circle - Left */}
         <section
+          id="chromatic-circle"
           className={styles.circleArea}
           role="region"
           aria-label="Chromatic Circle - Select and inspect the current chord"
@@ -110,14 +122,15 @@ export default function App() {
             isPlaybackActive={isPlaying}
             onCurrentChordChange={handleCurrentChordChange}
             onKeyScaleChange={handleKeyScaleChange}
-            selectedScale={selectedScale}
             showCentroid={showCentroid}
             showIntervals={showIntervals}
           />
+          {showLegend && <VisualLegend />}
         </section>
 
         {/* Current Chord Panel - Center */}
         <section
+          id="current-chord"
           className={styles.panelArea}
           role="region"
           aria-label="Current Chord - Add to progression"
@@ -136,6 +149,7 @@ export default function App() {
 
         {/* Progression Sidebar - Right */}
         <section
+          id="chord-progression"
           className={styles.sidebarArea}
           role="region"
           aria-label="Chord Progression - View and manage added chords"
@@ -158,5 +172,6 @@ export default function App() {
         </section>
       </div>
     </div>
+    </AppErrorBoundary>
   );
 }

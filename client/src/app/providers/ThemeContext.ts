@@ -1,10 +1,12 @@
 import { createContext } from "react";
 
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "retro";
 
 export interface ThemeContextValue {
   theme: Theme;
   toggleTheme: () => void;
 }
 
-export const ThemeContext = createContext<ThemeContextValue | null>(null);
+export const MISSING_THEME_PROVIDER = {} as ThemeContextValue;
+
+export const ThemeContext = createContext<ThemeContextValue>(MISSING_THEME_PROVIDER);

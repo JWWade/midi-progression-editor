@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import type { Chord } from "../types";
 import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
-import { getChordNoteIndices, transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { getChordPitchClasses } from "@/features/chord/utils";
 import { getCircleColorForTheme } from "@/features/chromatic-circle/utils/circleColors";
 import { ChordColors } from "@/features/color-language/constants/chordColors";
 import { getChordComplexity, getChordColor, getAccessibleTextColor } from "@/features/color-language/utils/chordColorUtils";
@@ -13,6 +14,9 @@ import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import { useAudioPlayback } from "@/features/audio";
 import type { AudioParams } from "@/features/audio/constants/audioConfig";
 import { AudioDebugPanel } from "@/features/audio/components/AudioDebugPanel";
+
+/** Duration the "Copied!" feedback badge remains visible (milliseconds). */
+const COPY_FEEDBACK_DURATION_MS = 1500;
 
 interface CurrentChordPanelProps {
   chord: Chord | null;
@@ -45,9 +49,7 @@ export function CurrentChordPanel({
   const { pitchClasses } = useEnharmonic();
   const { isPlaying, play, stop } = useAudioPlayback(audioParams);
 
-  const noteIndices = chord
-    ? (isCustomChord(chord) ? chord.customNotes : getChordNoteIndices(chord.root, chord.quality))
-    : [];
+  const noteIndices = chord ? getChordPitchClasses(chord) : [];
   const isDisabled = chord === null || isProgressionFull;
   const [pressing, setPressing] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -99,7 +101,7 @@ export function CurrentChordPanel({
 
   useEffect(() => {
     if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 1500);
+    const timer = setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS);
     return () => clearTimeout(timer);
   }, [copied]);
 
@@ -197,11 +199,8 @@ export function CurrentChordPanel({
               className={styles.noteNames}
               aria-label={`Chord notes: ${noteNames}`}
             >
-              {noteIndices.map((i, idx) => (
-                <span key={i}>
-                  {idx > 0 && <span className={styles.noteSeparator}>·</span>}
-                  {pitchClasses[i]}
-                </span>
+              {noteIndices.map((i) => (
+                <span key={i}>{pitchClasses[i]}</span>
               ))}
             </span>
             <button
@@ -213,6 +212,14 @@ export function CurrentChordPanel({
             >
               {copied ? '✓' : '⎘'}
             </button>
+          </div>
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="sr-only"
+          >
+            {copied ? 'Notes copied to clipboard' : ''}
           </div>
         </>
       )}
