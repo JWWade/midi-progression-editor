@@ -11,6 +11,7 @@ import {
 } from "@/features/chord/utils/transpose";
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
 import { CHORD_NAME_TO_DATA, getChordName } from "@/features/chord/data/chordNames";
+import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { CustomChordState } from "../types";
 
 const PRIMITIVE_SHAPE_META: Record<PrimitiveShape, { quality: ChordType; label: string }> = {
@@ -31,6 +32,7 @@ export interface CustomChordStateResult {
   handleRotateChord: (direction: "clockwise" | "counterclockwise") => void;
   handleMirrorChord: () => void;
   handleRandomChord: () => void;
+  handleMutateChord: () => void;
   handleSelectPrimitiveShape: (shape: PrimitiveShape) => void;
 }
 
@@ -125,6 +127,36 @@ export function useCustomChordState({
     onCurrentChordChange?.(newChord);
     onAnnounce?.("Generated random chord");
   }, [onCurrentChordChange, onAnnounce]);
+  const handleMutateChord = useCallback(() => {
+    const currentNotes = customFromChord
+      ? customFromChord.customNotes
+      : CHORD_INTERVALS[CHORD_NAME_TO_DATA[selectedChordName].type].map(
+          (i) => (CHORD_NAME_TO_DATA[selectedChordName].root + i) % 12,
+        );
+    if (currentNotes.length === 0) return;
+    // Pick a random note index to replace.
+    const mutatePos = Math.floor(Math.random() * currentNotes.length);
+    // Collect all pitch classes not already in the chord.
+    const available = Array.from({ length: 12 }, (_, i) => i).filter(
+      (pc) => !currentNotes.includes(pc),
+    );
+    if (available.length === 0) return;
+    const newPc = available[Math.floor(Math.random() * available.length)];
+    const oldName = PITCH_CLASSES[currentNotes[mutatePos]];
+    const newName = PITCH_CLASSES[newPc];
+    const newNotes = currentNotes.map((n, i) => (i === mutatePos ? newPc : n));
+    const { root: r, quality: q, matchScore } = findNearestChord(newNotes);
+    if (matchScore === 1) {
+      setCustomFromChord(null);
+      setSelectedChordName(getChordName(r, q));
+      onCurrentChordChange?.({ root: r, quality: q });
+    } else {
+      const newChord: CustomChordState = { root: r, quality: q, customNotes: newNotes };
+      setCustomFromChord(newChord);
+      onCurrentChordChange?.(newChord);
+    }
+    onAnnounce?.(`Replaced ${oldName} with ${newName}`);
+  }, [customFromChord, selectedChordName, setSelectedChordName, onCurrentChordChange, onAnnounce]);
   const handleSelectPrimitiveShape = useCallback(
     (shape: PrimitiveShape) => {
       const root = customFromChord?.root ?? CHORD_NAME_TO_DATA[selectedChordName].root;
@@ -145,6 +177,7 @@ export function useCustomChordState({
     handleRotateChord,
     handleMirrorChord,
     handleRandomChord,
+    handleMutateChord,
     handleSelectPrimitiveShape,
   };
 }

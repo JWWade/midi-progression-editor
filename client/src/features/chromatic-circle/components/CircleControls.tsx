@@ -6,6 +6,7 @@ import type { CustomChordState } from "../types";
 interface CircleControlsProps {
   onRotate: (direction: "clockwise" | "counterclockwise") => void;
   onMirror: () => void;
+  onMutate: () => void;
   onSelectShape: (shape: PrimitiveShape) => void;
   onRandomChord: () => void;
   selectedChordName: string;
@@ -102,6 +103,7 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
 export function CircleControls({
   onRotate,
   onMirror,
+  onMutate,
   onSelectShape,
   onRandomChord,
   selectedChordName,
@@ -159,6 +161,15 @@ export function CircleControls({
               style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)", fontSize: 14 }}
             >
               ⇌
+            </button>
+            <button
+              type="button"
+              onClick={onMutate}
+              title="Mutate one note at random"
+              aria-label="Mutate one note at random"
+              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)", fontSize: 14 }}
+            >
+              ⊛
             </button>
             <button
               type="button"

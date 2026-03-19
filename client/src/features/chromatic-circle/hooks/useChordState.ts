@@ -34,6 +34,7 @@ export function useChordState({
     handleRotateChord,
     handleMirrorChord,
     handleRandomChord,
+    handleMutateChord,
     handleSelectPrimitiveShape,
   } = useCustomChordState({
     selectedChordName,
@@ -146,5 +147,6 @@ export function useChordState({
     handleMirrorChord,
     handleSelectPrimitiveShape,
     handleRandomChord,
+    handleMutateChord,
   };
 }
