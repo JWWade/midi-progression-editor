@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Point } from "../utils";
 import {
   VERTEX_RADIUS,
@@ -17,8 +18,10 @@ interface ChordVertexProps {
 /**
  * A single clickable vertex dot rendered at a chord polygon corner.
  * Highlights when selected and supports keyboard activation.
+ *
+ * Wrapped with React.memo so it only re-renders when its own props change.
  */
-export function ChordVertex({
+export const ChordVertex = memo(function ChordVertex({
   noteName,
   point,
   isSelected,
@@ -63,4 +66,4 @@ export function ChordVertex({
       )}
     </g>
   );
-}
+});
