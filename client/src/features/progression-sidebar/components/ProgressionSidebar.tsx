@@ -32,7 +32,16 @@ interface ProgressionSidebarProps {
   onChordDurationChange: (ms: number) => void;
   scale?: ScaleContext | null;
   onApplyBridge?: (insertAfterIndex: number, bridge: Chord[]) => void;
-  onPreviewBridge?: (bridge: Chord[]) => void;
+  onPreviewBridge?: (
+    insertAfterIndex: number,
+    source: Chord,
+    bridge: Chord[],
+    target: Chord,
+  ) => void;
+  previewBridge?: Chord[] | null;
+  previewInsertAfterIndex?: number | null;
+  isPreviewPlaying?: boolean;
+  onStopPreview?: () => void;
 }
 
 const DURATION_OPTIONS: { label: string; ms: number }[] = [
@@ -57,6 +66,9 @@ interface BridgeGapRowProps {
   onClose: () => void;
   onApply: (insertAfterIndex: number, bridge: Chord[]) => void;
   onPreview: (bridge: Chord[]) => void;
+  previewBridge: Chord[] | null;
+  isPreviewPlaying: boolean;
+  onStopPreview: () => void;
 }
 
 function BridgeGapRow({
@@ -73,6 +85,9 @@ function BridgeGapRow({
   onClose,
   onApply,
   onPreview,
+  previewBridge,
+  isPreviewPlaying,
+  onStopPreview,
 }: BridgeGapRowProps) {
   const suggestions = useBridgeSuggestions(chords, index, scale);
   // Ref to the icon trigger button — used to restore focus when the popover closes
@@ -106,6 +121,9 @@ function BridgeGapRow({
           onApply={(bridge) => onApply(index, bridge)}
           onPreview={onPreview}
           onClose={handleClose}
+          previewBridge={previewBridge}
+          isPreviewPlaying={isPreviewPlaying}
+          onStopPreview={onStopPreview}
         />
       )}
     </li>
@@ -131,6 +149,10 @@ export function ProgressionSidebar({
   scale = null,
   onApplyBridge,
   onPreviewBridge,
+  previewBridge = null,
+  previewInsertAfterIndex = null,
+  isPreviewPlaying = false,
+  onStopPreview,
 }: ProgressionSidebarProps) {
   const { pitchClasses } = useEnharmonic();
   const isFull = chords.length >= maxLength;
@@ -245,6 +267,23 @@ export function ProgressionSidebar({
             />
           );
 
+          // Render ghost tiles for the bridge being previewed immediately after the source chord
+          if (previewBridge !== null && previewInsertAfterIndex === i) {
+            previewBridge.forEach((ghostChord, ghostIdx) => {
+              elements.push(
+                <ChordTile
+                  key={`ghost-${i}-${ghostIdx}`}
+                  chord={ghostChord}
+                  index={i + ghostIdx + 1}
+                  isFirst={false}
+                  isLast={false}
+                  onDelete={() => {}}
+                  isGhost={true}
+                />
+              );
+            });
+          }
+
           // Render the gap (metric badge + bridge suggestion) after each tile except the last
           if (i < chords.length - 1 && pairMetrics[i]) {
             const metric = pairMetrics[i];
@@ -269,7 +308,17 @@ export function ProgressionSidebar({
                 }
                 onClose={() => setOpenBridgeIndex(null)}
                 onApply={onApplyBridge ?? (() => {})}
-                onPreview={onPreviewBridge ?? (() => {})}
+                onPreview={(bridge) =>
+                  (onPreviewBridge ?? (() => {}))(
+                    i,
+                    chords[i],
+                    bridge,
+                    chords[i + 1],
+                  )
+                }
+                previewBridge={previewBridge}
+                isPreviewPlaying={isPreviewPlaying}
+                onStopPreview={onStopPreview ?? (() => {})}
               />
             );
           }

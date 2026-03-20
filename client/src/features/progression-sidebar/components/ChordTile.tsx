@@ -16,6 +16,7 @@ interface ChordTileProps {
   isLast: boolean;
   isNew?: boolean;
   isPlaying?: boolean;
+  isGhost?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onDelete: () => void;
@@ -23,7 +24,7 @@ interface ChordTileProps {
 }
 
 export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
-  function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
+  function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
@@ -41,10 +42,11 @@ export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
   return (
     <li
       ref={ref}
-      className={`${styles.tile}${isNew ? ` ${styles.tileHighlight}` : ""}${isPlaying ? ` ${styles.tilePlaying}` : ""}`}
+      className={`${styles.tile}${isNew ? ` ${styles.tileHighlight}` : ""}${isPlaying ? ` ${styles.tilePlaying}` : ""}${isGhost ? ` ${styles.ghostTile}` : ""}`}
       style={{ "--accent-color": accentColor } as React.CSSProperties}
-      aria-label={`${chordName}, position ${index + 1}`}
-      tabIndex={0}
+      aria-label={isGhost ? undefined : `${chordName}, position ${index + 1}`}
+      aria-hidden={isGhost ? "true" : undefined}
+      tabIndex={isGhost ? -1 : 0}
       onAnimationEnd={onAnimationEnd}
     >
       <div className={styles.thumbnail}>
@@ -61,36 +63,38 @@ export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
           <span className={styles.chordNotes}>{noteNames}</span>
         )}
       </div>
-      <div className={styles.controls} aria-label="Chord controls">
-        <button
-          className={styles.controlBtn}
-          onClick={onMoveUp}
-          disabled={isFirst}
-          aria-disabled={isFirst}
-          aria-label="Move chord up"
-          title="Move up"
-        >
-          ↑
-        </button>
-        <button
-          className={styles.controlBtn}
-          onClick={onMoveDown}
-          disabled={isLast}
-          aria-disabled={isLast}
-          aria-label="Move chord down"
-          title="Move down"
-        >
-          ↓
-        </button>
-        <button
-          className={`${styles.controlBtn} ${styles.deleteBtn}`}
-          onClick={onDelete}
-          aria-label="Delete chord"
-          title="Delete"
-        >
-          ✕
-        </button>
-      </div>
+      {!isGhost && (
+        <div className={styles.controls} aria-label="Chord controls">
+          <button
+            className={styles.controlBtn}
+            onClick={onMoveUp}
+            disabled={isFirst}
+            aria-disabled={isFirst}
+            aria-label="Move chord up"
+            title="Move up"
+          >
+            ↑
+          </button>
+          <button
+            className={styles.controlBtn}
+            onClick={onMoveDown}
+            disabled={isLast}
+            aria-disabled={isLast}
+            aria-label="Move chord down"
+            title="Move down"
+          >
+            ↓
+          </button>
+          <button
+            className={`${styles.controlBtn} ${styles.deleteBtn}`}
+            onClick={onDelete}
+            aria-label="Delete chord"
+            title="Delete"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </li>
   );
 });

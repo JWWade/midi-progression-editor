@@ -146,6 +146,12 @@
   outline-offset: 2px;
 }
 
+/* ── Ghost tile (bridge preview) ─────────────────────────────────────────── */
+.ghostTile {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 /* ── Retro theme overrides ───────────────────────────────────────────────── */
 [data-theme="retro"] .tile {
   border-radius: 0;

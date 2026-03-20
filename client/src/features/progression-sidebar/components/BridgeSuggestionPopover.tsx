@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import type { BridgeSuggestion } from "@/features/ii-v-suggestions";
 import type { Chord } from "@/features/current-chord/types";
 import { getChordName } from "@/features/chord/data/chordNames";
@@ -15,6 +15,20 @@ export interface BridgeSuggestionPopoverProps {
   onApply: (bridge: Chord[]) => void;
   onPreview: (bridge: Chord[]) => void;
   onClose: () => void;
+  /** The bridge currently being previewed (null when no preview is active). */
+  previewBridge?: Chord[] | null;
+  /** Whether the preview sequence is currently playing. */
+  isPreviewPlaying?: boolean;
+  /** Stops the in-progress preview. */
+  onStopPreview?: () => void;
+}
+
+/** Returns true when two bridge arrays represent the same sequence of chords. */
+function bridgesMatch(a: Chord[], b: Chord[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every(
+    (c, i) => c.root === b[i].root && c.quality === b[i].quality,
+  );
 }
 
 /** Format an ordered list of bridge chords into "Am7 → D7" style. */
@@ -36,6 +50,9 @@ export function BridgeSuggestionPopover({
   onApply,
   onPreview,
   onClose,
+  previewBridge = null,
+  isPreviewPlaying = false,
+  onStopPreview,
 }: BridgeSuggestionPopoverProps): React.ReactElement {
   const { pitchClasses } = useEnharmonic();
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -46,16 +63,21 @@ export function BridgeSuggestionPopover({
     closeButtonRef.current?.focus();
   }, []);
 
+  const handleClose = useCallback(() => {
+    onStopPreview?.();
+    onClose();
+  }, [onClose, onStopPreview]);
+
   // Close on Escape key
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        onClose();
+        handleClose();
       }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [handleClose]);
 
   // Close on outside click
   useEffect(() => {
@@ -64,12 +86,12 @@ export function BridgeSuggestionPopover({
         popoverRef.current &&
         !popoverRef.current.contains(e.target as Node)
       ) {
-        onClose();
+        handleClose();
       }
     }
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [onClose]);
+  }, [handleClose]);
 
   return (
     <div
@@ -85,7 +107,7 @@ export function BridgeSuggestionPopover({
           className={styles.closeButton}
           type="button"
           aria-label="Close bridge suggestions"
-          onClick={onClose}
+          onClick={handleClose}
         >
           ✕
         </button>
@@ -99,6 +121,10 @@ export function BridgeSuggestionPopover({
           const wouldExceedCap =
             progressionLength + suggestion.bridge.length > maxProgressionLength;
           const rowAriaLabel = `${chordNames} — ${suggestion.label} — score ${suggestion.score.toFixed(2)}`;
+          const isThisPreviewPlaying =
+            isPreviewPlaying &&
+            previewBridge !== null &&
+            bridgesMatch(suggestion.bridge, previewBridge);
 
           return (
             <li
@@ -119,10 +145,20 @@ export function BridgeSuggestionPopover({
               <button
                 className={styles.actionButton}
                 type="button"
-                aria-label={`Preview bridge: ${chordNames}`}
-                onClick={() => onPreview(suggestion.bridge)}
+                aria-label={
+                  isThisPreviewPlaying
+                    ? "Stop preview"
+                    : `Preview bridge: ${chordNames}`
+                }
+                onClick={() => {
+                  if (isThisPreviewPlaying) {
+                    onStopPreview?.();
+                  } else {
+                    onPreview(suggestion.bridge);
+                  }
+                }}
               >
-                ▶
+                {isThisPreviewPlaying ? "■" : "▶"}
               </button>
               <button
                 className={`${styles.actionButton} ${styles.applyButton}`}
