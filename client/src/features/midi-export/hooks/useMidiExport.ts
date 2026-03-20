@@ -7,13 +7,11 @@ export function useMidiExport(chords: Chord[]): {
   setBpm: (v: number) => void;
   beatsPerChord: number;
   setBeatsPerChord: (v: number) => void;
-  startOctave: number;
-  setStartOctave: (v: number) => void;
   exportMidi: () => void;
 } {
   const [bpm, setBpm] = useState(120);
   const [beatsPerChord, setBeatsPerChord] = useState(2);
-  const [startOctave, setStartOctave] = useState(4);
+  const startOctave = 4;
 
   const exportMidi = useCallback(() => {
     const bytes = buildMidiFile(chords, { bpm, beatsPerChord, startOctave });
@@ -26,5 +24,5 @@ export function useMidiExport(chords: Chord[]): {
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }, [chords, bpm, beatsPerChord, startOctave]);
 
-  return { bpm, setBpm, beatsPerChord, setBeatsPerChord, startOctave, setStartOctave, exportMidi };
+  return { bpm, setBpm, beatsPerChord, setBeatsPerChord, exportMidi };
 }
