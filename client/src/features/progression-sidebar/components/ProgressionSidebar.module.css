@@ -215,7 +215,9 @@
 /* ── Pair metric badge list item ────────────────────────────────────────── */
 .metricListItem {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   padding: 0;
   margin: -6px 0;
   list-style: none;

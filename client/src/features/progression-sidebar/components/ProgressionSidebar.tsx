@@ -2,7 +2,12 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import { ChordTile } from "./ChordTile";
 import { PairMetricBadge } from "./PairMetricBadge";
+import { BridgeSuggestionIcon } from "./BridgeSuggestionIcon";
+import { BridgeSuggestionPopover } from "./BridgeSuggestionPopover";
 import { computeProgressionPairMetrics } from "../utils/pairMetrics";
+import type { PairMetric } from "../utils/pairMetrics";
+import { useBridgeSuggestions } from "../hooks/useBridgeSuggestions";
+import type { ScaleContext } from "../hooks/useBridgeSuggestions";
 import { MidiExportControls } from "@/features/midi-export/components/MidiExportControls";
 import { getChordName } from "@/features/chord/data/chordNames";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
@@ -25,6 +30,9 @@ interface ProgressionSidebarProps {
   onToggleLoop: () => void;
   chordDurationMs: number;
   onChordDurationChange: (ms: number) => void;
+  scale?: ScaleContext | null;
+  onApplyBridge?: (insertAfterIndex: number, bridge: Chord[]) => void;
+  onPreviewBridge?: (bridge: Chord[]) => void;
 }
 
 const DURATION_OPTIONS: { label: string; ms: number }[] = [
@@ -33,12 +41,103 @@ const DURATION_OPTIONS: { label: string; ms: number }[] = [
   { label: "Fast", ms: 600 },
 ];
 
-export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, maxLength, isPlaying, playingIndex, onPlay, onStop, loop, onToggleLoop, chordDurationMs, onChordDurationChange }: ProgressionSidebarProps) {
+// ── Inner component: renders the gap between two chord tiles ─────────────
+
+interface BridgeGapRowProps {
+  chords: Chord[];
+  index: number;
+  scale: ScaleContext | null;
+  maxProgressionLength: number;
+  metric: PairMetric;
+  metricAriaLabel: string;
+  sourceChordName: string;
+  targetChordName: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onApply: (insertAfterIndex: number, bridge: Chord[]) => void;
+  onPreview: (bridge: Chord[]) => void;
+}
+
+function BridgeGapRow({
+  chords,
+  index,
+  scale,
+  maxProgressionLength,
+  metric,
+  metricAriaLabel,
+  sourceChordName,
+  targetChordName,
+  isOpen,
+  onToggle,
+  onClose,
+  onApply,
+  onPreview,
+}: BridgeGapRowProps) {
+  const suggestions = useBridgeSuggestions(chords, index, scale);
+  // Ref to the icon trigger button — used to restore focus when the popover closes
+  const iconRef = useRef<HTMLButtonElement>(null);
+
+  function handleClose() {
+    onClose();
+    // Return focus to the trigger icon button after closing the popover
+    setTimeout(() => iconRef.current?.focus(), 0);
+  }
+
+  return (
+    <li className={styles.metricListItem} role="presentation">
+      <PairMetricBadge metric={metric} ariaLabel={metricAriaLabel} />
+      <BridgeSuggestionIcon
+        ref={iconRef}
+        suggestionCount={suggestions.length}
+        sourceChordName={sourceChordName}
+        targetChordName={targetChordName}
+        isOpen={isOpen}
+        onToggle={onToggle}
+      />
+      {isOpen && (
+        <BridgeSuggestionPopover
+          suggestions={suggestions}
+          sourceChordName={sourceChordName}
+          targetChordName={targetChordName}
+          insertAfterIndex={index}
+          progressionLength={chords.length}
+          maxProgressionLength={maxProgressionLength}
+          onApply={(bridge) => onApply(index, bridge)}
+          onPreview={onPreview}
+          onClose={handleClose}
+        />
+      )}
+    </li>
+  );
+}
+
+// ── Main component ───────────────────────────────────────────────────────
+
+export function ProgressionSidebar({
+  chords,
+  onMoveUp,
+  onMoveDown,
+  onDelete,
+  maxLength,
+  isPlaying,
+  playingIndex,
+  onPlay,
+  onStop,
+  loop,
+  onToggleLoop,
+  chordDurationMs,
+  onChordDurationChange,
+  scale = null,
+  onApplyBridge,
+  onPreviewBridge,
+}: ProgressionSidebarProps) {
   const { pitchClasses } = useEnharmonic();
   const isFull = chords.length >= maxLength;
   const [newTileIndex, setNewTileIndex] = useState<number | null>(null);
   const [prevLength, setPrevLength] = useState(chords.length);
   const tileRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const [openBridgeIndex, setOpenBridgeIndex] = useState<number | null>(null);
 
   // Compute pair metrics for the progression
   const pairMetrics = useMemo(() => computeProgressionPairMetrics(chords), [chords]);
@@ -146,7 +245,7 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
             />
           );
 
-          // Render the pair metric badge after each tile (except the last)
+          // Render the gap (metric badge + bridge suggestion) after each tile except the last
           if (i < chords.length - 1 && pairMetrics[i]) {
             const metric = pairMetrics[i];
             const chordAName = getChordName(chord.root, chord.quality, pitchClasses);
@@ -154,9 +253,24 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
             const ariaLabel = `${metric.sharedCount} notes in common between ${chordAName} and ${chordBName}, ${Math.round(metric.proportion * 100)} percent`;
 
             elements.push(
-              <li key={`metric-${i}`} className={styles.metricListItem} role="presentation">
-                <PairMetricBadge metric={metric} ariaLabel={ariaLabel} />
-              </li>
+              <BridgeGapRow
+                key={`gap-${i}`}
+                chords={chords}
+                index={i}
+                scale={scale}
+                maxProgressionLength={maxLength}
+                metric={metric}
+                metricAriaLabel={ariaLabel}
+                sourceChordName={chordAName}
+                targetChordName={chordBName}
+                isOpen={openBridgeIndex === i}
+                onToggle={() =>
+                  setOpenBridgeIndex((prev) => (prev === i ? null : i))
+                }
+                onClose={() => setOpenBridgeIndex(null)}
+                onApply={onApplyBridge ?? (() => {})}
+                onPreview={onPreviewBridge ?? (() => {})}
+              />
             );
           }
 
@@ -172,3 +286,4 @@ export function ProgressionSidebar({ chords, onMoveUp, onMoveDown, onDelete, max
     </aside>
   );
 }
+

@@ -1,0 +1,166 @@
+/* ── Bridge Suggestion Popover ──────────────────────────────────────────── */
+.popover {
+  position: relative;
+  margin-top: 4px;
+  background-color: var(--color-bg-panel, var(--color-bg-sidebar));
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  padding: 10px 0;
+  min-width: 240px;
+  z-index: 10;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 8px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.closeButton:hover {
+  background-color: var(--color-tile-bg-hover);
+  color: var(--color-text-secondary);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
+}
+
+/* ── Suggestion list ────────────────────────────────────────────────────── */
+.suggestionList {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0 0;
+}
+
+.suggestionRow {
+  display: grid;
+  grid-template-columns: 1fr auto 60px auto auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  transition: background-color 0.1s ease;
+}
+
+.suggestionRow:hover {
+  background-color: color-mix(in srgb, var(--color-accent, #4f46e5) 6%, transparent);
+}
+
+/* ── Chord names ────────────────────────────────────────────────────────── */
+.chordNames {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary, var(--color-text-secondary));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Label ──────────────────────────────────────────────────────────────── */
+.label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* ── Score bar ──────────────────────────────────────────────────────────── */
+.scoreBarContainer {
+  width: 60px;
+  height: 4px;
+  background-color: var(--color-border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.scoreBarFill {
+  height: 100%;
+  background-color: var(--color-accent, #4f46e5);
+  border-radius: 2px;
+  transition: width 0.2s ease;
+}
+
+/* ── Score number ───────────────────────────────────────────────────────── */
+.score {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  min-width: 30px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ── Action buttons ─────────────────────────────────────────────────────── */
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.actionButton:hover:not(:disabled):not([aria-disabled="true"]) {
+  background-color: var(--color-tile-bg-hover);
+  border-color: var(--color-text-muted);
+  color: var(--color-text-primary, var(--color-text-secondary));
+}
+
+.actionButton:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
+}
+
+.actionButton:disabled,
+.actionButton[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.applyButton {
+  color: var(--color-accent, #4f46e5);
+  border-color: var(--color-accent, #4f46e5);
+}
+
+.applyButton:hover:not(:disabled):not([aria-disabled="true"]) {
+  background-color: color-mix(in srgb, var(--color-accent, #4f46e5) 12%, transparent);
+  border-color: var(--color-accent, #4f46e5);
+  color: var(--color-accent, #4f46e5);
+}
