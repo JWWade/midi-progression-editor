@@ -1,5 +1,6 @@
 import type { Chord } from "@/features/current-chord/types";
 import { useMidiExport } from "../hooks/useMidiExport";
+import { getBpmTempoLabel } from "../utils/bpmTempoLabel";
 import styles from "./MidiExportControls.module.css";
 
 interface MidiExportControlsProps {
@@ -11,24 +12,36 @@ export function MidiExportControls({ chords, disabled }: MidiExportControlsProps
   const { bpm, setBpm, beatsPerChord, setBeatsPerChord, startOctave, setStartOctave, exportMidi } =
     useMidiExport(chords);
 
+  const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
+
   return (
     <div className={styles.exportControls}>
-      <div className={styles.row}>
-        <label className={styles.label} htmlFor="midi-bpm">
-          BPM
-        </label>
+      <div className={styles.bpmRow}>
+        <div className={styles.bpmHeader}>
+          <label className={styles.label} htmlFor="midi-bpm">
+            BPM
+          </label>
+          <span className={styles.bpmValue}>
+            <span className={styles.bpmNumber}>{bpm}</span>
+            <span className={styles.tempoLabel}>{getBpmTempoLabel(bpm)}</span>
+          </span>
+        </div>
         <input
           id="midi-bpm"
-          className={styles.input}
-          type="number"
+          className={styles.bpmSlider}
+          type="range"
           min={40}
           max={240}
           step={1}
           value={bpm}
-          onChange={(e) => {
-            const v = e.target.valueAsNumber;
-            if (!isNaN(v) && v >= 40 && v <= 240) setBpm(v);
+          style={{
+            background: `linear-gradient(to right, var(--color-accent, #6366f1) ${bpmFillPct}, var(--color-border-subtle, #2a2a4a) ${bpmFillPct})`,
           }}
+          onChange={(e) => setBpm(e.target.valueAsNumber)}
+          aria-valuemin={40}
+          aria-valuemax={240}
+          aria-valuenow={bpm}
+          aria-valuetext={`${bpm} BPM — ${getBpmTempoLabel(bpm)}`}
         />
       </div>
       <div className={styles.row}>
