@@ -5,6 +5,7 @@ import { getDiatonicIndices } from '../features/chromatic-circle/utils';
 import { ProgressionSidebar } from '../features/progression-sidebar';
 import { useProgression } from '../features/progression-sidebar/hooks/useProgression';
 import { useBridgePreview } from '../features/progression-sidebar/hooks/useBridgePreview';
+import { useBridgeApply } from '../features/progression-sidebar/hooks/useBridgeApply';
 import { MAX_PROGRESSION_LENGTH } from '../features/progression-sidebar/constants/progressionConfig';
 import { useProgressionPlayback } from '../features/audio';
 import type { AudioParams } from '../features/audio/constants/audioConfig';
@@ -14,6 +15,7 @@ import { AppErrorBoundary } from './components/AppErrorBoundary';
 import type { ScaleType } from '../features/scale/types';
 import { useEnharmonic } from './providers/useEnharmonic';
 import { VisualLegend } from '../features/legend';
+import { Toast } from '../shared/components/Toast/Toast';
 import styles from './App.module.css';
 
 /** Default chord duration used for progression playback (milliseconds). */
@@ -32,11 +34,13 @@ export default function App() {
   const [showLegend, setShowLegend] = useState(false);
 
   const { pitchClasses } = useEnharmonic();
-  const { chords, addChord, moveChord, deleteChord } = useProgression();
+  const { chords, addChord, moveChord, deleteChord, setChords } = useProgression();
   // Guard ref to prevent duplicate progression entries from rapid double-clicks.
   // Set synchronously when add is initiated; cleared after the current animation
   // frame so intentional subsequent adds still work.
   const addGuardRef = useRef(false);
+
+  const { applyBridge, undoPending, undoBridge } = useBridgeApply(chords, setChords);
 
   const { isPlaying, playingIndex, loop, play: onPlay, stop: onStop, toggleLoop } = useProgressionPlayback(chords, audioParams, chordDurationMs);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
@@ -177,6 +181,7 @@ export default function App() {
             onToggleLoop={toggleLoop}
             chordDurationMs={chordDurationMs}
             onChordDurationChange={setChordDurationMs}
+            onApplyBridge={applyBridge}
             onPreviewBridge={onPreviewBridge}
             onStopPreview={onStopPreview}
             previewBridge={previewBridge}
@@ -185,6 +190,12 @@ export default function App() {
           />
         </section>
       </div>
+      {undoPending && (
+        <Toast
+          message="Bridge inserted —"
+          action={{ label: 'Undo', onClick: undoBridge }}
+        />
+      )}
     </div>
     </AppErrorBoundary>
   );
