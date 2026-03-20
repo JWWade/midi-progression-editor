@@ -21,7 +21,7 @@ export function useMidiExport(chords: Chord[]): {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "progression.mid";
+    a.download = `progression-${Date.now()}.mid`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }, [chords, bpm, beatsPerChord, startOctave]);
