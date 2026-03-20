@@ -233,6 +233,14 @@ button:focus-visible {
   box-shadow: -1px -1px 0 #404040 inset, 1px 1px 0 #ffffff inset;
 }
 
+/* ── Native select option readability ───────────────────────────────────── */
+/* Force a solid background and legible text on native <option> elements so
+   the OS dropdown popup is readable regardless of the active theme. */
+option {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
 /* ── Globally shared accessibility utility ───────────────────────────────── */
 /* Visually hides content while keeping it accessible to screen readers. */
 .sr-only {
