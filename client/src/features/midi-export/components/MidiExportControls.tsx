@@ -9,7 +9,7 @@ interface MidiExportControlsProps {
 }
 
 export function MidiExportControls({ chords, disabled }: MidiExportControlsProps) {
-  const { bpm, setBpm, beatsPerChord, setBeatsPerChord, startOctave, setStartOctave, exportMidi } =
+  const { bpm, setBpm, beatsPerChord, setBeatsPerChord, exportMidi } =
     useMidiExport(chords);
 
   const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
@@ -43,23 +43,6 @@ export function MidiExportControls({ chords, disabled }: MidiExportControlsProps
           aria-valuenow={bpm}
           aria-valuetext={`${bpm} BPM — ${getBpmTempoLabel(bpm)}`}
         />
-      </div>
-      <div className={styles.row}>
-        <label className={styles.label} htmlFor="midi-octave">
-          Octave
-        </label>
-        <select
-          id="midi-octave"
-          className={styles.select}
-          value={startOctave}
-          onChange={(e) => setStartOctave(Number(e.target.value))}
-        >
-          <option value={2}>2</option>
-          <option value={3}>3</option>
-          <option value={4}>4</option>
-          <option value={5}>5</option>
-          <option value={6}>6</option>
-        </select>
       </div>
       <div className={styles.row}>
         <label className={styles.label} htmlFor="midi-beats">
