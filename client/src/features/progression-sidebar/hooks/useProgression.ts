@@ -12,6 +12,7 @@ export interface UseProgressionReturn {
   addChord: (chord: Chord) => void;
   moveChord: (index: number, direction: 'up' | 'down') => void;
   deleteChord: (index: number) => void;
+  setChords: (chords: Chord[]) => void;
 }
 
 export function useProgression(): UseProgressionReturn {
@@ -44,5 +45,9 @@ export function useProgression(): UseProgressionReturn {
     setEntries((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  return { chords, addChord, moveChord, deleteChord };
+  const setChords = useCallback((newChords: Chord[]) => {
+    setEntries(newChords.map((chord) => ({ id: crypto.randomUUID(), chord })));
+  }, []);
+
+  return { chords, addChord, moveChord, deleteChord, setChords };
 }
