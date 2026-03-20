@@ -217,8 +217,10 @@
   display: flex;
   justify-content: center;
   padding: 0;
-  margin: -4px 0 0 0; /* Slight negative margin to visually nestle badges */
+  margin: -6px 0;
   list-style: none;
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Full indicator ──────────────────────────────────────────────────────── */
