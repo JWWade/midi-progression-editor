@@ -140,6 +140,13 @@
   }
 }
 
+/* ── Ghost tile (bridge preview) ─────────────────────────────────────────── */
+.ghostTile {
+  opacity: 0.4;
+  pointer-events: none;
+  border-style: dashed;
+}
+
 /* ── Keyboard focus indicator ────────────────────────────────────────────── */
 .tile:focus-visible {
   outline: 2px solid var(--accent-color, #4f46e5);

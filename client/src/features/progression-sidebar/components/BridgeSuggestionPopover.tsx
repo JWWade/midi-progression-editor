@@ -14,6 +14,8 @@ export interface BridgeSuggestionPopoverProps {
   maxProgressionLength: number;
   onApply: (bridge: Chord[]) => void;
   onPreview: (bridge: Chord[]) => void;
+  onStopPreview: () => void;
+  previewingBridge: Chord[] | null;
   onClose: () => void;
 }
 
@@ -35,6 +37,8 @@ export function BridgeSuggestionPopover({
   maxProgressionLength,
   onApply,
   onPreview,
+  onStopPreview,
+  previewingBridge,
   onClose,
 }: BridgeSuggestionPopoverProps): React.ReactElement {
   const { pitchClasses } = useEnharmonic();
@@ -46,30 +50,32 @@ export function BridgeSuggestionPopover({
     closeButtonRef.current?.focus();
   }, []);
 
-  // Close on Escape key
+  // Close on Escape key — also stop any in-progress preview
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
+        onStopPreview();
         onClose();
       }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, onStopPreview]);
 
-  // Close on outside click
+  // Close on outside click — also stop any in-progress preview
   useEffect(() => {
     function handlePointerDown(e: PointerEvent) {
       if (
         popoverRef.current &&
         !popoverRef.current.contains(e.target as Node)
       ) {
+        onStopPreview();
         onClose();
       }
     }
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [onClose]);
+  }, [onClose, onStopPreview]);
 
   return (
     <div
@@ -85,7 +91,7 @@ export function BridgeSuggestionPopover({
           className={styles.closeButton}
           type="button"
           aria-label="Close bridge suggestions"
-          onClick={onClose}
+          onClick={() => { onStopPreview(); onClose(); }}
         >
           ✕
         </button>
@@ -116,14 +122,21 @@ export function BridgeSuggestionPopover({
                 />
               </div>
               <span className={styles.score}>{suggestion.score.toFixed(2)}</span>
-              <button
-                className={styles.actionButton}
-                type="button"
-                aria-label={`Preview bridge: ${chordNames}`}
-                onClick={() => onPreview(suggestion.bridge)}
-              >
-                ▶
-              </button>
+              {(() => {
+                // Reference equality is intentional: startPreview stores the exact
+                // suggestion.bridge reference, so this correctly identifies the active row.
+                const isThisPreviewPlaying = previewingBridge === suggestion.bridge;
+                return (
+                  <button
+                    className={styles.actionButton}
+                    type="button"
+                    aria-label={isThisPreviewPlaying ? "Stop preview" : `Preview bridge: ${chordNames}`}
+                    onClick={() => isThisPreviewPlaying ? onStopPreview() : onPreview(suggestion.bridge)}
+                  >
+                    {isThisPreviewPlaying ? "■" : "▶"}
+                  </button>
+                );
+              })()}
               <button
                 className={`${styles.actionButton} ${styles.applyButton}`}
                 type="button"

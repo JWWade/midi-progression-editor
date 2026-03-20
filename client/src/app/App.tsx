@@ -4,6 +4,7 @@ import { CurrentChordPanel, type Chord, formatChordName } from '../features/curr
 import { getDiatonicIndices } from '../features/chromatic-circle/utils';
 import { ProgressionSidebar } from '../features/progression-sidebar';
 import { useProgression } from '../features/progression-sidebar/hooks/useProgression';
+import { useBridgePreview } from '../features/progression-sidebar/hooks/useBridgePreview';
 import { MAX_PROGRESSION_LENGTH } from '../features/progression-sidebar/constants/progressionConfig';
 import { useProgressionPlayback } from '../features/audio';
 import type { AudioParams } from '../features/audio/constants/audioConfig';
@@ -39,6 +40,14 @@ export default function App() {
 
   const { isPlaying, playingIndex, loop, play: onPlay, stop: onStop, toggleLoop } = useProgressionPlayback(chords, audioParams, chordDurationMs);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
+
+  const {
+    isPreviewPlaying,
+    previewBridge,
+    previewInsertAfterIndex,
+    startPreview: onPreviewBridge,
+    stopPreview: onStopPreview,
+  } = useBridgePreview(chordDurationMs, audioParams);
 
   // ARIA live region: announce chord name on each playback step; clear when stopped.
   const [liveRegionText, setLiveRegionText] = useState('');
@@ -168,6 +177,11 @@ export default function App() {
             onToggleLoop={toggleLoop}
             chordDurationMs={chordDurationMs}
             onChordDurationChange={setChordDurationMs}
+            onPreviewBridge={onPreviewBridge}
+            onStopPreview={onStopPreview}
+            previewBridge={previewBridge}
+            previewInsertAfterIndex={previewInsertAfterIndex}
+            isPreviewPlaying={isPreviewPlaying}
           />
         </section>
       </div>
