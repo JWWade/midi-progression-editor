@@ -1,6 +1,7 @@
 import type { Chord } from "@/features/current-chord/types";
 import { useMidiExport } from "../hooks/useMidiExport";
 import { getBpmTempoLabel } from "../utils/bpmTempoLabel";
+import { NoteValueSelector } from "./NoteValueSelector";
 import styles from "./MidiExportControls.module.css";
 
 interface MidiExportControlsProps {
@@ -45,19 +46,8 @@ export function MidiExportControls({ chords, disabled }: MidiExportControlsProps
         />
       </div>
       <div className={styles.row}>
-        <label className={styles.label} htmlFor="midi-beats">
-          Beats / chord
-        </label>
-        <select
-          id="midi-beats"
-          className={styles.select}
-          value={beatsPerChord}
-          onChange={(e) => setBeatsPerChord(Number(e.target.value))}
-        >
-          <option value={1}>1</option>
-          <option value={2}>2</option>
-          <option value={4}>4</option>
-        </select>
+        <span className={styles.label}>Beats / chord</span>
+        <NoteValueSelector value={beatsPerChord} onChange={setBeatsPerChord} />
       </div>
       <button
         className={styles.exportButton}
