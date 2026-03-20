@@ -1,4 +1,5 @@
 import type { Chord } from "@/features/current-chord/types";
+import { SCALE_INTERVALS } from "@/features/scale/types/scales";
 import type { ScaleType } from "@/features/scale/types/scales";
 import { closeVoiceChord, minimalMotionVoicing } from "@/features/voice-leading";
 import { computeSharedNotes } from "@/features/progression-sidebar/utils/pairMetrics";
@@ -70,6 +71,9 @@ export function diatonicBonus(
   scale: { root: number; mode: string } | null,
 ): number {
   if (scale === null) return 0;
+
+  // Guard: unknown mode (e.g. pentatonic subset) → no diatonic bonus
+  if (!(scale.mode in SCALE_INTERVALS)) return 0;
 
   const diatonic = getDiatonicIndices(scale.root, scale.mode as ScaleType);
   if (diatonic.size < 7) return 0;

@@ -44,7 +44,7 @@ export function BridgeSuggestionPopover({
   onStopPreview,
   previewingBridge,
   onClose,
-}: BridgeSuggestionPopoverProps): React.ReactElement {
+}: BridgeSuggestionPopoverProps): React.ReactElement | null {
   const { pitchClasses } = useEnharmonic();
   const popoverRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -81,6 +81,9 @@ export function BridgeSuggestionPopover({
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [onClose, onStopPreview]);
 
+  // Guard: popover requires at least two chords in the progression
+  if (progressionLength < 2) return null;
+
   return (
     <div
       ref={popoverRef}
@@ -101,7 +104,10 @@ export function BridgeSuggestionPopover({
         </button>
       </div>
       <ul className={styles.suggestionList}>
-        {suggestions.map((suggestion, idx) => {
+        {suggestions.length === 0 ? (
+          <li className={styles.emptyState}>No bridge suggestions</li>
+        ) : (
+          suggestions.map((suggestion, idx) => {
           const chordNames = formatBridgeChordNames(
             suggestion.bridge,
             pitchClasses,
@@ -169,7 +175,8 @@ export function BridgeSuggestionPopover({
               <span className={styles.explanation}>{explanation}</span>
             </li>
           );
-        })}
+        })
+        )}
       </ul>
     </div>
   );
