@@ -53,9 +53,12 @@ export function minimalMotionVoicing(
   prevMidi: number[],
   nextPitchClasses: number[],
 ): number[] {
-  const voiceCount = Math.min(prevMidi.length, nextPitchClasses.length);
-  return Array.from({ length: voiceCount }, (_, i) => {
-    const prev = prevMidi[i];
+  if (prevMidi.length === 0) return [];
+  return Array.from({ length: nextPitchClasses.length }, (_, i) => {
+    // For voices beyond prevMidi's range (e.g. going from a triad to a seventh
+    // chord), anchor to the last previous note so the new voice is placed nearby
+    // rather than being silently dropped.
+    const prev = prevMidi[Math.min(i, prevMidi.length - 1)];
     const pc = nextPitchClasses[i];
     // Nearest MIDI note with pitch class pc to prev:
     // MIDI notes with pitch class pc are 12*k + pc; find k that minimises |12*k + pc - prev|.

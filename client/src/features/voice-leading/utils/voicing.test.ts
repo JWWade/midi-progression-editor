@@ -61,8 +61,15 @@ describe("minimalMotionVoicing", () => {
     expect(result).toHaveLength(3);
   });
 
-  it("truncates to min voice count when prev has fewer voices than the next chord", () => {
+  it("produces all 4 voices when expanding from a triad to a seventh chord", () => {
     const result = minimalMotionVoicing([60, 64, 67], [0, 4, 7, 11]);
-    expect(result).toHaveLength(3);
+    expect(result).toHaveLength(4);
+  });
+
+  it("includes the correct pitch class for the 4th note when expanding triad → seventh", () => {
+    // C major triad → C maj7: the 7th (B, pc=11) must appear in the output
+    const result = minimalMotionVoicing([60, 64, 67], [0, 4, 7, 11]);
+    const pitchClasses = result.map((n) => n % 12);
+    expect(pitchClasses).toContain(11); // B
   });
 });
