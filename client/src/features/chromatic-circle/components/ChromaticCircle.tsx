@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import { getDiatonicIndices, PITCH_CLASSES, FLAT_PITCH_CLASSES } from "../utils";
 import { getCircleColorForTheme } from "../utils/circleColors";
 import { calculatePolygonPoints } from "../utils/geometry";
@@ -115,6 +116,92 @@ export function ChromaticCircle({
     pitchClasses,
   });
 
+  // Stable chord-change handler avoids creating a new function on every render.
+  const handleChordChange = useCallback(
+    (name: string) => {
+      setSelectedChordName(name);
+      setCustomFromChord(null);
+    },
+    [setSelectedChordName, setCustomFromChord],
+  );
+
+  // Ref that always holds the latest mutable state consumed by the stable note
+  // event handlers below. Updated via useLayoutEffect (after each render) to
+  // keep values fresh without triggering new renders.  This pattern lets the
+  // stable useCallback handlers below omit these values from their dep arrays
+  // while still reading their most recent values at event time.
+  const noteHandlerStateRef = useRef({
+    suppressNextClick,
+    setSuppressNextClick,
+    isDragging,
+    rootIndex: 0 as number,
+    chordIndices: [] as number[],
+    chordType: "major" as ChordType,
+    handleNoteClick,
+  });
+
+  // Stable per-note pointer-down handlers.  One function per note index, only
+  // recreated when handleNoteDragStart (a useCallback) changes identity.
+  const notePointerDownHandlers = useMemo(
+    () =>
+      Array.from(
+        { length: 12 },
+        (_, i) =>
+          (e: ReactPointerEvent) =>
+            handleNoteDragStart(i, e),
+      ),
+    [handleNoteDragStart],
+  );
+
+  /**
+   * Reads note identity from the data attributes that NoteNode places on its
+   * root `<g>` element, then fires handleNoteClick with the tone info built
+   * from the latest noteHandlerStateRef values.
+   *
+   * Extracted to avoid duplicating this logic between stableNoteClick and
+   * stableNoteKeyDown.
+   */
+  const fireToneInfoFromElement = useCallback(
+    (el: Element) => {
+      const idx = parseInt(el.getAttribute("data-note-index") ?? "-1", 10);
+      if (idx < 0) return;
+      const label = el.getAttribute("data-note-label") ?? "";
+      const s = noteHandlerStateRef.current;
+      const note = { index: idx, name: label, role: "root" as const };
+      const interval = (idx - s.rootIndex + 12) % 12;
+      const isInChord = s.chordIndices.includes(idx);
+      s.handleNoteClick(label, {
+        note,
+        frequency: noteIndexToFrequency(idx),
+        enharmonicEquivalent: getEnharmonicEquivalent(idx, label),
+        scaleDegree: isInChord ? getToneRole(interval, s.chordType) : undefined,
+      });
+    },
+    [],
+  );
+
+  // Stable click handler — reads the note identity from HTML data attributes set
+  // by NoteNode on its root <g> element, then delegates into the latest handler
+  // state via noteHandlerStateRef.
+  const stableNoteClick = useCallback((e: React.MouseEvent) => {
+    const s = noteHandlerStateRef.current;
+    if (s.suppressNextClick) {
+      s.setSuppressNextClick(false);
+      return;
+    }
+    if (s.isDragging) return;
+    e.stopPropagation();
+    fireToneInfoFromElement(e.currentTarget as Element);
+  }, [fireToneInfoFromElement]);
+
+  // Stable keyboard handler — same delegation pattern as stableNoteClick.
+  const stableNoteKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    e.stopPropagation();
+    fireToneInfoFromElement(e.currentTarget as Element);
+  }, [fireToneInfoFromElement]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -181,6 +268,28 @@ export function ChromaticCircle({
         }))
       : transposeChord(baseIntervals, rootIndex, pitchClasses);
   const chordIndices = chordNotes.map((n) => n.index);
+
+  // Sync noteHandlerStateRef with the latest derived values and state.  Using
+  // useLayoutEffect ensures the ref is updated before the browser paints and
+  // before any user interaction events can fire after this render, without
+  // violating the react-hooks/refs rule that forbids mutations during render.
+  useLayoutEffect(() => {
+    noteHandlerStateRef.current.suppressNextClick = suppressNextClick;
+    noteHandlerStateRef.current.setSuppressNextClick = setSuppressNextClick;
+    noteHandlerStateRef.current.isDragging = isDragging;
+    noteHandlerStateRef.current.handleNoteClick = handleNoteClick;
+    noteHandlerStateRef.current.rootIndex = rootIndex;
+    noteHandlerStateRef.current.chordIndices = chordIndices;
+    noteHandlerStateRef.current.chordType = chordType;
+  }, [
+    suppressNextClick,
+    setSuppressNextClick,
+    isDragging,
+    handleNoteClick,
+    rootIndex,
+    chordIndices,
+    chordType,
+  ]);
 
   const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
 
@@ -333,44 +442,15 @@ export function ChromaticCircle({
                 x={x}
                 y={y}
                 noteStyle={noteStyle}
-                isDragging={isDragging}
-                dragTargetIndex={dragTargetIndex}
+                isDropTarget={isDragging && dragTargetIndex === i}
                 isSelected={isSelected}
                 isInFromChord={isInFromChord}
-                onPointerDown={(e) => handleNoteDragStart(i, e)}
+                onPointerDown={notePointerDownHandlers[i]!}
                 onPointerMove={handleNoteDragMove}
                 onPointerUp={handleNoteDragEnd}
                 onPointerCancel={handleNoteDragEnd}
-                onClick={(e) => {
-                  if (suppressNextClick) {
-                    setSuppressNextClick(false);
-                    return;
-                  }
-                  if (isDragging) return;
-                  e.stopPropagation();
-                  const note = { index: i, name: label, role: "root" as const };
-                  const interval = (i - rootIndex + 12) % 12;
-                  handleNoteClick(label, {
-                    note,
-                    frequency: noteIndexToFrequency(i),
-                    enharmonicEquivalent: getEnharmonicEquivalent(i, label),
-                    scaleDegree: isInFromChord ? getToneRole(interval, chordType) : undefined,
-                  });
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const note = { index: i, name: label, role: "root" as const };
-                    const interval = (i - rootIndex + 12) % 12;
-                    handleNoteClick(label, {
-                      note,
-                      frequency: noteIndexToFrequency(i),
-                      enharmonicEquivalent: getEnharmonicEquivalent(i, label),
-                      scaleDegree: isInFromChord ? getToneRole(interval, chordType) : undefined,
-                    });
-                  }
-                }}
+                onClick={stableNoteClick}
+                onKeyDown={stableNoteKeyDown}
               />
             );
           })}
@@ -404,10 +484,7 @@ export function ChromaticCircle({
         onSelectShape={handleSelectPrimitiveShape}
         onRandomChord={handleRandomChord}
         selectedChordName={selectedChordName}
-        onChordChange={(name) => {
-          setSelectedChordName(name);
-          setCustomFromChord(null);
-        }}
+        onChordChange={handleChordChange}
         customFromChord={customFromChord}
       />
     </div>

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { IntervalLabel, getIntervalName, getRootIntervals } from "@/features/chord-intervals";
 import type { Point } from "../utils";
 import {
@@ -31,8 +32,10 @@ interface ChordPolygonProps {
 /**
  * Renders the chord polygon, optional centroid crosshair, and optional
  * interval labels inside the chromatic circle SVG.
+ *
+ * Wrapped with React.memo so it only re-renders when its own props change.
  */
-export function ChordPolygon({
+export const ChordPolygon = memo(function ChordPolygon({
   morphedPoints,
   fillColor,
   strokeColor,
@@ -104,4 +107,4 @@ export function ChordPolygon({
         })}
     </>
   );
-}
+});

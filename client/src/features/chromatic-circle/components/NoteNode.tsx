@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { NoteStyle } from "../utils/noteStyles";
 import {
@@ -15,8 +16,8 @@ interface NoteNodeProps {
   x: number;
   y: number;
   noteStyle: NoteStyle;
-  isDragging: boolean;
-  dragTargetIndex: number | null;
+  /** True when this note is the current drag-and-drop target. */
+  isDropTarget: boolean;
   /** True when this note is selected in the tone info panel (not as a chord vertex). */
   isSelected: boolean;
   isInFromChord: boolean;
@@ -33,15 +34,16 @@ interface NoteNodeProps {
  *
  * Renders the coloured circle, the note-name label, an optional drag-preview
  * ring (while dragging), and an optional selection ring.
+ *
+ * Wrapped with React.memo so it only re-renders when its own props change.
  */
-export function NoteNode({
+export const NoteNode = memo(function NoteNode({
   label,
   index,
   x,
   y,
   noteStyle,
-  isDragging,
-  dragTargetIndex,
+  isDropTarget,
   isSelected,
   isInFromChord,
   onPointerDown,
@@ -57,6 +59,8 @@ export function NoteNode({
       tabIndex={0}
       aria-label={isInFromChord ? `${label}, chord tone` : label}
       aria-pressed={isSelected}
+      data-note-index={index}
+      data-note-label={label}
       style={{ cursor: isInFromChord ? "grab" : "pointer" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -92,7 +96,7 @@ export function NoteNode({
       </text>
 
       {/* Drop-target highlight shown while dragging */}
-      {isDragging && dragTargetIndex === index && (
+      {isDropTarget && (
         <circle
           cx={x}
           cy={y}
@@ -122,4 +126,4 @@ export function NoteNode({
       )}
     </g>
   );
-}
+});

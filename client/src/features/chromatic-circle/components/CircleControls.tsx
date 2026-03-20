@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import type { PrimitiveShape } from "@/features/current-chord";
 import { ChordGrid } from "@/features/chord/components/ChordGrid";
 import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
@@ -99,8 +100,10 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
  *
  * Contains two button groups (Transform / Templates) and the chord-grid
  * selector.
+ *
+ * Wrapped with React.memo so it only re-renders when its own props change.
  */
-export function CircleControls({
+export const CircleControls = memo(function CircleControls({
   onRotate,
   onMirror,
   onMutate,
@@ -111,6 +114,12 @@ export function CircleControls({
   customFromChord,
 }: CircleControlsProps) {
   const activeShape = customFromChord?.primitiveShape;
+
+  const handleRotateCounterclockwise = useCallback(
+    () => onRotate("counterclockwise"),
+    [onRotate],
+  );
+  const handleRotateClockwise = useCallback(() => onRotate("clockwise"), [onRotate]);
 
   // Pitch-class geometries and colors for each template
   const templateIconProps = {
@@ -146,7 +155,7 @@ export function CircleControls({
           <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
             <button
               type="button"
-              onClick={() => onRotate("counterclockwise")}
+              onClick={handleRotateCounterclockwise}
               title="Rotate counterclockwise by one semitone (Ctrl+Left)"
               aria-label="Rotate chord counterclockwise"
               style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
@@ -173,7 +182,7 @@ export function CircleControls({
             </button>
             <button
               type="button"
-              onClick={() => onRotate("clockwise")}
+              onClick={handleRotateClockwise}
               title="Rotate clockwise by one semitone (Ctrl+Right)"
               aria-label="Rotate chord clockwise"
               style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
@@ -270,4 +279,4 @@ export function CircleControls({
       />
     </div>
   );
-}
+});
