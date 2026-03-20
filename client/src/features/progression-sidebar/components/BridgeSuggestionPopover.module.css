@@ -92,6 +92,17 @@
   white-space: nowrap;
 }
 
+/* ── Explanation ────────────────────────────────────────────────────────── */
+.explanation {
+  grid-column: 1 / -1;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  opacity: 0.8;
+  white-space: normal;
+  line-height: 1.3;
+  padding-top: 2px;
+}
+
 /* ── Score bar ──────────────────────────────────────────────────────────── */
 .scoreBarContainer {
   width: 60px;

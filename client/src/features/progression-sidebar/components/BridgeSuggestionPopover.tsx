@@ -2,6 +2,10 @@ import React, { useEffect, useRef } from "react";
 import type { BridgeSuggestion } from "@/features/ii-v-suggestions";
 import type { Chord } from "@/features/current-chord/types";
 import { getChordName } from "@/features/chord/data/chordNames";
+import {
+  generateBridgeLabel,
+  generateBridgeExplanation,
+} from "@/features/ii-v-suggestions/utils/bridgeLabel";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import styles from "./BridgeSuggestionPopover.module.css";
 
@@ -102,9 +106,19 @@ export function BridgeSuggestionPopover({
             suggestion.bridge,
             pitchClasses,
           );
+          const label = generateBridgeLabel(
+            suggestion,
+            targetChordName,
+            pitchClasses,
+          );
+          const explanation = generateBridgeExplanation(
+            suggestion,
+            targetChordName,
+            pitchClasses,
+          );
           const wouldExceedCap =
             progressionLength + suggestion.bridge.length > maxProgressionLength;
-          const rowAriaLabel = `${chordNames} — ${suggestion.label} — score ${suggestion.score.toFixed(2)}`;
+          const rowAriaLabel = `${chordNames} — ${label} — score ${suggestion.score.toFixed(2)}`;
 
           return (
             <li
@@ -113,7 +127,7 @@ export function BridgeSuggestionPopover({
               aria-label={rowAriaLabel}
             >
               <span className={styles.chordNames}>{chordNames}</span>
-              <span className={styles.label}>{suggestion.label}</span>
+              <span className={styles.label}>{label}</span>
               <div className={styles.scoreBarContainer}>
                 <div
                   className={styles.scoreBarFill}
@@ -152,6 +166,7 @@ export function BridgeSuggestionPopover({
               >
                 ✓
               </button>
+              <span className={styles.explanation}>{explanation}</span>
             </li>
           );
         })}
