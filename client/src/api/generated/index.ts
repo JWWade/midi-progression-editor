@@ -37,7 +37,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "text/plain": components["schemas"]["ChordDto"];
                         "application/json": components["schemas"]["ChordDto"];
+                        "text/json": components["schemas"]["ChordDto"];
                     };
                 };
                 /** @description Bad Request */
@@ -46,7 +48,71 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
                         "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/Chord/quartal/from-scale": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Build a diatonic quartal chord from a scale root, scale type, and scale degree.
+         * @description Stacks diatonic fourths above the given scale degree using the formula
+         *     `Q(i) = [ S[i], S[(i+3)%7], S[(i+6)%7] ]` where `S` is the 7-note scale
+         *     and `i` is the 0-based degree index.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    note?: "C" | "CSharp" | "D" | "DSharp" | "E" | "F" | "FSharp" | "G" | "GSharp" | "A" | "ASharp" | "B";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DiatonicQuartalRequestDto"];
+                    "text/json": components["schemas"]["DiatonicQuartalRequestDto"];
+                    "application/*+json": components["schemas"]["DiatonicQuartalRequestDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuartalChordDto"];
+                        "application/json": components["schemas"]["QuartalChordDto"];
+                        "text/json": components["schemas"]["QuartalChordDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
+                        "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
                     };
                 };
             };
@@ -80,7 +146,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "text/plain": components["schemas"]["HealthResponse"];
                         "application/json": components["schemas"]["HealthResponse"];
+                        "text/json": components["schemas"]["HealthResponse"];
                     };
                 };
             };
@@ -124,7 +192,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "text/plain": components["schemas"]["ProgressionAnalyzeResponseDto"];
                         "application/json": components["schemas"]["ProgressionAnalyzeResponseDto"];
+                        "text/json": components["schemas"]["ProgressionAnalyzeResponseDto"];
                     };
                 };
                 /** @description Bad Request */
@@ -133,7 +203,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
                         "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -177,7 +249,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "text/plain": components["schemas"]["NoteInfo"][];
                         "application/json": components["schemas"]["NoteInfo"][];
+                        "text/json": components["schemas"]["NoteInfo"][];
                     };
                 };
                 /** @description Bad Request */
@@ -186,7 +260,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "text/plain": components["schemas"]["ValidationProblemDetails"];
                         "application/json": components["schemas"]["ValidationProblemDetails"];
+                        "text/json": components["schemas"]["ValidationProblemDetails"];
                     };
                 };
             };
@@ -212,12 +288,40 @@ export interface components {
         ChordFromRootRequestDto: {
             /** @enum {string} */
             quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7";
-        };
-        ChordRef: {
-            root?: string | null;
-            quality?: string | null;
             /** @enum {string|null} */
             primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
+        };
+        ChordRef: {
+            root: string;
+            quality: string;
+            /** @enum {string|null} */
+            primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
+            /**
+             * @description Optional explicit pitch-class array (values 0–11) for custom chords
+             *     that do not map to a named tertian quality.  When present and
+             *     non-empty, the analyzer uses these pitch classes directly instead of
+             *     deriving them from ParametricMusic.Api.Models.ChordRef.Root and ParametricMusic.Api.Models.ChordRef.Quality.
+             *     Out-of-range values are silently discarded.
+             */
+            customNotes?: number[] | null;
+        };
+        /**
+         * @description Request body for building a diatonic quartal chord from a scale root,
+         *     scale type, and scale degree.
+         */
+        DiatonicQuartalRequestDto: {
+            /** @enum {string} */
+            scaleType?: "Major" | "NaturalMinor" | "HarmonicMinor" | "MelodicMinor" | "Dorian" | "Phrygian" | "Lydian" | "Mixolydian";
+            /**
+             * Format: int32
+             * @description Scale degree index, 1-based (1..7).
+             */
+            degree?: number;
+            /**
+             * Format: int32
+             * @description Number of voices to stack (default 3).
+             */
+            size?: number;
         };
         HealthResponse: {
             status?: string | null;
@@ -241,6 +345,7 @@ export interface components {
         };
         ProgressionAnalyzeRequestDto: {
             chords?: components["schemas"]["ChordRef"][] | null;
+            scaleContext?: components["schemas"]["ScaleContextDto"];
         };
         ProgressionAnalyzeResponseDto: {
             steps?: components["schemas"]["ProgressionStep"][] | null;
@@ -253,6 +358,53 @@ export interface components {
             to?: components["schemas"]["ChordRef"];
             /** Format: int32 */
             motion?: number;
+        };
+        /**
+         * @description Data transfer object for a diatonic quartal chord, extending the standard
+         *     chord fields with quartal-specific metadata.
+         */
+        QuartalChordDto: {
+            root?: string | null;
+            quality?: string | null;
+            displayName?: string | null;
+            pitchClasses?: number[] | null;
+            noteNames?: string[] | null;
+            quartal?: components["schemas"]["QuartalMetadata"];
+        };
+        /** @description Metadata describing the diatonic quartal context of a chord. */
+        QuartalMetadata: {
+            isDiatonic?: boolean;
+            scaleRoot?: string | null;
+            scaleType?: string | null;
+            /**
+             * Format: int32
+             * @description Scale degree (1-indexed, 1..7).
+             */
+            degree?: number;
+            /**
+             * Format: int32
+             * @description Number of voices in the quartal stack (default 3).
+             */
+            size?: number;
+        };
+        /**
+         * @description Identifies a diatonic context for scale-aware chord analysis:
+         *     a root pitch-class (0–11) and a scale mode.
+         *
+         *     Mirrors the frontend `ScaleContext` type
+         *     (`client/src/shared/types/ScaleContext.ts`).
+         */
+        ScaleContextDto: {
+            /**
+             * Format: int32
+             * @description Root pitch-class (0 = C, 1 = C♯/D♭, …, 11 = B).
+             */
+            root?: number;
+            /**
+             * @description Scale mode used to resolve diatonic membership.
+             * @enum {string}
+             */
+            mode?: "Major" | "NaturalMinor" | "HarmonicMinor" | "MelodicMinor" | "Dorian" | "Phrygian" | "Lydian" | "Mixolydian";
         };
         ScaleOptionsDto: {
             /** @enum {string} */

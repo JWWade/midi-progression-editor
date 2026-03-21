@@ -1,5 +1,5 @@
 import type { Chord } from "@/features/current-chord/types";
-import type { BridgeSuggestion, BridgeType } from "../types";
+import type { BridgeSuggestion, BridgeType, ScaleContext } from "../types";
 import { generateCandidates, type BridgeCandidate } from "./buildBridge";
 import { scoreCandidate } from "./scoreCandidate";
 
@@ -83,7 +83,7 @@ function buildExplanation(type: BridgeType, bridge: Chord[], target: Chord): str
 export function suggestBridges(
   source: Chord,
   target: Chord,
-  scale: { root: number; mode: string } | null = null,
+  scale: ScaleContext | null = null,
   maxBridgeLength = 2,
   topN = 3,
 ): BridgeSuggestion[] {

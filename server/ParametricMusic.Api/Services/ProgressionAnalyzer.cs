@@ -62,14 +62,30 @@ public static class ProgressionAnalyzer
 
     /// <summary>
     /// Resolves the sorted pitch-class array for a chord specified by root note name and quality string.
+    /// When <see cref="ChordRef.CustomNotes"/> is provided and non-empty, those pitch classes are used
+    /// directly instead of deriving them from root and quality. Out-of-range values (outside 0–11) are
+    /// silently discarded; duplicates are collapsed.
     /// </summary>
-    /// <param name="chordRef">A chord reference containing a root note name and quality label.</param>
+    /// <param name="chordRef">A chord reference containing a root note name, quality label, and optional custom notes.</param>
     /// <returns>A sorted array of MIDI pitch classes (0–11) for the chord's tones.</returns>
     /// <exception cref="ArgumentException">
-    /// Thrown when <paramref name="chordRef"/> contains an unrecognized root or quality value.
+    /// Thrown when <paramref name="chordRef"/> contains an unrecognized root or quality value and
+    /// <see cref="ChordRef.CustomNotes"/> is null or empty.
     /// </exception>
     private static int[] GetSortedPitchClasses(ChordRef chordRef)
     {
+        // When custom notes are provided, use them directly (filter out of range, deduplicate, sort).
+        if (chordRef.CustomNotes is { Length: > 0 } customNotes)
+        {
+            var valid = customNotes
+                .Where(pc => pc is >= 0 and <= 11)
+                .Distinct()
+                .OrderBy(pc => pc)
+                .ToArray();
+            if (valid.Length > 0)
+                return valid;
+        }
+
         if (!NoteExtensions.TryParse(chordRef.Root, out var note))
             throw new ArgumentException($"Invalid root note: \"{chordRef.Root}\"");
 

@@ -1,10 +1,10 @@
 import type { Chord } from "@/features/current-chord/types";
 import { SCALE_INTERVALS } from "@/features/scale/types/scales";
-import type { ScaleType } from "@/features/scale/types/scales";
 import { closeVoiceChord, minimalMotionVoicing } from "@/features/voice-leading";
 import { computeSharedNotes } from "@/features/progression-sidebar/utils/pairMetrics";
 import { getDiatonicIndices } from "@/features/scale/utils";
 import { getChordPitchClasses } from "@/features/chord/utils";
+import type { ScaleContext } from "../types";
 
 /**
  * Computes the total semitone voice-leading cost between two adjacent chords.
@@ -68,14 +68,14 @@ export function sharedNoteBonus(
  */
 export function diatonicBonus(
   bridge: Chord[],
-  scale: { root: number; mode: string } | null,
+  scale: ScaleContext | null,
 ): number {
   if (scale === null) return 0;
 
   // Guard: unknown mode (e.g. pentatonic subset) → no diatonic bonus
   if (!(scale.mode in SCALE_INTERVALS)) return 0;
 
-  const diatonic = getDiatonicIndices(scale.root, scale.mode as ScaleType);
+  const diatonic = getDiatonicIndices(scale.root, scale.mode);
   if (diatonic.size < 7) return 0;
 
   let diatonicCount = 0;
@@ -132,7 +132,7 @@ export function scoreCandidate(
   bridge: Chord[],
   source: Chord,
   target: Chord,
-  scale: { root: number; mode: string } | null,
+  scale: ScaleContext | null,
 ): number {
   const sn = sharedNoteBonus(source, bridge, target);
   const dt = diatonicBonus(bridge, scale);
