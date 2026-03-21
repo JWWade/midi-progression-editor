@@ -1,5 +1,7 @@
 ﻿# Parametric MIDI Sequencer  Web Prototype
 
+[![CI](https://github.com/JWWade/midi-progression-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/JWWade/midi-progression-editor/actions/workflows/ci.yml)
+
 ## About
 
 **MIDI Progression Editor** is a parametric MIDI sequencer for exploring and editing chord progressions. It combines an interactive React/TypeScript web interface with an ASP.NET Core Web API backend, enabling musicians to:
@@ -27,19 +29,22 @@
 
 ## Quick Start
 
-### Option 1: Automated (Windows)
+### Option 1: Automated (macOS / Linux)
 
 ```bash
-./run-dev.bat
+chmod +x run-dev.sh
+./run-dev.sh
 ```
 
-This script orchestrates everything:
-- Kills any existing processes on ports
-- Starts backend on http://localhost:5110
-- Starts frontend on http://localhost:5173
-- Opens both in separate terminal windows
+### Option 2: Automated (Windows)
 
-### Option 2: Manual Setup
+```bat
+run-dev.bat
+```
+
+Both launchers start the backend on http://localhost:5110 and the frontend on http://localhost:5173. Press <kbd>Ctrl+C</kbd> (Linux/macOS) or close the terminal windows (Windows) to stop.
+
+### Option 3: Manual Setup
 
 **Terminal 1  Backend**
 
@@ -250,3 +255,7 @@ npm run generate:api
 - **Backend**: ASP.NET Core .NET 10, Swashbuckle 10.1.4, xUnit 2.9
 - **API**: OpenAPI/Swagger specification with code generation
 - **Build**: npm + dotnet CLI
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, code style guidelines, and the PR workflow.

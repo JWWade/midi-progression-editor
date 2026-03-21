@@ -677,16 +677,26 @@ curl -X POST "http://localhost:5110/Scale/from-root?note=C" \
 
 #### Local Development
 
-**Option 1: Automated (Windows)**
+**Option 1: Automated (macOS / Linux)**
 ```bash
-./run-dev.bat
+chmod +x run-dev.sh
+./run-dev.sh
+```
+- Frees port 5110 if already in use
+- Starts backend on `http://localhost:5110`
+- Starts frontend on `http://localhost:5173`
+- Press Ctrl+C to stop both servers
+
+**Option 2: Automated (Windows)**
+```bat
+run-dev.bat
 ```
 - Kills any existing processes
 - Starts backend on `http://localhost:5110`
 - Starts frontend on `http://localhost:5173`
 - Opens separate terminal windows for each
 
-**Option 2: Manual**
+**Option 3: Manual**
 
 Terminal 1 - Backend:
 ```bash
@@ -832,15 +842,12 @@ dotnet test
 
 ### ⚠️ Known Issues
 
-1. **Windows-Only Dev Script**
-   - `run-dev.bat` only works on Windows
-   - Plan: Create shell script for Linux/Mac
+_No blocking issues — see the [issues/](issues/) directory for the full backlog._
 
 ### 🚀 Future Improvements
 
 - [ ] Add state management (Zustand or Redux) — `app/store/` directory is scaffolded
 - [ ] Implement client-side routing — `app/routes/` directory is scaffolded
-- [ ] Cross-platform dev script (shell version for Linux/Mac)
 - [ ] Docker configuration
 - [ ] Performance monitoring
 - [ ] Expand frontend test coverage (components, hooks)
