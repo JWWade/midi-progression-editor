@@ -12,6 +12,7 @@ import type { AudioParams } from '../features/audio/constants/audioConfig';
 import { DEFAULT_AUDIO_PARAMS } from '../features/audio/constants/audioConfig';
 import { AppHeader } from './components/AppHeader';
 import { AppErrorBoundary } from './components/AppErrorBoundary';
+import { DevDiagnosticsPanel } from './components/DevDiagnosticsPanel';
 import type { ScaleType } from '../features/scale/types';
 import { useEnharmonic } from './providers/useEnharmonic';
 import { VisualLegend } from '../features/legend';
@@ -194,6 +195,18 @@ export default function App() {
         <Toast
           message="Bridge inserted —"
           action={{ label: 'Undo', onClick: undoBridge }}
+        />
+      )}
+      {import.meta.env.DEV && (
+        <DevDiagnosticsPanel
+          currentChord={currentChord}
+          keyRoot={keyRoot}
+          keyScale={keyScale}
+          progressionLength={chords.length}
+          maxProgressionLength={MAX_PROGRESSION_LENGTH}
+          audioParams={audioParams}
+          isPlaying={isPlaying}
+          playingIndex={playingIndex}
         />
       )}
     </div>
