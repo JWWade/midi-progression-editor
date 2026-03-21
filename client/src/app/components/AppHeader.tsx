@@ -34,7 +34,7 @@ export function AppHeader({
             onChange={(e) => onCentroidChange(e.target.checked)}
             className={styles.checkbox}
           />
-          Centroid
+          Center
         </label>
 
         {/* Show Intervals toggle */}
