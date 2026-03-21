@@ -1,4 +1,7 @@
 import type { Chord } from "@/features/current-chord/types";
+import type { ScaleContext } from "@/shared/types";
+
+export type { ScaleContext };
 
 export type BridgeType =
   | "diatonic-ii-v"
@@ -33,7 +36,7 @@ export interface BridgeRequest {
   sourceChord: Chord;
   targetChord: Chord;
   insertAfterIndex: number;
-  contextScale?: { root: number; mode: string } | null;
+  contextScale?: ScaleContext | null;
   maxBridgeLength?: number;
   topN?: number;
 }

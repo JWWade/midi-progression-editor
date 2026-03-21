@@ -154,6 +154,101 @@ public class ProgressionAnalyzerTests
         Assert.Equal([0.0, 0.0], result.TensionTrend);
     }
 
+    // ── CustomNotes ───────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Analyze_CustomNotes_UsesProvidedPitchClasses()
+    {
+        // Custom C major triad: pitch classes [0, 4, 7] — same as ChordGenerator output
+        var chords = new List<ChordRef>
+        {
+            new() { Root = "C", Quality = "Major", CustomNotes = [0, 4, 7] },
+            new() { Root = "G", Quality = "Major" },
+        };
+
+        var result = ProgressionAnalyzer.Analyze(chords);
+
+        Assert.Single(result.Steps);
+        Assert.Equal(3, result.Steps[0].Motion);
+    }
+
+    [Fact]
+    public void Analyze_EmptyCustomNotes_FallsBackToRootAndQuality()
+    {
+        var chords = new List<ChordRef>
+        {
+            new() { Root = "C", Quality = "Major", CustomNotes = [] },
+            new() { Root = "G", Quality = "Major" },
+        };
+
+        var result = ProgressionAnalyzer.Analyze(chords);
+
+        Assert.Equal(3, result.Steps[0].Motion);
+    }
+
+    [Fact]
+    public void Analyze_CustomNotes_FiltersOutOfRangePitchClasses()
+    {
+        // Out-of-range values (12, -1) are discarded; valid subset [0, 4, 7] matches C major
+        var chords = new List<ChordRef>
+        {
+            new() { Root = "C", Quality = "Major", CustomNotes = [0, 4, 7, 12, -1] },
+            new() { Root = "G", Quality = "Major" },
+        };
+
+        var result = ProgressionAnalyzer.Analyze(chords);
+
+        Assert.Equal(3, result.Steps[0].Motion);
+    }
+
+    [Fact]
+    public void Analyze_CustomNotes_DeduplicatesPitchClasses()
+    {
+        // Duplicates (0, 0, 4, 7) → [0, 4, 7] → same motion as C major → G major
+        var chords = new List<ChordRef>
+        {
+            new() { Root = "C", Quality = "Major", CustomNotes = [0, 0, 4, 7] },
+            new() { Root = "G", Quality = "Major" },
+        };
+
+        var result = ProgressionAnalyzer.Analyze(chords);
+
+        Assert.Equal(3, result.Steps[0].Motion);
+    }
+
+    [Fact]
+    public void Analyze_CustomNotesAllOutOfRange_FallsBackToRootAndQuality()
+    {
+        // All custom notes are out of range → fall back to root + quality
+        var chords = new List<ChordRef>
+        {
+            new() { Root = "C", Quality = "Major", CustomNotes = [15, -3, 99] },
+            new() { Root = "G", Quality = "Major" },
+        };
+
+        var result = ProgressionAnalyzer.Analyze(chords);
+
+        Assert.Equal(3, result.Steps[0].Motion);
+    }
+
+    // ── ScaleContext on request ───────────────────────────────────────────────
+
+    [Fact]
+    public void Analyze_WithScaleContext_StillProducesCorrectMotion()
+    {
+        // ScaleContext is accepted on the request DTO without affecting motion calculation
+        var chords = ChordRefs("C", "Major", "G", "Major");
+        var dto = new ProgressionAnalyzeRequestDto
+        {
+            Chords = chords,
+            ScaleContext = new ScaleContextDto { Root = 0, Mode = ScaleType.Major },
+        };
+
+        var result = ProgressionAnalyzer.Analyze(dto.Chords);
+
+        Assert.Equal(3, result.Steps[0].Motion);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static List<ChordRef> ChordRefs(params string[] rootsAndQualities)
