@@ -1,4 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { createLogger } from '@/shared/utils/logger';
+
+const log = createLogger('ErrorBoundary');
 
 interface Props {
   children: ReactNode;
@@ -20,7 +23,7 @@ export class AppErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error('AppErrorBoundary caught an error:', error, info);
+    log.error('Unhandled render error', error, info);
   }
 
   render(): ReactNode {
