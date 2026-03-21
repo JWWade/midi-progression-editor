@@ -195,7 +195,7 @@ export function ProgressionSidebar({
         </div>
         <div className={styles.controls}>
           <label className={styles.durationLabel} htmlFor="chord-duration-select">
-            ms / chord
+            Speed
           </label>
           <select
             id="chord-duration-select"
