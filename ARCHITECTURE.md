@@ -104,7 +104,7 @@ client/
 │   │   │   └── utils/                   # Transpose, interval helpers
 │   │   │
 │   │   ├── chord-animation/              # Animated chord transitions
-│   │   │   └── hooks/                   # useChordMorphing (easeInOutQuad, 350ms)
+│   │   │   └── hooks/                   # useChordMorphing (easeInOutCubic, 260ms)
 │   │   │
 │   │   ├── chord-geometry/               # Polygon vertex calculations
 │   │   │   └── utils/                   # CHORD_SHAPES, geometry helpers
@@ -159,8 +159,12 @@ client/
 │   │   │   ├── types/                   # ScaleType (8 modes), SCALE_INTERVALS, SCALE_LABELS
 │   │   │   └── utils/                   # Scale helpers
 │   │   │
+│   │   ├── ii-v-suggestions/             # Harmonic bridge suggestions (ii–V, tritone-sub, backchains)
+│   │   │   ├── types/                   # BridgeSuggestion, BridgeType, BridgeRequest
+│   │   │   └── utils/                   # suggestBridges, buildBridge, scoreCandidate, bridgeLabel
+│   │   │
 │   │   └── voice-leading/                # Voice-leading path utilities
-│   │       └── utils/                   # Path calculation between chords
+│   │       └── utils/                   # closeVoiceChord, minimalMotionVoicing
 │   │
 │   ├── shared/                           # Shared across features
 │   │   ├── components/                  # Reusable components
@@ -252,7 +256,7 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 - ✅ **Chromatic Circle**: Full SVG visualisation with diatonic transparency, chord-tone emphasis, colour-responsive background, and note labels
 - ✅ **Chord Selector**: Dropdown for selecting root note and chord quality across all 8 chord types
 - ✅ **Chord Shapes**: Triangles for triads, quadrilaterals for seventh chords; dual-layer overlay supported
-- ✅ **Chord Animation**: Smooth 350 ms easeInOutQuad polygon morphing on chord changes
+- ✅ **Chord Animation**: Smooth 260 ms easeInOutCubic polygon morphing on chord changes
 - ✅ **Color Language**: Quality-based colour grammar (major → amber, minor → blue, dim → purple, aug → orange, dom7 → red-orange) with radial gradient fills
 - ✅ **Current-Chord Panel**: Displays chord identity, stylised geometric thumbnail, and add-to-progression button
 - ✅ **Progression Sidebar**: Right-hand vertical sidebar with chord tiles, thumbnails, add/remove controls, maximum 8 chords, session-only persistence
@@ -267,7 +271,8 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 - ✅ **MIDI Export**: Export current chord progression as a standard MIDI file (`.mid`); configurable BPM (40–240) and beats-per-chord (1, 2, 4)
 - ✅ **Enharmonic Toggle**: Global sharp/flat notation switch via `EnharmonicProvider`; `useEnharmonic()` exposes `useFlats`, `pitchClasses`, and `toggleEnharmonic`
 - ✅ **Visual Legend**: `VisualLegend` component displays chord quality colour bands (with polygon glyphs) and note opacity levels (diatonic, chord-tone chromatic, chromatic)
-- ✅ **Structure**: Feature-based architecture across 15 modules
+- ✅ **ii–V Suggestions**: `suggestBridges` generates ranked harmonic bridge chords (diatonic ii–V, tritone substitutions, backchains) between any two chords in the progression
+- ✅ **Structure**: Feature-based architecture across 16 modules
 
 ---
 
@@ -861,7 +866,8 @@ _No blocking issues — see the [issues/](issues/) directory for the full backlo
 - **Backend**: [ASP.NET Core Docs](https://learn.microsoft.com/en-us/aspnet/core/), [Swashbuckle Docs](https://github.com/domaindrivendev/Swashbuckle.AspNetCore)
 - **API Generation**: [openapi-typescript](https://openapi-ts.dev/)
 - **Testing**: [xUnit Docs](https://xunit.net/)
+- **Geometric Harmony System**: [docs/geometric-harmony-system.md](docs/geometric-harmony-system.md)
 
 ---
 
-**Last Updated**: March 18, 2026
+**Last Updated**: March 21, 2026

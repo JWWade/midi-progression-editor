@@ -60,6 +60,7 @@ export type { MyType } from './types';
 | `chromatic-circle` | Main 12-note SVG circle visualisation |
 | `color-language` | Quality-based color system (chord colors, harmony opacity) |
 | `current-chord` | Current-chord info panel |
+| `ii-v-suggestions` | Harmonic bridge suggestions (ii–V, tritone substitutions, backchains) |
 | `legend` | Visual legend component |
 | `midi-export` | MIDI file export (BPM, beats/chord) |
 | `progression-sidebar` | Chord progression sidebar (max 8 chords, session-only) |
