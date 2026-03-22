@@ -1,5 +1,7 @@
 public class ProgressionAnalyzerTests
 {
+    private readonly IProgressionService _service = new ProgressionAnalyzer();
+
     // ── Motion ───────────────────────────────────────────────────────────────
 
     [Fact]
@@ -7,7 +9,7 @@ public class ProgressionAnalyzerTests
     {
         var chords = ChordRefs("C", "Major", "G", "Major");
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Single(result.Steps);
         Assert.Equal(3, result.Steps[0].Motion);
@@ -18,7 +20,7 @@ public class ProgressionAnalyzerTests
     {
         var chords = ChordRefs("C", "Major", "C", "Major");
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(0, result.Steps[0].Motion);
     }
@@ -30,7 +32,7 @@ public class ProgressionAnalyzerTests
         // Best rotation [0,5,9]: 0+1+2 = 3
         var chords = ChordRefs("C", "Major", "F", "Major");
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(3, result.Steps[0].Motion);
     }
@@ -43,7 +45,7 @@ public class ProgressionAnalyzerTests
         // averageMotion = 3, 1 - 3/12 = 0.75
         var chords = ChordRefs("C", "Major", "G", "Major");
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(0.75, result.ContinuityScore);
     }
@@ -53,7 +55,7 @@ public class ProgressionAnalyzerTests
     {
         var chords = ChordRefs("C", "Major", "C", "Major");
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(1.0, result.ContinuityScore);
     }
@@ -63,7 +65,7 @@ public class ProgressionAnalyzerTests
     {
         var chords = new List<ChordRef> { new() { Root = "C", Quality = "Major" } };
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Empty(result.Steps);
         Assert.Equal(1.0, result.ContinuityScore);
@@ -75,7 +77,7 @@ public class ProgressionAnalyzerTests
         // C→F motion=3, F→G motion=6 → averageMotion=4.5, 1 - 4.5/12 = 0.625
         var chords = ChordRefs("C", "Major", "F", "Major", "G", "Major");
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(2, result.Steps.Count);
         Assert.Equal(0.625, result.ContinuityScore, precision: 10);
@@ -89,7 +91,7 @@ public class ProgressionAnalyzerTests
         // Major chord intervals: major 3rd (IC4), perfect 5th (IC5), minor 3rd (IC3) — all consonant
         var chords = ChordRefs("C", "Major", "G", "Major");
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(2, result.TensionTrend.Count);
         Assert.Equal(0.0, result.TensionTrend[0]);
@@ -102,7 +104,7 @@ public class ProgressionAnalyzerTests
         // C Diminished [0,3,6]: pairs (0,3)=IC3, (0,6)=IC6 (rough), (3,6)=IC3 → 1/3
         var chords = new List<ChordRef> { new() { Root = "C", Quality = "Diminished" } };
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Single(result.TensionTrend);
         Assert.Equal(1.0 / 3.0, result.TensionTrend[0], precision: 10);
@@ -114,7 +116,7 @@ public class ProgressionAnalyzerTests
         // C Dom7 [0,4,7,10]: pairs → IC4,IC5,IC2(rough),IC3,IC6(rough),IC3 → 2/6 = 1/3
         var chords = new List<ChordRef> { new() { Root = "C", Quality = "Dominant7" } };
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(1.0 / 3.0, result.TensionTrend[0], precision: 10);
     }
@@ -126,7 +128,7 @@ public class ProgressionAnalyzerTests
     {
         var chords = ChordRefs("C", "Major", "G", "Major");
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         var step = result.Steps[0];
         Assert.Equal("C", step.From.Root);
@@ -146,7 +148,7 @@ public class ProgressionAnalyzerTests
         // tensionTrend = [0.0, 0.0] (both major triads, no rough intervals)
         var chords = ChordRefs("C", "Major", "G", "Major");
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Single(result.Steps);
         Assert.Equal(3, result.Steps[0].Motion);
@@ -166,7 +168,7 @@ public class ProgressionAnalyzerTests
             new() { Root = "G", Quality = "Major" },
         };
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Single(result.Steps);
         Assert.Equal(3, result.Steps[0].Motion);
@@ -181,7 +183,7 @@ public class ProgressionAnalyzerTests
             new() { Root = "G", Quality = "Major" },
         };
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(3, result.Steps[0].Motion);
     }
@@ -196,7 +198,7 @@ public class ProgressionAnalyzerTests
             new() { Root = "G", Quality = "Major" },
         };
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(3, result.Steps[0].Motion);
     }
@@ -211,7 +213,7 @@ public class ProgressionAnalyzerTests
             new() { Root = "G", Quality = "Major" },
         };
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(3, result.Steps[0].Motion);
     }
@@ -226,7 +228,7 @@ public class ProgressionAnalyzerTests
             new() { Root = "G", Quality = "Major" },
         };
 
-        var result = ProgressionAnalyzer.Analyze(chords);
+        var result = _service.Analyze(chords);
 
         Assert.Equal(3, result.Steps[0].Motion);
     }
@@ -244,7 +246,7 @@ public class ProgressionAnalyzerTests
             ScaleContext = new ScaleContextDto { Root = 0, Mode = ScaleType.Major },
         };
 
-        var result = ProgressionAnalyzer.Analyze(dto.Chords);
+        var result = _service.Analyze(dto.Chords);
 
         Assert.Equal(3, result.Steps[0].Motion);
     }

@@ -8,7 +8,7 @@ namespace ParametricMusic.Api.Controllers;
 [ApiController]
 [Route("[controller]")]
 [Tags("Chord")]
-public class ChordController : ControllerBase
+public class ChordController(IChordService chordService, IQuartalChordService quartalChordService) : ControllerBase
 {
     /// <summary>
     /// Build a chord from a root note and chord quality.
@@ -24,7 +24,7 @@ public class ChordController : ControllerBase
         [Display(Name = "Chord Options")]
         ChordFromRootRequestDto body)
     {
-        var chord = ChordGenerator.BuildChord(note, body.Quality);
+        var chord = chordService.BuildChord(note, body.Quality);
         return Ok(chord);
     }
 
@@ -49,7 +49,7 @@ public class ChordController : ControllerBase
     {
         ArgumentNullException.ThrowIfNull(body, nameof(body));
 
-        var chord = QuartalChordGenerator.BuildDiatonicQuartal((int)note, body.ScaleType, body.Degree, body.Size);
+        var chord = quartalChordService.BuildDiatonicQuartal((int)note, body.ScaleType, body.Degree, body.Size);
         return Ok(chord);
     }
 }

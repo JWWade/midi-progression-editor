@@ -1,4 +1,5 @@
 using Microsoft.OpenApi;
+using ParametricMusic.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,13 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddProblemDetails();
+
+// Register harmony-engine services for constructor injection in controllers.
+// Singletons are safe here because all services are stateless pure functions.
+builder.Services.AddSingleton<IChordService, ChordGenerator>();
+builder.Services.AddSingleton<IScaleService, ScaleGenerator>();
+builder.Services.AddSingleton<IProgressionService, ProgressionAnalyzer>();
+builder.Services.AddSingleton<IQuartalChordService, QuartalChordGenerator>();
 
 builder.Services.AddCors(options =>
 {
