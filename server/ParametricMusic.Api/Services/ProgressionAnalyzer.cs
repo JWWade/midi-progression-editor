@@ -2,30 +2,21 @@ using ParametricMusic.Api.Models;
 
 namespace ParametricMusic.Api.Services;
 
-public static class ProgressionAnalyzer
+/// <summary>
+/// Analyses chord progressions by computing voice-leading motion, continuity score, and tension trend.
+/// </summary>
+/// <remarks>
+/// Implements <see cref="IProgressionService"/> for use with dependency injection.
+/// </remarks>
+public class ProgressionAnalyzer : IProgressionService
 {
     private const double MaxMotionNormalization = 12.0;
 
     // Rough interval classes: minor 2nd (1), major 2nd (2), tritone (6)
     private static readonly HashSet<int> RoughIntervalClasses = [1, 2, 6];
 
-    /// <summary>
-    /// Analyzes a chord progression by computing the voice-leading motion between consecutive
-    /// chords, a continuity score derived from average motion, and a per-chord tension trend
-    /// based on interval roughness.
-    /// </summary>
-    /// <param name="chords">
-    /// The ordered list of chords in the progression. Must contain at least one chord.
-    /// </param>
-    /// <returns>
-    /// A <see cref="ProgressionAnalyzeResponseDto"/> containing:
-    /// <list type="bullet">
-    ///   <item><see cref="ProgressionAnalyzeResponseDto.Steps"/> — one entry per consecutive pair.</item>
-    ///   <item><see cref="ProgressionAnalyzeResponseDto.ContinuityScore"/> — scalar in [0, 1].</item>
-    ///   <item><see cref="ProgressionAnalyzeResponseDto.TensionTrend"/> — one value per chord.</item>
-    /// </list>
-    /// </returns>
-    public static ProgressionAnalyzeResponseDto Analyze(List<ChordRef> chords)
+    /// <inheritdoc />
+    public ProgressionAnalyzeResponseDto Analyze(List<ChordRef> chords)
     {
         var pitchClassSets = chords
             .Select(GetSortedPitchClasses)
@@ -92,8 +83,12 @@ public static class ProgressionAnalyzer
         if (!Enum.TryParse<ChordQuality>(chordRef.Quality, ignoreCase: true, out var quality))
             throw new ArgumentException($"Invalid chord quality: \"{chordRef.Quality}\"");
 
-        var chord = ChordGenerator.BuildChord(note, quality);
-        return [.. chord.PitchClasses.Order()];
+        // Use the internal interval table directly to avoid a separate IChordService dependency.
+        if (!ChordGenerator.Intervals.TryGetValue(quality, out var intervals))
+            throw new ArgumentException($"Unsupported chord quality: \"{chordRef.Quality}\"");
+
+        var rootIndex = (int)note;
+        return [.. intervals.Select(i => (rootIndex + i) % 12).Order()];
     }
 
     /// <summary>
