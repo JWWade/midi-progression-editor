@@ -34,17 +34,17 @@
 }
 
 .noteButton:hover:not(.selected) {
-  background-color: var(--color-bg-subtle, #13132a);
+  background-color: var(--color-bg-subtle, rgba(0, 0, 0, 0.04));
   color: var(--color-text-primary);
 }
 
 .noteButton.selected {
-  background-color: var(--color-accent, #6366f1);
+  background-color: var(--color-accent, #4f46e5);
   color: #fff;
 }
 
 .noteButton:focus-visible {
-  outline: 2px solid var(--color-accent, #6366f1);
+  outline: 2px solid var(--color-accent, #4f46e5);
   outline-offset: -2px;
 }
 

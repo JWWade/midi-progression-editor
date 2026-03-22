@@ -19,11 +19,11 @@
 
 /* ── Section label ("Current Chord") ────────────────────────────────────── */
 .sectionLabel {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   margin-bottom: 2px;
 }
 
@@ -32,7 +32,7 @@
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 28px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--color-text-primary);
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
@@ -41,7 +41,7 @@
 .placeholder {
   font-size: 16px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -62,7 +62,7 @@
 .quality {
   font-size: 12px;
   font-weight: 400;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   letter-spacing: 0.02em;
 }
 
@@ -107,7 +107,7 @@
 }
 
 .addButtonDisabled {
-  background-color: #d1d5db;
+  background-color: var(--color-disabled-bg);
   color: var(--color-disabled-text);
   cursor: not-allowed;
   box-shadow: none;
@@ -155,7 +155,7 @@
 }
 
 .noteSeparator {
-  color: #9ca3af;
+  color: var(--color-text-muted);
   font-weight: 400;
   margin: 0 3px;
 }
@@ -241,25 +241,9 @@
 .fullMessage {
   font-size: 11px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   letter-spacing: 0.02em;
   margin-top: 4px;
-}
-
-[data-theme="dark"] .sectionLabel {
-  color: var(--color-text-secondary);
-}
-
-[data-theme="dark"] .chordName {
-  color: var(--color-text-primary);
-}
-
-[data-theme="dark"] .placeholder {
-  color: var(--color-text-secondary);
-}
-
-[data-theme="dark"] .quality {
-  color: var(--color-text-secondary);
 }
 
 [data-theme="dark"] .fullMessage {
@@ -272,10 +256,6 @@
 
 [data-theme="dark"] .noteNames {
   color: var(--chord-quality-base, #818cf8);
-}
-
-[data-theme="dark"] .noteSeparator {
-  color: var(--color-text-muted);
 }
 
 [data-theme="dark"] .playButton {
@@ -310,11 +290,6 @@
 
 [data-theme="dark"] .copyIconButton:focus-visible {
   outline-color: var(--chord-quality-base, #818cf8);
-}
-
-[data-theme="dark"] .addButtonDisabled {
-  background-color: var(--color-disabled-bg);
-  color: var(--color-disabled-text);
 }
 
 /* ── Retro theme overrides ───────────────────────────────────────────────── */
