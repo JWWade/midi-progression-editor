@@ -22,7 +22,7 @@
 }
 
 .badge:focus {
-  outline: 2px solid var(--accent-color, #4f46e5);
+  outline: 2px solid var(--color-accent, #4f46e5);
   outline-offset: 2px;
 }
 

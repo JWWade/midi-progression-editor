@@ -46,7 +46,7 @@
   font-size: 11px;
   font-weight: 500;
   font-style: italic;
-  color: var(--color-accent, #6366f1);
+  color: var(--color-accent, #4f46e5);
   letter-spacing: 0.02em;
 }
 
@@ -66,24 +66,24 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--color-accent, #6366f1);
-  border: 2px solid var(--color-bg-canvas, #0a0a1a);
+  background: var(--color-accent, #4f46e5);
+  border: 2px solid var(--color-bg-canvas, #ffffff);
   cursor: pointer;
-  box-shadow: 0 0 0 1px var(--color-accent, #6366f1);
+  box-shadow: 0 0 0 1px var(--color-accent, #4f46e5);
 }
 
 .bpmSlider::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--color-accent, #6366f1);
-  border: 2px solid var(--color-bg-canvas, #0a0a1a);
+  background: var(--color-accent, #4f46e5);
+  border: 2px solid var(--color-bg-canvas, #ffffff);
   cursor: pointer;
-  box-shadow: 0 0 0 1px var(--color-accent, #6366f1);
+  box-shadow: 0 0 0 1px var(--color-accent, #4f46e5);
 }
 
 .bpmSlider:focus-visible {
-  outline: 2px solid var(--color-accent, #6366f1);
+  outline: 2px solid var(--color-accent, #4f46e5);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -110,7 +110,7 @@
 
 .input:focus,
 .select:focus {
-  outline: 2px solid var(--color-accent, #6366f1);
+  outline: 2px solid var(--color-accent, #4f46e5);
   outline-offset: 1px;
 }
 
@@ -122,7 +122,7 @@
   letter-spacing: 0.04em;
   border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background-color: var(--color-accent, #6366f1);
+  background-color: var(--color-accent, #4f46e5);
   color: #fff;
   cursor: pointer;
   transition: opacity 0.15s ease;

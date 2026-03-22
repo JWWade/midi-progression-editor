@@ -37,7 +37,7 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #f59e0b;
+  accent-color: var(--color-accent, #4f46e5);
 }
 
 /* ── Right-side controls (theme) ────────────────────────────────────────── */
@@ -70,7 +70,7 @@
 }
 
 .themeToggle:focus-visible {
-  outline: 3px solid #f59e0b;
+  outline: 3px solid var(--color-accent, #4f46e5);
   outline-offset: 2px;
 }
 
@@ -104,19 +104,19 @@
 }
 
 .modeButton:focus-visible {
-  outline: 2px solid #f59e0b;
+  outline: 2px solid var(--color-accent, #4f46e5);
   outline-offset: 1px;
 }
 
 /* Active mode button styling */
 .modeButtonActive {
-  background-color: #f59e0b;
+  background-color: var(--color-accent, #4f46e5);
   color: white;
   font-weight: 600;
 }
 
 .modeButtonActive:hover {
-  background-color: #d97706;
+  background-color: var(--color-accent-hover, #4338ca);
 }
 
 /* ── Responsive: stack controls vertically on small screens ─────────────── */
