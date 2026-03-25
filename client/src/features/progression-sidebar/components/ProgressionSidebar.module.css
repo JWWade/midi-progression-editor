@@ -146,6 +146,12 @@
   background-color: color-mix(in srgb, var(--color-accent, #4f46e5) 10%, transparent);
 }
 
+/* ── Retro: show loop active as sunken / depressed Win95 button ───────── */
+[data-theme="retro"] .loopButtonActive {
+  border-color: #808080 #dfdfdf #dfdfdf #808080 !important;
+  box-shadow: -1px -1px 0 #ffffff inset, 1px 1px 0 #404040 inset !important;
+}
+
 /* ── Reset note ──────────────────────────────────────────────────────────── */
 .resetNote {
   flex-shrink: 0;

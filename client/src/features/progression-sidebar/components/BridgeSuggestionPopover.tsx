@@ -21,6 +21,7 @@ export interface BridgeSuggestionPopoverProps {
   onStopPreview: () => void;
   previewingBridge: Chord[] | null;
   onClose: () => void;
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 /** Format an ordered list of bridge chords into "Am7 → D7" style. */
@@ -44,6 +45,7 @@ export function BridgeSuggestionPopover({
   onStopPreview,
   previewingBridge,
   onClose,
+  triggerRef,
 }: BridgeSuggestionPopoverProps): React.ReactElement | null {
   const { pitchClasses } = useEnharmonic();
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -71,7 +73,8 @@ export function BridgeSuggestionPopover({
     function handlePointerDown(e: PointerEvent) {
       if (
         popoverRef.current &&
-        !popoverRef.current.contains(e.target as Node)
+        !popoverRef.current.contains(e.target as Node) &&
+        !(triggerRef?.current && triggerRef.current.contains(e.target as Node))
       ) {
         onStopPreview();
         onClose();
@@ -79,7 +82,7 @@ export function BridgeSuggestionPopover({
     }
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [onClose, onStopPreview]);
+  }, [onClose, onStopPreview, triggerRef]);
 
   // Guard: popover requires at least two chords in the progression
   if (progressionLength < 2) return null;

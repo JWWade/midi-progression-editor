@@ -116,6 +116,7 @@ function BridgeGapRow({
           onStopPreview={onStopPreview}
           previewingBridge={previewingBridge}
           onClose={handleClose}
+          triggerRef={iconRef}
         />
       )}
     </li>

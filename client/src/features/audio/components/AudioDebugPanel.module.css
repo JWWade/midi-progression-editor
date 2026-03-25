@@ -134,3 +134,28 @@
 [data-theme="dark"] .toggleButton button:hover {
   background-color: var(--color-tile-bg-hover);
 }
+
+/* ── Retro theme overrides ───────────────────────────────────────────────── */
+[data-theme="retro"] .container {
+  background-color: var(--color-bg-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="retro"] .header {
+  border-bottom-color: var(--color-border);
+}
+
+[data-theme="retro"] .header h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="retro"] .control label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="retro"] .control select {
+  background-color: var(--color-bg-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
