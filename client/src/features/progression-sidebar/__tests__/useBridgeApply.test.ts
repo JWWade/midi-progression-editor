@@ -38,7 +38,7 @@ describe("useBridgeApply — applyBridge", () => {
     );
 
     act(() => {
-      result.current.applyBridge([Dm7, G7], 0);
+      result.current.applyBridge(0, [Dm7, G7]);
     });
 
     // [Cmaj7, ← Dm7, G7 inserted here, Am7]
@@ -51,7 +51,7 @@ describe("useBridgeApply — applyBridge", () => {
     );
 
     act(() => {
-      result.current.applyBridge([Dm7, G7], 0);
+      result.current.applyBridge(0, [Dm7, G7]);
     });
 
     expect(result.current.undoPending).toBe(true);
@@ -63,7 +63,7 @@ describe("useBridgeApply — applyBridge", () => {
     );
 
     act(() => {
-      result.current.applyBridge([Fmaj7], 1);
+      result.current.applyBridge(1, [Fmaj7]);
     });
 
     expect(result.current.chords).toEqual([Cmaj7, Am7, Fmaj7]);
@@ -79,7 +79,7 @@ describe("useBridgeApply — undoBridge", () => {
     );
 
     act(() => {
-      result.current.applyBridge([Dm7, G7], 0);
+      result.current.applyBridge(0, [Dm7, G7]);
     });
     act(() => {
       result.current.undoBridge();
@@ -94,7 +94,7 @@ describe("useBridgeApply — undoBridge", () => {
     );
 
     act(() => {
-      result.current.applyBridge([Dm7, G7], 0);
+      result.current.applyBridge(0, [Dm7, G7]);
     });
     act(() => {
       result.current.undoBridge();
@@ -122,7 +122,7 @@ describe("useBridgeApply — timer behaviour", () => {
     );
 
     act(() => {
-      result.current.applyBridge([Dm7, G7], 0);
+      result.current.applyBridge(0, [Dm7, G7]);
     });
 
     expect(result.current.undoPending).toBe(true);
@@ -142,12 +142,12 @@ describe("useBridgeApply — timer behaviour", () => {
 
     // First apply: [Cmaj7, Am7] → [Cmaj7, Dm7, Am7]
     act(() => {
-      result.current.applyBridge([Dm7], 0);
+      result.current.applyBridge(0, [Dm7]);
     });
 
     // Second apply on updated state [Cmaj7, Dm7, Am7] → [Cmaj7, G7, Dm7, Am7]
     act(() => {
-      result.current.applyBridge([G7], 0);
+      result.current.applyBridge(0, [G7]);
     });
 
     expect(result.current.chords).toEqual([Cmaj7, G7, Dm7, Am7]);
@@ -166,7 +166,7 @@ describe("useBridgeApply — timer behaviour", () => {
     );
 
     act(() => {
-      result.current.applyBridge([Dm7], 0);
+      result.current.applyBridge(0, [Dm7]);
     });
 
     // Advance almost to the first timer expiry
@@ -176,7 +176,7 @@ describe("useBridgeApply — timer behaviour", () => {
 
     // Second apply resets the timer
     act(() => {
-      result.current.applyBridge([G7], 0);
+      result.current.applyBridge(0, [G7]);
     });
 
     expect(result.current.undoPending).toBe(true);

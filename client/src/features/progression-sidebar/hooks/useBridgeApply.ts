@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import type { Chord } from '@/features/current-chord/types';
 
 export interface UseBridgeApplyReturn {
-  applyBridge: (bridge: Chord[], insertAfterIndex: number) => void;
+  applyBridge: (insertAfterIndex: number, bridge: Chord[]) => void;
   undoPending: boolean;
   undoBridge: () => void;
   clearUndo: () => void;
@@ -28,7 +28,7 @@ export function useBridgeApply(
   }, []);
 
   const applyBridge = useCallback(
-    (bridge: Chord[], insertAfterIndex: number) => {
+    (insertAfterIndex: number, bridge: Chord[]) => {
       // Discard any previous pending undo before starting fresh
       if (timerRef.current !== null) {
         clearTimeout(timerRef.current);

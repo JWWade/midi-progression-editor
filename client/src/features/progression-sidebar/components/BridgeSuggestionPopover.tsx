@@ -168,7 +168,7 @@ export function BridgeSuggestionPopover({
                     : undefined
                 }
                 disabled={wouldExceedCap}
-                onClick={() => onApply(suggestion.bridge)}
+                onClick={() => { onApply(suggestion.bridge); onClose(); }}
               >
                 ✓
               </button>
