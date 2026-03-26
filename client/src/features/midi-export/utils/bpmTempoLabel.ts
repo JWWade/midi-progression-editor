@@ -30,3 +30,37 @@ export function getBpmTempoLabel(bpm: number): string {
   }
   return "Largo";
 }
+
+/**
+ * Returns the minimum BPM for a given tempo marking label.
+ * Throws if label is not found.
+ */
+export function getTempoMarkingMin(label: string): number {
+  const marking = TEMPO_MARKINGS.find(m => m.label.toLowerCase() === label.toLowerCase());
+  if (!marking) throw new Error(`Unknown tempo marking: ${label}`);
+  return marking.min;
+}
+
+/**
+ * Returns the maximum BPM (exclusive) for a given tempo marking label.
+ * This is the min BPM of the next faster marking, or Infinity for the fastest.
+ * Throws if label is not found.
+ */
+export function getTempoMarkingMax(label: string): number {
+  const idx = TEMPO_MARKINGS.findIndex(m => m.label.toLowerCase() === label.toLowerCase());
+  if (idx === -1) throw new Error(`Unknown tempo marking: ${label}`);
+  if (idx === 0) return Infinity;
+  return TEMPO_MARKINGS[idx - 1].min;
+}
+
+/**
+ * Returns a random integer BPM between the min of minLabel and max of maxLabel (inclusive lower, inclusive upper).
+ * Example: getRandomBpmInRange("Adagio", "Presto") yields 60–199.
+ */
+export function getRandomBpmInRange(minLabel: string, maxLabel: string): number {
+  const min = getTempoMarkingMin(minLabel);
+  // max is exclusive, but we want inclusive, so subtract 1
+  const max = getTempoMarkingMax(maxLabel) - 1;
+  if (min > max) throw new Error(`Invalid tempo range: ${minLabel}–${maxLabel}`);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}

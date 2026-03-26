@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import { buildMidiFile } from "../utils/midiBuilder";
+import { getRandomBpmInRange } from "../utils/bpmTempoLabel";
 
 export function useMidiExport(chords: Chord[]): {
   bpm: number;
@@ -9,8 +10,8 @@ export function useMidiExport(chords: Chord[]): {
   setBeatsPerChord: (v: number) => void;
   exportMidi: () => void;
 } {
-  const [bpm, setBpm] = useState(120);
-  const [beatsPerChord, setBeatsPerChord] = useState(2);
+  const [bpm, setBpm] = useState(() => getRandomBpmInRange("Adagio", "Presto")); // Random BPM between Adagio and Presto (60–199)
+  const [beatsPerChord, setBeatsPerChord] = useState(4);
   const startOctave = 4;
 
   const exportMidi = useCallback(() => {
