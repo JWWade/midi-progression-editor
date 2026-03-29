@@ -95,6 +95,11 @@ public class ProgressionAnalyzer : IProgressionService
     /// Computes the voice-leading motion cost between two chords using minimum-cost cyclic matching.
     /// </summary>
     /// <remarks>
+    /// TODO: Replace current motion metric with chordDistance once validated (see
+    /// client/src/features/voice-leading/utils/chordDistance.ts for the full-permutation
+    /// implementation that uses the same cyclic pitch-class distance but searches all n!
+    /// assignments rather than only cyclic rotations).
+    /// <para>
     /// The method performs a brute-force search over all <c>n</c> cyclic rotations of the shorter
     /// sorted pitch-class array against the longer, selecting the rotation that minimises the total
     /// semitone displacement. This is a simplified, exhaustive-search form of the optimal
