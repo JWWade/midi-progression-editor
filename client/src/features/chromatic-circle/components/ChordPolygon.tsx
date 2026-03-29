@@ -64,7 +64,7 @@ export const ChordPolygon = memo(function ChordPolygon({
 
       {/* Centroid crosshair + dot */}
       {showCentroid && (
-        <g aria-label="From chord centroid">
+        <g role="img" aria-label="From chord centroid">
           <line
             x1={centroid.x - CENTROID_CROSSHAIR_LENGTH}
             y1={centroid.y}
