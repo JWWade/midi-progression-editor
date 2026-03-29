@@ -4,3 +4,10 @@ export {
   chordDistance,
   chordMatching,
 } from "./utils/chordDistance";
+export {
+  normalize,
+  transpose,
+  invert,
+  canonicalizeChord,
+} from "./utils/canonicalizeChord";
+export type { CanonicalizationMode, CanonicalChord } from "./utils/canonicalizeChord";
