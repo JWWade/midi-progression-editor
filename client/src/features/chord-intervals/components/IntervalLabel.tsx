@@ -32,7 +32,7 @@ export function IntervalLabel({
   const labelY = magnitude > 0 ? midY + (dy / magnitude) * LABEL_OFFSET : midY;
 
   return (
-    <g aria-label={`Interval: ${intervalName}`}>
+    <g role="img" aria-label={`Interval: ${intervalName}`}>
       <rect
         x={labelX - RECT_WIDTH / 2}
         y={labelY - RECT_HEIGHT / 2}

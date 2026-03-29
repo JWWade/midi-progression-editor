@@ -332,6 +332,7 @@ export function ChromaticCircle({
         <svg
           viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
           className={styles.chromaticSvg}
+          role="application"
           aria-label="Chromatic Circle"
           onClick={deselectTone}
           style={{
@@ -394,6 +395,7 @@ export function ChromaticCircle({
           />
 
           {/* Chord polygon vertices */}
+          <g role="group" aria-label="From chord notes">
           {chordNotes.map((note, i) => {
             const point = fromPoints[i];
             const interval = baseIntervals[i];
@@ -421,6 +423,7 @@ export function ChromaticCircle({
               />
             );
           })}
+          </g>
 
           {/* Chromatic ring note nodes */}
           {pitchClasses.map((label, i) => {
