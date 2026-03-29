@@ -21,3 +21,19 @@ export interface ChordGraph {
   nodes: ChordNode[];
   edges: ChordEdge[];
 }
+
+/**
+ * Result of a shortest voice-leading path query between two canonical chord nodes.
+ */
+export interface PathResult {
+  /** Ordered sequence of canonical chord nodes from start to end (inclusive). */
+  nodes: ChordNode[];
+  /** Total voice-leading distance: sum of edge weights along the path. */
+  totalDistance: number;
+  /**
+   * Per-step optimal voice-leading assignments.  Entry `i` describes the
+   * mapping from `nodes[i].pcs` to `nodes[i+1].pcs` as returned by
+   * `chordMatching`.  Absent when the path contains only one node.
+   */
+  mappings?: { fromIdx: number; toIdx: number }[][];
+}
