@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, memo } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import { ChordTile } from "./ChordTile";
 import { PairMetricBadge } from "./PairMetricBadge";
@@ -65,7 +65,7 @@ interface BridgeGapRowProps {
   previewingBridge: Chord[] | null;
 }
 
-function BridgeGapRow({
+const BridgeGapRow = memo(function BridgeGapRow({
   chords,
   index,
   scale,
@@ -121,7 +121,7 @@ function BridgeGapRow({
       )}
     </li>
   );
-}
+});
 
 // ── Main component ───────────────────────────────────────────────────────
 

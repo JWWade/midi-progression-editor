@@ -3,7 +3,7 @@
  * Rendered between progression tiles to show note overlap at a glance.
  */
 
-import React from "react";
+import React, { memo } from "react";
 import type { PairMetric } from "../utils/pairMetrics";
 import styles from "./PairMetricBadge.module.css";
 
@@ -13,7 +13,7 @@ interface PairMetricBadgeProps {
   ariaLabel?: string;
 }
 
-export function PairMetricBadge({ metric, ariaLabel }: PairMetricBadgeProps): React.ReactElement | null {
+export const PairMetricBadge = memo(function PairMetricBadge({ metric, ariaLabel }: PairMetricBadgeProps): React.ReactElement | null {
   // Hide metrics for identical chord pairs
   if (metric.hide) {
     return null;
@@ -52,4 +52,4 @@ export function PairMetricBadge({ metric, ariaLabel }: PairMetricBadgeProps): Re
       </div>
     </div>
   );
-}
+});

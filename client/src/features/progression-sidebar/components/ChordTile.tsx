@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, memo } from "react";
 import { ChordThumbnail } from "@/features/current-chord/components/ChordThumbnail";
 import { getChordName } from "@/features/chord/data/chordNames";
 import { getChordPitchClasses } from "@/features/chord/utils";
@@ -23,8 +23,14 @@ interface ChordTileProps {
   onAnimationEnd?: () => void;
 }
 
-export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
-  function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
+// Memoize using data-only comparison so that inline callback wrappers created
+// in the parent's render/map loop do not trigger unnecessary re-renders.
+// Only chord identity and boolean display flags drive visual output; the
+// callback props (onMoveUp, onMoveDown, onDelete, onAnimationEnd) are stable
+// in behaviour per tile even when their reference changes.
+export const ChordTile = memo(
+  forwardRef<HTMLLIElement, ChordTileProps>(
+    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
@@ -97,5 +103,14 @@ export const ChordTile = forwardRef<HTMLLIElement, ChordTileProps>(
       )}
     </li>
   );
-});
+}),
+  (prev, next) =>
+    prev.chord === next.chord &&
+    prev.index === next.index &&
+    prev.isFirst === next.isFirst &&
+    prev.isLast === next.isLast &&
+    prev.isNew === next.isNew &&
+    prev.isPlaying === next.isPlaying &&
+    prev.isGhost === next.isGhost,
+);
 

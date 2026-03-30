@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, memo } from "react";
 import type { Chord } from "../types";
 import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
@@ -35,7 +35,7 @@ interface CurrentChordPanelProps {
   onAudioParamsChange?: (params: AudioParams) => void;
 }
 
-export function CurrentChordPanel({
+export const CurrentChordPanel = memo(function CurrentChordPanel({
   chord,
   onAddChord,
   diatonicIndices,
@@ -247,4 +247,4 @@ export function CurrentChordPanel({
       )}
     </div>
   );
-}
+});
