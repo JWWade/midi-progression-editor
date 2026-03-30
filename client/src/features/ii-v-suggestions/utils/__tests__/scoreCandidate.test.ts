@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Chord } from "@/features/current-chord/types";
+import type { ScaleContext } from "@/shared/types/ScaleContext";
 import {
   totalVoiceLeadingCost,
   sharedNoteBonus,
@@ -20,7 +21,7 @@ const Am7 = chord(9, "min7");
 const Dm7 = chord(2, "min7");
 const G7 = chord(7, "dom7");
 
-const C_MAJOR = { root: 0, mode: "major" };
+const C_MAJOR: ScaleContext = { root: 0, mode: "major" };
 
 // ── totalVoiceLeadingCost ────────────────────────────────────────────────────
 
@@ -90,7 +91,7 @@ describe("diatonicBonus", () => {
   });
 
   it("returns 0 for an unknown scale mode", () => {
-    expect(diatonicBonus([G7], { root: 0, mode: "pentatonic" })).toBe(0);
+    expect(diatonicBonus([G7], { root: 0, mode: "pentatonic" } as unknown as ScaleContext)).toBe(0);
   });
 
   it("returns 1.0 when all bridge notes are diatonic to C major", () => {
@@ -193,7 +194,7 @@ describe("scoreCandidate", () => {
 
   it("all scores are in [0,1] for various bridge/scale combinations", () => {
     const bridges: Chord[][] = [[G7], [Dm7, G7], [Am7]];
-    const scales = [C_MAJOR, { root: 9, mode: "naturalMinor" }, null];
+    const scales = [C_MAJOR, { root: 9, mode: "naturalMinor" } as ScaleContext, null];
     for (const bridge of bridges) {
       for (const scale of scales) {
         const score = scoreCandidate(bridge, Dm7, Cmaj7, scale);

@@ -6,6 +6,7 @@ import { ProgressionSidebar } from '../features/progression-sidebar';
 import { useProgression } from '../features/progression-sidebar/hooks/useProgression';
 import { useBridgePreview } from '../features/progression-sidebar/hooks/useBridgePreview';
 import { useBridgeApply } from '../features/progression-sidebar/hooks/useBridgeApply';
+import { importSnapshot } from '../features/progression-sidebar/utils/snapshotIO';
 import { MAX_PROGRESSION_LENGTH } from '../features/progression-sidebar/constants/progressionConfig';
 import { useProgressionPlayback } from '../features/audio';
 import type { AudioParams } from '../features/audio/constants/audioConfig';
@@ -35,6 +36,10 @@ export default function App() {
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+
+  // Session import state
+  const [importError, setImportError] = useState<string | null>(null);
+  const loadJsonInputRef = useRef<HTMLInputElement>(null);
 
   const { pitchClasses } = useEnharmonic();
   const { chords, addChord, moveChord, deleteChord, setChords } = useProgression();
@@ -87,6 +92,44 @@ export default function App() {
     setKeyScale(scale);
   }, []);
 
+  const handleLoadJsonClick = useCallback(() => {
+    loadJsonInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      // Reset value so re-selecting the same file triggers onChange again
+      e.target.value = '';
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result;
+        if (typeof text !== 'string') {
+          setImportError('Failed to read file.');
+          return;
+        }
+        const snapshot = importSnapshot(text);
+        if (!snapshot) {
+          setImportError('Invalid session file. The file does not contain a valid progression snapshot.');
+          return;
+        }
+        setChords(snapshot.progression);
+        if (snapshot.scaleContext) {
+          setKeyRoot(snapshot.scaleContext.root);
+          setKeyScale(snapshot.scaleContext.mode);
+        }
+        setImportError(null);
+      };
+      reader.onerror = () => {
+        setImportError('Failed to read file.');
+      };
+      reader.readAsText(file);
+    },
+    [setChords],
+  );
+
   const handleAddChord = useCallback(() => {
     if (currentChord === null || addGuardRef.current) return;
     addGuardRef.current = true;
@@ -124,6 +167,7 @@ export default function App() {
         onIntervalsChange={setShowIntervals}
         showLegend={showLegend}
         onLegendChange={setShowLegend}
+        onLoadJson={handleLoadJsonClick}
       />
       <div className={styles.primaryFlowContainer}>
         {/* Chromatic Circle - Left */}
@@ -186,6 +230,7 @@ export default function App() {
             onToggleLoop={toggleLoop}
             chordDurationMs={chordDurationMs}
             onChordDurationChange={setChordDurationMs}
+            scale={{ root: keyRoot, mode: keyScale }}
             onApplyBridge={applyBridge}
             onPreviewBridge={onPreviewBridge}
             onStopPreview={onStopPreview}
@@ -201,6 +246,21 @@ export default function App() {
           action={{ label: 'Undo', onClick: undoBridge }}
         />
       )}
+      {importError && (
+        <Toast
+          message={importError}
+          action={{ label: 'Dismiss', onClick: () => setImportError(null) }}
+        />
+      )}
+      <input
+        ref={loadJsonInputRef}
+        type="file"
+        accept=".json,application/json"
+        aria-hidden="true"
+        tabIndex={-1}
+        className={styles.visuallyHidden}
+        onChange={handleFileChange}
+      />
       {import.meta.env.DEV && (
         <DevDiagnosticsPanel
           currentChord={currentChord}

@@ -133,9 +133,9 @@ public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicatio
 
         Assert.Single(dto!.Steps);
         Assert.Equal("C", dto.Steps[0].From.Root);
-        Assert.Equal("Major", dto.Steps[0].From.Quality);
+        Assert.Equal(ChordQuality.Major, dto.Steps[0].From.Quality);
         Assert.Equal("G", dto.Steps[0].To.Root);
-        Assert.Equal("Major", dto.Steps[0].To.Quality);
+        Assert.Equal(ChordQuality.Major, dto.Steps[0].To.Quality);
         Assert.Equal(3, dto.Steps[0].Motion);
 
         Assert.Equal(0.75, dto.ContinuityScore);
@@ -181,6 +181,41 @@ public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicatio
     {
         var response = await PostAnalyzeAsync("""{"chords": [{"root":"C","quality":"Major","primitiveShape":"hexagon"}]}""");
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // ── Quartal chord support ─────────────────────────────────────────────────
+
+    [Fact]
+    public async Task PostAnalyze_QuartalQuality_Returns200()
+    {
+        var response = await PostAnalyzeAsync("""{"chords": [{"root":"C","quality":"Quartal"}]}""");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostAnalyze_LowercaseQuartalQuality_Returns200()
+    {
+        var response = await PostAnalyzeAsync("""{"chords": [{"root":"C","quality":"quartal"}]}""");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    // ── Lowercase frontend quality strings ────────────────────────────────────
+
+    [Theory]
+    [InlineData("major")]
+    [InlineData("minor")]
+    [InlineData("dim")]
+    [InlineData("aug")]
+    [InlineData("dom7")]
+    [InlineData("maj7")]
+    [InlineData("min7")]
+    [InlineData("halfdim7")]
+    [InlineData("quartal")]
+    public async Task PostAnalyze_FrontendLowercaseQuality_Returns200(string quality)
+    {
+        var body = $$"""{"chords": [{"root":"C","quality":"{{quality}}"}]}""";
+        var response = await PostAnalyzeAsync(body);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

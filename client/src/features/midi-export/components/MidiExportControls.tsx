@@ -1,19 +1,33 @@
 import type { Chord } from "@/features/current-chord/types";
+import type { ScaleContext } from "@/shared/types/ScaleContext";
 import { useMidiExport } from "../hooks/useMidiExport";
 import { getBpmTempoLabel } from "../utils/bpmTempoLabel";
 import { NoteValueSelector } from "./NoteValueSelector";
+import { exportSnapshot } from "@/features/progression-sidebar/utils/snapshotIO";
 import styles from "./MidiExportControls.module.css";
 
 interface MidiExportControlsProps {
   chords: Chord[];
   disabled: boolean;
+  scaleContext: ScaleContext | null;
 }
 
-export function MidiExportControls({ chords, disabled }: MidiExportControlsProps) {
+export function MidiExportControls({ chords, disabled, scaleContext }: MidiExportControlsProps) {
   const { bpm, setBpm, beatsPerChord, setBeatsPerChord, exportMidi } =
     useMidiExport(chords);
 
   const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
+
+  function handleExportJson() {
+    const json = exportSnapshot(chords, scaleContext, { bpm, beatsPerChord });
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "progression.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className={styles.exportControls}>
@@ -58,6 +72,16 @@ export function MidiExportControls({ chords, disabled }: MidiExportControlsProps
         title={disabled ? "Add chords to export" : "Export as MIDI file"}
       >
         Export .mid
+      </button>
+      <button
+        className={styles.exportButton}
+        onClick={handleExportJson}
+        disabled={disabled}
+        aria-disabled={disabled}
+        aria-label={disabled ? "Export as JSON (add chords first)" : "Export progression as JSON"}
+        title={disabled ? "Add chords to export" : "Export as JSON"}
+      >
+        Export JSON
       </button>
     </div>
   );

@@ -103,6 +103,7 @@ describe("findNearestChord", () => {
       min7: [0, 3, 7, 10],
       dom7: [0, 4, 7, 10],
       halfdim7: [0, 3, 6, 10],
+      quartal: [0, 5, 10],
     };
     // Augmented triads are symmetric: [0,4,8], [4,8,0], [8,0,4] all produce
     // the same pitch-class set, so any of the three roots is valid.

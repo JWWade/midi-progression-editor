@@ -1,4 +1,3 @@
-import type { ChordNoteInfo } from "@/features/chord/types";
 import type { AudioParams } from "../constants/audioConfig";
 import { DEFAULT_AUDIO_PARAMS } from "../constants/audioConfig";
 
@@ -65,7 +64,7 @@ export function stopChord(): void {
 }
 
 export async function playChord(
-  notes: ChordNoteInfo[],
+  notes: ReadonlyArray<{ index: number }>,
   options: PlayOptions = {},
 ): Promise<void> {
   const { duration = 1200, octave = 4, audioParams = DEFAULT_AUDIO_PARAMS } = options;

@@ -280,20 +280,21 @@ export interface components {
         ChordDto: {
             root?: string | null;
             /** @enum {string} */
-            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7";
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
             displayName?: string | null;
             pitchClasses?: number[] | null;
             noteNames?: string[] | null;
         };
         ChordFromRootRequestDto: {
             /** @enum {string} */
-            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7";
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
             /** @enum {string|null} */
             primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
         };
         ChordRef: {
             root: string;
-            quality: string;
+            /** @enum {string} */
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
             /** @enum {string|null} */
             primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
             /**

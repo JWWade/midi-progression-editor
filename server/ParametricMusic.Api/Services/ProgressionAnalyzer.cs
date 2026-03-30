@@ -52,15 +52,15 @@ public class ProgressionAnalyzer : IProgressionService
     }
 
     /// <summary>
-    /// Resolves the sorted pitch-class array for a chord specified by root note name and quality string.
+    /// Resolves the sorted pitch-class array for a chord specified by root note name and quality.
     /// When <see cref="ChordRef.CustomNotes"/> is provided and non-empty, those pitch classes are used
     /// directly instead of deriving them from root and quality. Out-of-range values (outside 0–11) are
     /// silently discarded; duplicates are collapsed.
     /// </summary>
-    /// <param name="chordRef">A chord reference containing a root note name, quality label, and optional custom notes.</param>
+    /// <param name="chordRef">A chord reference containing a root note name, quality, and optional custom notes.</param>
     /// <returns>A sorted array of MIDI pitch classes (0–11) for the chord's tones.</returns>
     /// <exception cref="ArgumentException">
-    /// Thrown when <paramref name="chordRef"/> contains an unrecognized root or quality value and
+    /// Thrown when <paramref name="chordRef"/> contains an unrecognized root note value and
     /// <see cref="ChordRef.CustomNotes"/> is null or empty.
     /// </exception>
     private static int[] GetSortedPitchClasses(ChordRef chordRef)
@@ -80,11 +80,8 @@ public class ProgressionAnalyzer : IProgressionService
         if (!NoteExtensions.TryParse(chordRef.Root, out var note))
             throw new ArgumentException($"Invalid root note: \"{chordRef.Root}\"");
 
-        if (!Enum.TryParse<ChordQuality>(chordRef.Quality, ignoreCase: true, out var quality))
-            throw new ArgumentException($"Invalid chord quality: \"{chordRef.Quality}\"");
-
-        // Use the internal interval table directly to avoid a separate IChordService dependency.
-        if (!ChordGenerator.Intervals.TryGetValue(quality, out var intervals))
+        // Quality is already validated as a ChordQuality enum during JSON deserialization.
+        if (!ChordGenerator.Intervals.TryGetValue(chordRef.Quality, out var intervals))
             throw new ArgumentException($"Unsupported chord quality: \"{chordRef.Quality}\"");
 
         var rootIndex = (int)note;

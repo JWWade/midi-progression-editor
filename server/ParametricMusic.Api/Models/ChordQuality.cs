@@ -19,5 +19,7 @@ public enum ChordQuality
     [Display(Name = "Minor 7th", Description = "Minor seventh chord (root, minor 3rd, perfect 5th, minor 7th)")]
     Minor7,
     [Display(Name = "Half-Diminished 7th", Description = "Half-diminished seventh chord (root, minor 3rd, diminished 5th, minor 7th)")]
-    HalfDiminished7
+    HalfDiminished7,
+    [Display(Name = "Quartal", Description = "Quartal chord (root, perfect 4th, minor 7th — stacked fourths)")]
+    Quartal
 }
