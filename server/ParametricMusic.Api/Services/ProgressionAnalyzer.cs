@@ -102,6 +102,7 @@ public class ProgressionAnalyzer : IProgressionService
     /// semitone displacement. This is a simplified, exhaustive-search form of the optimal
     /// voice-leading assignment problem described in Tymoczko's
     /// <em>A Geometry of Music</em> (Oxford University Press, 2011, ch. 2).
+    /// </para>
     /// <para>
     /// Each pairwise distance uses the cyclic (interval-class) metric:
     /// <c>min(|a - b|, 12 - |a - b|)</c>, which measures the shortest path around the
