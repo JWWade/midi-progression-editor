@@ -62,7 +62,8 @@ dotnet run
 
 ```bash
 cd client
-npm install     # First time only
+cp .env.example .env.local  # First time only; edit if backend runs elsewhere
+npm install                  # First time only
 npm run dev
 ```
 

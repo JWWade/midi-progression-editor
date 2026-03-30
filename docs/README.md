@@ -30,6 +30,7 @@ Each audit document catalogues findings for a specific quality dimension.
 | [data-model-audit.md](data-model-audit.md) | Schema stability, expressiveness, ML-readiness; all six gap findings and fixes | — |
 | [design-system-audit.md](design-system-audit.md) | CSS architecture, design tokens, color system, component catalogue | ISSUE-E9-07 |
 | [documentation-audit.md](documentation-audit.md) | Documentation inventory, gap analysis, classification of all docs | ISSUE-E9-08 |
+| [dx-audit.md](dx-audit.md) | Developer experience — setup, tooling, scripts, error handling, API evolution | ISSUE-E9-09 |
 | [performance-audit.md](performance-audit.md) | Render bottlenecks, state management efficiency, optimization candidates | ISSUE-E9-05 |
 | [tech-debt-audit.md](tech-debt-audit.md) | Technical debt inventory, refactoring candidates, code smell analysis | ISSUE-E9-03 |
 
@@ -45,6 +46,7 @@ investigations that informed (or will inform) feature development.
 | [spikes/SPIKE-architecture-boundaries.md](spikes/SPIKE-architecture-boundaries.md) | Feature/service/controller layer boundaries and cross-cutting concerns | Open |
 | [spikes/SPIKE-audiocontext-currenttime-sequencing.md](spikes/SPIKE-audiocontext-currenttime-sequencing.md) | Web Audio API timing, `AudioContext.currentTime` sequencing strategies | Open |
 | [spikes/SPIKE-design-system.md](spikes/SPIKE-design-system.md) | Icon systems, design token expansion, motion/animation standards | Open |
+| [spikes/SPIKE-dx-setup.md](spikes/SPIKE-dx-setup.md) | Prerequisite-check scripts and `generate:api` hardening | Open |
 | [spikes/SPIKE-ii-v-bridges.md](spikes/SPIKE-ii-v-bridges.md) | Automatic ii–V bridge and tritone substitution suggestions | Complete |
 | [spikes/SPIKE-performance-hotspots.md](spikes/SPIKE-performance-hotspots.md) | Critical performance bottleneck identification | Open |
 | [spikes/SPIKE-quartal-diatonic.md](spikes/SPIKE-quartal-diatonic.md) | Quartal harmony theory and diatonic quartal chord generation | Complete |
@@ -69,3 +71,6 @@ investigations that informed (or will inform) feature development.
 
 **"What documentation exists and what's missing?"**
 → [documentation-audit.md](documentation-audit.md)
+
+**"What developer experience friction points exist and how are they addressed?"**
+→ [dx-audit.md](dx-audit.md)

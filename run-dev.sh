@@ -18,18 +18,37 @@ trap cleanup EXIT INT TERM
 echo "Starting MIDI Progression Editor Development Environment..."
 echo ""
 
-# Kill any process already holding port 5110 so dotnet run succeeds.
+# Free port 5110 (backend) if already occupied.
 if lsof -ti:5110 >/dev/null 2>&1; then
-  echo "[0/2] Freeing port 5110..."
+  echo "[0/4] Freeing port 5110..."
   lsof -ti:5110 | xargs kill -9 2>/dev/null || true
   sleep 1
 fi
 
-echo "[1/2] Starting Backend (ASP.NET Core → http://localhost:5110)..."
+# Free port 5173 (frontend) if already occupied.
+if lsof -ti:5173 >/dev/null 2>&1; then
+  echo "[0/4] Freeing port 5173..."
+  lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+  sleep 1
+fi
+
+# Restore backend packages on first run (when obj/ does not exist yet).
+if [ ! -d "$ROOT/server/ParametricMusic.Api/obj" ]; then
+  echo "[1/4] Restoring backend packages (first-time setup)..."
+  (cd "$ROOT/server/ParametricMusic.Api" && dotnet restore)
+fi
+
+# Install frontend dependencies on first run (when node_modules/ does not exist yet).
+if [ ! -d "$ROOT/client/node_modules" ]; then
+  echo "[2/4] Installing frontend dependencies (first-time setup)..."
+  (cd "$ROOT/client" && npm install)
+fi
+
+echo "[3/4] Starting Backend (ASP.NET Core → http://localhost:5110)..."
 (cd "$ROOT/server/ParametricMusic.Api" && dotnet run) &
 BACKEND_PID=$!
 
-echo "[2/2] Starting Frontend  (Vite        → http://localhost:5173)..."
+echo "[4/4] Starting Frontend  (Vite        → http://localhost:5173)..."
 (cd "$ROOT/client" && npm run dev) &
 FRONTEND_PID=$!
 
