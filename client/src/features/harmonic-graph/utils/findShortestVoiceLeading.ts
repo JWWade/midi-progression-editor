@@ -1,9 +1,10 @@
 /**
  * Shortest-path voice-leading on the harmonic chord graph.
  *
- * Implements Dijkstra's algorithm over the T-canonical chord graph produced by
- * `buildChordGraph`.  Edge weights are `chordDistance` values, so the shortest
- * path corresponds to the smoothest voice-leading sequence between two chords.
+ * Implements Dijkstra's algorithm over the canonical chord graph produced by
+ * `buildChordGraph`.  Edge weights are `weightFn` values (defaulting to
+ * `chordDistance`), so the shortest path corresponds to the smoothest
+ * voice-leading sequence between two chords.
  *
  * Usage:
  *   const result = findShortestVoiceLeading([0, 4, 7], [0, 3, 7]);
@@ -15,12 +16,39 @@ import {
   canonicalizeChord,
   chordMatching,
 } from "@/features/voice-leading";
-import type { ChordGraph, ChordNode, PathResult } from "../types";
+import type { CanonicalizationMode } from "@/features/voice-leading";
+import type { ChordGraph, ChordNode, PathResult, WeightFn } from "../types";
 import { buildChordGraph } from "./buildChordGraph";
+
+// ---------------------------------------------------------------------------
+// Public types
+// ---------------------------------------------------------------------------
+
+/**
+ * Options accepted by {@link findShortestVoiceLeading} as its fourth argument.
+ */
+export interface FindShortestVoiceLeadingOptions {
+  /**
+   * Symmetry group used to canonicalize `startPCS` and `endPCS` before node
+   * lookup.  Must match the mode used to build the graph.
+   * @default "T"
+   */
+  canonicalization?: CanonicalizationMode;
+  /**
+   * Custom edge-weight function passed to `buildChordGraph` when no pre-built
+   * graph is provided.  Ignored when `graph` is supplied.
+   * @default chordDistance
+   */
+  weightFn?: WeightFn;
+}
+
+// ---------------------------------------------------------------------------
+// findShortestVoiceLeading
+// ---------------------------------------------------------------------------
 
 /**
  * Computes the shortest voice-leading path between two chords on the
- * T-canonical chord graph using Dijkstra's algorithm.
+ * canonical chord graph using Dijkstra's algorithm.
  *
  * Both input chords are canonicalised before the search, so enharmonically
  * or transpositionally equivalent inputs (e.g. `[0,4,7]` and `[2,6,9]`)
@@ -30,10 +58,11 @@ import { buildChordGraph } from "./buildChordGraph";
  * @param endPCS    - Pitch classes of the ending chord.
  * @param graph     - Optional pre-built {@link ChordGraph}.  When omitted a
  *                    full (complete) graph is built via `buildChordGraph`.
- * @param maxWeight - Upper bound on edge weight used **only** when `graph` is
- *                    not provided (passed to `buildChordGraph`).  Pruning edges
- *                    may disconnect the graph and cause the function to return
- *                    `null` even for reachable chord pairs.
+ * @param maxWeightOrOptions - Either a legacy `maxWeight` number (upper bound
+ *                    on edge weight, passed to `buildChordGraph` when `graph`
+ *                    is not provided) **or** a {@link FindShortestVoiceLeadingOptions}
+ *                    object.  Pruning edges may disconnect the graph and cause
+ *                    the function to return `null` even for reachable chord pairs.
  * @returns A {@link PathResult} describing the optimal path, or `null` when:
  *   - either chord is not present in the graph, or
  *   - no path connects the two nodes (disconnected graph due to `maxWeight`).
@@ -44,14 +73,29 @@ export function findShortestVoiceLeading(
   startPCS: number[],
   endPCS: number[],
   graph?: ChordGraph,
-  maxWeight?: number,
+  maxWeightOrOptions?: number | FindShortestVoiceLeadingOptions,
 ): PathResult | null {
-  // Canonicalise inputs to stable node IDs.
-  const startId = canonicalizeChord(startPCS, "T").pcs.join(",");
-  const endId = canonicalizeChord(endPCS, "T").pcs.join(",");
+  // Normalise the overloaded fourth argument.
+  const opts: FindShortestVoiceLeadingOptions =
+    typeof maxWeightOrOptions === "number"
+      ? {}
+      : (maxWeightOrOptions ?? {});
+  const legacyMaxWeight =
+    typeof maxWeightOrOptions === "number" ? maxWeightOrOptions : undefined;
+
+  const { canonicalization = "T", weightFn } = opts;
+
+  // Canonicalise inputs to stable node IDs using the requested mode.
+  const startId = canonicalizeChord(startPCS, canonicalization).pcs.join(",");
+  const endId = canonicalizeChord(endPCS, canonicalization).pcs.join(",");
 
   // Use the provided graph or build a fresh one.
-  const chordGraph = graph ?? buildChordGraph(maxWeight);
+  const chordGraph =
+    graph ??
+    buildChordGraph({
+      maxWeight: legacyMaxWeight,
+      weightFn,
+    });
 
   // Index nodes for O(1) lookup.
   const nodeById = new Map<string, ChordNode>();
@@ -80,7 +124,7 @@ export function findShortestVoiceLeading(
   }
 
   // ---------------------------------------------------------------------------
-  // Dijkstra's algorithm (O(n²) — adequate for the ~19-node triad graph).
+  // Dijkstra's algorithm (O(n²) — adequate for small chord graphs).
   // ---------------------------------------------------------------------------
   const dist = new Map<string, number>();
   const prev = new Map<string, string | null>();

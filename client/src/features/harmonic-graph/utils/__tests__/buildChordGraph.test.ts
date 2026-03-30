@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildChordGraph } from "../buildChordGraph";
+import { buildChordGraph, containsTritoneMotion } from "../buildChordGraph";
 import { canonicalizeChord, chordDistance } from "@/features/voice-leading";
 
 // ---------------------------------------------------------------------------
@@ -177,5 +177,162 @@ describe("buildChordGraph — canonicalization", () => {
     // That single canonical key appears exactly once in the graph
     const matching = graph.nodes.filter((n) => n.id === canonCMaj);
     expect(matching).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildChordGraph — Phase 3: multi-size chord nodes
+// ---------------------------------------------------------------------------
+
+describe("buildChordGraph — multi-size (sizes: [3, 4])", () => {
+  it("builds without errors for sizes [3, 4]", () => {
+    expect(() => buildChordGraph({ sizes: [3, 4] })).not.toThrow();
+  });
+
+  it("returns exactly 19 triad nodes under T-equivalence (sizes: [3])", () => {
+    const graph = buildChordGraph({ sizes: [3] });
+    expect(graph.nodes).toHaveLength(19);
+  });
+
+  it("returns exactly 43 seventh-chord nodes under T-equivalence (sizes: [4])", () => {
+    const graph = buildChordGraph({ sizes: [4] });
+    expect(graph.nodes).toHaveLength(43);
+  });
+
+  it("returns 62 nodes (19 triads + 43 sevenths) for sizes [3, 4]", () => {
+    const graph = buildChordGraph({ sizes: [3, 4] });
+    expect(graph.nodes).toHaveLength(62);
+  });
+
+  it("all triad nodes have pcs of length 3 and all seventh nodes have pcs of length 4", () => {
+    const graph = buildChordGraph({ sizes: [3, 4] });
+    const triads = graph.nodes.filter((n) => n.pcs.length === 3);
+    const sevenths = graph.nodes.filter((n) => n.pcs.length === 4);
+    expect(triads).toHaveLength(19);
+    expect(sevenths).toHaveLength(43);
+  });
+
+  it("cross-size edges are absent (chordDistance returns Infinity for different sizes)", () => {
+    const graph = buildChordGraph({ sizes: [3, 4] });
+    const nodeById = new Map(graph.nodes.map((n) => [n.id, n]));
+    for (const edge of graph.edges) {
+      const fromLen = nodeById.get(edge.from)!.pcs.length;
+      const toLen = nodeById.get(edge.to)!.pcs.length;
+      expect(fromLen).toBe(toLen);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildChordGraph — Phase 3: TI canonicalization
+// ---------------------------------------------------------------------------
+
+describe("buildChordGraph — TI canonicalization", () => {
+  it("TI mode produces fewer or equal nodes than T mode for triads", () => {
+    const tGraph = buildChordGraph({ sizes: [3], canonicalization: "T" });
+    const tiGraph = buildChordGraph({ sizes: [3], canonicalization: "TI" });
+    expect(tiGraph.nodes.length).toBeLessThan(tGraph.nodes.length);
+  });
+
+  it("returns exactly 12 nodes for triads under TI-equivalence", () => {
+    const graph = buildChordGraph({ sizes: [3], canonicalization: "TI" });
+    expect(graph.nodes).toHaveLength(12);
+  });
+
+  it("returns exactly 29 nodes for seventh chords under TI-equivalence", () => {
+    const graph = buildChordGraph({ sizes: [4], canonicalization: "TI" });
+    expect(graph.nodes).toHaveLength(29);
+  });
+
+  it("inversion pairs collapse under TI: [0,4,7] and [0,5,8] map to the same node", () => {
+    // [0,4,7] is a major triad; [0,5,8] is its inversion (minor triad = I([0,4,7]))
+    const tiId1 = canonicalizeChord([0, 4, 7], "TI").pcs.join(",");
+    const tiId2 = canonicalizeChord([0, 5, 8], "TI").pcs.join(",");
+    expect(tiId1).toBe(tiId2);
+
+    const graph = buildChordGraph({ sizes: [3], canonicalization: "TI" });
+    const nodeIds = graph.nodes.map((n) => n.id);
+    // Both IDs resolve to the same canonical ID, so it appears only once
+    const matches = nodeIds.filter((id) => id === tiId1);
+    expect(matches).toHaveLength(1);
+  });
+
+  it("every node is idempotent under re-canonicalization with TI", () => {
+    const graph = buildChordGraph({ sizes: [3], canonicalization: "TI" });
+    for (const node of graph.nodes) {
+      const recanon = canonicalizeChord(node.pcs, "TI");
+      expect(recanon.pcs).toEqual(node.pcs);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildChordGraph — Phase 3: pluggable weight function
+// ---------------------------------------------------------------------------
+
+describe("buildChordGraph — custom weightFn", () => {
+  it("custom weightFn changes edge weights compared to default chordDistance", () => {
+    const defaultGraph = buildChordGraph({ sizes: [3] });
+    // weightFn that doubles every cost
+    const doubledGraph = buildChordGraph({
+      sizes: [3],
+      weightFn: (a, b) => chordDistance(a, b) * 2,
+    });
+    // Same number of edges (no maxWeight filter)
+    expect(doubledGraph.edges).toHaveLength(defaultGraph.edges.length);
+    // All doubled weights should be exactly 2× the default weights
+    const defaultById = new Map(
+      defaultGraph.edges.map((e) => [`${e.from}|${e.to}`, e.weight]),
+    );
+    for (const edge of doubledGraph.edges) {
+      const key = `${edge.from}|${edge.to}`;
+      const defaultWeight = defaultById.get(key)!;
+      expect(edge.weight).toBeCloseTo(defaultWeight * 2);
+    }
+  });
+
+  it("tritonePenalty weightFn increases weights for tritone-containing chord pairs", () => {
+    const tritonePenalty = (a: number[], b: number[]) => {
+      const base = chordDistance(a, b);
+      return base === Infinity ? Infinity : base + (containsTritoneMotion(a, b) ? 2 : 0);
+    };
+    const defaultGraph = buildChordGraph({ sizes: [3] });
+    const penaltyGraph = buildChordGraph({ sizes: [3], weightFn: tritonePenalty });
+    // Same structure (no filtering)
+    expect(penaltyGraph.nodes).toHaveLength(defaultGraph.nodes.length);
+    expect(penaltyGraph.edges).toHaveLength(defaultGraph.edges.length);
+    // At least one edge should have a higher weight in the penalty graph
+    const penaltyById = new Map(
+      penaltyGraph.edges.map((e) => [`${e.from}|${e.to}`, e.weight]),
+    );
+    const defaultById = new Map(
+      defaultGraph.edges.map((e) => [`${e.from}|${e.to}`, e.weight]),
+    );
+    let atLeastOnePenalized = false;
+    for (const [key, penaltyWeight] of penaltyById) {
+      const defaultWeight = defaultById.get(key)!;
+      if (penaltyWeight > defaultWeight) {
+        atLeastOnePenalized = true;
+        break;
+      }
+    }
+    expect(atLeastOnePenalized).toBe(true);
+  });
+
+  it("custom weightFn with maxWeight can further restrict edges", () => {
+    const uniformGraph = buildChordGraph({ sizes: [3], weightFn: () => 1 });
+    // All edges have weight 1 so maxWeight=1 retains all, maxWeight=0 removes all
+    const allEdges = buildChordGraph({
+      sizes: [3],
+      weightFn: () => 1,
+      maxWeight: 1,
+    });
+    const noEdges = buildChordGraph({
+      sizes: [3],
+      weightFn: () => 1,
+      maxWeight: 0,
+    });
+    expect(allEdges.edges).toHaveLength(uniformGraph.edges.length);
+    expect(noEdges.edges).toHaveLength(0);
   });
 });
