@@ -2,6 +2,8 @@ import { Midi } from "@tonejs/midi";
 import type { Chord } from "@/features/current-chord/types";
 import { getChordPitchClasses } from "@/features/chord/utils";
 import { closeVoiceChord, minimalMotionVoicing } from "@/features/voice-leading";
+import { getChordName } from "@/features/chord/data/chordNames";
+import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 
 export interface MidiExportOptions {
   /** Beats per minute (40–240). Default: 120. */
@@ -10,6 +12,18 @@ export interface MidiExportOptions {
   beatsPerChord: number;
   /** Starting octave for the first chord (2–6). Default: 4. */
   startOctave: number;
+  /**
+   * When `true` (default), a MIDI Text meta event (0x01) and a Marker meta
+   * event (0x06) are written at the start tick of every chord so that
+   * notation tools and DAWs can display harmony labels.
+   */
+  includeChordSymbols: boolean;
+  /**
+   * Optional per-chord label overrides.  When `chordLabels[i]` is a non-empty
+   * string it replaces the auto-derived symbol for chord `i`; otherwise the
+   * auto-derived name is used.
+   */
+  chordLabels: string[];
 }
 
 const MIN_BPM = 40;
@@ -28,7 +42,21 @@ const DEFAULT_OPTIONS: MidiExportOptions = {
   bpm: DEFAULT_BPM,
   beatsPerChord: DEFAULT_BEATS_PER_CHORD,
   startOctave: DEFAULT_OCTAVE,
+  includeChordSymbols: true,
+  chordLabels: [],
 };
+
+/** Derive a chord symbol string for use in MIDI meta events. */
+function getChordSymbol(
+  chord: Chord,
+  labelOverride?: string,
+  pitchClasses: readonly string[] = PITCH_CLASSES,
+): string {
+  if (labelOverride && labelOverride.trim().length > 0) {
+    return labelOverride.trim();
+  }
+  return getChordName(chord.root, chord.quality, pitchClasses);
+}
 
 /**
  * Converts a chord progression into raw MIDI bytes.
@@ -41,7 +69,10 @@ export function buildMidiFile(
   chords: Chord[],
   options: Partial<MidiExportOptions> = {},
 ): Uint8Array {
-  const { bpm, beatsPerChord, startOctave } = { ...DEFAULT_OPTIONS, ...options };
+  const { bpm, beatsPerChord, startOctave, includeChordSymbols, chordLabels } = {
+    ...DEFAULT_OPTIONS,
+    ...options,
+  };
 
   if (bpm < MIN_BPM || bpm > MAX_BPM) {
     throw new RangeError(`bpm must be between ${MIN_BPM} and ${MAX_BPM}, got ${bpm}`);
@@ -83,6 +114,13 @@ export function buildMidiFile(
         duration: chordDuration,
         velocity: VELOCITY / MIDI_MAX_VELOCITY,
       });
+    }
+
+    if (includeChordSymbols) {
+      const symbol = getChordSymbol(chord, chordLabels[index]);
+      const startTicks = index * beatsPerChord * midi.header.ppq;
+      midi.header.meta.push({ type: "text", text: symbol, ticks: startTicks });
+      midi.header.meta.push({ type: "marker", text: symbol, ticks: startTicks });
     }
 
     prevMidi = midiNotes;
