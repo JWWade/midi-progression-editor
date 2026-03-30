@@ -3,6 +3,11 @@ using System.Text.Json.Serialization;
 
 namespace ParametricMusic.Api.Models;
 
+/// <summary>
+/// A chord reference used as input to the progression analyzer.
+/// Identifies a chord either by its named root + quality or by an explicit
+/// set of pitch classes (for custom / non-tertian chords).
+/// </summary>
 public class ChordRef
 {
     [JsonPropertyName("root")]
@@ -32,6 +37,9 @@ public class ChordRef
 
 public class ProgressionAnalyzeRequestDto
 {
+    /// <summary>
+    /// Ordered list of chords in the progression. Must contain 1–8 chords.
+    /// </summary>
     [JsonPropertyName("chords")]
     public List<ChordRef> Chords { get; set; } = [];
 

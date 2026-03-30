@@ -8,6 +8,15 @@
  * Mathematical foundation:
  *   d_pc(x, y) = min(|x − y|, 12 − |x − y|)   (circular semitone distance)
  *   d(A, B)    = min_{σ ∈ S_n} Σ_i d_pc(a_i, b_{σ(i)})
+ *
+ * **Backend counterpart:** `ProgressionAnalyzer.ComputeMotion()` in
+ * `server/ParametricMusic.Api/Services/ProgressionAnalyzer.cs` implements the
+ * same cyclic pitch-class distance metric but searches only cyclic rotations
+ * (O(n²)) rather than all n! permutations. For chords with ≤4 voices the
+ * cyclic-rotation and full permutation approaches produce identical results when
+ * the pitch-class arrays are sorted ascending before comparison.  If the metric
+ * is ever enhanced (e.g. octave weighting, voice crossing penalty) both files
+ * must be updated in sync.
  */
 
 /**
