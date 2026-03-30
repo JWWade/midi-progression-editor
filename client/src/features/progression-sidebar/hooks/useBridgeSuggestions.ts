@@ -2,11 +2,9 @@ import { useMemo } from "react";
 import type { BridgeSuggestion } from "@/features/ii-v-suggestions";
 import { suggestBridges } from "@/features/ii-v-suggestions";
 import type { Chord } from "@/features/current-chord/types";
+import type { ScaleContext } from "@/shared/types/ScaleContext";
 
-export interface ScaleContext {
-  root: number;
-  mode: string;
-}
+export type { ScaleContext };
 
 export function useBridgeSuggestions(
   chords: Chord[],

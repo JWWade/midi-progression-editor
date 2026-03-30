@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Chord } from "@/features/current-chord/types";
+import type { ScaleContext } from "@/shared/types/ScaleContext";
 import { buildDiatonicIIV } from "../buildBridge";
 import { suggestBridges } from "../suggestBridges";
 
@@ -101,7 +102,7 @@ describe("suggestBridges", () => {
     // Dm7 (root=2) → G7 (root=7), C major scale
     const source: Chord = { root: 2, quality: "min7" };
     const target: Chord = { root: 7, quality: "dom7" };
-    const scale = { root: 0, mode: "major" };
+    const scale: ScaleContext = { root: 0, mode: "major" };
 
     const result = suggestBridges(source, target, scale, 2, 3);
     expect(result.length).toBeGreaterThan(0);
@@ -119,7 +120,7 @@ describe("suggestBridges", () => {
   it("G7 → Cmaj: diatonic-ii-v candidate has bridge [Dm7 (root=2), G7 (root=7)]", () => {
     const source: Chord = { root: 7, quality: "dom7" }; // G7
     const target: Chord = { root: 0, quality: "major" }; // C
-    const scale = { root: 0, mode: "major" };
+    const scale: ScaleContext = { root: 0, mode: "major" };
 
     const result = suggestBridges(source, target, scale, 2, 5);
 

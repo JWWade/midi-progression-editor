@@ -9,6 +9,7 @@ interface AppHeaderProps {
   onIntervalsChange: (show: boolean) => void;
   showLegend: boolean;
   onLegendChange: (show: boolean) => void;
+  onLoadJson: () => void;
 }
 
 export function AppHeader({
@@ -18,6 +19,7 @@ export function AppHeader({
   onIntervalsChange,
   showLegend,
   onLegendChange,
+  onLoadJson,
 }: AppHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { useFlats, toggleEnharmonic } = useEnharmonic();
@@ -63,6 +65,17 @@ export function AppHeader({
       </div>
 
       <div className={styles.rightControls}>
+        {/* Load JSON session button */}
+        <button
+          type="button"
+          className={styles.themeToggle}
+          onClick={onLoadJson}
+          aria-label="Load session from JSON file"
+          title="Load session from JSON file"
+        >
+          Load JSON
+        </button>
+
         {/* Theme toggle (cycles light → dark → retro → light) */}
         <button
           type="button"

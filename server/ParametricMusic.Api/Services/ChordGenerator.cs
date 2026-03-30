@@ -22,6 +22,7 @@ public class ChordGenerator : IChordService
         [ChordQuality.Major7]          = [0, 4, 7, 11],
         [ChordQuality.Minor7]          = [0, 3, 7, 10],
         [ChordQuality.HalfDiminished7] = [0, 3, 6, 10],
+        [ChordQuality.Quartal]         = [0, 5, 10],
     };
 
     private static readonly Dictionary<ChordQuality, string> QualityDisplayNames = new()
@@ -34,6 +35,7 @@ public class ChordGenerator : IChordService
         [ChordQuality.Major7]          = "Major 7th",
         [ChordQuality.Minor7]          = "Minor 7th",
         [ChordQuality.HalfDiminished7] = "Half-Diminished 7th",
+        [ChordQuality.Quartal]         = "Quartal",
     };
 
     /// <inheritdoc />

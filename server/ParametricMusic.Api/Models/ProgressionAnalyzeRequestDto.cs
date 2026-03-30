@@ -11,9 +11,8 @@ public class ChordRef
     public string Root { get; set; } = string.Empty;
 
     [JsonPropertyName("quality")]
-    [Required]
-    [StringLength(16, MinimumLength = 1)]
-    public string Quality { get; set; } = string.Empty;
+    [JsonConverter(typeof(ChordQualityJsonConverter))]
+    public ChordQuality Quality { get; set; } = ChordQuality.Major;
 
     [JsonPropertyName("primitiveShape")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

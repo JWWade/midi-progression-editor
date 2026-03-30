@@ -19,7 +19,7 @@ import type { BridgeSuggestion } from "../types";
 export function generateBridgeLabel(
   suggestion: BridgeSuggestion,
   targetName: string,
-  pitchClasses: string[],
+  pitchClasses: readonly string[],
 ): string {
   switch (suggestion.type) {
     case "diatonic-ii-v":
@@ -66,7 +66,7 @@ export function generateBridgeLabel(
 export function generateBridgeExplanation(
   suggestion: BridgeSuggestion,
   targetName: string,
-  pitchClasses: string[],
+  pitchClasses: readonly string[],
 ): string {
   const bridge = suggestion.bridge;
 
@@ -166,7 +166,7 @@ export function generateBridgeExplanation(
 function getSharedNoteNames(
   chordA: Chord,
   chordB: Chord,
-  pitchClasses: string[],
+  pitchClasses: readonly string[],
 ): string[] {
   const aSet = new Set(getChordPitchClasses(chordA));
   const bSet = new Set(getChordPitchClasses(chordB));

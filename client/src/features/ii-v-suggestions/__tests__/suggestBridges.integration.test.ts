@@ -5,6 +5,7 @@
 
 import { describe, it, expect } from "vitest";
 import type { Chord } from "@/features/current-chord/types";
+import type { ScaleContext } from "@/shared/types/ScaleContext";
 import { suggestBridges } from "@/features/ii-v-suggestions";
 import { getChordPitchClasses } from "@/features/chord/utils";
 
@@ -15,7 +16,7 @@ const Am7: Chord = { root: 9, quality: "min7" };
 
 // ── Scale fixtures ──────────────────────────────────────────────────────────
 
-const C_MAJOR = { root: 0, mode: "major" };
+const C_MAJOR: ScaleContext = { root: 0, mode: "major" };
 
 // ── 1. Bridge within cap ────────────────────────────────────────────────────
 
@@ -55,12 +56,12 @@ describe("suggestBridges integration — bridge exceeding cap", () => {
 
 describe("suggestBridges integration — non-7-note scale", () => {
   it("unknown mode string returns results without throwing", () => {
-    const pentatonicLike = { root: 0, mode: "pentatonic" };
+    const pentatonicLike = { root: 0, mode: "pentatonic" } as unknown as ScaleContext;
     expect(() => suggestBridges(Am7, Cmaj7, pentatonicLike, 2)).not.toThrow();
   });
 
   it("unknown mode yields same results as scale=null (no diatonic bonus)", () => {
-    const pentatonicLike = { root: 0, mode: "pentatonic" };
+    const pentatonicLike = { root: 0, mode: "pentatonic" } as unknown as ScaleContext;
     const withUnknown = suggestBridges(Am7, Cmaj7, pentatonicLike, 2);
     const withNull = suggestBridges(Am7, Cmaj7, null, 2);
     expect(withUnknown.length).toBe(withNull.length);

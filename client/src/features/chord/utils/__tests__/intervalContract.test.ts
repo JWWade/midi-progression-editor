@@ -32,6 +32,8 @@ const BACKEND_CHORD_INTERVALS = {
   min7:     [0, 3, 7, 10],
   dom7:     [0, 4, 7, 10],
   halfdim7: [0, 3, 6, 10],
+  // Quartal (stacked perfect fourths)
+  quartal:  [0, 5, 10],
 } as const;
 
 describe("CHORD_INTERVALS frontend↔backend contract", () => {
@@ -67,7 +69,11 @@ describe("CHORD_INTERVALS frontend↔backend contract", () => {
     expect(Array.from(CHORD_INTERVALS.halfdim7)).toEqual(BACKEND_CHORD_INTERVALS.halfdim7);
   });
 
-  it("all 8 tertian chord qualities have a matching backend entry", () => {
+  it("quartal chord matches backend", () => {
+    expect(Array.from(CHORD_INTERVALS.quartal)).toEqual(BACKEND_CHORD_INTERVALS.quartal);
+  });
+
+  it("all 9 chord qualities have a matching backend entry", () => {
     const backendQualities = Object.keys(BACKEND_CHORD_INTERVALS) as Array<keyof typeof BACKEND_CHORD_INTERVALS>;
     for (const quality of backendQualities) {
       expect(CHORD_INTERVALS[quality]).toBeDefined();

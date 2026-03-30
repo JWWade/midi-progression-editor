@@ -7,7 +7,7 @@ import { BridgeSuggestionPopover } from "./BridgeSuggestionPopover";
 import { computeProgressionPairMetrics } from "../utils/pairMetrics";
 import type { PairMetric } from "../utils/pairMetrics";
 import { useBridgeSuggestions } from "../hooks/useBridgeSuggestions";
-import type { ScaleContext } from "../hooks/useBridgeSuggestions";
+import type { ScaleContext } from "@/shared/types/ScaleContext";
 import { MidiExportControls } from "@/features/midi-export/components/MidiExportControls";
 import { getChordName } from "@/features/chord/data/chordNames";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
@@ -315,7 +315,7 @@ export function ProgressionSidebar({
           Maximum {maxLength} chords reached
         </div>
       )}
-      <MidiExportControls chords={chords} disabled={chords.length === 0} />
+      <MidiExportControls chords={chords} disabled={chords.length === 0} scaleContext={scale ?? null} />
     </aside>
   );
 }
