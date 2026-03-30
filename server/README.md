@@ -115,15 +115,15 @@ dotnet build
 
 ## Current Architecture Notes
 
-- Controllers call static domain services directly.
+- Controllers receive services by constructor injection via ASP.NET Core DI (registered as singletons in `Program.cs`).
+- Each service implements a dedicated interface (`IChordService`, `IScaleService`, `IProgressionService`, `IQuartalChordService`) that forms the stable boundary between the HTTP layer and domain logic.
 - JSON enum values are serialized as strings.
 - CORS is configured for localhost development.
 - Swagger is enabled in development.
 - XML comments are included in generated OpenAPI when available.
 - `HealthController` returns a typed `HealthResponse` DTO (not an anonymous object).
-- `QuartalChordGenerator` is a static service alongside `ChordGenerator`, `ScaleGenerator`, and `ProgressionAnalyzer`.
 
-This keeps the backend simple, but it also means there is no service abstraction, persistence layer, authentication, or versioned application boundary yet.
+This keeps the backend simple, but it also means there is no persistence layer, authentication, or versioned application boundary yet.
 
 ## Manual Review Workflow
 

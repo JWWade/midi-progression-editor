@@ -159,9 +159,16 @@ client/
 │   │   │   ├── types/                   # ScaleType (8 modes), SCALE_INTERVALS, SCALE_LABELS
 │   │   │   └── utils/                   # Scale helpers
 │   │   │
+│   │   ├── harmonic-graph/               # Harmonic relationship graph; shortest voice-leading path
+│   │   │   └── utils/                   # findShortestVoiceLeading (Dijkstra's on 19-node T-canonical graph)
+│   │   │
 │   │   ├── ii-v-suggestions/             # Harmonic bridge suggestions (ii–V, tritone-sub, backchains)
 │   │   │   ├── types/                   # BridgeSuggestion, BridgeType, BridgeRequest
 │   │   │   └── utils/                   # suggestBridges, buildBridge, scoreCandidate, bridgeLabel
+│   │   │
+│   │   ├── intent-capture/               # User intent capture (localStorage-backed, Cmd/Ctrl+. hotkey)
+│   │   │   ├── hooks/                   # useIntentCapture hook
+│   │   │   └── utils/                   # IntentStore, captureIntent, snapshotContext
 │   │   │
 │   │   └── voice-leading/                # Voice-leading path utilities
 │   │       └── utils/                   # closeVoiceChord, minimalMotionVoicing
@@ -272,7 +279,9 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 - ✅ **Enharmonic Toggle**: Global sharp/flat notation switch via `EnharmonicProvider`; `useEnharmonic()` exposes `useFlats`, `pitchClasses`, and `toggleEnharmonic`
 - ✅ **Visual Legend**: `VisualLegend` component displays chord quality colour bands (with polygon glyphs) and note opacity levels (diatonic, chord-tone chromatic, chromatic)
 - ✅ **ii–V Suggestions**: `suggestBridges` generates ranked harmonic bridge chords (diatonic ii–V, tritone substitutions, backchains) between any two chords in the progression
-- ✅ **Structure**: Feature-based architecture across 16 modules
+- ✅ **Harmonic Graph**: `findShortestVoiceLeading` (Dijkstra's algorithm on a 19-node T-canonical chord graph) computes the optimal voice-leading path between any two chords
+- ✅ **Intent Capture**: `IntentStore` (localStorage-backed) with `captureIntent`, `snapshotContext`, and `useIntentCapture` hook; global <kbd>Cmd/Ctrl+.</kbd> hotkey triggers capture and adds a placeholder to the progression
+- ✅ **Structure**: Feature-based architecture across 18 modules
 
 ---
 
@@ -479,23 +488,23 @@ public class DiatonicQuartalRequestDto {
 #### Services
 
 **ChordGenerator**
-- Static class; builds a `ChordDto` from a root `Note` and `ChordQuality`
+- Implements `IChordService`; registered as a singleton via DI; builds a `ChordDto` from a root `Note` and `ChordQuality`
 - Applies standard Western tertian harmony interval patterns (triads and seventh chords)
 - Throws `ArgumentOutOfRangeException` for unsupported quality values
 
 **ScaleGenerator**
-- Static class; builds a `NoteInfo[]` from a root pitch-class index and `ScaleType`
+- Implements `IScaleService`; registered as a singleton via DI; builds a `NoteInfo[]` from a root pitch-class index and `ScaleType`
 - Supports all 8 scale types via a lookup dictionary of interval arrays
 - Throws `ArgumentOutOfRangeException` for unsupported scale type values
 
 **ProgressionAnalyzer**
-- Static class; analyzes step-by-step voice motion, computes a normalized continuity score, and returns a per-chord tension trend
+- Implements `IProgressionService`; registered as a singleton via DI; analyzes step-by-step voice motion, computes a normalized continuity score, and returns a per-chord tension trend
 - Continuity score formula: `1 − (averageMotion / 12)` (higher = smoother voice leading)
 - Tension trend: proportion of "rough" interval pairs (tritone, minor 2nd) per chord
 - Input limited to 1–8 chords
 
 **QuartalChordGenerator**
-- Static class; builds and identifies diatonic quartal chords for any 7-note scale
+- Implements `IQuartalChordService`; registered as a singleton via DI; builds and identifies diatonic quartal chords for any 7-note scale
 - `BuildDiatonicQuartal(root, scaleType, degree, size)`: stacks diatonic fourths using `Q(i) = [S[i], S[(i+3)%7], S[(i+6)%7], …]`
 - `IdentifyDiatonicQuartal(root, scaleType, pitchClasses, size)`: searches all 7 scale degrees for a matching pitch-class set
 - Supports degree range 1–7 and voice stack size 2–7
@@ -505,13 +514,19 @@ public class DiatonicQuartalRequestDto {
 #### Program.cs Setup
 
 ```csharp
+// DI: Register harmony-engine services as singletons (stateless pure functions)
+builder.Services.AddSingleton<IChordService, ChordGenerator>();
+builder.Services.AddSingleton<IScaleService, ScaleGenerator>();
+builder.Services.AddSingleton<IProgressionService, ProgressionAnalyzer>();
+builder.Services.AddSingleton<IQuartalChordService, QuartalChordGenerator>();
+
 // CORS: Allow frontend dev server
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("LocalDev", policy =>
         policy.WithOrigins("http://localhost:5173")
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .WithMethods("GET", "POST", "OPTIONS"));
 });
 
 // Swagger: OpenAPI spec generation & UI
@@ -537,12 +552,18 @@ Port configuration in `launchSettings.json`:
 **xUnit Tests** in `ParametricMusic.Tests/`:
 
 ```csharp
-[Theory]
-[InlineData(0)]      // C major
-[InlineData(5)]      // F major (with wraparound)
-public void BuildScale_ReturnsSevenNotes(int root) {
-    var result = ScaleGenerator.BuildScale(root, ScaleType.Major);
-    Assert.Equal(7, result.Length);
+public class ScaleGeneratorTests
+{
+    private readonly IScaleService _service = new ScaleGenerator();
+
+    [Theory]
+    [InlineData(ScaleType.Major, new[] { 0, 2, 4, 5, 7, 9, 11 })]
+    [InlineData(ScaleType.Dorian, new[] { 0, 2, 3, 5, 7, 9, 10 })]
+    public void BuildScale_RootC_ReturnsExpectedPitchClasses(ScaleType scaleType, int[] expected)
+    {
+        var result = _service.BuildScale(0, scaleType);
+        Assert.Equal(expected, result.Select(n => n.Index));
+    }
 }
 ```
 
