@@ -195,6 +195,106 @@ export function ProgressionSidebar({
     return () => clearTimeout(focusTimer);
   }, [newTileNodeIndex]);
 
+  /**
+   * Builds the flat list of rendered tile elements from the mixed node array.
+   * Chord tiles include gap rows and optional ghost bridge-preview tiles.
+   * Placeholder tiles are rendered as dashed ghost cards.
+   *
+   * Defined as a named helper (not an IIFE) for readability.
+   */
+  function buildProgressionTiles(): React.ReactElement[] {
+    const elements: React.ReactElement[] = [];
+    let chordIndex = 0;
+
+    nodes.forEach((node, nodeIndex) => {
+      if (node.type === 'chord') {
+        const ci = chordIndex++;
+        const chord = node.value;
+
+        elements.push(
+          <ChordTile
+            key={node.id}
+            ref={(el) => { tileRefs.current[nodeIndex] = el; }}
+            chord={chord}
+            index={ci}
+            isFirst={ci === 0}
+            isLast={ci === chordCount - 1}
+            isNew={newTileNodeIndex === nodeIndex}
+            isPlaying={playingIndex === ci}
+            onMoveUp={() => onMoveUp(ci)}
+            onMoveDown={() => onMoveDown(ci)}
+            onDelete={() => onDelete(ci)}
+            onAnimationEnd={() => setNewTileNodeIndex(null)}
+          />,
+        );
+
+        // Render ghost bridge-preview tiles immediately after this chord
+        if (previewBridge !== null && previewInsertAfterIndex === ci) {
+          previewBridge.forEach((ghostChord, gi) => {
+            elements.push(
+              <ChordTile
+                key={`ghost-${ci}-${gi}`}
+                chord={ghostChord}
+                index={ci + gi + 1}
+                isFirst={false}
+                isLast={false}
+                isGhost={true}
+                onDelete={() => {}}
+              />,
+            );
+          });
+        }
+
+        // Gap row between consecutive chord tiles (not after the last chord)
+        if (ci < chordCount - 1 && pairMetrics[ci]) {
+          const metric = pairMetrics[ci];
+          const chordAName = getChordName(chord.root, chord.quality, pitchClasses);
+          const chordBName = getChordName(chords[ci + 1].root, chords[ci + 1].quality, pitchClasses);
+          const ariaLabel = `${metric.sharedCount} notes in common between ${chordAName} and ${chordBName}, ${Math.round(metric.proportion * 100)} percent`;
+
+          elements.push(
+            <BridgeGapRow
+              key={`gap-${ci}`}
+              chords={chords}
+              index={ci}
+              scale={scale}
+              maxProgressionLength={maxLength}
+              metric={metric}
+              metricAriaLabel={ariaLabel}
+              sourceChordName={chordAName}
+              targetChordName={chordBName}
+              isOpen={openBridgeIndex === ci}
+              onToggle={() =>
+                setOpenBridgeIndex((prev) => (prev === ci ? null : ci))
+              }
+              onClose={() => setOpenBridgeIndex(null)}
+              onApply={onApplyBridge ?? (() => {})}
+              onPreview={onPreviewBridge ?? (() => {})}
+              onStopPreview={onStopPreview ?? (() => {})}
+              previewingBridge={previewBridge}
+            />,
+          );
+        }
+      } else {
+        // Placeholder tile
+        elements.push(
+          <PlaceholderTile
+            key={node.id}
+            ref={(el) => { tileRefs.current[nodeIndex] = el; }}
+            id={node.id}
+            intentId={node.intentId}
+            position={nodeIndex + 1}
+            isNew={newTileNodeIndex === nodeIndex}
+            onDelete={onDeletePlaceholder}
+            onAnimationEnd={() => setNewTileNodeIndex(null)}
+          />,
+        );
+      }
+    });
+
+    return elements;
+  }
+
   return (
     <aside
       className={styles.sidebar}
@@ -251,98 +351,7 @@ export function ProgressionSidebar({
             </p>
           </div>
         )}
-        {(() => {
-          const elements: React.ReactElement[] = [];
-          let chordCounter = 0;
-
-          nodes.forEach((node, nodeIndex) => {
-            if (node.type === 'chord') {
-              const ci = chordCounter++;
-              const chord = node.value;
-
-              elements.push(
-                <ChordTile
-                  key={node.id}
-                  ref={(el) => { tileRefs.current[nodeIndex] = el; }}
-                  chord={chord}
-                  index={ci}
-                  isFirst={ci === 0}
-                  isLast={ci === chordCount - 1}
-                  isNew={newTileNodeIndex === nodeIndex}
-                  isPlaying={playingIndex === ci}
-                  onMoveUp={() => onMoveUp(ci)}
-                  onMoveDown={() => onMoveDown(ci)}
-                  onDelete={() => onDelete(ci)}
-                  onAnimationEnd={() => setNewTileNodeIndex(null)}
-                />,
-              );
-
-              // Render ghost bridge-preview tiles immediately after this chord
-              if (previewBridge !== null && previewInsertAfterIndex === ci) {
-                previewBridge.forEach((ghostChord, gi) => {
-                  elements.push(
-                    <ChordTile
-                      key={`ghost-${ci}-${gi}`}
-                      chord={ghostChord}
-                      index={ci + gi + 1}
-                      isFirst={false}
-                      isLast={false}
-                      isGhost={true}
-                      onDelete={() => {}}
-                    />,
-                  );
-                });
-              }
-
-              // Gap row between consecutive chord tiles (not after the last chord)
-              if (ci < chordCount - 1 && pairMetrics[ci]) {
-                const metric = pairMetrics[ci];
-                const chordAName = getChordName(chord.root, chord.quality, pitchClasses);
-                const chordBName = getChordName(chords[ci + 1].root, chords[ci + 1].quality, pitchClasses);
-                const ariaLabel = `${metric.sharedCount} notes in common between ${chordAName} and ${chordBName}, ${Math.round(metric.proportion * 100)} percent`;
-
-                elements.push(
-                  <BridgeGapRow
-                    key={`gap-${ci}`}
-                    chords={chords}
-                    index={ci}
-                    scale={scale}
-                    maxProgressionLength={maxLength}
-                    metric={metric}
-                    metricAriaLabel={ariaLabel}
-                    sourceChordName={chordAName}
-                    targetChordName={chordBName}
-                    isOpen={openBridgeIndex === ci}
-                    onToggle={() =>
-                      setOpenBridgeIndex((prev) => (prev === ci ? null : ci))
-                    }
-                    onClose={() => setOpenBridgeIndex(null)}
-                    onApply={onApplyBridge ?? (() => {})}
-                    onPreview={onPreviewBridge ?? (() => {})}
-                    onStopPreview={onStopPreview ?? (() => {})}
-                    previewingBridge={previewBridge}
-                  />,
-                );
-              }
-            } else {
-              // Placeholder tile
-              elements.push(
-                <PlaceholderTile
-                  key={node.id}
-                  ref={(el) => { tileRefs.current[nodeIndex] = el; }}
-                  id={node.id}
-                  intentId={node.intentId}
-                  position={nodeIndex + 1}
-                  isNew={newTileNodeIndex === nodeIndex}
-                  onDelete={onDeletePlaceholder}
-                  onAnimationEnd={() => setNewTileNodeIndex(null)}
-                />,
-              );
-            }
-          });
-
-          return elements;
-        })()}
+        {buildProgressionTiles()}
       </ol>
       {isFull && (
         <div className={styles.fullIndicator} role="status" aria-live="polite">
