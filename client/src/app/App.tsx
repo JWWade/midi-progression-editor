@@ -17,15 +17,17 @@ import type { ScaleType } from '../features/scale/types';
 import { useEnharmonic } from './providers/useEnharmonic';
 import { VisualLegend } from '../features/legend';
 import { Toast } from '../shared/components/Toast/Toast';
+import { selectRandomDiatonicStartupChord } from '../features/chord/utils/selectRandomDiatonicStartupChord';
 import styles from './App.module.css';
 
 /** Default chord duration used for progression playback (milliseconds). */
 const DEFAULT_CHORD_DURATION_MS = 1200;
 
 export default function App() {
-  const [currentChord, setCurrentChord] = useState<Chord | null>(null);
-  const [keyRoot, setKeyRoot] = useState<number>(0);
-  const [keyScale, setKeyScale] = useState<ScaleType>("major");
+  const [startupSelection] = useState(() => selectRandomDiatonicStartupChord());
+  const [currentChord, setCurrentChord] = useState<Chord | null>(startupSelection.chord);
+  const [keyRoot, setKeyRoot] = useState<number>(startupSelection.keyRoot);
+  const [keyScale, setKeyScale] = useState<ScaleType>(startupSelection.keyScale);
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
   const [chordDurationMs, setChordDurationMs] = useState(DEFAULT_CHORD_DURATION_MS);
 
@@ -132,10 +134,12 @@ export default function App() {
           aria-label="Chromatic Circle - Select and inspect the current chord"
         >
           <ChromaticCircle
+            initialChordName={startupSelection.chordName}
             externalChord={playingChord}
             isPlaybackActive={isPlaying}
             onCurrentChordChange={handleCurrentChordChange}
             onKeyScaleChange={handleKeyScaleChange}
+            selectedScale={keyScale}
             showCentroid={showCentroid}
             showIntervals={showIntervals}
           />

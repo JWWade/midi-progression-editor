@@ -41,6 +41,8 @@ import styles from "./ChromaticCircle.module.css";
 
 interface ChromaticCircleProps {
   onCurrentChordChange?: (chord: Chord) => void;
+  /** Initial named chord selected on first render (e.g. Dmaj7). */
+  initialChordName?: string;
   /** Called whenever the key root or scale mode changes. */
   onKeyScaleChange?: (root: number, scale: ScaleType) => void;
   selectedScale?: ScaleType;
@@ -66,6 +68,7 @@ function getEnharmonicEquivalent(noteIndex: number, currentName: string): string
 
 export function ChromaticCircle({
   onCurrentChordChange,
+  initialChordName = "C",
   onKeyScaleChange,
   selectedScale: propSelectedScale = "major",
   showCentroid: propShowCentroid = false,
@@ -113,6 +116,7 @@ export function ChromaticCircle({
     onCurrentChordChange,
     onKeyScaleChange,
     selectedScale: propSelectedScale,
+    initialChordName,
     pitchClasses,
   });
 
