@@ -17,7 +17,7 @@ Create the `ii-v-suggestions` feature module: the core engine that generates, sc
 
 A ii–V bridge is a one-to-four-chord insertion between any two chords in the progression that creates directed harmonic motion toward the target chord. The algorithm is rule-based, deterministic, and completes in < 2 ms per pair. It reuses existing utilities — no new API call is required.
 
-Spike document: `docs/spikes/ii-v-bridges.md`
+Spike document: `docs/spikes/SPIKE-ii-v-bridges.md`
 
 ---
 

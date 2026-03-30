@@ -68,7 +68,7 @@ src/
 └── features/               # Feature modules (feature-based architecture)
     ├── audio/              # In-browser chord playback (Web Audio API)
     ├── chord/              # Core chord data, types, and utilities
-    ├── chord-animation/    # Animated chord shape transitions (easeInOutQuad, 350 ms)
+    ├── chord-animation/    # Animated chord shape transitions (easeInOutCubic, 260 ms)
     ├── chord-geometry/     # Polygon vertex and centroid calculations
     ├── chord-inspection/   # Tone detail panel (ToneInfoPanel)
     ├── chord-intervals/    # Interval pattern visualisation (IntervalLabel)
@@ -76,6 +76,10 @@ src/
     ├── chromatic-circle/   # Main 12-note SVG circle visualisation
     ├── color-language/     # Quality-based color grammar and opacity system
     ├── current-chord/      # Current-chord info panel (CurrentChordPanel)
+    ├── harmonic-graph/     # Harmonic relationship graph; shortest voice-leading path (Dijkstra)
+    ├── ii-v-suggestions/   # Harmonic bridge suggestions (ii–V, tritone substitutions, backchains)
+    ├── intent-capture/     # User intent capture (IntentStore, captureIntent, Cmd/Ctrl+. hotkey)
+    ├── legend/             # Visual legend (chord quality colors, note opacity levels)
     ├── midi-export/        # MIDI file export (configurable BPM, beats/chord)
     ├── progression-sidebar/# Chord progression sidebar (up to 8 chords, session-only)
     ├── scale/              # Scale generation and diatonic highlighting (8 modes)

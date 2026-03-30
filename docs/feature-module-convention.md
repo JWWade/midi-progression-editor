@@ -60,7 +60,9 @@ export type { MyType } from './types';
 | `chromatic-circle` | Main 12-note SVG circle visualisation |
 | `color-language` | Quality-based color system (chord colors, harmony opacity) |
 | `current-chord` | Current-chord info panel |
+| `harmonic-graph` | Harmonic relationship graph; shortest voice-leading path via Dijkstra on 19-node T-canonical chord graph |
 | `ii-v-suggestions` | Harmonic bridge suggestions (ii–V, tritone substitutions, backchains) |
+| `intent-capture` | User intent capture — localStorage-backed `IntentStore`, `captureIntent`, `snapshotContext`, `useIntentCapture`; global hotkey Cmd/Ctrl+. |
 | `legend` | Visual legend component |
 | `midi-export` | MIDI file export (BPM, beats/chord) |
 | `progression-sidebar` | Chord progression sidebar (max 8 chords, session-only) |
@@ -71,7 +73,7 @@ export type { MyType } from './types';
 
 These two modules have related but distinct responsibilities:
 
-- **`chord-animation`** is a *high-level consumer*: it owns the `useChordMorphing` hook, which drives an animation loop (easeInOutQuad, 350 ms) that automatically transitions the displayed polygon whenever the active chord changes.
+- **`chord-animation`** is a *high-level consumer*: it owns the `useChordMorphing` hook, which drives an animation loop (easeInOutCubic, 260 ms) that automatically transitions the displayed polygon whenever the active chord changes.
 - **`chord-morphing`** is a *low-level library*: it owns the pure `morphPoints` and `interpolateColor` functions used by the animation loop, as well as the lower-level `useChordMorph` hook that exposes the raw interpolated state without opinionated timing.
 
 ## Linting and Building
