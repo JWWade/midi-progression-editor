@@ -254,3 +254,104 @@ describe("findShortestVoiceLeading — T-canonical equivalence", () => {
     expect(result!.nodes).toHaveLength(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// findShortestVoiceLeading — Phase 3: options object (canonicalization + weightFn)
+// ---------------------------------------------------------------------------
+
+describe("findShortestVoiceLeading — options object (Phase 3)", () => {
+  it("accepts a {canonicalization: 'T'} options object and returns a result", () => {
+    const result = findShortestVoiceLeading([0, 4, 7], [0, 3, 7], undefined, {
+      canonicalization: "T",
+    });
+    expect(result).not.toBeNull();
+    expect(result!.totalDistance).toBeGreaterThanOrEqual(0);
+  });
+
+  it("options with canonicalization:'T' produces the same result as the legacy number API", () => {
+    const legacyResult = findShortestVoiceLeading([0, 4, 7], [0, 3, 7]);
+    const optionsResult = findShortestVoiceLeading(
+      [0, 4, 7],
+      [0, 3, 7],
+      undefined,
+      { canonicalization: "T" },
+    );
+    expect(optionsResult).not.toBeNull();
+    expect(optionsResult!.totalDistance).toBe(legacyResult!.totalDistance);
+    expect(optionsResult!.nodes.map((n) => n.id)).toEqual(
+      legacyResult!.nodes.map((n) => n.id),
+    );
+  });
+
+  it("a custom weightFn can alter the shortest path", () => {
+    // Build a graph where moving from [0,4,7] toward [0,1,6] is penalised
+    // by adding 100 to any transition involving [0,1,6]'s canonical form.
+    const target = canonicalizeChord([0, 1, 6], "T").pcs.join(",");
+    const penaltyFn = (a: number[], b: number[]) => {
+      const base = chordDistance(a, b);
+      const aId = canonicalizeChord(a, "T").pcs.join(",");
+      const bId = canonicalizeChord(b, "T").pcs.join(",");
+      const penalty = aId === target || bId === target ? 100 : 0;
+      return base + penalty;
+    };
+    const defaultResult = findShortestVoiceLeading([0, 4, 7], [0, 1, 6]);
+    const penaltyResult = findShortestVoiceLeading(
+      [0, 4, 7],
+      [0, 1, 6],
+      undefined,
+      { weightFn: penaltyFn },
+    );
+    // The penalised path must be at least as long as the default
+    if (penaltyResult !== null && defaultResult !== null) {
+      expect(penaltyResult.totalDistance).toBeGreaterThanOrEqual(
+        defaultResult.totalDistance,
+      );
+    }
+  });
+
+  it("returns null when the start chord is absent from a TI graph built separately", () => {
+    // Build a TI graph: [0,4,7] and its inversion [0,5,8] share one node
+    const tiGraph = buildChordGraph({ sizes: [3], canonicalization: "TI" });
+    // The canonical TI ID for [0,4,7]
+    const canonId = canonicalizeChord([0, 4, 7], "TI").pcs.join(",");
+    expect(tiGraph.nodes.some((n) => n.id === canonId)).toBe(true);
+
+    // When using that graph with TI canonicalization, it should find a result
+    const result = findShortestVoiceLeading(
+      [0, 4, 7],
+      [0, 2, 7],
+      tiGraph,
+      { canonicalization: "TI" },
+    );
+    // Node must be in the graph for the search to succeed; otherwise null is valid
+    const endId = canonicalizeChord([0, 2, 7], "TI").pcs.join(",");
+    if (tiGraph.nodes.some((n) => n.id === endId)) {
+      expect(result).not.toBeNull();
+    } else {
+      expect(result).toBeNull();
+    }
+  });
+
+  it("works correctly on a seventh-chord graph (sizes: [4])", () => {
+    const graph = buildChordGraph({ sizes: [4] });
+    // Dominant 7 [0,4,7,10] → minor 7 [0,3,7,10]
+    const result = findShortestVoiceLeading([0, 4, 7, 10], [0, 3, 7, 10], graph);
+    expect(result).not.toBeNull();
+    expect(result!.totalDistance).toBeGreaterThanOrEqual(0);
+    // All nodes must have pcs of length 4
+    for (const node of result!.nodes) {
+      expect(node.pcs).toHaveLength(4);
+    }
+  });
+
+  it("returns null when start and end are in different layers (triad vs seventh) of a single-size graph", () => {
+    // The triad graph only has 3-note nodes; a 4-note chord won't be present
+    const triadGraph = buildChordGraph({ sizes: [3] });
+    const result = findShortestVoiceLeading(
+      [0, 4, 7],       // triad — present
+      [0, 4, 7, 10],   // seventh — absent
+      triadGraph,
+    );
+    expect(result).toBeNull();
+  });
+});

@@ -1,8 +1,8 @@
-/** A canonical triad node in the chord graph. */
+/** A canonical chord node in the chord graph. */
 export interface ChordNode {
   /** Canonical key derived from the lex-min pitch-class set, e.g. "0,3,8". */
   id: string;
-  /** Canonical pitch classes (lex-min representative under transposition). */
+  /** Canonical pitch classes (lex-min representative under the chosen symmetry group). */
   pcs: number[];
 }
 
@@ -12,7 +12,7 @@ export interface ChordEdge {
   from: string;
   /** `id` of the destination node. */
   to: string;
-  /** Voice-leading cost between the two canonical chords (`chordDistance`). */
+  /** Voice-leading cost between the two canonical chords. */
   weight: number;
 }
 
@@ -21,6 +21,12 @@ export interface ChordGraph {
   nodes: ChordNode[];
   edges: ChordEdge[];
 }
+
+/**
+ * A function that computes the voice-leading cost between two pitch-class sets.
+ * Must return `Infinity` when the two sets are incompatible (e.g. different sizes).
+ */
+export type WeightFn = (a: number[], b: number[]) => number;
 
 /**
  * Result of a shortest voice-leading path query between two canonical chord nodes.
