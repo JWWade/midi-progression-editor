@@ -11,6 +11,7 @@ import {
   CIRCLE_PADDING,
 } from "../constants/visualConstants";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { getChordName } from "@/features/chord/data/chordNames";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import type { ScaleType } from "@/features/scale/types";
@@ -52,6 +53,12 @@ interface ChromaticCircleProps {
   externalChord?: Chord | null;
   /** When true, renders a pulsing ring to indicate active playback. */
   isPlaybackActive?: boolean;
+  /**
+   * When non-null, programmatically loads this chord into the circle's
+   * internal selection state. Each distinct object reference triggers a load,
+   * so spread a new object (`{ ...chord }`) to re-send the same chord.
+   */
+  loadChord?: Chord | null;
 }
 
 /**
@@ -75,6 +82,7 @@ export function ChromaticCircle({
   showIntervals: propShowIntervals = false,
   externalChord,
   isPlaybackActive = false,
+  loadChord,
 }: ChromaticCircleProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
@@ -128,6 +136,28 @@ export function ChromaticCircle({
     },
     [setSelectedChordName, setCustomFromChord],
   );
+
+  // When a chord is sent back from the progression sidebar, load it into the
+  // circle's internal selection state. Each new object reference triggers a
+  // fresh load so that re-sending the same chord works correctly.
+  useEffect(() => {
+    if (!loadChord) return;
+    if (loadChord.customNotes) {
+      const customState = {
+        root: loadChord.root,
+        quality: loadChord.quality,
+        customNotes: loadChord.customNotes,
+        primitiveShape: loadChord.primitiveShape,
+      };
+      setCustomFromChord(customState);
+      onCurrentChordChange?.(loadChord);
+    } else {
+      setCustomFromChord(null);
+      setSelectedChordName(getChordName(loadChord.root, loadChord.quality));
+      // onCurrentChordChange is fired by the existing effect in useChordState
+      // once effectiveRoot/effectiveQuality update.
+    }
+  }, [loadChord, setCustomFromChord, setSelectedChordName, onCurrentChordChange]);
 
   // Ref that always holds the latest mutable state consumed by the stable note
   // event handlers below. Updated via useLayoutEffect (after each render) to
