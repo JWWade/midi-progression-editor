@@ -41,6 +41,8 @@ interface ProgressionSidebarProps {
   previewBridge?: Chord[] | null;
   previewInsertAfterIndex?: number | null;
   isPreviewPlaying?: boolean;
+  /** Called when the user sends a chord back to the chromatic circle. */
+  onSendBack?: (chord: Chord) => void;
 }
 
 const DURATION_OPTIONS: { label: string; ms: number }[] = [
@@ -150,6 +152,7 @@ export function ProgressionSidebar({
   onStopPreview,
   previewBridge = null,
   previewInsertAfterIndex = null,
+  onSendBack,
 }: ProgressionSidebarProps) {
   const { pitchClasses } = useEnharmonic();
   const isFull = chords.length >= maxLength;
@@ -219,6 +222,7 @@ export function ProgressionSidebar({
           onDelete={() => onDelete(ci)}
           onAnimationEnd={() => setNewTileNodeIndex(null)}
           onWillPlay={isPlaying ? onStop : undefined}
+          onSendBack={onSendBack ? () => onSendBack(chord) : undefined}
         />,
       );
 

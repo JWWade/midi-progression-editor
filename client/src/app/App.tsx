@@ -33,6 +33,11 @@ export default function App() {
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
   const [chordDurationMs, setChordDurationMs] = useState(DEFAULT_CHORD_DURATION_MS);
 
+  // Chord sent back from the progression sidebar to the chromatic circle.
+  // Spread into a new object on each send so the ChromaticCircle effect always
+  // fires, even when the same chord is re-sent.
+  const [sendBackChord, setSendBackChord] = useState<Chord | null>(null);
+
   // Visualization toggles (lifted from ChromaticCircle)
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
@@ -96,6 +101,12 @@ export default function App() {
     setKeyRoot(root);
     setKeyScale(scale);
   }, []);
+
+  const handleSendChordToCircle = useCallback((chord: Chord) => {
+    // Spread into a new object so ChromaticCircle's loadChord effect always fires.
+    setSendBackChord({ ...chord });
+    setLiveRegionText(`${formatChordName(chord, pitchClasses)} loaded into chromatic circle`);
+  }, [pitchClasses]);
 
   const handleLoadJsonClick = useCallback(() => {
     loadJsonInputRef.current?.click();
@@ -197,6 +208,7 @@ export default function App() {
             selectedScale={keyScale}
             showCentroid={showCentroid}
             showIntervals={showIntervals}
+            loadChord={sendBackChord}
           />
           {showLegend && <VisualLegend />}
         </section>
@@ -249,6 +261,7 @@ export default function App() {
             previewBridge={previewBridge}
             previewInsertAfterIndex={previewInsertAfterIndex}
             isPreviewPlaying={isPreviewPlaying}
+            onSendBack={handleSendChordToCircle}
           />
         </section>
       </div>

@@ -26,6 +26,8 @@ interface ChordTileProps {
   onAnimationEnd?: () => void;
   /** Called before this tile starts audio playback so the caller can stop global playback. */
   onWillPlay?: () => void;
+  /** Called when the user sends this chord back to the chromatic circle. */
+  onSendBack?: () => void;
 }
 
 type TilePlayMode = "chord" | "arpeggio" | null;
@@ -37,7 +39,7 @@ type TilePlayMode = "chord" | "arpeggio" | null;
 // in behaviour per tile even when their reference changes.
 export const ChordTile = memo(
   forwardRef<HTMLLIElement, ChordTileProps>(
-    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay }, ref) {
+    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
@@ -135,6 +137,15 @@ export const ChordTile = memo(
       </div>
       {!isGhost && (
         <div className={styles.tileActions}>
+          <button
+            className={styles.sendBackBtn}
+            onClick={onSendBack}
+            disabled={!onSendBack}
+            aria-label="Send chord to circle"
+            title="Send to circle"
+          >
+            ↩
+          </button>
           <div className={styles.playbackControls} aria-label="Chord playback">
             <button
               className={`${styles.playBtn}${tilePlayMode === "chord" ? ` ${styles.playBtnActive}` : ""}`}
