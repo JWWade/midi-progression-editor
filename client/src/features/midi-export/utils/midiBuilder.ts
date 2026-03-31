@@ -48,6 +48,12 @@ const DEFAULT_OCTAVE = 4;
 const VELOCITY = 100;
 const MIDI_MAX_VELOCITY = 127;
 const SECONDS_PER_MINUTE = 60;
+/**
+ * Fraction of the subdivision duration used as note-on time for arpeggiated
+ * notes.  The remaining 10 % provides a subtle gap (articulation) between
+ * consecutive arpeggiated notes so that DAWs render them as distinct events.
+ */
+const ARPEGGIO_NOTE_DURATION_FACTOR = 0.9;
 
 const DEFAULT_OPTIONS: MidiExportOptions = {
   bpm: DEFAULT_BPM,
@@ -138,7 +144,7 @@ export function buildMidiFile(
         arpeggioPattern.swingPercent,
       );
       const beatsPerNote = getSubdivisionBeats(arpeggioPattern.subdivision);
-      const noteDuration = beatsPerNote * secondsPerBeat * 0.9; // slight gap
+      const noteDuration = beatsPerNote * secondsPerBeat * ARPEGGIO_NOTE_DURATION_FACTOR;
 
       sequence.forEach((note, ni) => {
         const offset = startOffsets[ni] ?? ni * beatsPerNote * secondsPerBeat;

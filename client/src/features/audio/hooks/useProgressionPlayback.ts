@@ -125,5 +125,16 @@ export function useProgressionPlayback(
     };
   }, []);
 
-  return { isPlaying, playingIndex, loop, play, stop, toggleLoop, arpeggioEnabled, arpeggioPattern, toggleArpeggio, setArpeggioPattern };
+  return {
+    isPlaying,
+    playingIndex,
+    loop,
+    play,
+    stop,
+    toggleLoop,
+    arpeggioEnabled,
+    arpeggioPattern,
+    toggleArpeggio,
+    setArpeggioPattern,
+  };
 }

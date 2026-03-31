@@ -368,7 +368,7 @@ export function ProgressionSidebar({
           aria-live="polite"
           aria-atomic="true"
         >
-          {arpeggioEnabled ? "Arpeggiated playback enabled" : ""}
+          {arpeggioEnabled ? "Arpeggiated playback enabled" : "Arpeggiated playback disabled"}
         </div>
       </div>
 
