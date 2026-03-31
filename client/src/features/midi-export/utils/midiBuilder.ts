@@ -59,6 +59,15 @@ function getChordSymbol(
 }
 
 /**
+ * Convert Unicode text into a byte-preserving string for MIDI meta writers that
+ * emit one byte per code point. This yields UTF-8 bytes in the output file.
+ */
+function toMidiMetaUtf8Text(text: string): string {
+  const bytes = new TextEncoder().encode(text);
+  return Array.from(bytes, (b) => String.fromCharCode(b)).join("");
+}
+
+/**
  * Converts a chord progression into raw MIDI bytes.
  *
  * @param chords  - Array of chords to export.
@@ -118,9 +127,10 @@ export function buildMidiFile(
 
     if (includeChordSymbols) {
       const symbol = getChordSymbol(chord, chordLabels[index]);
+      const midiText = toMidiMetaUtf8Text(symbol);
       const startTicks = index * beatsPerChord * midi.header.ppq;
-      midi.header.meta.push({ type: "text", text: symbol, ticks: startTicks });
-      midi.header.meta.push({ type: "marker", text: symbol, ticks: startTicks });
+      midi.header.meta.push({ type: "text", text: midiText, ticks: startTicks });
+      midi.header.meta.push({ type: "marker", text: midiText, ticks: startTicks });
     }
 
     prevMidi = midiNotes;

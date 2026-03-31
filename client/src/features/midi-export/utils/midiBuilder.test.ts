@@ -10,6 +10,7 @@ const MIDI_HEADER = [0x4d, 0x54, 0x68, 0x64];
 const C_MAJOR: Chord = { root: 0, quality: "major" };
 const G_MAJOR: Chord = { root: 7, quality: "major" };
 const C_MAJ7: Chord = { root: 0, quality: "maj7" };
+const C_HALFDIM7: Chord = { root: 0, quality: "halfdim7" };
 
 /** Parse raw MIDI bytes back into a Midi object for inspection. */
 function parseMidiTone(bytes: Uint8Array): Midi {
@@ -39,6 +40,19 @@ function collectChordSymbolEvents(bytes: Uint8Array): Array<{ type: string; text
     }
   }
   return results;
+}
+
+function containsByteSequence(haystack: Uint8Array, needle: number[]): boolean {
+  if (needle.length === 0) return true;
+  outer: for (let i = 0; i <= haystack.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) {
+        continue outer;
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 describe("buildMidiFile", () => {
@@ -192,6 +206,14 @@ describe("buildMidiFile", () => {
       const withoutSymbols = buildMidiFile([C_MAJOR], { includeChordSymbols: false });
       expect(countNotes(parseMidiTone(withSymbols))).toBe(3);
       expect(countNotes(parseMidiTone(withoutSymbols))).toBe(3);
+    });
+
+    it("encodes half-diminished symbol as UTF-8 bytes for meta text", () => {
+      const result = buildMidiFile([C_HALFDIM7]);
+      // "Cø7" in UTF-8 bytes = 43 C3 B8 37
+      expect(containsByteSequence(result, [0x43, 0xc3, 0xb8, 0x37])).toBe(true);
+      // Ensure we are not emitting single-byte 0xF8 for "ø"
+      expect(containsByteSequence(result, [0x43, 0xf8, 0x37])).toBe(false);
     });
   });
 });
