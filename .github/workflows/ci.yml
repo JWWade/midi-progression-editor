@@ -55,12 +55,10 @@ jobs:
           dotnet-version: "10.x"
 
       - name: Restore
-        working-directory: server
-        run: dotnet restore
+        run: dotnet restore midi-progression-editor.sln
 
       - name: Build
-        working-directory: server
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build midi-progression-editor.sln --no-restore --configuration Release
 
       - name: Test
         working-directory: server/ParametricMusic.Tests

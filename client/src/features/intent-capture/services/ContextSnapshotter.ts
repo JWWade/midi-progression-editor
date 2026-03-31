@@ -11,7 +11,7 @@ export interface SnapshotParams {
   /** Active scale mode. */
   keyScale: ScaleType;
   /** Ordered pitch-class display names (e.g. ["C","C#",…]). */
-  pitchClasses: string[];
+  pitchClasses: readonly string[];
   /** Active cursor / note index (0–11), if available. */
   cursorPosition?: number;
 }
