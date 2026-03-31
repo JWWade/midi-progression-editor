@@ -10,6 +10,7 @@ import {
   CHORD_INTERVALS,
 } from "@/features/chord/utils/transpose";
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
+import { rerootChord } from "@/features/chord/utils/rerootChord";
 import { CHORD_NAME_TO_DATA, getChordName } from "@/features/chord/data/chordNames";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { CustomChordState } from "../types";
@@ -34,6 +35,7 @@ export interface CustomChordStateResult {
   handleRandomChord: () => void;
   handleMutateChord: () => void;
   handleSelectPrimitiveShape: (shape: PrimitiveShape) => void;
+  handleRerootChord: (newRoot: number, pitchClassLabel: string) => void;
 }
 
 export function useCustomChordState({
@@ -171,6 +173,41 @@ export function useCustomChordState({
     [customFromChord, selectedChordName, onCurrentChordChange, onAnnounce],
   );
 
+  const handleRerootChord = useCallback(
+    (newRoot: number, pitchClassLabel: string) => {
+      const currentNotes =
+        customFromChord?.customNotes ??
+        CHORD_INTERVALS[CHORD_NAME_TO_DATA[selectedChordName].type].map(
+          (i) => (CHORD_NAME_TO_DATA[selectedChordName].root + i) % 12,
+        );
+
+      const { root, quality, matchScore } = rerootChord(currentNotes, newRoot);
+
+      if (matchScore === 1) {
+        setCustomFromChord(null);
+        setSelectedChordName(getChordName(root, quality));
+        onCurrentChordChange?.({ root, quality });
+        onAnnounce?.(`Root set to ${pitchClassLabel}. ${getChordName(root, quality)} chord`);
+      } else {
+        const newChord: CustomChordState = { root, quality, customNotes: currentNotes };
+        setCustomFromChord(newChord);
+        onCurrentChordChange?.(newChord);
+        const noteNames = currentNotes.map((i) => PITCH_CLASSES[i]).join(", ");
+        onAnnounce?.(
+          `Root set to ${pitchClassLabel}. No exact chord match. Notes: ${noteNames}`,
+        );
+      }
+    },
+    [
+      customFromChord,
+      selectedChordName,
+      setSelectedChordName,
+      setCustomFromChord,
+      onCurrentChordChange,
+      onAnnounce,
+    ],
+  );
+
   return {
     customFromChord,
     setCustomFromChord,
@@ -179,5 +216,6 @@ export function useCustomChordState({
     handleRandomChord,
     handleMutateChord,
     handleSelectPrimitiveShape,
+    handleRerootChord,
   };
 }
