@@ -5,6 +5,7 @@ import { ChordTile } from "./ChordTile";
 import { PairMetricBadge } from "./PairMetricBadge";
 import { BridgeSuggestionIcon } from "./BridgeSuggestionIcon";
 import { BridgeSuggestionPopover } from "./BridgeSuggestionPopover";
+import { ArpeggioPatternEditor } from "./ArpeggioPatternEditor";
 import { computeProgressionPairMetrics } from "../utils/pairMetrics";
 import type { PairMetric } from "../utils/pairMetrics";
 import { useBridgeSuggestions } from "../hooks/useBridgeSuggestions";
@@ -12,6 +13,7 @@ import type { ScaleContext } from "@/shared/types/ScaleContext";
 import { MidiExportControls } from "@/features/midi-export/components/MidiExportControls";
 import { getChordName } from "@/features/chord/data/chordNames";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
+import type { ArpeggioPattern } from "@/features/audio";
 import styles from "./ProgressionSidebar.module.css";
 
 /** Must match the `tileHighlight` animation duration in ChordTile.module.css */
@@ -43,6 +45,12 @@ interface ProgressionSidebarProps {
   isPreviewPlaying?: boolean;
   /** Called when the user sends a chord back to the chromatic circle. */
   onSendBack?: (chord: Chord) => void;
+  /** Whether "Play All" uses arpeggiated playback. */
+  arpeggioEnabled?: boolean;
+  /** Active arpeggio pattern for "Play All". */
+  arpeggioPattern?: ArpeggioPattern;
+  onToggleArpeggio?: () => void;
+  onSetArpeggioPattern?: (pattern: ArpeggioPattern) => void;
 }
 
 const DURATION_OPTIONS: { label: string; ms: number }[] = [
@@ -153,10 +161,17 @@ export function ProgressionSidebar({
   previewBridge = null,
   previewInsertAfterIndex = null,
   onSendBack,
+  arpeggioEnabled = false,
+  arpeggioPattern,
+  onToggleArpeggio,
+  onSetArpeggioPattern,
 }: ProgressionSidebarProps) {
   const { pitchClasses } = useEnharmonic();
   const isFull = chords.length >= maxLength;
   const chordCount = chords.length;
+
+  // Local state: whether the arpeggio pattern editor panel is visible.
+  const [showPatternEditor, setShowPatternEditor] = useState(false);
 
   // Track the node-index of the most recently added tile for scroll/focus/animation.
   const [newTileNodeIndex, setNewTileNodeIndex] = useState<number | null>(null);
@@ -309,7 +324,7 @@ export function ProgressionSidebar({
             className={styles.playAllButton}
             onClick={isPlaying ? onStop : onPlay}
             disabled={chordCount === 0}
-            aria-label={isPlaying ? "Stop playback" : "Play all chords"}
+            aria-label={isPlaying ? "Stop playback" : (arpeggioEnabled ? "Play all chords arpeggiated" : "Play all chords")}
           >
             {isPlaying ? "■ Stop" : "▶ Play All"}
           </button>
@@ -322,8 +337,51 @@ export function ProgressionSidebar({
           >
             ↻ Loop
           </button>
+          {onToggleArpeggio && (
+            <button
+              className={`${styles.loopButton}${arpeggioEnabled ? ` ${styles.loopButtonActive}` : ""}`}
+              onClick={onToggleArpeggio}
+              disabled={chordCount === 0}
+              aria-label={arpeggioEnabled ? "Disable arpeggiated playback" : "Enable arpeggiated playback"}
+              aria-pressed={arpeggioEnabled}
+              title={arpeggioEnabled ? "Arpeggio on" : "Arpeggio off"}
+            >
+              ≈ Arp
+            </button>
+          )}
+          {onToggleArpeggio && arpeggioEnabled && onSetArpeggioPattern && arpeggioPattern && (
+            <button
+              className={`${styles.loopButton}${showPatternEditor ? ` ${styles.loopButtonActive}` : ""}`}
+              onClick={() => setShowPatternEditor((prev) => !prev)}
+              aria-label={showPatternEditor ? "Close arpeggio pattern editor" : "Open arpeggio pattern editor"}
+              aria-expanded={showPatternEditor}
+              aria-controls="arpeggio-pattern-editor"
+              title="Arpeggio pattern settings"
+            >
+              ⚙
+            </button>
+          )}
+        </div>
+        {/* ARIA live region: announces playback mode changes */}
+        <div
+          className={styles.srOnly}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {arpeggioEnabled ? "Arpeggiated playback enabled" : ""}
         </div>
       </div>
+
+      {/* Arpeggio pattern editor panel */}
+      {arpeggioEnabled && showPatternEditor && arpeggioPattern && onSetArpeggioPattern && (
+        <div id="arpeggio-pattern-editor" role="region" aria-label="Arpeggio pattern editor">
+          <ArpeggioPatternEditor
+            pattern={arpeggioPattern}
+            onChange={onSetArpeggioPattern}
+          />
+        </div>
+      )}
+
       <p className={styles.resetNote}>Resets on page reload</p>
       <ol className={styles.chordList} aria-label="Chord list">
         {nodes.length === 0 && (
@@ -341,7 +399,7 @@ export function ProgressionSidebar({
           Maximum {maxLength} chords reached
         </div>
       )}
-      <MidiExportControls chords={chords} disabled={chordCount === 0} scaleContext={scale ?? null} />
+      <MidiExportControls chords={chords} disabled={chordCount === 0} scaleContext={scale ?? null} arpeggioPattern={arpeggioEnabled ? arpeggioPattern : undefined} />
     </aside>
   );
 }
