@@ -20,6 +20,7 @@ import { VisualLegend } from '../features/legend';
 import { Toast } from '../shared/components/Toast/Toast';
 import { selectRandomDiatonicStartupChord } from '../features/chord/utils/selectRandomDiatonicStartupChord';
 import { useIntentCapture } from '../features/intent-capture';
+import { useTutorial } from '../features/tutorial';
 import styles from './App.module.css';
 
 /** Default chord duration used for progression playback (milliseconds). */
@@ -53,6 +54,9 @@ export default function App() {
   const addGuardRef = useRef(false);
 
   const { capture: captureIntent } = useIntentCapture({ chords, keyRoot, keyScale });
+
+  // Tutorial engine integration
+  const { fireEvent, updateAppContext } = useTutorial();
 
   const { applyBridge, undoPending, undoBridge } = useBridgeApply(chords, setChords);
 
@@ -91,7 +95,8 @@ export default function App() {
 
   const handleCurrentChordChange = useCallback((chord: Chord) => {
     setCurrentChord(chord);
-  }, []);
+    fireEvent('chordSelected');
+  }, [fireEvent]);
 
   const handleKeyScaleChange = useCallback((root: number, scale: ScaleType) => {
     setKeyRoot(root);
@@ -140,13 +145,14 @@ export default function App() {
     if (currentChord === null || addGuardRef.current) return;
     addGuardRef.current = true;
     addChord(currentChord);
+    fireEvent('chordAdded');
     // currentChord intentionally stays after adding so the panel remains
     // populated and the user can immediately add the same chord again
     // without re-selecting it on the circle.
     requestAnimationFrame(() => {
       addGuardRef.current = false;
     });
-  }, [currentChord, addChord]);
+  }, [currentChord, addChord, fireEvent]);
 
   /**
    * Captures the current chord / composition context as an intent and inserts
@@ -171,6 +177,11 @@ export default function App() {
   }, [handleCaptureIntent]);
 
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
+
+  // Keep the tutorial engine in sync with app state for state-based triggers.
+  useEffect(() => {
+    updateAppContext({ progressionLength: chords.length, isPlaying });
+  }, [chords.length, isPlaying, updateAppContext]);
 
   return (
     <AppErrorBoundary>
