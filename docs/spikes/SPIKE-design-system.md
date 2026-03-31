@@ -107,16 +107,15 @@ Animations are defined at the component level with no shared constants. The curr
 
 | Animation | Duration | Easing | File |
 |-----------|----------|--------|------|
-| `tileHighlight` | `300ms` | `ease-out` | `ChordTile.module.css`, `PlaceholderTile.module.css` |
+| `tileHighlight` | `300ms` | `ease-out` | `ChordTile.module.css` |
 | `arrowSlide` | `0.35s` | `ease` | `CurrentChordPanel.module.css` |
 | `playbackPulse` | (in ProgressionSidebar) | `ease` | `ProgressionSidebar.module.css` |
 | Chord morph | `260ms` | `easeInOutCubic` (JS) | `useChordMorphing.ts` |
 | `transition: background-color` | `0.15–0.35s` | `ease` | Multiple |
-| `prefers-reduced-motion` | `none` | — | `ChordTile`, `PlaceholderTile`, `ChromaticCircle` |
+| `prefers-reduced-motion` | `none` | — | `ChordTile`, `ChromaticCircle` |
 
 Issues:
 - Duration values (`260ms`, `300ms`, `350ms`) are scattered across JS and CSS with no shared source of truth.
-- Two components (`ChordTile`, `PlaceholderTile`) duplicate the `@keyframes tileHighlight` definition identically.
 - `prefers-reduced-motion` is respected in some components but not all.
 
 ### Options

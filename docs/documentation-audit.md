@@ -35,7 +35,7 @@ gaps are catalogued below with recommended actions.
 
 | File | Classification | Description | Notes |
 |---|---|---|---|
-| `README.md` | Canonical | Project overview, quick start, feature list, troubleshooting | Accurate and complete. Feature list does not include `harmonic-graph` or `intent-capture` modules. |
+| `README.md` | Canonical | Project overview, quick start, feature list, troubleshooting | Accurate and complete. Feature list does not include `harmonic-graph` module. |
 | `ARCHITECTURE.md` | Canonical | Full system architecture, layer diagrams, feature module table | Accurate. Matches implementation. |
 | `CONTRIBUTING.md` | Canonical | Setup, testing, linting, PR workflow | Accurate. |
 
@@ -43,7 +43,7 @@ gaps are catalogued below with recommended actions.
 
 | File | Classification | Description | Notes |
 |---|---|---|---|
-| `docs/feature-module-convention.md` | Canonical | Folder structure, barrel export rules, feature table | **Fixed**: corrected `easeInOutQuad, 350 ms` → `easeInOutCubic, 260 ms`; added `harmonic-graph` and `intent-capture` to feature table. |
+| `docs/feature-module-convention.md` | Canonical | Folder structure, barrel export rules, feature table | **Fixed**: corrected `easeInOutQuad, 350 ms` → `easeInOutCubic, 260 ms`; added `harmonic-graph` to feature table. |
 | `docs/geometric-harmony-system.md` | Canonical | Coordinate system, intervals, polygon geometry, color schema, voice-leading formulas, animation rules, ii–V bridge model | Accurate and authoritative. Last updated 2026-03-21. |
 | `docs/accessibility-audit.md` | Canonical | WCAG compliance audit, keyboard navigation, screen reader gaps | Accurate. |
 | `docs/architecture-audit.md` | Canonical | Structural risk assessment, layer analysis, architectural recommendations | Accurate. |
@@ -69,7 +69,7 @@ gaps are catalogued below with recommended actions.
 
 | File | Classification | Description | Notes |
 |---|---|---|---|
-| `client/README.md` | Derived | Frontend tech stack, scripts, project structure, API client, testing | **Fixed**: corrected `easeInOutQuad, 350 ms` → `easeInOutCubic, 260 ms`; added `harmonic-graph` and `intent-capture` to feature list. |
+| `client/README.md` | Derived | Frontend tech stack, scripts, project structure, API client, testing | **Fixed**: corrected `easeInOutQuad, 350 ms` → `easeInOutCubic, 260 ms`; added `harmonic-graph` to feature list. |
 | `server/README.md` | Canonical | Backend scope, controllers, domain capabilities, architecture notes | Accurate. |
 | `server/CONTROLLER-REVIEW.md` | Canonical | Live controller walkthrough plan and session log | Working document; intentionally incomplete. |
 
@@ -116,18 +116,14 @@ Line 71 read: `"chord-animation/    # Animated chord shape transitions (easeInOu
 
 Updated to `easeInOutCubic, 260 ms`.
 
-### 3.4 ~~Missing: `harmonic-graph` and `intent-capture` in feature lists~~ — **Fixed**
+### 3.4 ~~Missing: `harmonic-graph` in feature lists~~ — **Fixed**
 
-Two feature modules that existed in `client/src/features/` were absent from the
+One feature module that existed in `client/src/features/` was absent from the
 feature tables in `docs/feature-module-convention.md` and `client/README.md`:
 
 - `harmonic-graph/` — Harmonic relationship graph; exposes
   `findShortestVoiceLeading` (Dijkstra's on a 19-node T-canonical chord graph).
-- `intent-capture/` — User intent capture with localStorage-backed
-  `IntentStore`, `captureIntent`, `snapshotContext`, and `useIntentCapture`
-  hook. Global hotkey <kbd>Cmd/Ctrl+.</kbd> triggers capture.
-
-Both modules have been added to both feature tables.
+The module was added to both feature tables.
 
 ### 3.5 ~~Naming inconsistency: Two spike files lacked SPIKE- prefix~~ — **Fixed**
 
@@ -213,7 +209,7 @@ research) is an adequate and intuitive separation.
 | High | Create central docs index | ✅ Done | `docs/README.md` (created) |
 | High | Fix stale easing/duration in feature-module-convention | ✅ Done | `docs/feature-module-convention.md` |
 | High | Fix stale easing/duration in client README | ✅ Done | `client/README.md` |
-| High | Add `harmonic-graph` and `intent-capture` to feature tables | ✅ Done | `docs/feature-module-convention.md`, `client/README.md` |
+| High | Add `harmonic-graph` to feature tables | ✅ Done | `docs/feature-module-convention.md`, `client/README.md` |
 | Medium | Rename ii-v-bridges spike to follow convention | ✅ Done | `docs/spikes/SPIKE-ii-v-bridges.md` |
 | Medium | Rename quartal-diatonic spike to follow convention | ✅ Done | `docs/spikes/SPIKE-quartal-diatonic.md` |
 | Low | Consider moving security-audit to `docs/` | ⬜ Deferred | `docs/spikes/security-audit.md` |

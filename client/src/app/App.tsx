@@ -19,7 +19,6 @@ import { useEnharmonic } from './providers/useEnharmonic';
 import { VisualLegend } from '../features/legend';
 import { Toast } from '../shared/components/Toast/Toast';
 import { selectRandomDiatonicStartupChord } from '../features/chord/utils/selectRandomDiatonicStartupChord';
-import { useIntentCapture } from '../features/intent-capture';
 import { useTutorial } from '../features/tutorial';
 import styles from './App.module.css';
 
@@ -43,17 +42,12 @@ export default function App() {
   const [importError, setImportError] = useState<string | null>(null);
   const loadJsonInputRef = useRef<HTMLInputElement>(null);
 
-  // Intent capture toast state
-  const [intentToast, setIntentToast] = useState<string | null>(null);
-
   const { pitchClasses } = useEnharmonic();
-  const { nodes, chords, addChord, addPlaceholder, deletePlaceholder, moveChord, deleteChord, setChords } = useProgression();
+  const { nodes, chords, addChord, moveChord, deleteChord, setChords } = useProgression();
   // Guard ref to prevent duplicate progression entries from rapid double-clicks.
   // Set synchronously when add is initiated; cleared after the current animation
   // frame so intentional subsequent adds still work.
   const addGuardRef = useRef(false);
-
-  const { capture: captureIntent } = useIntentCapture({ chords, keyRoot, keyScale });
 
   // Tutorial engine integration
   const { fireEvent, updateAppContext } = useTutorial();
@@ -154,28 +148,6 @@ export default function App() {
     });
   }, [currentChord, addChord, fireEvent]);
 
-  /**
-   * Captures the current chord / composition context as an intent and inserts
-   * a placeholder into the progression. Non-blocking; <100 ms target.
-   */
-  const handleCaptureIntent = useCallback(() => {
-    const intentId = captureIntent('');
-    addPlaceholder(intentId);
-    setIntentToast('Idea captured — placeholder added to progression');
-  }, [captureIntent, addPlaceholder]);
-
-  // Global hotkey: Cmd/Ctrl + . → capture intent (M1)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === '.') {
-        e.preventDefault();
-        handleCaptureIntent();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleCaptureIntent]);
-
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 
   // Keep the tutorial engine in sync with app state for state-based triggers.
@@ -245,7 +217,6 @@ export default function App() {
             maxProgressionLength={MAX_PROGRESSION_LENGTH}
             audioParams={audioParams}
             onAudioParamsChange={setAudioParams}
-            onCaptureIntent={handleCaptureIntent}
           />
         </section>
 
@@ -262,7 +233,6 @@ export default function App() {
             onMoveUp={(i) => moveChord(i, 'up')}
             onMoveDown={(i) => moveChord(i, 'down')}
             onDelete={deleteChord}
-            onDeletePlaceholder={deletePlaceholder}
             maxLength={MAX_PROGRESSION_LENGTH}
             isPlaying={isPlaying}
             playingIndex={playingIndex}
@@ -292,12 +262,6 @@ export default function App() {
         <Toast
           message={importError}
           action={{ label: 'Dismiss', onClick: () => setImportError(null) }}
-        />
-      )}
-      {intentToast && (
-        <Toast
-          message={intentToast}
-          action={{ label: 'Dismiss', onClick: () => setIntentToast(null) }}
         />
       )}
       <input

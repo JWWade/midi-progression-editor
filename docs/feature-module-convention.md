@@ -62,7 +62,6 @@ export type { MyType } from './types';
 | `current-chord` | Current-chord info panel |
 | `harmonic-graph` | Harmonic relationship graph; shortest voice-leading path via Dijkstra on 19-node T-canonical chord graph |
 | `ii-v-suggestions` | Harmonic bridge suggestions (ii–V, tritone substitutions, backchains) |
-| `intent-capture` | User intent capture — localStorage-backed `IntentStore`, `captureIntent`, `snapshotContext`, `useIntentCapture`; global hotkey Cmd/Ctrl+. |
 | `legend` | Visual legend component |
 | `midi-export` | MIDI file export (BPM, beats/chord) |
 | `progression-sidebar` | Chord progression sidebar (max 8 chords, session-only) |

@@ -197,7 +197,6 @@ midi-progression-editor/
           current-chord/      # Current-chord info panel
           harmonic-graph/     # Harmonic relationship graph; shortest voice-leading path (Dijkstra)
           ii-v-suggestions/   # Harmonic bridge suggestions (ii–V, tritone substitutions, backchains)
-          intent-capture/     # User intent capture (IntentStore, captureIntent, Cmd/Ctrl+. hotkey)
           legend/             # Visual legend (chord quality colours, note opacity levels)
           midi-export/        # MIDI file export (BPM, beats/chord)
           progression-sidebar/ # Chord progression sidebar (max 8 chords)

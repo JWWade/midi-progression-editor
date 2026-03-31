@@ -78,7 +78,6 @@ src/
     ├── current-chord/      # Current-chord info panel (CurrentChordPanel)
     ├── harmonic-graph/     # Harmonic relationship graph; shortest voice-leading path (Dijkstra)
     ├── ii-v-suggestions/   # Harmonic bridge suggestions (ii–V, tritone substitutions, backchains)
-    ├── intent-capture/     # User intent capture (IntentStore, captureIntent, Cmd/Ctrl+. hotkey)
     ├── legend/             # Visual legend (chord quality colors, note opacity levels)
     ├── midi-export/        # MIDI file export (configurable BPM, beats/chord)
     ├── progression-sidebar/# Chord progression sidebar (up to 8 chords, session-only)

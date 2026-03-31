@@ -166,10 +166,6 @@ client/
 │   │   │   ├── types/                   # BridgeSuggestion, BridgeType, BridgeRequest
 │   │   │   └── utils/                   # suggestBridges, buildBridge, scoreCandidate, bridgeLabel
 │   │   │
-│   │   ├── intent-capture/               # User intent capture (localStorage-backed, Cmd/Ctrl+. hotkey)
-│   │   │   ├── hooks/                   # useIntentCapture hook
-│   │   │   └── utils/                   # IntentStore, captureIntent, snapshotContext
-│   │   │
 │   │   └── voice-leading/                # Voice-leading path utilities
 │   │       └── utils/                   # closeVoiceChord, minimalMotionVoicing
 │   │
@@ -280,8 +276,7 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 - ✅ **Visual Legend**: `VisualLegend` component displays chord quality colour bands (with polygon glyphs) and note opacity levels (diatonic, chord-tone chromatic, chromatic)
 - ✅ **ii–V Suggestions**: `suggestBridges` generates ranked harmonic bridge chords (diatonic ii–V, tritone substitutions, backchains) between any two chords in the progression
 - ✅ **Harmonic Graph**: `findShortestVoiceLeading` (Dijkstra's algorithm on a 19-node T-canonical chord graph) computes the optimal voice-leading path between any two chords
-- ✅ **Intent Capture**: `IntentStore` (localStorage-backed) with `captureIntent`, `snapshotContext`, and `useIntentCapture` hook; global <kbd>Cmd/Ctrl+.</kbd> hotkey triggers capture and adds a placeholder to the progression
-- ✅ **Structure**: Feature-based architecture across 18 modules
+- ✅ **Structure**: Feature-based architecture across modules
 
 ---
 

@@ -34,7 +34,6 @@ The Parametric MIDI Sequencer's design system is well-structured: it defines a c
 | **High** | 1 | `AudioDebugPanel.module.css` — hardcoded colors bypassing the CSS-variable theme system |
 | **Low** | 3 | Hardcoded utility colors (`#9ca3af`, `#d1d5db`, `#10b981`) inside `CurrentChordPanel.module.css` |
 | **Low** | 1 | Hardcoded link colors (`#646cff`, `#535bf2`) in `index.css` `a` element |
-| **Low** | 1 | `monospace` font-family in `PlaceholderTile.module.css` `.sub` lacks a named variable |
 | **Info** | 1 | Focus-ring offset is inconsistently `1px` vs `2px` vs `3px` across components |
 | **Info** | 1 | `font-size: 11.5px` in VisualLegend — not on the canonical scale |
 
@@ -197,15 +196,6 @@ All semantic tokens are defined in `client/src/styles/index.css` for all three t
 
 ---
 
-#### PlaceholderTile
-
-**File:** `PlaceholderTile.module.css`  
-**Tokens used:** `--color-text-muted`, `--color-bg-subtle`, `--color-tile-bg-hover`, `--color-accent`, `--color-text-secondary`, `--color-delete-btn*`  
-**Notes:** `.sub` uses `font-family: monospace` without a token. Intentional for the "keyboard shortcut" sub-text.  
-**Status:** ✅ Consistent (monospace for keyboard hint is idiomatic)
-
----
-
 #### MidiExportControls / NoteValueSelector
 
 **Files:** `MidiExportControls.module.css`, `NoteValueSelector.module.css`  
@@ -304,7 +294,7 @@ All semantic tokens are defined in `client/src/styles/index.css` for all three t
 | Subtle fill | `--color-bg-subtle` | Input backgrounds, inline code |
 | Primary text | `--color-text-primary` | Body, headings |
 | Secondary text | `--color-text-secondary` | Labels, metadata |
-| Muted text | `--color-text-muted` | Placeholders, disabled labels |
+| Muted text | `--color-text-muted` | Secondary and disabled labels |
 | Border | `--color-border` | Component outlines |
 | Subtle border | `--color-border-subtle` | Inner dividers, separators |
 | Tile fill | `--color-tile-bg` | Progression tile default |
@@ -348,8 +338,7 @@ The current icon system uses Unicode / emoji characters as inline text within SV
 |------|---------|-------|
 | ↑ Move up | `↑` | ChordTile reorder button |
 | ↓ Move down | `↓` | ChordTile reorder button |
-| ✕ Remove | `✕` | ChordTile / PlaceholderTile delete button |
-| + Add | `+` | PlaceholderTile add chord |
+| ✕ Remove | `✕` | ChordTile delete button |
 | ▶ Play | `▶` | CurrentChordPanel play button |
 | ⟳ Repeat | `⟳` | Progression playback |
 | 💡 Suggestion | `💡` | BridgeSuggestionIcon |
@@ -429,7 +418,6 @@ The current icon system uses Unicode / emoji characters as inline text within SV
 |-----------|--------|
 | ChordTile `.controlBtn:focus-visible` | `1px` |
 | ChordTile `.tile:focus-visible` | `2px` |
-| PlaceholderTile `.tile:focus-visible`, `.deleteBtn:focus-visible` | `2px`, `1px` |
 | CurrentChordPanel `.addButton:focus-visible` | `3px` |
 | CurrentChordPanel `.playButton:focus-visible`, `.copyIconButton:focus-visible` | `2px` |
 | MidiExportControls | `2px` |
