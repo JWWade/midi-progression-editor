@@ -17,7 +17,7 @@ interface MidiExportControlsProps {
 
 export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPattern }: MidiExportControlsProps) {
   const { bpm, setBpm, beatsPerChord, setBeatsPerChord, exportMidi } =
-    useMidiExport(chords, arpeggioPattern);
+    useMidiExport(chords, arpeggioPattern, scaleContext);
 
   const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
 
