@@ -1,4 +1,4 @@
-export type { ChordType, ChordNoteInfo, ChordRole } from "./types";
+export type { ChordType, ChordExtension, ChordNoteInfo, ChordRole } from "./types";
 export { SEVENTH_CHORD_TYPES } from "./types";
 export { ChordQualityColors } from "./constants/chordQualityColors";
 export type { ChordQualityColor } from "./constants/chordQualityColors";

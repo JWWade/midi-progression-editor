@@ -2,30 +2,21 @@ using ParametricMusic.Api.Models;
 
 namespace ParametricMusic.Api.Services;
 
-public static class ProgressionAnalyzer
+/// <summary>
+/// Analyses chord progressions by computing voice-leading motion, continuity score, and tension trend.
+/// </summary>
+/// <remarks>
+/// Implements <see cref="IProgressionService"/> for use with dependency injection.
+/// </remarks>
+public class ProgressionAnalyzer : IProgressionService
 {
     private const double MaxMotionNormalization = 12.0;
 
     // Rough interval classes: minor 2nd (1), major 2nd (2), tritone (6)
     private static readonly HashSet<int> RoughIntervalClasses = [1, 2, 6];
 
-    /// <summary>
-    /// Analyzes a chord progression by computing the voice-leading motion between consecutive
-    /// chords, a continuity score derived from average motion, and a per-chord tension trend
-    /// based on interval roughness.
-    /// </summary>
-    /// <param name="chords">
-    /// The ordered list of chords in the progression. Must contain at least one chord.
-    /// </param>
-    /// <returns>
-    /// A <see cref="ProgressionAnalyzeResponseDto"/> containing:
-    /// <list type="bullet">
-    ///   <item><see cref="ProgressionAnalyzeResponseDto.Steps"/> — one entry per consecutive pair.</item>
-    ///   <item><see cref="ProgressionAnalyzeResponseDto.ContinuityScore"/> — scalar in [0, 1].</item>
-    ///   <item><see cref="ProgressionAnalyzeResponseDto.TensionTrend"/> — one value per chord.</item>
-    /// </list>
-    /// </returns>
-    public static ProgressionAnalyzeResponseDto Analyze(List<ChordRef> chords)
+    /// <inheritdoc />
+    public ProgressionAnalyzeResponseDto Analyze(List<ChordRef> chords)
     {
         var pitchClassSets = chords
             .Select(GetSortedPitchClasses)
@@ -61,34 +52,57 @@ public static class ProgressionAnalyzer
     }
 
     /// <summary>
-    /// Resolves the sorted pitch-class array for a chord specified by root note name and quality string.
+    /// Resolves the sorted pitch-class array for a chord specified by root note name and quality.
+    /// When <see cref="ChordRef.CustomNotes"/> is provided and non-empty, those pitch classes are used
+    /// directly instead of deriving them from root and quality. Out-of-range values (outside 0–11) are
+    /// silently discarded; duplicates are collapsed.
     /// </summary>
-    /// <param name="chordRef">A chord reference containing a root note name and quality label.</param>
+    /// <param name="chordRef">A chord reference containing a root note name, quality, and optional custom notes.</param>
     /// <returns>A sorted array of MIDI pitch classes (0–11) for the chord's tones.</returns>
     /// <exception cref="ArgumentException">
-    /// Thrown when <paramref name="chordRef"/> contains an unrecognized root or quality value.
+    /// Thrown when <paramref name="chordRef"/> contains an unrecognized root note value and
+    /// <see cref="ChordRef.CustomNotes"/> is null or empty.
     /// </exception>
     private static int[] GetSortedPitchClasses(ChordRef chordRef)
     {
+        // When custom notes are provided, use them directly (filter out of range, deduplicate, sort).
+        if (chordRef.CustomNotes is { Length: > 0 } customNotes)
+        {
+            var valid = customNotes
+                .Where(pc => pc is >= 0 and <= 11)
+                .Distinct()
+                .OrderBy(pc => pc)
+                .ToArray();
+            if (valid.Length > 0)
+                return valid;
+        }
+
         if (!NoteExtensions.TryParse(chordRef.Root, out var note))
             throw new ArgumentException($"Invalid root note: \"{chordRef.Root}\"");
 
-        if (!Enum.TryParse<ChordQuality>(chordRef.Quality, ignoreCase: true, out var quality))
-            throw new ArgumentException($"Invalid chord quality: \"{chordRef.Quality}\"");
+        // Quality is already validated as a ChordQuality enum during JSON deserialization.
+        if (!ChordGenerator.Intervals.TryGetValue(chordRef.Quality, out var intervals))
+            throw new ArgumentException($"Unsupported chord quality: \"{chordRef.Quality}\"");
 
-        var chord = ChordGenerator.BuildChord(note, quality);
-        return [.. chord.PitchClasses.Order()];
+        var rootIndex = (int)note;
+        return [.. intervals.Select(i => (rootIndex + i) % 12).Order()];
     }
 
     /// <summary>
     /// Computes the voice-leading motion cost between two chords using minimum-cost cyclic matching.
     /// </summary>
     /// <remarks>
+    /// TODO: Replace current motion metric with chordDistance once validated (see
+    /// client/src/features/voice-leading/utils/chordDistance.ts for the full-permutation
+    /// implementation that uses the same cyclic pitch-class distance but searches all n!
+    /// assignments rather than only cyclic rotations).
+    /// <para>
     /// The method performs a brute-force search over all <c>n</c> cyclic rotations of the shorter
     /// sorted pitch-class array against the longer, selecting the rotation that minimises the total
     /// semitone displacement. This is a simplified, exhaustive-search form of the optimal
     /// voice-leading assignment problem described in Tymoczko's
     /// <em>A Geometry of Music</em> (Oxford University Press, 2011, ch. 2).
+    /// </para>
     /// <para>
     /// Each pairwise distance uses the cyclic (interval-class) metric:
     /// <c>min(|a - b|, 12 - |a - b|)</c>, which measures the shortest path around the

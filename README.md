@@ -1,5 +1,7 @@
 ﻿# Parametric MIDI Sequencer  Web Prototype
 
+[![CI](https://github.com/JWWade/midi-progression-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/JWWade/midi-progression-editor/actions/workflows/ci.yml)
+
 ## About
 
 **MIDI Progression Editor** is a parametric MIDI sequencer for exploring and editing chord progressions. It combines an interactive React/TypeScript web interface with an ASP.NET Core Web API backend, enabling musicians to:
@@ -27,19 +29,22 @@
 
 ## Quick Start
 
-### Option 1: Automated (Windows)
+### Option 1: Automated (macOS / Linux)
 
 ```bash
-./run-dev.bat
+chmod +x run-dev.sh
+./run-dev.sh
 ```
 
-This script orchestrates everything:
-- Kills any existing processes on ports
-- Starts backend on http://localhost:5110
-- Starts frontend on http://localhost:5173
-- Opens both in separate terminal windows
+### Option 2: Automated (Windows)
 
-### Option 2: Manual Setup
+```bat
+run-dev.bat
+```
+
+Both launchers start the backend on http://localhost:5110 and the frontend on http://localhost:5173. Press <kbd>Ctrl+C</kbd> (Linux/macOS) or close the terminal windows (Windows) to stop.
+
+### Option 3: Manual Setup
 
 **Terminal 1  Backend**
 
@@ -57,7 +62,8 @@ dotnet run
 
 ```bash
 cd client
-npm install     # First time only
+cp .env.example .env.local  # First time only; edit if backend runs elsewhere
+npm install                  # First time only
 npm run dev
 ```
 
@@ -172,6 +178,9 @@ midi-progression-editor/
           chromatic-circle/   # Main 12-note circle visualisation
           color-language/     # Quality-based color system
           current-chord/      # Current-chord info panel
+          harmonic-graph/     # Harmonic relationship graph; shortest voice-leading path (Dijkstra)
+          ii-v-suggestions/   # Harmonic bridge suggestions (ii–V, tritone substitutions, backchains)
+          intent-capture/     # User intent capture (IntentStore, captureIntent, Cmd/Ctrl+. hotkey)
           legend/             # Visual legend (chord quality colours, note opacity levels)
           midi-export/        # MIDI file export (BPM, beats/chord)
           progression-sidebar/ # Chord progression sidebar (max 8 chords)
@@ -250,3 +259,7 @@ npm run generate:api
 - **Backend**: ASP.NET Core .NET 10, Swashbuckle 10.1.4, xUnit 2.9
 - **API**: OpenAPI/Swagger specification with code generation
 - **Build**: npm + dotnet CLI
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, code style guidelines, and the PR workflow.

@@ -8,7 +8,7 @@ namespace ParametricMusic.Api.Controllers;
 [ApiController]
 [Route("[controller]")]
 [Tags("Scale")]
-public class ScaleController : ControllerBase
+public class ScaleController(IScaleService scaleService) : ControllerBase
 {
     /// <summary>
     /// Generate a musical scale from a root note with specified options.
@@ -26,6 +26,6 @@ public class ScaleController : ControllerBase
     {
         ArgumentNullException.ThrowIfNull(body, nameof(body));
 
-        return Ok(ScaleGenerator.BuildScale((int)note, body.ScaleType));
+        return Ok(scaleService.BuildScale((int)note, body.ScaleType));
     }
 }

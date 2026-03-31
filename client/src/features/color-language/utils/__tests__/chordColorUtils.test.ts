@@ -3,6 +3,7 @@ import {
   getChordComplexity,
   getChordColor,
   getChordFillColor,
+  getAccessibleTextColor,
 } from "../chordColorUtils";
 import type { Chord } from "@/features/current-chord/types";
 import type { ChordType } from "@/features/chord/types";
@@ -177,5 +178,58 @@ describe("getChordFillColor", () => {
     const majorFill = getChordFillColor("major", "triad");
     const minorFill = getChordFillColor("minor", "triad");
     expect(majorFill).not.toBe(minorFill);
+  });
+});
+
+describe("getAccessibleTextColor", () => {
+  it("returns dark text for a very light background (95% lightness)", () => {
+    // All quality 'light' colors have 95–96% lightness → dark text
+    expect(getAccessibleTextColor("hsl(45, 80%, 95%)")).toBe("#111827");
+  });
+
+  it("returns white text for a dark background (28% lightness)", () => {
+    // All quality 'dark' colors have 20–30% lightness → white text
+    expect(getAccessibleTextColor("hsl(45, 80%, 28%)")).toBe("#ffffff");
+  });
+
+  it("returns dark text for each quality's light color", () => {
+    for (const quality of ALL_8_CHORD_TYPES) {
+      const solidColor = getChordColor(quality, "triad");
+      // base colors (50% lightness) could go either way; light colors always return dark
+      const lightColor = solidColor.replace(/\d+%\)$/, "95%)");
+      expect(getAccessibleTextColor(lightColor)).toBe("#111827");
+    }
+  });
+
+  it("returns white text for very dark backgrounds (10% lightness)", () => {
+    expect(getAccessibleTextColor("hsl(230, 65%, 10%)")).toBe("#ffffff");
+  });
+
+  it("returns the fallback dark color for a non-HSL input string", () => {
+    expect(getAccessibleTextColor("red")).toBe("#111827");
+    expect(getAccessibleTextColor("#ff0000")).toBe("#111827");
+    expect(getAccessibleTextColor("")).toBe("#111827");
+  });
+
+  it("returns either '#111827' or '#ffffff' — no other values", () => {
+    const testColors = [
+      "hsl(0, 0%, 0%)",
+      "hsl(0, 0%, 50%)",
+      "hsl(0, 0%, 100%)",
+      "hsl(120, 60%, 40%)",
+      "hsl(240, 80%, 70%)",
+    ];
+    for (const color of testColors) {
+      const result = getAccessibleTextColor(color);
+      expect(["#111827", "#ffffff"]).toContain(result);
+    }
+  });
+
+  it("invariant: black background (0% lightness) always returns white text", () => {
+    expect(getAccessibleTextColor("hsl(0, 0%, 0%)")).toBe("#ffffff");
+  });
+
+  it("invariant: white background (100% lightness) always returns dark text", () => {
+    expect(getAccessibleTextColor("hsl(0, 0%, 100%)")).toBe("#111827");
   });
 });

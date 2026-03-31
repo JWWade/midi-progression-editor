@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, memo } from "react";
 import type { Chord } from "../types";
 import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
@@ -33,9 +33,15 @@ interface CurrentChordPanelProps {
   audioParams?: AudioParams;
   /** Callback fired when audio parameters change. */
   onAudioParamsChange?: (params: AudioParams) => void;
+  /**
+   * Called when the user chooses to capture the current chord as an intent
+   * placeholder instead of adding it to a full progression (M3 inline trigger).
+   * When provided, a "Capture Idea" button appears alongside the full-indicator.
+   */
+  onCaptureIntent?: () => void;
 }
 
-export function CurrentChordPanel({
+export const CurrentChordPanel = memo(function CurrentChordPanel({
   chord,
   onAddChord,
   diatonicIndices,
@@ -44,6 +50,7 @@ export function CurrentChordPanel({
   maxProgressionLength = 8,
   audioParams,
   onAudioParamsChange,
+  onCaptureIntent,
 }: CurrentChordPanelProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
@@ -238,13 +245,25 @@ export function CurrentChordPanel({
         Add to Progression &#8594;
       </button>
       {isProgressionFull && (
-        <span className={styles.fullMessage} role="status">
-          Progression is full ({progressionLength}/{maxProgressionLength})
-        </span>
+        <div className={styles.fullRow} role="status">
+          <span className={styles.fullMessage}>
+            Progression is full ({progressionLength}/{maxProgressionLength})
+          </span>
+          {onCaptureIntent && (
+            <button
+              className={styles.captureButton}
+              onClick={onCaptureIntent}
+              aria-label="Capture current chord as an idea placeholder"
+              title="Save idea for later (Ctrl/Cmd + .)"
+            >
+              ✦ Capture Idea
+            </button>
+          )}
+        </div>
       )}
       {audioParams && onAudioParamsChange && (
         <AudioDebugPanel params={audioParams} onChange={onAudioParamsChange} />
       )}
     </div>
   );
-}
+});

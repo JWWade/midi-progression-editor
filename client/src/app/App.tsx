@@ -4,24 +4,32 @@ import { CurrentChordPanel, type Chord, formatChordName } from '../features/curr
 import { getDiatonicIndices } from '../features/chromatic-circle/utils';
 import { ProgressionSidebar } from '../features/progression-sidebar';
 import { useProgression } from '../features/progression-sidebar/hooks/useProgression';
+import { useBridgePreview } from '../features/progression-sidebar/hooks/useBridgePreview';
+import { useBridgeApply } from '../features/progression-sidebar/hooks/useBridgeApply';
+import { importSnapshot } from '../features/progression-sidebar/utils/snapshotIO';
 import { MAX_PROGRESSION_LENGTH } from '../features/progression-sidebar/constants/progressionConfig';
 import { useProgressionPlayback } from '../features/audio';
 import type { AudioParams } from '../features/audio/constants/audioConfig';
 import { DEFAULT_AUDIO_PARAMS } from '../features/audio/constants/audioConfig';
 import { AppHeader } from './components/AppHeader';
 import { AppErrorBoundary } from './components/AppErrorBoundary';
+import { DevDiagnosticsPanel } from './components/DevDiagnosticsPanel';
 import type { ScaleType } from '../features/scale/types';
 import { useEnharmonic } from './providers/useEnharmonic';
 import { VisualLegend } from '../features/legend';
+import { Toast } from '../shared/components/Toast/Toast';
+import { selectRandomDiatonicStartupChord } from '../features/chord/utils/selectRandomDiatonicStartupChord';
+import { useIntentCapture } from '../features/intent-capture';
 import styles from './App.module.css';
 
 /** Default chord duration used for progression playback (milliseconds). */
 const DEFAULT_CHORD_DURATION_MS = 1200;
 
 export default function App() {
-  const [currentChord, setCurrentChord] = useState<Chord | null>(null);
-  const [keyRoot, setKeyRoot] = useState<number>(0);
-  const [keyScale, setKeyScale] = useState<ScaleType>("major");
+  const [startupSelection] = useState(() => selectRandomDiatonicStartupChord());
+  const [currentChord, setCurrentChord] = useState<Chord | null>(startupSelection.chord);
+  const [keyRoot, setKeyRoot] = useState<number>(startupSelection.keyRoot);
+  const [keyScale, setKeyScale] = useState<ScaleType>(startupSelection.keyScale);
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
   const [chordDurationMs, setChordDurationMs] = useState(DEFAULT_CHORD_DURATION_MS);
 
@@ -30,15 +38,34 @@ export default function App() {
   const [showIntervals, setShowIntervals] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
 
+  // Session import state
+  const [importError, setImportError] = useState<string | null>(null);
+  const loadJsonInputRef = useRef<HTMLInputElement>(null);
+
+  // Intent capture toast state
+  const [intentToast, setIntentToast] = useState<string | null>(null);
+
   const { pitchClasses } = useEnharmonic();
-  const { chords, addChord, moveChord, deleteChord } = useProgression();
+  const { nodes, chords, addChord, addPlaceholder, deletePlaceholder, moveChord, deleteChord, setChords } = useProgression();
   // Guard ref to prevent duplicate progression entries from rapid double-clicks.
   // Set synchronously when add is initiated; cleared after the current animation
   // frame so intentional subsequent adds still work.
   const addGuardRef = useRef(false);
 
+  const { capture: captureIntent } = useIntentCapture({ chords, keyRoot, keyScale });
+
+  const { applyBridge, undoPending, undoBridge } = useBridgeApply(chords, setChords);
+
   const { isPlaying, playingIndex, loop, play: onPlay, stop: onStop, toggleLoop } = useProgressionPlayback(chords, audioParams, chordDurationMs);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
+
+  const {
+    isPreviewPlaying,
+    previewBridge,
+    previewInsertAfterIndex,
+    startPreview: onPreviewBridge,
+    stopPreview: onStopPreview,
+  } = useBridgePreview(chordDurationMs, audioParams);
 
   // ARIA live region: announce chord name on each playback step; clear when stopped.
   const [liveRegionText, setLiveRegionText] = useState('');
@@ -71,6 +98,44 @@ export default function App() {
     setKeyScale(scale);
   }, []);
 
+  const handleLoadJsonClick = useCallback(() => {
+    loadJsonInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      // Reset value so re-selecting the same file triggers onChange again
+      e.target.value = '';
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result;
+        if (typeof text !== 'string') {
+          setImportError('Failed to read file.');
+          return;
+        }
+        const snapshot = importSnapshot(text);
+        if (!snapshot) {
+          setImportError('Invalid session file. The file does not contain a valid progression snapshot.');
+          return;
+        }
+        setChords(snapshot.progression);
+        if (snapshot.scaleContext) {
+          setKeyRoot(snapshot.scaleContext.root);
+          setKeyScale(snapshot.scaleContext.mode);
+        }
+        setImportError(null);
+      };
+      reader.onerror = () => {
+        setImportError('Failed to read file.');
+      };
+      reader.readAsText(file);
+    },
+    [setChords],
+  );
+
   const handleAddChord = useCallback(() => {
     if (currentChord === null || addGuardRef.current) return;
     addGuardRef.current = true;
@@ -82,6 +147,28 @@ export default function App() {
       addGuardRef.current = false;
     });
   }, [currentChord, addChord]);
+
+  /**
+   * Captures the current chord / composition context as an intent and inserts
+   * a placeholder into the progression. Non-blocking; <100 ms target.
+   */
+  const handleCaptureIntent = useCallback(() => {
+    const intentId = captureIntent('');
+    addPlaceholder(intentId);
+    setIntentToast('Idea captured — placeholder added to progression');
+  }, [captureIntent, addPlaceholder]);
+
+  // Global hotkey: Cmd/Ctrl + . → capture intent (M1)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '.') {
+        e.preventDefault();
+        handleCaptureIntent();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleCaptureIntent]);
 
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 
@@ -108,6 +195,7 @@ export default function App() {
         onIntervalsChange={setShowIntervals}
         showLegend={showLegend}
         onLegendChange={setShowLegend}
+        onLoadJson={handleLoadJsonClick}
       />
       <div className={styles.primaryFlowContainer}>
         {/* Chromatic Circle - Left */}
@@ -118,10 +206,12 @@ export default function App() {
           aria-label="Chromatic Circle - Select and inspect the current chord"
         >
           <ChromaticCircle
+            initialChordName={startupSelection.chordName}
             externalChord={playingChord}
             isPlaybackActive={isPlaying}
             onCurrentChordChange={handleCurrentChordChange}
             onKeyScaleChange={handleKeyScaleChange}
+            selectedScale={keyScale}
             showCentroid={showCentroid}
             showIntervals={showIntervals}
           />
@@ -144,6 +234,7 @@ export default function App() {
             maxProgressionLength={MAX_PROGRESSION_LENGTH}
             audioParams={audioParams}
             onAudioParamsChange={setAudioParams}
+            onCaptureIntent={handleCaptureIntent}
           />
         </section>
 
@@ -155,10 +246,12 @@ export default function App() {
           aria-label="Chord Progression - View and manage added chords"
         >
           <ProgressionSidebar
+            nodes={nodes}
             chords={chords}
             onMoveUp={(i) => moveChord(i, 'up')}
             onMoveDown={(i) => moveChord(i, 'down')}
             onDelete={deleteChord}
+            onDeletePlaceholder={deletePlaceholder}
             maxLength={MAX_PROGRESSION_LENGTH}
             isPlaying={isPlaying}
             playingIndex={playingIndex}
@@ -168,9 +261,55 @@ export default function App() {
             onToggleLoop={toggleLoop}
             chordDurationMs={chordDurationMs}
             onChordDurationChange={setChordDurationMs}
+            scale={{ root: keyRoot, mode: keyScale }}
+            onApplyBridge={applyBridge}
+            onPreviewBridge={onPreviewBridge}
+            onStopPreview={onStopPreview}
+            previewBridge={previewBridge}
+            previewInsertAfterIndex={previewInsertAfterIndex}
+            isPreviewPlaying={isPreviewPlaying}
           />
         </section>
       </div>
+      {undoPending && (
+        <Toast
+          message="Bridge inserted —"
+          action={{ label: 'Undo', onClick: undoBridge }}
+        />
+      )}
+      {importError && (
+        <Toast
+          message={importError}
+          action={{ label: 'Dismiss', onClick: () => setImportError(null) }}
+        />
+      )}
+      {intentToast && (
+        <Toast
+          message={intentToast}
+          action={{ label: 'Dismiss', onClick: () => setIntentToast(null) }}
+        />
+      )}
+      <input
+        ref={loadJsonInputRef}
+        type="file"
+        accept=".json,application/json"
+        aria-hidden="true"
+        tabIndex={-1}
+        className={styles.visuallyHidden}
+        onChange={handleFileChange}
+      />
+      {import.meta.env.DEV && (
+        <DevDiagnosticsPanel
+          currentChord={currentChord}
+          keyRoot={keyRoot}
+          keyScale={keyScale}
+          progressionLength={chords.length}
+          maxProgressionLength={MAX_PROGRESSION_LENGTH}
+          audioParams={audioParams}
+          isPlaying={isPlaying}
+          playingIndex={playingIndex}
+        />
+      )}
     </div>
     </AppErrorBoundary>
   );

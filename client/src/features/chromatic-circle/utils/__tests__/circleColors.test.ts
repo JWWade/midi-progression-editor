@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { getCircleColor, getCircleColorForTheme } from "../circleColors";
 import { ChordColors } from "@/features/color-language/constants/chordColors";
 import type { ChordType } from "@/features/chord/types";
@@ -78,5 +79,46 @@ describe("getCircleColorForTheme", () => {
     const root0 = getCircleColorForTheme(0, "major", "light");
     const root5 = getCircleColorForTheme(5, "major", "light");
     expect(root0).toBe(root5);
+  });
+});
+
+describe("getCircleColor — dark theme (document data-theme=dark)", () => {
+  beforeEach(() => {
+    document.documentElement.setAttribute("data-theme", "dark");
+  });
+
+  afterEach(() => {
+    document.documentElement.removeAttribute("data-theme");
+  });
+
+  it("returns an hsla() string for the default 'circle' surface in dark theme", () => {
+    const result = getCircleColor(0, "major");
+    expect(result).toMatch(/^hsla\(/i);
+  });
+
+  it("returns an hsl() string for 'panel' surface in dark theme", () => {
+    const result = getCircleColor(0, "major", "panel");
+    expect(result).toMatch(/^hsl\(/i);
+  });
+
+  it("dark-theme circle color is different from the quality's light color", () => {
+    const lightColor = ChordColors.major.light;
+    const darkResult = getCircleColor(0, "major", "circle");
+    expect(darkResult).not.toBe(lightColor);
+  });
+
+  it("returns distinct dark-theme circle colors for different chord qualities", () => {
+    const majorDark = getCircleColor(0, "major", "circle");
+    const minorDark = getCircleColor(0, "minor", "circle");
+    expect(majorDark).not.toBe(minorDark);
+  });
+
+  it("returns a non-empty string for all chord types and both surfaces in dark theme", () => {
+    for (const quality of ALL_CHORD_TYPES) {
+      const circle = getCircleColor(0, quality, "circle");
+      const panel = getCircleColor(0, quality, "panel");
+      expect(circle.length).toBeGreaterThan(0);
+      expect(panel.length).toBeGreaterThan(0);
+    }
   });
 });

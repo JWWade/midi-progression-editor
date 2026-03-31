@@ -19,11 +19,11 @@
 
 /* ── Section label ("Current Chord") ────────────────────────────────────── */
 .sectionLabel {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   margin-bottom: 2px;
 }
 
@@ -32,7 +32,7 @@
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 28px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--color-text-primary);
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
@@ -41,7 +41,7 @@
 .placeholder {
   font-size: 16px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -62,7 +62,7 @@
 .quality {
   font-size: 12px;
   font-weight: 400;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   letter-spacing: 0.02em;
 }
 
@@ -107,7 +107,7 @@
 }
 
 .addButtonDisabled {
-  background-color: #d1d5db;
+  background-color: var(--color-disabled-bg);
   color: var(--color-disabled-text);
   cursor: not-allowed;
   box-shadow: none;
@@ -155,7 +155,7 @@
 }
 
 .noteSeparator {
-  color: #9ca3af;
+  color: var(--color-text-muted);
   font-weight: 400;
   margin: 0 3px;
 }
@@ -237,29 +237,47 @@
   border-color: var(--chord-quality-dark, #4f46e5);
 }
 
+/* ── Progression full row ────────────────────────────────────────────────── */
+.fullRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 /* ── Progression full message ───────────────────────────────────────────── */
 .fullMessage {
   font-size: 11px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   letter-spacing: 0.02em;
-  margin-top: 4px;
 }
 
-[data-theme="dark"] .sectionLabel {
-  color: var(--color-text-muted);
-}
-
-[data-theme="dark"] .chordName {
-  color: var(--color-text-primary);
-}
-
-[data-theme="dark"] .placeholder {
+/* ── Capture idea button (shown when progression is full) ───────────────── */
+.captureButton {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border: 1.5px dashed var(--color-text-muted, #888);
+  border-radius: 6px;
+  background: transparent;
   color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
 }
 
-[data-theme="dark"] .quality {
-  color: var(--color-text-secondary);
+.captureButton:hover {
+  background-color: color-mix(in srgb, var(--color-accent, #4f46e5) 10%, transparent);
+  color: var(--color-accent, #4f46e5);
+  border-color: var(--color-accent, #4f46e5);
+}
+
+.captureButton:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
 }
 
 [data-theme="dark"] .fullMessage {
@@ -268,6 +286,44 @@
 
 [data-theme="dark"] .root {
   color: var(--chord-quality-base, #f59e0b);
+}
+
+[data-theme="dark"] .noteNames {
+  color: var(--chord-quality-base, #818cf8);
+}
+
+[data-theme="dark"] .playButton {
+  border-color: var(--chord-quality-base, #818cf8);
+  color: var(--chord-quality-base, #818cf8);
+}
+
+[data-theme="dark"] .playButton:hover:not(:disabled) {
+  background-color: var(--chord-quality-base, #818cf8);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .playButton:focus-visible {
+  outline-color: var(--chord-quality-base, #818cf8);
+}
+
+[data-theme="dark"] .playButtonActive {
+  background-color: var(--chord-quality-base, #818cf8);
+  border-color: var(--chord-quality-base, #818cf8);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .copyIconButton {
+  border-color: var(--chord-quality-base, #818cf8);
+  color: var(--chord-quality-base, #818cf8);
+}
+
+[data-theme="dark"] .copyIconButton:hover:not(:disabled) {
+  background-color: var(--chord-quality-base, #818cf8);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .copyIconButton:focus-visible {
+  outline-color: var(--chord-quality-base, #818cf8);
 }
 
 /* ── Retro theme overrides ───────────────────────────────────────────────── */

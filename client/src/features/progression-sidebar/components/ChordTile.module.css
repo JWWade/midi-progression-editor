@@ -96,7 +96,7 @@
 }
 
 .controlBtn:focus-visible {
-  outline: 2px solid var(--accent-color, #6b7280);
+  outline: 2px solid var(--accent-color, var(--color-accent, #4f46e5));
   outline-offset: 1px;
 }
 
@@ -140,9 +140,16 @@
   }
 }
 
+/* ── Ghost tile (bridge preview) ─────────────────────────────────────────── */
+.ghostTile {
+  opacity: 0.4;
+  pointer-events: none;
+  border-style: dashed;
+}
+
 /* ── Keyboard focus indicator ────────────────────────────────────────────── */
 .tile:focus-visible {
-  outline: 2px solid var(--accent-color, #4f46e5);
+  outline: 2px solid var(--color-accent, #4f46e5);
   outline-offset: 2px;
 }
 

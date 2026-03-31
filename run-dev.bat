@@ -5,21 +5,45 @@ REM Starts both backend (ASP.NET Core) and frontend (Vite) servers
 echo Starting MIDI Progression Editor Development Environment...
 echo.
 
-REM Kill any existing dotnet/backend processes to free up ports
-echo [0/3] Cleaning up existing processes...
-taskkill /F /IM dotnet.exe >nul 2>&1
-taskkill /F /IM "ParametricMusic.Api.exe" >nul 2>&1
+REM Free port 5110 (backend) if already occupied — targeted kill by port only.
+echo [0/4] Freeing port 5110 if occupied...
+FOR /F "tokens=5" %%P IN ('netstat -ano ^| findstr ":5110 "') DO (
+  taskkill /F /PID %%P >nul 2>&1
+)
+
+REM Free port 5173 (frontend) if already occupied — targeted kill by port only.
+echo [0/4] Freeing port 5173 if occupied...
+FOR /F "tokens=5" %%P IN ('netstat -ano ^| findstr ":5173 "') DO (
+  taskkill /F /PID %%P >nul 2>&1
+)
+
 timeout /t 2 /nobreak >nul
 
+REM Restore backend packages on first run (when obj\ does not exist yet).
+IF NOT EXIST "%~dp0server\ParametricMusic.Api\obj" (
+  echo [1/4] Restoring backend packages (first-time setup)...
+  pushd "%~dp0server\ParametricMusic.Api"
+  dotnet restore
+  popd
+)
+
+REM Install frontend dependencies on first run (when node_modules\ does not exist yet).
+IF NOT EXIST "%~dp0client\node_modules" (
+  echo [2/4] Installing frontend dependencies (first-time setup)...
+  pushd "%~dp0client"
+  npm install
+  popd
+)
+
 REM Start the backend server in a new window
-echo [1/3] Starting Backend Server (ASP.NET Core)...
+echo [3/4] Starting Backend Server (ASP.NET Core)...
 start "Backend - ParametricMusic.Api" /D "%~dp0server\ParametricMusic.Api" cmd /k "dotnet run || pause"
 
 REM Wait for the backend to initialize
 timeout /t 5 /nobreak >nul
 
 REM Start the frontend dev server in a new window
-echo [2/3] Starting Frontend Dev Server (Vite)...
+echo [4/4] Starting Frontend Dev Server (Vite)...
 start "Frontend - Client" /D "%~dp0client" cmd /k "npm run dev || pause"
 
 echo.

@@ -6,6 +6,12 @@ import {
   MAJOR_INTERVALS,
   MINOR_INTERVALS,
   CHORD_INTERVALS,
+  getChordTriad,
+  getChordNoteIndices,
+  rotateChordNotes,
+  rotateNamedChordRoot,
+  dedupePitchClasses,
+  getPrimitiveNoteIndices,
 } from "../transpose";
 import type { ChordType } from "@/features/chord/types";
 
@@ -117,5 +123,178 @@ describe("CHORD_INTERVALS", () => {
     for (const type of ALL_8_CHORD_TYPES) {
       expect(CHORD_INTERVALS[type][0]).toBe(0);
     }
+  });
+});
+
+describe("getChordTriad", () => {
+  it("returns [0,4,7] for maj7", () => {
+    expect(getChordTriad("maj7")).toEqual([0, 4, 7]);
+  });
+
+  it("returns [0,3,7] for min7", () => {
+    expect(getChordTriad("min7")).toEqual([0, 3, 7]);
+  });
+
+  it("returns [0,4,7] for dom7", () => {
+    expect(getChordTriad("dom7")).toEqual([0, 4, 7]);
+  });
+
+  it("returns [0,3,6] for halfdim7", () => {
+    expect(getChordTriad("halfdim7")).toEqual([0, 3, 6]);
+  });
+
+  it("returns undefined for triad types (major, minor, dim, aug)", () => {
+    for (const type of ["major", "minor", "dim", "aug"] as ChordType[]) {
+      expect(getChordTriad(type)).toBeUndefined();
+    }
+  });
+});
+
+describe("getChordNoteIndices", () => {
+  it("returns [0,4,7] for C major (root=0)", () => {
+    expect(getChordNoteIndices(0, "major")).toEqual([0, 4, 7]);
+  });
+
+  it("returns [7,11,2] for G major (root=7)", () => {
+    expect(getChordNoteIndices(7, "major")).toEqual([7, 11, 2]);
+  });
+
+  it("returns [0,4,7,11] for C maj7 (root=0)", () => {
+    expect(getChordNoteIndices(0, "maj7")).toEqual([0, 4, 7, 11]);
+  });
+
+  it("all returned indices are in range 0–11 for every chord type and root", () => {
+    for (const type of ALL_8_CHORD_TYPES) {
+      for (let root = 0; root < 12; root++) {
+        for (const idx of getChordNoteIndices(root, type)) {
+          expect(idx).toBeGreaterThanOrEqual(0);
+          expect(idx).toBeLessThanOrEqual(11);
+        }
+      }
+    }
+  });
+
+  it("result length matches CHORD_INTERVALS length for that type", () => {
+    for (const type of ALL_8_CHORD_TYPES) {
+      const indices = getChordNoteIndices(0, type);
+      expect(indices).toHaveLength(CHORD_INTERVALS[type].length);
+    }
+  });
+});
+
+describe("rotateChordNotes", () => {
+  it("rotates C major [0,4,7] up 2 semitones → [2,6,9]", () => {
+    expect(rotateChordNotes([0, 4, 7], 2)).toEqual([2, 6, 9]);
+  });
+
+  it("wraps values at the chromatic boundary — root B(11) + 2 → 1", () => {
+    expect(rotateChordNotes([11], 2)).toEqual([1]);
+  });
+
+  it("handles negative semitones — [2,6,9] rotated by -2 → [0,4,7]", () => {
+    expect(rotateChordNotes([2, 6, 9], -2)).toEqual([0, 4, 7]);
+  });
+
+  it("0 semitones returns the same indices", () => {
+    expect(rotateChordNotes([0, 4, 7], 0)).toEqual([0, 4, 7]);
+  });
+
+  it("all results are in range 0–11 for any rotation", () => {
+    for (let semitones = -12; semitones <= 12; semitones++) {
+      for (const idx of rotateChordNotes([0, 3, 6, 9], semitones)) {
+        expect(idx).toBeGreaterThanOrEqual(0);
+        expect(idx).toBeLessThanOrEqual(11);
+      }
+    }
+  });
+
+  it("rotating by 12 (full octave) returns the same chord", () => {
+    expect(rotateChordNotes([0, 4, 7], 12)).toEqual([0, 4, 7]);
+  });
+});
+
+describe("rotateNamedChordRoot", () => {
+  it("rotates C(0) by 2 semitones → D(2)", () => {
+    expect(rotateNamedChordRoot(0, 2)).toBe(2);
+  });
+
+  it("wraps B(11) by 2 semitones → C#(1)", () => {
+    expect(rotateNamedChordRoot(11, 2)).toBe(1);
+  });
+
+  it("handles negative semitones: C(0) by -1 → B(11)", () => {
+    expect(rotateNamedChordRoot(0, -1)).toBe(11);
+  });
+
+  it("rotation by 12 returns the same root", () => {
+    for (let root = 0; root < 12; root++) {
+      expect(rotateNamedChordRoot(root, 12)).toBe(root);
+    }
+  });
+
+  it("result is always in range 0–11", () => {
+    for (let root = 0; root < 12; root++) {
+      for (let semitones = -24; semitones <= 24; semitones++) {
+        const result = rotateNamedChordRoot(root, semitones);
+        expect(result).toBeGreaterThanOrEqual(0);
+        expect(result).toBeLessThanOrEqual(11);
+      }
+    }
+  });
+});
+
+describe("dedupePitchClasses", () => {
+  it("removes duplicate pitch classes", () => {
+    expect(dedupePitchClasses([0, 4, 7, 4, 0])).toEqual([0, 4, 7]);
+  });
+
+  it("preserves first-seen order", () => {
+    expect(dedupePitchClasses([7, 4, 0, 4, 7])).toEqual([7, 4, 0]);
+  });
+
+  it("returns the same array when all values are unique", () => {
+    expect(dedupePitchClasses([0, 3, 6, 9])).toEqual([0, 3, 6, 9]);
+  });
+
+  it("returns an empty array for empty input", () => {
+    expect(dedupePitchClasses([])).toEqual([]);
+  });
+
+  it("handles a single element", () => {
+    expect(dedupePitchClasses([5])).toEqual([5]);
+  });
+});
+
+describe("getPrimitiveNoteIndices", () => {
+  it("equilateral-triangle from root 0 → [0,4,8]", () => {
+    expect(getPrimitiveNoteIndices(0, "equilateral-triangle")).toEqual([0, 4, 8]);
+  });
+
+  it("suspended-triangle from root 0 → [0,5,7]", () => {
+    expect(getPrimitiveNoteIndices(0, "suspended-triangle")).toEqual([0, 5, 7]);
+  });
+
+  it("square from root 0 → [0,3,6,9]", () => {
+    expect(getPrimitiveNoteIndices(0, "square")).toEqual([0, 3, 6, 9]);
+  });
+
+  it("rectangle from root 0 → [0,4,6,10]", () => {
+    expect(getPrimitiveNoteIndices(0, "rectangle")).toEqual([0, 4, 6, 10]);
+  });
+
+  it("all results are in range 0–11 for every shape and root", () => {
+    const shapes = ["equilateral-triangle", "suspended-triangle", "square", "rectangle"] as const;
+    for (const shape of shapes) {
+      for (let root = 0; root < 12; root++) {
+        for (const idx of getPrimitiveNoteIndices(root, shape)) {
+          expect(idx).toBeGreaterThanOrEqual(0);
+          expect(idx).toBeLessThanOrEqual(11);
+        }
+      }
+    }
+  });
+
+  it("equilateral-triangle from root 4 → [4,8,0]", () => {
+    expect(getPrimitiveNoteIndices(4, "equilateral-triangle")).toEqual([4, 8, 0]);
   });
 });

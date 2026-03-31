@@ -7,7 +7,7 @@ namespace ParametricMusic.Api.Controllers;
 [ApiController]
 [Route("[controller]")]
 [Tags("Progression")]
-public class ProgressionController : ControllerBase
+public class ProgressionController(IProgressionService progressionService) : ControllerBase
 {
     /// <summary>
     /// Analyze a chord progression, returning voice-leading motion, continuity score, and tension trend.
@@ -25,7 +25,7 @@ public class ProgressionController : ControllerBase
 
         try
         {
-            var result = ProgressionAnalyzer.Analyze(request.Chords);
+            var result = progressionService.Analyze(request.Chords);
             return Ok(result);
         }
         catch (ArgumentException ex)

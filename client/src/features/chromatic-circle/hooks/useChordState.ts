@@ -14,6 +14,7 @@ interface UseChordStateOptions {
   onCurrentChordChange?: (chord: Chord) => void;
   onKeyScaleChange?: (root: number, scale: ScaleType) => void;
   selectedScale: ScaleType;
+  initialChordName?: string;
   pitchClasses: readonly string[];
 }
 
@@ -21,12 +22,13 @@ export function useChordState({
   onCurrentChordChange,
   onKeyScaleChange,
   selectedScale,
+  initialChordName = "C",
   pitchClasses,
 }: UseChordStateOptions) {
   const [suppressNextClick, setSuppressNextClick] = useState(false);
   const [moveAnnouncement, setMoveAnnouncement] = useState("");
 
-  const { selectedChordName, setSelectedChordName } = useChordSelection();
+  const { selectedChordName, setSelectedChordName } = useChordSelection(initialChordName);
 
   const {
     customFromChord,
@@ -34,6 +36,7 @@ export function useChordState({
     handleRotateChord,
     handleMirrorChord,
     handleRandomChord,
+    handleMutateChord,
     handleSelectPrimitiveShape,
   } = useCustomChordState({
     selectedChordName,
@@ -146,5 +149,6 @@ export function useChordState({
     handleMirrorChord,
     handleSelectPrimitiveShape,
     handleRandomChord,
+    handleMutateChord,
   };
 }

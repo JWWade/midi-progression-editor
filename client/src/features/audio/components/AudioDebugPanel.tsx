@@ -7,10 +7,23 @@ interface AudioDebugPanelProps {
   onChange: (params: AudioParams) => void;
 }
 
-const OSCILLATOR_TYPES: OscillatorTypeConfig[] = ["sine", "square", "sawtooth", "triangle"];
+/** Musical display names for oscillator waveform types. */
+const WAVEFORM_LABELS: Record<OscillatorTypeConfig, string> = {
+  sine: "Mellow",
+  triangle: "Warm",
+  square: "Hollow",
+  sawtooth: "Bright",
+};
+
+const OSCILLATOR_TYPES: OscillatorTypeConfig[] = ["sine", "triangle", "square", "sawtooth"];
+
+/** Returns a percentage string (0–100) relative to a slider's min/max range. */
+function toPercent(value: number, min: number, max: number): string {
+  return `${Math.round(((value - min) / (max - min)) * 100)}%`;
+}
 
 export function AudioDebugPanel({ params, onChange }: AudioDebugPanelProps): React.ReactElement {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleChange = (field: keyof AudioParams, value: unknown) => {
     onChange({ ...params, [field]: value });
@@ -19,7 +32,7 @@ export function AudioDebugPanel({ params, onChange }: AudioDebugPanelProps): Rea
   if (!isExpanded) {
     return (
       <div className={styles.toggleButton}>
-        <button onClick={() => setIsExpanded(true)}>▶ Audio Debug</button>
+        <button onClick={() => setIsExpanded(true)} aria-label="Sound settings">Sound</button>
       </div>
     );
   }
@@ -27,16 +40,16 @@ export function AudioDebugPanel({ params, onChange }: AudioDebugPanelProps): Rea
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3>Audio Debug Panel</h3>
-        <button onClick={() => setIsExpanded(false)} aria-label="Collapse audio debug panel">
+        <h3>Sound</h3>
+        <button onClick={() => setIsExpanded(false)} aria-label="Collapse sound settings">
           ▼
         </button>
       </div>
 
       <div className={styles.controls}>
-        {/* Master Volume */}
+        {/* Volume */}
         <div className={styles.control}>
-          <label htmlFor="masterVolume">Master Volume ({params.masterVolume.toFixed(2)})</label>
+          <label htmlFor="masterVolume">Volume ({Math.round(params.masterVolume * 100)}%)</label>
           <input
             id="masterVolume"
             type="range"
@@ -44,27 +57,14 @@ export function AudioDebugPanel({ params, onChange }: AudioDebugPanelProps): Rea
             max="1"
             step="0.01"
             value={params.masterVolume}
+            aria-valuetext={`${Math.round(params.masterVolume * 100)}%`}
             onChange={(e) => handleChange("masterVolume", parseFloat(e.target.value))}
           />
         </div>
 
-        {/* Attack Peak */}
+        {/* Attack */}
         <div className={styles.control}>
-          <label htmlFor="attackPeak">Attack Peak ({params.attackPeak.toFixed(2)})</label>
-          <input
-            id="attackPeak"
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={params.attackPeak}
-            onChange={(e) => handleChange("attackPeak", parseFloat(e.target.value))}
-          />
-        </div>
-
-        {/* Attack Time */}
-        <div className={styles.control}>
-          <label htmlFor="attackTime">Attack ({params.attackTime.toFixed(3)}s)</label>
+          <label htmlFor="attackTime">Attack</label>
           <input
             id="attackTime"
             type="range"
@@ -72,13 +72,14 @@ export function AudioDebugPanel({ params, onChange }: AudioDebugPanelProps): Rea
             max="0.5"
             step="0.01"
             value={params.attackTime}
+            aria-valuetext={toPercent(params.attackTime, 0.01, 0.5)}
             onChange={(e) => handleChange("attackTime", parseFloat(e.target.value))}
           />
         </div>
 
-        {/* Decay Time */}
+        {/* Decay */}
         <div className={styles.control}>
-          <label htmlFor="decayTime">Decay ({params.decayTime.toFixed(3)}s)</label>
+          <label htmlFor="decayTime">Decay</label>
           <input
             id="decayTime"
             type="range"
@@ -86,13 +87,14 @@ export function AudioDebugPanel({ params, onChange }: AudioDebugPanelProps): Rea
             max="0.5"
             step="0.01"
             value={params.decayTime}
+            aria-valuetext={toPercent(params.decayTime, 0.01, 0.5)}
             onChange={(e) => handleChange("decayTime", parseFloat(e.target.value))}
           />
         </div>
 
-        {/* Sustain Level */}
+        {/* Sustain */}
         <div className={styles.control}>
-          <label htmlFor="sustainLevel">Sustain ({params.sustainLevel.toFixed(2)})</label>
+          <label htmlFor="sustainLevel">Sustain</label>
           <input
             id="sustainLevel"
             type="range"
@@ -100,13 +102,14 @@ export function AudioDebugPanel({ params, onChange }: AudioDebugPanelProps): Rea
             max="1"
             step="0.01"
             value={params.sustainLevel}
+            aria-valuetext={`${Math.round(params.sustainLevel * 100)}%`}
             onChange={(e) => handleChange("sustainLevel", parseFloat(e.target.value))}
           />
         </div>
 
-        {/* Release Time */}
+        {/* Release */}
         <div className={styles.control}>
-          <label htmlFor="releaseTime">Release ({params.releaseTime.toFixed(3)}s)</label>
+          <label htmlFor="releaseTime">Release</label>
           <input
             id="releaseTime"
             type="range"
@@ -114,13 +117,14 @@ export function AudioDebugPanel({ params, onChange }: AudioDebugPanelProps): Rea
             max="0.5"
             step="0.01"
             value={params.releaseTime}
+            aria-valuetext={toPercent(params.releaseTime, 0.01, 0.5)}
             onChange={(e) => handleChange("releaseTime", parseFloat(e.target.value))}
           />
         </div>
 
-        {/* Oscillator Type */}
+        {/* Tone */}
         <div className={styles.control}>
-          <label htmlFor="oscillatorType">Waveform</label>
+          <label htmlFor="oscillatorType">Tone</label>
           <select
             id="oscillatorType"
             value={params.oscillatorType}
@@ -128,51 +132,10 @@ export function AudioDebugPanel({ params, onChange }: AudioDebugPanelProps): Rea
           >
             {OSCILLATOR_TYPES.map((type) => (
               <option key={type} value={type}>
-                {type}
+                {WAVEFORM_LABELS[type]}
               </option>
             ))}
           </select>
-        </div>
-
-        {/* Scale Gain by Note Count */}
-        <div className={styles.control}>
-          <label htmlFor="scaleGainByNoteCount">
-            <input
-              id="scaleGainByNoteCount"
-              type="checkbox"
-              checked={params.scaleGainByNoteCount}
-              onChange={(e) => handleChange("scaleGainByNoteCount", e.target.checked)}
-            />
-            Scale gain by note count (prevents clipping)
-          </label>
-        </div>
-
-        {/* Compressor Threshold */}
-        <div className={styles.control}>
-          <label htmlFor="compressorThreshold">Compressor Threshold ({params.compressorThreshold.toFixed(1)}dB)</label>
-          <input
-            id="compressorThreshold"
-            type="range"
-            min="-100"
-            max="0"
-            step="1"
-            value={params.compressorThreshold}
-            onChange={(e) => handleChange("compressorThreshold", parseFloat(e.target.value))}
-          />
-        </div>
-
-        {/* Compressor Ratio */}
-        <div className={styles.control}>
-          <label htmlFor="compressorRatio">Compressor Ratio ({params.compressorRatio.toFixed(1)}:1)</label>
-          <input
-            id="compressorRatio"
-            type="range"
-            min="1"
-            max="20"
-            step="0.1"
-            value={params.compressorRatio}
-            onChange={(e) => handleChange("compressorRatio", parseFloat(e.target.value))}
-          />
         </div>
       </div>
     </div>

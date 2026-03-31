@@ -1,4 +1,3 @@
-import type { ChordNoteInfo } from "@/features/chord/types";
 import type { AudioParams } from "../constants/audioConfig";
 import { DEFAULT_AUDIO_PARAMS } from "../constants/audioConfig";
 
@@ -9,6 +8,9 @@ export interface PlayOptions {
 }
 
 let activeOscillators: OscillatorNode[] = [];
+let activeEnvelopeGain: GainNode | null = null;
+let activeMasterGain: GainNode | null = null;
+let activeCompressor: DynamicsCompressorNode | null = null;
 let audioCtx: AudioContext | null = null;
 
 export function initAudioContext(): AudioContext {
@@ -25,6 +27,7 @@ function noteIndexToFrequency(noteIndex: number, octave: number): number {
   return 440 * Math.pow(2, (midiNote - 69) / 12);
 }
 
+/** Stops all playing oscillators and disconnects every active audio node. */
 export function stopChord(): void {
   for (const osc of activeOscillators) {
     try {
@@ -32,12 +35,36 @@ export function stopChord(): void {
     } catch {
       // already stopped
     }
+    try {
+      osc.disconnect();
+    } catch {
+      // already disconnected
+    }
   }
   activeOscillators = [];
+
+  try {
+    activeEnvelopeGain?.disconnect();
+  } catch {
+    // already disconnected
+  }
+  try {
+    activeMasterGain?.disconnect();
+  } catch {
+    // already disconnected
+  }
+  try {
+    activeCompressor?.disconnect();
+  } catch {
+    // already disconnected
+  }
+  activeEnvelopeGain = null;
+  activeMasterGain = null;
+  activeCompressor = null;
 }
 
 export async function playChord(
-  notes: ChordNoteInfo[],
+  notes: ReadonlyArray<{ index: number }>,
   options: PlayOptions = {},
 ): Promise<void> {
   const { duration = 1200, octave = 4, audioParams = DEFAULT_AUDIO_PARAMS } = options;
@@ -73,6 +100,11 @@ export async function playChord(
   masterGainNode.connect(compressor);
   compressor.connect(ctx.destination);
 
+  // Track nodes so stopChord() can disconnect them if called early
+  activeEnvelopeGain = envelopeGainNode;
+  activeMasterGain = masterGainNode;
+  activeCompressor = compressor;
+
   // Scale the attack peak by note count if enabled
   const scaleFactor = audioParams.scaleGainByNoteCount ? 1 / notes.length : 1;
   const attackPeakGain = audioParams.attackPeak * scaleFactor;
@@ -102,9 +134,48 @@ export async function playChord(
     activeOscillators.push(osc);
   }
 
+  // Snapshot this call's oscillator list so the cleanup closure below doesn't
+  // accidentally disconnect nodes that belong to a subsequent playChord call.
+  const oscillatorsForThisCall = activeOscillators.slice();
+
   return new Promise((resolve) => {
     setTimeout(() => {
-      activeOscillators = [];
+      // Disconnect oscillators created in this call (local snapshot).
+      // stopChord() may have already disconnected these; the try-catch silently
+      // swallows errors from nodes that are already disconnected.
+      for (const osc of oscillatorsForThisCall) {
+        try {
+          osc.disconnect();
+        } catch {
+          // already disconnected by stopChord
+        }
+      }
+
+      // Disconnect the shared audio chain using local closure references so we
+      // always clean up even when stopChord() already cleared the module refs.
+      // The try-catch handles the case where stopChord() disconnected first.
+      try {
+        envelopeGainNode.disconnect();
+      } catch {
+        // already disconnected by stopChord
+      }
+      try {
+        masterGainNode.disconnect();
+      } catch {
+        // already disconnected by stopChord
+      }
+      try {
+        compressor.disconnect();
+      } catch {
+        // already disconnected by stopChord
+      }
+
+      // Clear module-level refs only if they still point to our nodes —
+      // a subsequent playChord call may have already replaced them.
+      if (activeEnvelopeGain === envelopeGainNode) activeEnvelopeGain = null;
+      if (activeMasterGain === masterGainNode) activeMasterGain = null;
+      if (activeCompressor === compressor) activeCompressor = null;
+
       resolve();
     }, duration);
   });

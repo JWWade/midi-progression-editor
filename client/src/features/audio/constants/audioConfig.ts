@@ -38,12 +38,12 @@ export interface AudioParams {
 }
 
 export const DEFAULT_AUDIO_PARAMS: AudioParams = {
-  masterVolume: 0.5,
+  masterVolume: 0.15,
   attackPeak: 0.7,
-  attackTime: 0.05,
-  decayTime: 0.2,
-  sustainLevel: 0.4,
-  releaseTime: 0.2,
+  attackTime: 0.08,
+  decayTime: 0.22,
+  sustainLevel: 0.42,
+  releaseTime: 0.22,
   oscillatorType: "sine",
   scaleGainByNoteCount: true,
   compressorThreshold: -24,
