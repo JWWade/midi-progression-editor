@@ -21,19 +21,23 @@ timeout /t 2 /nobreak >nul
 
 REM Restore backend packages on first run (when obj\ does not exist yet).
 IF NOT EXIST "%~dp0server\ParametricMusic.Api\obj" (
-  echo [1/4] Restoring backend packages (first-time setup)...
+  echo [1/4] Restoring backend packages first-time setup...
   pushd "%~dp0server\ParametricMusic.Api"
   dotnet restore
   popd
 )
 
-REM Install frontend dependencies on first run (when node_modules\ does not exist yet).
-IF NOT EXIST "%~dp0client\node_modules" (
-  echo [2/4] Installing frontend dependencies (first-time setup)...
-  pushd "%~dp0client"
-  npm install
+REM Ensure frontend dependencies are up to date to avoid stale local installs.
+echo [2/4] Ensuring frontend dependencies are up to date...
+pushd "%~dp0client"
+call npm install
+IF ERRORLEVEL 1 (
+  echo Frontend dependency install failed. Fix npm errors above, then rerun.
   popd
+  pause
+  exit /b 1
 )
+popd
 
 REM Start the backend server in a new window
 echo [3/4] Starting Backend Server (ASP.NET Core)...

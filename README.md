@@ -21,6 +21,17 @@
 - Export chord progressions as standard MIDI files (`.mid`) with configurable BPM and beats-per-chord
 - Generate scales from any root note via the backend API
 
+## Architecture Overview
+
+```mermaid
+flowchart LR
+   U[User in Browser] --> F[React + TypeScript Frontend]
+   F -->|HTTP/JSON| A[ASP.NET Core Web API]
+   A --> S[Music Services]
+   F --> E[MIDI Export]
+   E --> O[.mid Output File]
+```
+
 ## Prerequisites
 
 - **Node.js** 18 or higher (for frontend)
@@ -68,6 +79,12 @@ npm run dev
 ```
 
 - App: http://localhost:5173
+
+## UI Preview
+
+![MIDI Progression Editor interface preview](docs/images/chromatic-circle-interface.png)
+
+The preview highlights the chromatic circle workspace, progression sidebar, and inspector panel.
 
 ## Environment Variables
 

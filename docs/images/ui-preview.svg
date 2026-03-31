@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">MIDI Progression Editor UI Preview</title>
+  <desc id="desc">Stylized preview of the chromatic circle workspace, progression sidebar, and inspector panel.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f2f6ff" />
+      <stop offset="100%" stop-color="#edf9f1" />
+    </linearGradient>
+    <linearGradient id="header" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1f2937" />
+    </linearGradient>
+    <style>
+      .title { font: 700 22px 'Segoe UI', Tahoma, sans-serif; fill: #ffffff; }
+      .label { font: 600 16px 'Segoe UI', Tahoma, sans-serif; fill: #1f2937; }
+      .small { font: 500 13px 'Segoe UI', Tahoma, sans-serif; fill: #334155; }
+      .chip { font: 600 12px 'Segoe UI', Tahoma, sans-serif; fill: #0f172a; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="720" fill="url(#bg)" rx="18" />
+  <rect x="24" y="24" width="1152" height="80" rx="14" fill="url(#header)" />
+  <text x="52" y="73" class="title">MIDI Progression Editor</text>
+  <rect x="900" y="48" width="110" height="30" rx="15" fill="#f8fafc" />
+  <text x="930" y="68" class="chip">Info</text>
+  <rect x="1022" y="48" width="130" height="30" rx="15" fill="#c7f9d4" />
+  <text x="1052" y="68" class="chip">Select</text>
+
+  <rect x="24" y="122" width="760" height="574" rx="16" fill="#ffffff" stroke="#d4dde8" />
+  <text x="48" y="158" class="label">Chromatic Circle</text>
+
+  <g transform="translate(404 414)">
+    <circle r="210" fill="#f8fbff" stroke="#d4dde8" stroke-width="2" />
+    <circle r="160" fill="none" stroke="#e6eef8" stroke-width="2" />
+    <polygon points="0,-130 112,65 -112,65" fill="#fde68a" stroke="#f59e0b" stroke-width="3" opacity="0.9" />
+    <line x1="0" y1="0" x2="0" y2="-210" stroke="#94a3b8" stroke-width="2" />
+    <line x1="0" y1="0" x2="181" y2="105" stroke="#94a3b8" stroke-width="2" />
+    <line x1="0" y1="0" x2="-181" y2="105" stroke="#94a3b8" stroke-width="2" />
+    <circle cx="0" cy="-130" r="11" fill="#16a34a" />
+    <circle cx="112" cy="65" r="11" fill="#16a34a" />
+    <circle cx="-112" cy="65" r="11" fill="#16a34a" />
+  </g>
+  <text x="48" y="190" class="small">Interactive 12-note circle with chord shape overlays and animation</text>
+
+  <rect x="806" y="122" width="370" height="360" rx="16" fill="#ffffff" stroke="#d4dde8" />
+  <text x="830" y="158" class="label">Progression Sidebar</text>
+  <g>
+    <rect x="830" y="178" width="322" height="42" rx="10" fill="#eff6ff" stroke="#cddbf0" />
+    <text x="850" y="204" class="small">1. Cmaj7</text>
+    <rect x="830" y="230" width="322" height="42" rx="10" fill="#f0fdf4" stroke="#ccead7" />
+    <text x="850" y="256" class="small">2. Am7</text>
+    <rect x="830" y="282" width="322" height="42" rx="10" fill="#fff7ed" stroke="#f4ddc3" />
+    <text x="850" y="308" class="small">3. Dm7</text>
+    <rect x="830" y="334" width="322" height="42" rx="10" fill="#fef2f2" stroke="#f1d2d2" />
+    <text x="850" y="360" class="small">4. G7</text>
+    <rect x="830" y="386" width="322" height="42" rx="10" fill="#f8fafc" stroke="#dce3eb" />
+    <text x="850" y="412" class="small">5. Cmaj7</text>
+  </g>
+
+  <rect x="806" y="498" width="370" height="198" rx="16" fill="#ffffff" stroke="#d4dde8" />
+  <text x="830" y="534" class="label">Tone Inspector</text>
+  <text x="830" y="560" class="small">Note: E4</text>
+  <text x="830" y="584" class="small">Role: Major 3rd</text>
+  <text x="830" y="608" class="small">Frequency: 329.63 Hz</text>
+  <text x="830" y="632" class="small">Chord: Cmaj7</text>
+
+  <rect x="44" y="646" width="344" height="30" rx="15" fill="#dbeafe" />
+  <text x="62" y="666" class="chip">Scale Mode: Major</text>
+  <rect x="398" y="646" width="304" height="30" rx="15" fill="#dcfce7" />
+  <text x="416" y="666" class="chip">Playback: 120 BPM</text>
+</svg>
