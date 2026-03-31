@@ -11,7 +11,7 @@ export function useBridgeSuggestions(
   insertAfterIndex: number,
   scale: ScaleContext | null,
   maxBridgeLength = 2,
-  topN = 3,
+  topN = 8,
 ): BridgeSuggestion[] {
   return useMemo(() => {
     if (
