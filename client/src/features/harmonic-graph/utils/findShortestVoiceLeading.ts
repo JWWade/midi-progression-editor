@@ -18,6 +18,7 @@ import {
 } from "@/features/voice-leading";
 import type { CanonicalizationMode } from "@/features/voice-leading";
 import type { ChordGraph, ChordNode, PathResult, WeightFn } from "../types";
+import type { BuildChordGraphOptions } from "./buildChordGraph";
 import { buildChordGraph } from "./buildChordGraph";
 
 // ---------------------------------------------------------------------------
@@ -40,6 +41,14 @@ export interface FindShortestVoiceLeadingOptions {
    * @default chordDistance
    */
   weightFn?: WeightFn;
+  /**
+   * Optional graph construction settings used only when `graph` is omitted.
+   * Allows auto-build of mixed-size or TI graphs without prebuilding them.
+   */
+  graphOptions?: Pick<
+    BuildChordGraphOptions,
+    "sizes" | "canonicalization" | "maxWeight"
+  >;
 }
 
 // ---------------------------------------------------------------------------
@@ -83,7 +92,9 @@ export function findShortestVoiceLeading(
   const legacyMaxWeight =
     typeof maxWeightOrOptions === "number" ? maxWeightOrOptions : undefined;
 
-  const { canonicalization = "T", weightFn } = opts;
+  const canonicalization =
+    opts.canonicalization ?? opts.graphOptions?.canonicalization ?? "T";
+  const { weightFn, graphOptions } = opts;
 
   // Canonicalise inputs to stable node IDs using the requested mode.
   const startId = canonicalizeChord(startPCS, canonicalization).pcs.join(",");
@@ -93,7 +104,9 @@ export function findShortestVoiceLeading(
   const chordGraph =
     graph ??
     buildChordGraph({
-      maxWeight: legacyMaxWeight,
+      ...graphOptions,
+      canonicalization: graphOptions?.canonicalization ?? canonicalization,
+      maxWeight: legacyMaxWeight ?? graphOptions?.maxWeight,
       weightFn,
     });
 

@@ -3,6 +3,8 @@ import {
   pitchClassDistance,
   chordDistance,
   chordMatching,
+  chordDistanceFlexible,
+  chordMatchingFlexible,
 } from "./chordDistance";
 
 describe("pitchClassDistance", () => {
@@ -142,5 +144,61 @@ describe("chordMatching", () => {
     const result = chordMatching([], []);
     expect(result.distance).toBe(0);
     expect(result.mapping).toEqual([]);
+  });
+});
+
+describe("chordDistanceFlexible", () => {
+  it("matches chordDistance for same-size inputs", () => {
+    const a = [0, 4, 7];
+    const b = [0, 3, 7];
+    expect(chordDistanceFlexible(a, b)).toBe(chordDistance(a, b));
+  });
+
+  it("triad to same-pitch seventh adds only the unmatched penalty", () => {
+    expect(chordDistanceFlexible([0, 4, 7], [0, 4, 7, 11], { penalty: 2 })).toBe(2);
+  });
+
+  it("triad to seventh with one semitone motion adds motion + penalty", () => {
+    expect(chordDistanceFlexible([0, 4, 7], [0, 3, 7, 10], { penalty: 2 })).toBe(3);
+  });
+
+  it("is symmetric across different chord sizes", () => {
+    const a = [0, 4, 7];
+    const b = [0, 3, 7, 10];
+    expect(chordDistanceFlexible(a, b, { penalty: 2 })).toBe(
+      chordDistanceFlexible(b, a, { penalty: 2 }),
+    );
+  });
+
+  it("returns penalty * unmatched count when one side is empty", () => {
+    expect(chordDistanceFlexible([], [0, 4, 7], { penalty: 3 })).toBe(9);
+  });
+
+  it("throws for invalid penalty values", () => {
+    expect(() => chordDistanceFlexible([0, 4, 7], [0, 4, 7, 11], { penalty: -1 })).toThrow();
+    expect(() => chordDistanceFlexible([0, 4, 7], [0, 4, 7, 11], { penalty: Number.NaN })).toThrow();
+  });
+});
+
+describe("chordMatchingFlexible", () => {
+  it("returns min-size mapping length for cross-size input", () => {
+    const result = chordMatchingFlexible([0, 4, 7], [0, 3, 7, 10], { penalty: 2 });
+    expect(result.mapping).toHaveLength(3);
+  });
+
+  it("mapping indices are unique on both sides", () => {
+    const result = chordMatchingFlexible([0, 4, 7], [0, 3, 7, 10], { penalty: 2 });
+    const fromUnique = new Set(result.mapping.map((m) => m.fromIdx));
+    const toUnique = new Set(result.mapping.map((m) => m.toIdx));
+    expect(fromUnique.size).toBe(result.mapping.length);
+    expect(toUnique.size).toBe(result.mapping.length);
+  });
+
+  it("distance agrees with chordDistanceFlexible", () => {
+    const a = [0, 4, 7];
+    const b = [0, 3, 7, 10];
+    expect(chordMatchingFlexible(a, b, { penalty: 2 }).distance).toBe(
+      chordDistanceFlexible(a, b, { penalty: 2 }),
+    );
   });
 });

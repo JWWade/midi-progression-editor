@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { buildChordGraph, containsTritoneMotion } from "../buildChordGraph";
-import { canonicalizeChord, chordDistance } from "@/features/voice-leading";
+import {
+  canonicalizeChord,
+  chordDistance,
+  chordDistanceFlexible,
+} from "@/features/voice-leading";
 
 // ---------------------------------------------------------------------------
 // buildChordGraph — structural properties
@@ -334,5 +338,21 @@ describe("buildChordGraph — custom weightFn", () => {
     });
     expect(allEdges.edges).toHaveLength(uniformGraph.edges.length);
     expect(noEdges.edges).toHaveLength(0);
+  });
+
+  it("flexible weightFn allows cross-size edges for sizes [3, 4]", () => {
+    const flexGraph = buildChordGraph({
+      sizes: [3, 4],
+      weightFn: (a, b) => chordDistanceFlexible(a, b, { penalty: 2 }),
+    });
+
+    const nodeById = new Map(flexGraph.nodes.map((n) => [n.id, n]));
+    const hasCrossSizeEdge = flexGraph.edges.some((edge) => {
+      const fromLen = nodeById.get(edge.from)!.pcs.length;
+      const toLen = nodeById.get(edge.to)!.pcs.length;
+      return fromLen !== toLen;
+    });
+
+    expect(hasCrossSizeEdge).toBe(true);
   });
 });

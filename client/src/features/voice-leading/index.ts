@@ -3,6 +3,8 @@ export {
   pitchClassDistance,
   chordDistance,
   chordMatching,
+  chordDistanceFlexible,
+  chordMatchingFlexible,
 } from "./utils/chordDistance";
 export {
   normalize,

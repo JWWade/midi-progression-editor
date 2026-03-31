@@ -44,6 +44,35 @@ function permutations(indices: number[]): number[][] {
   return result;
 }
 
+/** Generates all k-combinations of an array of indices. */
+function combinations(indices: number[], k: number): number[][] {
+  if (k < 0 || k > indices.length) return [];
+  if (k === 0) return [[]];
+  if (k === indices.length) return [indices.slice()];
+
+  const result: number[][] = [];
+  const build = (start: number, combo: number[]) => {
+    if (combo.length === k) {
+      result.push(combo.slice());
+      return;
+    }
+    for (let i = start; i <= indices.length - (k - combo.length); i++) {
+      combo.push(indices[i]);
+      build(i + 1, combo);
+      combo.pop();
+    }
+  };
+
+  build(0, []);
+  return result;
+}
+
+/** Options for flexible cross-size chord distance. */
+export interface FlexibleOptions {
+  /** Per-unmatched-voice complexity penalty. Must be finite and >= 0. */
+  penalty?: number;
+}
+
 /**
  * Minimum total pitch-class displacement between two chords over all voice assignments.
  *
@@ -107,4 +136,87 @@ export function chordMatching(
 
   const mapping = a.map((_, i) => ({ fromIdx: i, toIdx: bestPerm[i] }));
   return { distance: minDist, mapping };
+}
+
+/**
+ * Flexible voice assignment for chords of equal or unequal sizes.
+ *
+ * When chord sizes differ, the algorithm matches `min(|a|, |b|)` voices via
+ * subset + permutation search and adds `penalty * | |a| - |b| |`.
+ */
+export function chordMatchingFlexible(
+  a: number[],
+  b: number[],
+  options?: FlexibleOptions,
+): {
+  distance: number;
+  mapping: { fromIdx: number; toIdx: number }[];
+} {
+  const penalty = options?.penalty ?? 2;
+  if (!Number.isFinite(penalty) || penalty < 0) {
+    throw new Error("penalty must be a finite number >= 0");
+  }
+
+  if (a.length === 0 && b.length === 0) {
+    return { distance: 0, mapping: [] };
+  }
+
+  if (a.length === b.length) {
+    return chordMatching(a, b);
+  }
+
+  const unmatched = Math.abs(a.length - b.length);
+
+  if (a.length === 0 || b.length === 0) {
+    return { distance: penalty * unmatched, mapping: [] };
+  }
+
+  let bestBaseDistance = Infinity;
+  let bestMapping: { fromIdx: number; toIdx: number }[] = [];
+
+  if (a.length < b.length) {
+    const bIndices = b.map((_, i) => i);
+    for (const subset of combinations(bIndices, a.length)) {
+      for (const perm of permutations(subset)) {
+        let dist = 0;
+        for (let i = 0; i < a.length; i++) {
+          dist += pitchClassDistance(a[i], b[perm[i]]);
+        }
+        if (dist < bestBaseDistance) {
+          bestBaseDistance = dist;
+          bestMapping = a.map((_, i) => ({ fromIdx: i, toIdx: perm[i] }));
+        }
+      }
+    }
+  } else {
+    const aIndices = a.map((_, i) => i);
+    for (const subset of combinations(aIndices, b.length)) {
+      for (const perm of permutations(subset)) {
+        let dist = 0;
+        for (let i = 0; i < b.length; i++) {
+          dist += pitchClassDistance(a[perm[i]], b[i]);
+        }
+        if (dist < bestBaseDistance) {
+          bestBaseDistance = dist;
+          bestMapping = b.map((_, i) => ({ fromIdx: perm[i], toIdx: i }));
+        }
+      }
+    }
+  }
+
+  return {
+    distance: bestBaseDistance + penalty * unmatched,
+    mapping: bestMapping,
+  };
+}
+
+/**
+ * Flexible distance wrapper over {@link chordMatchingFlexible}.
+ */
+export function chordDistanceFlexible(
+  a: number[],
+  b: number[],
+  options?: FlexibleOptions,
+): number {
+  return chordMatchingFlexible(a, b, options).distance;
 }
