@@ -63,6 +63,48 @@ export function stopChord(): void {
   activeCompressor = null;
 }
 
+export interface ArpeggioHandle {
+  /** Cancels ongoing arpeggio playback immediately. */
+  cancel: () => void;
+  /** Resolves when all notes have finished (or playback was cancelled). */
+  done: Promise<void>;
+}
+
+/**
+ * Plays the given notes one by one in sequence (arpeggiated).
+ *
+ * Returns a handle with:
+ * - `cancel()` — stop playback early and silence any playing note.
+ * - `done` — a Promise that resolves once all notes have played or playback
+ *   is cancelled.
+ *
+ * @param notes        Ordered list of note indices to play.
+ * @param options      Standard `PlayOptions`; `duration` is per-note (default 280 ms).
+ */
+export function playArpeggio(
+  notes: ReadonlyArray<{ index: number }>,
+  options: PlayOptions = {},
+): ArpeggioHandle {
+  const { duration = 280, octave = 4, audioParams = DEFAULT_AUDIO_PARAMS } = options;
+  let cancelled = false;
+
+  const done = (async () => {
+    for (const note of notes) {
+      if (cancelled) break;
+      await playChord([note], { duration, octave, audioParams });
+      if (cancelled) break;
+    }
+  })();
+
+  return {
+    cancel: () => {
+      cancelled = true;
+      stopChord();
+    },
+    done,
+  };
+}
+
 export async function playChord(
   notes: ReadonlyArray<{ index: number }>,
   options: PlayOptions = {},

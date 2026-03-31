@@ -1,12 +1,15 @@
-import { forwardRef, memo } from "react";
+import { forwardRef, memo, useState, useCallback, useRef, useEffect } from "react";
 import { ChordThumbnail } from "@/features/current-chord/components/ChordThumbnail";
 import { getChordName } from "@/features/chord/data/chordNames";
 import { getChordPitchClasses } from "@/features/chord/utils";
 import { getChordComplexity, getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import type { Chord } from "@/features/current-chord/types";
-import { isCustomChord } from "@/features/current-chord/utils/chordTypeGuards";
+import { isCustomChord, getChordNotes } from "@/features/current-chord/utils/chordTypeGuards";
 import { formatPrimitiveChordName } from "@/features/current-chord/utils/chordName";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
+import { playChord, playArpeggio, stopChord } from "@/features/audio";
+import type { ArpeggioHandle } from "@/features/audio";
+import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import styles from "./ChordTile.module.css";
 
 interface ChordTileProps {
@@ -21,16 +24,20 @@ interface ChordTileProps {
   onMoveDown?: () => void;
   onDelete: () => void;
   onAnimationEnd?: () => void;
+  /** Called before this tile starts audio playback so the caller can stop global playback. */
+  onWillPlay?: () => void;
 }
+
+type TilePlayMode = "chord" | "arpeggio" | null;
 
 // Memoize using data-only comparison so that inline callback wrappers created
 // in the parent's render/map loop do not trigger unnecessary re-renders.
 // Only chord identity and boolean display flags drive visual output; the
-// callback props (onMoveUp, onMoveDown, onDelete, onAnimationEnd) are stable
+// callback props (onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay) are stable
 // in behaviour per tile even when their reference changes.
 export const ChordTile = memo(
   forwardRef<HTMLLIElement, ChordTileProps>(
-    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd }, ref) {
+    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
@@ -44,6 +51,63 @@ export const ChordTile = memo(
         : chord.customNotes.map(i => pitchClasses[i]).join(" "))
     : getChordName(chord.root, chord.quality, pitchClasses);
   const noteNames = noteIndices.map(i => pitchClasses[i]).join(" ");
+
+  // ── Inline audio playback state ────────────────────────────────────────
+  const [tilePlayMode, setTilePlayMode] = useState<TilePlayMode>(null);
+  const arpeggioHandleRef = useRef<ArpeggioHandle | null>(null);
+  const isTilePlaying = tilePlayMode !== null;
+
+  // Clean up any in-progress arpeggio when the component unmounts.
+  useEffect(() => {
+    return () => {
+      arpeggioHandleRef.current?.cancel();
+      arpeggioHandleRef.current = null;
+    };
+  }, []);
+
+  const stopTilePlayback = useCallback(() => {
+    arpeggioHandleRef.current?.cancel();
+    arpeggioHandleRef.current = null;
+    stopChord();
+    setTilePlayMode(null);
+  }, []);
+
+  const getPlayNotes = useCallback(() =>
+    isCustomChord(chord)
+      ? getChordNotes(chord).map((idx) => ({ index: idx }))
+      : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses),
+  [chord, pitchClasses]);
+
+  const handlePlayChord = useCallback(async () => {
+    if (isTilePlaying) {
+      stopTilePlayback();
+      return;
+    }
+    onWillPlay?.();
+    const notes = getPlayNotes();
+    setTilePlayMode("chord");
+    try {
+      await playChord(notes, { duration: 900 });
+    } finally {
+      setTilePlayMode((prev) => (prev === "chord" ? null : prev));
+    }
+  }, [isTilePlaying, stopTilePlayback, getPlayNotes, onWillPlay]);
+
+  const handlePlayArpeggio = useCallback(() => {
+    if (isTilePlaying) {
+      stopTilePlayback();
+      return;
+    }
+    onWillPlay?.();
+    const notes = getPlayNotes();
+    setTilePlayMode("arpeggio");
+    const handle = playArpeggio(notes, { duration: 350 });
+    arpeggioHandleRef.current = handle;
+    handle.done.finally(() => {
+      arpeggioHandleRef.current = null;
+      setTilePlayMode((prev) => (prev === "arpeggio" ? null : prev));
+    });
+  }, [isTilePlaying, stopTilePlayback, getPlayNotes, onWillPlay]);
 
   return (
     <li
@@ -70,35 +134,55 @@ export const ChordTile = memo(
         )}
       </div>
       {!isGhost && (
-        <div className={styles.controls} aria-label="Chord controls">
-          <button
-            className={styles.controlBtn}
-            onClick={onMoveUp}
-            disabled={isFirst}
-            aria-disabled={isFirst}
-            aria-label="Move chord up"
-            title="Move up"
-          >
-            ↑
-          </button>
-          <button
-            className={styles.controlBtn}
-            onClick={onMoveDown}
-            disabled={isLast}
-            aria-disabled={isLast}
-            aria-label="Move chord down"
-            title="Move down"
-          >
-            ↓
-          </button>
-          <button
-            className={`${styles.controlBtn} ${styles.deleteBtn}`}
-            onClick={onDelete}
-            aria-label="Delete chord"
-            title="Delete"
-          >
-            ✕
-          </button>
+        <div className={styles.tileActions}>
+          <div className={styles.playbackControls} aria-label="Chord playback">
+            <button
+              className={`${styles.playBtn}${tilePlayMode === "chord" ? ` ${styles.playBtnActive}` : ""}`}
+              onClick={handlePlayChord}
+              aria-label={tilePlayMode === "chord" ? "Stop chord" : "Play chord"}
+              title={tilePlayMode === "chord" ? "Stop" : "Play chord"}
+            >
+              {tilePlayMode === "chord" ? "■" : "▶"}
+            </button>
+            <button
+              className={`${styles.playBtn}${tilePlayMode === "arpeggio" ? ` ${styles.playBtnActive}` : ""}`}
+              onClick={handlePlayArpeggio}
+              aria-label={tilePlayMode === "arpeggio" ? "Stop arpeggio" : "Play arpeggio"}
+              title={tilePlayMode === "arpeggio" ? "Stop" : "Play arpeggio"}
+            >
+              {tilePlayMode === "arpeggio" ? "■" : "≈"}
+            </button>
+          </div>
+          <div className={styles.controls} aria-label="Chord controls">
+            <button
+              className={styles.controlBtn}
+              onClick={onMoveUp}
+              disabled={isFirst}
+              aria-disabled={isFirst}
+              aria-label="Move chord up"
+              title="Move up"
+            >
+              ↑
+            </button>
+            <button
+              className={styles.controlBtn}
+              onClick={onMoveDown}
+              disabled={isLast}
+              aria-disabled={isLast}
+              aria-label="Move chord down"
+              title="Move down"
+            >
+              ↓
+            </button>
+            <button
+              className={`${styles.controlBtn} ${styles.deleteBtn}`}
+              onClick={onDelete}
+              aria-label="Delete chord"
+              title="Delete"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
     </li>

@@ -218,6 +218,7 @@ export function ProgressionSidebar({
           onMoveDown={() => onMoveDown(ci)}
           onDelete={() => onDelete(ci)}
           onAnimationEnd={() => setNewTileNodeIndex(null)}
+          onWillPlay={isPlaying ? onStop : undefined}
         />,
       );
 
