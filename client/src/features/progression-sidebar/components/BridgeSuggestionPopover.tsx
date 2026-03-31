@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import type { BridgeSuggestion } from "@/features/ii-v-suggestions";
+import React, { useEffect, useRef, useState } from "react";
+import type { BridgeSuggestion, BridgeType } from "@/features/ii-v-suggestions";
 import type { Chord } from "@/features/current-chord/types";
 import { getChordName } from "@/features/chord/data/chordNames";
 import {
@@ -8,6 +8,18 @@ import {
 } from "@/features/ii-v-suggestions/utils/bridgeLabel";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import styles from "./BridgeSuggestionPopover.module.css";
+
+/** Short human-readable label shown on each bridge-type tab. */
+const BRIDGE_TYPE_TAB_LABELS: Record<BridgeType, string> = {
+  "diatonic-ii-v": "ii–V",
+  "tritone-sub-ii-v": "♭II Sub",
+  "chromatic-ii-v": "Chromatic",
+  "incomplete-ii": "Pre-ii",
+  "incomplete-v": "V Only",
+  "tritone-sub": "Tritone Sub",
+  "backchain-vi-ii-v": "vi–ii–V",
+  "backchain-iii-vi-ii-v": "iii–vi–ii–V",
+};
 
 export interface BridgeSuggestionPopoverProps {
   suggestions: BridgeSuggestion[];
@@ -50,6 +62,34 @@ export function BridgeSuggestionPopover({
   const { pitchClasses } = useEnharmonic();
   const popoverRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // ── Tab state ────────────────────────────────────────────────────────────
+
+  // Ordered list of unique BridgeTypes present in the current suggestions
+  const typesInOrder = [...new Set(suggestions.map((s) => s.type))];
+
+  // Suggestions grouped by type
+  const suggestionsByType = suggestions.reduce<
+    Partial<Record<BridgeType, BridgeSuggestion[]>>
+  >((acc, s) => {
+    if (!acc[s.type]) acc[s.type] = [];
+    acc[s.type]!.push(s);
+    return acc;
+  }, {});
+
+  const [activeTab, setActiveTab] = useState<BridgeType | null>(
+    () => typesInOrder[0] ?? null,
+  );
+
+  // If the active tab is no longer available (suggestions changed), fall back
+  const effectiveTab =
+    activeTab && typesInOrder.includes(activeTab)
+      ? activeTab
+      : (typesInOrder[0] ?? null);
+
+  const activeTabSuggestions = effectiveTab
+    ? (suggestionsByType[effectiveTab] ?? [])
+    : [];
 
   // Move focus into the popover when it opens
   useEffect(() => {
@@ -106,11 +146,31 @@ export function BridgeSuggestionPopover({
           ✕
         </button>
       </div>
+      {typesInOrder.length > 0 && (
+        <div
+          role="tablist"
+          aria-label="Bridge type"
+          className={styles.tabBar}
+        >
+          {typesInOrder.map((type) => (
+            <button
+              key={type}
+              role="tab"
+              aria-selected={effectiveTab === type}
+              className={styles.tabButton}
+              type="button"
+              onClick={() => { setActiveTab(type); onStopPreview(); }}
+            >
+              {BRIDGE_TYPE_TAB_LABELS[type]}
+            </button>
+          ))}
+        </div>
+      )}
       <ul className={styles.suggestionList}>
         {suggestions.length === 0 ? (
           <li className={styles.emptyState}>No bridge suggestions</li>
         ) : (
-          suggestions.map((suggestion, idx) => {
+          activeTabSuggestions.map((suggestion, idx) => {
           const chordNames = formatBridgeChordNames(
             suggestion.bridge,
             pitchClasses,
