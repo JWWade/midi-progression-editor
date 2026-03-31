@@ -4,6 +4,12 @@ import { getChordPitchClasses } from "@/features/chord/utils";
 import { closeVoiceChord, minimalMotionVoicing } from "@/features/voice-leading";
 import { getChordName } from "@/features/chord/data/chordNames";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
+import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
+import {
+  generateArpeggioSequence,
+  computeArpeggioStartOffsets,
+  getSubdivisionBeats,
+} from "@/features/audio/utils/arpeggioUtils";
 
 export interface MidiExportOptions {
   /** Beats per minute (40–240). Default: 120. */
@@ -24,6 +30,11 @@ export interface MidiExportOptions {
    * auto-derived name is used.
    */
   chordLabels: string[];
+  /**
+   * When provided, each chord is exported as an arpeggiated sequence of notes
+   * rather than simultaneous block voicings.
+   */
+  arpeggioPattern?: ArpeggioPattern;
 }
 
 const MIN_BPM = 40;
@@ -37,6 +48,12 @@ const DEFAULT_OCTAVE = 4;
 const VELOCITY = 100;
 const MIDI_MAX_VELOCITY = 127;
 const SECONDS_PER_MINUTE = 60;
+/**
+ * Fraction of the subdivision duration used as note-on time for arpeggiated
+ * notes.  The remaining 10 % provides a subtle gap (articulation) between
+ * consecutive arpeggiated notes so that DAWs render them as distinct events.
+ */
+const ARPEGGIO_NOTE_DURATION_FACTOR = 0.9;
 
 const DEFAULT_OPTIONS: MidiExportOptions = {
   bpm: DEFAULT_BPM,
@@ -78,7 +95,7 @@ export function buildMidiFile(
   chords: Chord[],
   options: Partial<MidiExportOptions> = {},
 ): Uint8Array {
-  const { bpm, beatsPerChord, startOctave, includeChordSymbols, chordLabels } = {
+  const { bpm, beatsPerChord, startOctave, includeChordSymbols, chordLabels, arpeggioPattern } = {
     ...DEFAULT_OPTIONS,
     ...options,
   };
@@ -114,15 +131,42 @@ export function buildMidiFile(
         ? closeVoiceChord(pitchClasses, startOctave)
         : minimalMotionVoicing(prevMidi, pitchClasses);
 
-    const startTime = index * chordDuration;
+    const chordStartTime = index * chordDuration;
 
-    for (const note of midiNotes) {
-      track.addNote({
-        midi: note,
-        time: startTime,
-        duration: chordDuration,
-        velocity: VELOCITY / MIDI_MAX_VELOCITY,
+    if (arpeggioPattern) {
+      // Arpeggiated export: write each note individually with staggered start times.
+      const noteObjs = midiNotes.map((m) => ({ index: m % 12, midi: m }));
+      const sequence = generateArpeggioSequence(noteObjs, arpeggioPattern);
+      const startOffsets = computeArpeggioStartOffsets(
+        sequence.length,
+        secondsPerBeat,
+        arpeggioPattern.subdivision,
+        arpeggioPattern.swingPercent,
+      );
+      const beatsPerNote = getSubdivisionBeats(arpeggioPattern.subdivision);
+      const noteDuration = beatsPerNote * secondsPerBeat * ARPEGGIO_NOTE_DURATION_FACTOR;
+
+      sequence.forEach((note, ni) => {
+        const offset = startOffsets[ni] ?? ni * beatsPerNote * secondsPerBeat;
+        // Wrap around if arpeggio overflows the chord duration
+        const wrappedOffset = offset % chordDuration;
+        track.addNote({
+          midi: note.midi,
+          time: chordStartTime + wrappedOffset,
+          duration: noteDuration,
+          velocity: VELOCITY / MIDI_MAX_VELOCITY,
+        });
       });
+    } else {
+      // Block chord export (original behaviour).
+      for (const note of midiNotes) {
+        track.addNote({
+          midi: note,
+          time: chordStartTime,
+          duration: chordDuration,
+          velocity: VELOCITY / MIDI_MAX_VELOCITY,
+        });
+      }
     }
 
     if (includeChordSymbols) {

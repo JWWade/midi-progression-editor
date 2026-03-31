@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
 import type { Chord } from "@/features/current-chord/types";
+import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import { buildMidiFile } from "../utils/midiBuilder";
 import { getRandomBpmInRange } from "../utils/bpmTempoLabel";
 
-export function useMidiExport(chords: Chord[]): {
+export function useMidiExport(chords: Chord[], arpeggioPattern?: ArpeggioPattern): {
   bpm: number;
   setBpm: (v: number) => void;
   beatsPerChord: number;
@@ -15,7 +16,7 @@ export function useMidiExport(chords: Chord[]): {
   const startOctave = 4;
 
   const exportMidi = useCallback(() => {
-    const bytes = buildMidiFile(chords, { bpm, beatsPerChord, startOctave });
+    const bytes = buildMidiFile(chords, { bpm, beatsPerChord, startOctave, arpeggioPattern });
     const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "audio/midi" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -23,7 +24,7 @@ export function useMidiExport(chords: Chord[]): {
     a.download = `progression-${Date.now()}.mid`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
-  }, [chords, bpm, beatsPerChord, startOctave]);
+  }, [chords, bpm, beatsPerChord, startOctave, arpeggioPattern]);
 
   return { bpm, setBpm, beatsPerChord, setBeatsPerChord, exportMidi };
 }
