@@ -12,6 +12,7 @@ import {
 } from "../constants/visualConstants";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { getChordName } from "@/features/chord/data/chordNames";
+import { rerootChord } from "@/features/chord/utils/rerootChord";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import type { ScaleType } from "@/features/scale/types";
@@ -94,6 +95,9 @@ export function ChromaticCircle({
       window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
 
+  /** Ephemeral announcement shown while hovering / focusing a chord vertex. */
+  const [previewAnnouncement, setPreviewAnnouncement] = useState("");
+
   const deselectTone = useCallback(() => setSelectedTone(null), []);
 
   const handleNoteClick = useCallback((_noteName: string, toneInfo: ToneInfo) => {
@@ -120,6 +124,7 @@ export function ChromaticCircle({
     handleSelectPrimitiveShape,
     handleRandomChord,
     handleMutateChord,
+    handleRerootChord,
   } = useChordState({
     onCurrentChordChange,
     onKeyScaleChange,
@@ -428,32 +433,51 @@ export function ChromaticCircle({
             pulse={pulseCount}
           />
 
-          {/* Chord polygon vertices */}
-          <g role="group" aria-label="From chord notes">
+          {/* Chord polygon vertices — click or press R/Enter/Space to re-root the chord */}
+          <g role="group" aria-label="Chord vertices — press R on a vertex to set it as root">
           {chordNotes.map((note, i) => {
             const point = fromPoints[i];
             const interval = baseIntervals[i];
-            const isSelected =
-              selectedTone?.isChordVertex === true &&
-              selectedTone?.note.index === note.index;
+            const isRoot = note.index === rootIndex;
+
+            // Build accessible label: role name from the current root, action hint.
+            const roleLabel = getToneRole(interval, chordType);
+            const ariaLabel = isRoot
+              ? `${note.name}, current chord root`
+              : `${note.name}, vertex, ${roleLabel} from ${pitchClasses[rootIndex]}, press R to set as root`;
+
             if (point === undefined) return null;
             return (
               <ChordVertex
                 key={`from-vertex-${note.index}`}
-                noteName={note.name}
                 point={point}
-                isSelected={isSelected}
+                isRoot={isRoot}
+                isSelected={false}
                 strokeColor={strokeColor}
-                onActivate={(e) => {
-                  e.stopPropagation();
-                  handleNoteClick(note.name, {
-                    note,
-                    frequency: noteIndexToFrequency(note.index),
-                    enharmonicEquivalent: getEnharmonicEquivalent(note.index, note.name),
-                    scaleDegree: getToneRole(interval, chordType),
-                    isChordVertex: true,
-                  });
+                ariaLabel={ariaLabel}
+                onRerootCommit={() => {
+                  handleRerootChord(note.index, note.name);
+                  setPreviewAnnouncement("");
                 }}
+                onRerootPreview={() => {
+                  if (isRoot) {
+                    setPreviewAnnouncement(`${note.name} is the current chord root`);
+                    return;
+                  }
+                  const { quality, matchScore } = rerootChord(chordIndices, note.index);
+                  const chordLabel = getChordName(note.index, quality, pitchClasses);
+                  if (matchScore === 1) {
+                    setPreviewAnnouncement(
+                      `Preview: ${note.name} as root. ${chordLabel} chord`,
+                    );
+                  } else {
+                    const noteNames = chordIndices.map((idx) => pitchClasses[idx]).join(", ");
+                    setPreviewAnnouncement(
+                      `Preview: ${note.name} as root. No exact match. Notes: ${noteNames}`,
+                    );
+                  }
+                }}
+                onRerootPreviewClear={() => setPreviewAnnouncement("")}
               />
             );
           })}
@@ -494,7 +518,7 @@ export function ChromaticCircle({
         </svg>
       </div>
 
-      {/* Accessible live region for drag/rotation announcements */}
+      {/* Accessible live region for drag/rotation/re-root commit announcements */}
       <div
         role="status"
         aria-live="polite"
@@ -510,6 +534,25 @@ export function ChromaticCircle({
         }}
       >
         {moveAnnouncement}
+      </div>
+
+      {/* Accessible live region for ephemeral re-root preview announcements */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: "hidden",
+          clip: "rect(0, 0, 0, 0)",
+          border: 0,
+        }}
+      >
+        {previewAnnouncement}
       </div>
 
       <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
