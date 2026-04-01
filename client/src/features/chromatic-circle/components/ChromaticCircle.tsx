@@ -97,6 +97,8 @@ export function ChromaticCircle({
 
   /** Ephemeral announcement shown while hovering / focusing a chord vertex. */
   const [previewAnnouncement, setPreviewAnnouncement] = useState("");
+  /** Track which chord vertex note is currently being hovered/previewed (for R key re-root). */
+  const hoveredVertexNoteRef = useRef<number | null>(null);
 
   const deselectTone = useCallback(() => setSelectedTone(null), []);
 
@@ -254,7 +256,31 @@ export function ChromaticCircle({
           activeElement.tagName === "SELECT" ||
           activeElement.tagName === "TEXTAREA" ||
           activeElement.isContentEditable);
-      if (isInFormControl || !e.ctrlKey) return;
+      if (isInFormControl) return;
+
+      // Handle R key to re-root from either selected note-node or hovered vertex.
+      if (e.key === "r" || e.key === "R") {
+        e.preventDefault();
+        const selectedIndex = selectedTone?.note.index;
+        const chordIndices = noteHandlerStateRef.current.chordIndices;
+
+        if (selectedIndex !== undefined && chordIndices.includes(selectedIndex)) {
+          const pitchClassLabel = pitchClasses[selectedIndex];
+          handleRerootChord(selectedIndex, pitchClassLabel);
+          return;
+        }
+
+        if (hoveredVertexNoteRef.current !== null) {
+          const noteIndex = hoveredVertexNoteRef.current;
+          const pitchClassLabel = pitchClasses[noteIndex];
+          handleRerootChord(noteIndex, pitchClassLabel);
+          return;
+        }
+
+        return;
+      }
+
+      if (!e.ctrlKey) return;
       if (e.key === "ArrowRight") {
         e.preventDefault();
         handleRotateChord("clockwise");
@@ -265,7 +291,7 @@ export function ChromaticCircle({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [deselectTone, handleRotateChord]);
+  }, [deselectTone, handleRotateChord, handleRerootChord, pitchClasses, selectedTone]);
 
   useEffect(() => {
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -460,6 +486,7 @@ export function ChromaticCircle({
                   setPreviewAnnouncement("");
                 }}
                 onRerootPreview={() => {
+                  hoveredVertexNoteRef.current = note.index;
                   if (isRoot) {
                     setPreviewAnnouncement(`${note.name} is the current chord root`);
                     return;
@@ -477,7 +504,10 @@ export function ChromaticCircle({
                     );
                   }
                 }}
-                onRerootPreviewClear={() => setPreviewAnnouncement("")}
+                onRerootPreviewClear={() => {
+                  hoveredVertexNoteRef.current = null;
+                  setPreviewAnnouncement("");
+                }}
               />
             );
           })}

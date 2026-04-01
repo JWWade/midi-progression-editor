@@ -181,7 +181,19 @@ export function useCustomChordState({
           (i) => (CHORD_NAME_TO_DATA[selectedChordName].root + i) % 12,
         );
 
-      const { root, quality, matchScore } = rerootChord(currentNotes, newRoot);
+      // Find the index of newRoot in currentNotes
+      const rootIndex = currentNotes.indexOf(newRoot);
+      
+      // Reorder notes so newRoot is first (voicing inversion)
+      const rotatedNotes =
+        rootIndex === -1
+          ? currentNotes // newRoot not in chord, keep original order
+          : [
+              ...currentNotes.slice(rootIndex),
+              ...currentNotes.slice(0, rootIndex),
+            ];
+
+      const { root, quality, matchScore } = rerootChord(rotatedNotes, newRoot);
 
       if (matchScore === 1) {
         setCustomFromChord(null);
@@ -189,10 +201,10 @@ export function useCustomChordState({
         onCurrentChordChange?.({ root, quality });
         onAnnounce?.(`Root set to ${pitchClassLabel}. ${getChordName(root, quality)} chord`);
       } else {
-        const newChord: CustomChordState = { root, quality, customNotes: currentNotes };
+        const newChord: CustomChordState = { root, quality, customNotes: rotatedNotes };
         setCustomFromChord(newChord);
         onCurrentChordChange?.(newChord);
-        const noteNames = currentNotes.map((i) => PITCH_CLASSES[i]).join(", ");
+        const noteNames = rotatedNotes.map((i) => PITCH_CLASSES[i]).join(", ");
         onAnnounce?.(
           `Root set to ${pitchClassLabel}. No exact chord match. Notes: ${noteNames}`,
         );

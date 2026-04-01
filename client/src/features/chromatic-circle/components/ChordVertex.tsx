@@ -60,7 +60,7 @@ export const ChordVertex = memo(function ChordVertex({
       onFocus={onRerootPreview}
       onBlur={onRerootPreviewClear}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " " || e.key === "r" || e.key === "R") {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           e.stopPropagation();
           onRerootCommit();
