@@ -1,6 +1,12 @@
 import { useState, useCallback, useEffect, memo } from "react";
 import type { Chord } from "../types";
-import { formatChordName, formatPrimitiveChordName, CHORD_QUALITY_LABELS } from "../utils/chordName";
+import {
+  CHORD_QUALITY_LABELS,
+  formatChordName,
+  formatChordSymbol,
+  formatPrimitiveChordName,
+  resolveChordIdentity,
+} from "../utils/chordName";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { getChordPitchClasses } from "@/features/chord/utils";
 import { getCircleColorForTheme } from "@/features/chromatic-circle/utils/circleColors";
@@ -56,6 +62,7 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
   const [copied, setCopied] = useState(false);
 
   const noteNames = noteIndices.map(i => pitchClasses[i]).join('-');
+  const resolvedIdentity = chord ? resolveChordIdentity(chord) : null;
 
   const handleClick = useCallback(() => {
     if (isDisabled) return;
@@ -166,12 +173,12 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
                 ? formatChordName(chord, pitchClasses)
                 : chord.primitiveShape
                   ? formatPrimitiveChordName(chord, pitchClasses)
-                : chord.customNotes.map(i => pitchClasses[i]).join(" "))
+                : formatChordSymbol(chord, pitchClasses))
               : formatChordName(chord, pitchClasses)
             }
           </span>
           <div className={styles.rootQualityRow}>
-            <span className={styles.root}>{pitchClasses[chord.root]}</span>
+            <span className={styles.root}>{pitchClasses[resolvedIdentity?.root ?? chord.root]}</span>
             <span className={styles.quality}>
               {isCustomChord(chord)
                 ? (chord.primitiveShape === "equilateral-triangle"
@@ -180,8 +187,8 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
                     ? "sus4"
                   : chord.primitiveShape
                     ? CHORD_QUALITY_LABELS[chord.quality]
-                    : "(custom)")
-                : CHORD_QUALITY_LABELS[chord.quality]}
+                    : CHORD_QUALITY_LABELS[resolvedIdentity?.quality ?? chord.quality])
+                : CHORD_QUALITY_LABELS[resolvedIdentity?.quality ?? chord.quality]}
             </span>
           </div>
           <div className={styles.actionRow}>

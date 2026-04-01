@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { getChordName } from "@/features/chord/data/chordNames";
 import {
+  formatChordSymbol,
   formatChordName,
   formatPrimitiveChordName,
   CHORD_QUALITY_LABELS,
+  resolveChordIdentity,
 } from "@/features/current-chord/utils/chordName";
 import type { ChordType } from "@/features/chord/types";
 import type { Chord } from "@/features/current-chord/types";
@@ -110,6 +112,41 @@ describe("formatChordName", () => {
     const flatPitchClasses = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
     const chord: Chord = { root: 3, quality: "minor" };
     expect(formatChordName(chord, flatPitchClasses)).toBe("Eb Minor");
+  });
+
+  it("formats a rerooted custom E-G-C chord as E Minor", () => {
+    const chord: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
+    expect(formatChordName(chord)).toBe("E Minor");
+  });
+});
+
+describe("resolveChordIdentity", () => {
+  it("keeps named chord identity unchanged", () => {
+    const chord: Chord = { root: 0, quality: "major" };
+    expect(resolveChordIdentity(chord)).toEqual({ root: 0, quality: "major" });
+  });
+
+  it("anchors custom chord inference to the selected root", () => {
+    const eMinorLike: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
+    const gQuartalLike: Chord = { root: 7, quality: "major", customNotes: [7, 0, 4] };
+
+    expect(resolveChordIdentity(eMinorLike)).toEqual({ root: 4, quality: "minor" });
+    expect(resolveChordIdentity(gQuartalLike)).toEqual({ root: 7, quality: "quartal" });
+  });
+});
+
+describe("formatChordSymbol", () => {
+  it("formats named chords as compact symbols", () => {
+    const chord: Chord = { root: 0, quality: "major" };
+    expect(formatChordSymbol(chord)).toBe("C");
+  });
+
+  it("formats rerooted custom chords as compact inferred symbols", () => {
+    const eMinorLike: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
+    const gQuartalLike: Chord = { root: 7, quality: "major", customNotes: [7, 0, 4] };
+
+    expect(formatChordSymbol(eMinorLike)).toBe("Em");
+    expect(formatChordSymbol(gQuartalLike)).toBe("Gq");
   });
 });
 

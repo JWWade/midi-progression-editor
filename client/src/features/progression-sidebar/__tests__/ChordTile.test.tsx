@@ -26,6 +26,7 @@ vi.mock("@/features/audio", () => ({
 
 const Cmaj: Chord = { root: 0, quality: "major" };
 const Am7: Chord = { root: 9, quality: "min7" };
+const EGC_CUSTOM: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
 
 // ── Render helper ───────────────────────────────────────────────────────────
 
@@ -123,5 +124,11 @@ describe("ChordTile — existing controls still present", () => {
     renderTile(Cmaj, { isLast: true });
     const btn = screen.getByRole("button", { name: /move chord down/i });
     expect((btn as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("shows inferred symbol and note list for rerooted custom chords", () => {
+    renderTile(EGC_CUSTOM);
+    expect(screen.getByText("Em")).not.toBeNull();
+    expect(screen.getByText("E G C")).not.toBeNull();
   });
 });

@@ -105,6 +105,9 @@ function containsByteSequence(haystack: Uint8Array, needle: number[]): boolean {
 }
 
 describe("buildMidiFile", () => {
+  const EGC_CUSTOM: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
+  const GCE_CUSTOM: Chord = { root: 7, quality: "major", customNotes: [7, 0, 4] };
+
   it("returns a non-empty Uint8Array beginning with MIDI header magic bytes", () => {
     const result = buildMidiFile([C_MAJOR, G_MAJOR]);
     expect(result).toBeInstanceOf(Uint8Array);
@@ -248,6 +251,24 @@ describe("buildMidiFile", () => {
       const textEvents = events.filter((e) => e.type === "text");
       expect(textEvents[0]?.text).toBe("C");
       expect(textEvents[1]?.text).toBe("G override");
+    });
+
+    it("exports rerooted custom chord symbols anchored to the selected root", () => {
+      const result = buildMidiFile([C_MAJOR, EGC_CUSTOM, GCE_CUSTOM]);
+      const events = collectChordSymbolEvents(result);
+      const textEvents = events.filter((e) => e.type === "text");
+      expect(textEvents[0]?.text).toBe("C");
+      expect(textEvents[1]?.text).toBe("Em");
+      expect(textEvents[2]?.text).toBe("Gq");
+    });
+
+    it("still prefers manual label overrides for custom chords", () => {
+      const result = buildMidiFile([EGC_CUSTOM], {
+        chordLabels: ["alt"],
+      });
+      const events = collectChordSymbolEvents(result);
+      const textEvents = events.filter((e) => e.type === "text");
+      expect(textEvents[0]?.text).toBe("alt");
     });
 
     it("does not change note count or pitches when chord symbols are enabled", () => {

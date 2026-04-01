@@ -1,4 +1,6 @@
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
+import { getChordName } from "@/features/chord/data/chordNames";
+import { rerootChord } from "@/features/chord/utils/rerootChord";
 import type { ChordType } from "@/features/chord/types";
 import type { Chord } from "../types";
 import type { PrimitiveShape } from "../types";
@@ -22,16 +24,41 @@ export const CHORD_QUALITY_LABELS: Record<ChordType, string> = {
   quartal: "Quartal",
 };
 
+export interface ResolvedChordIdentity {
+  root: number;
+  quality: ChordType;
+}
+
+export function resolveChordIdentity(chord: Chord): ResolvedChordIdentity {
+  if (Array.isArray(chord.customNotes) && chord.customNotes.length > 0) {
+    const { root, quality } = rerootChord(chord.customNotes, chord.root);
+    return { root, quality };
+  }
+
+  return { root: chord.root, quality: chord.quality };
+}
+
+export function formatChordSymbol(
+  chord: Chord,
+  pitchClasses: readonly string[] = PITCH_CLASSES,
+): string {
+  const { root, quality } = resolveChordIdentity(chord);
+  return getChordName(root, quality, pitchClasses);
+}
+
 export function formatChordName(
   chord: Chord,
   pitchClasses: readonly string[] = PITCH_CLASSES,
 ): string {
-  const root = pitchClasses[chord.root];
-  const quality = CHORD_QUALITY_LABELS[chord.quality];
-  if (chord.extensions && chord.extensions.length > 0) {
-    return `${root} ${quality} (${chord.extensions.join(", ")})`;
+  const { root, quality } = resolveChordIdentity(chord);
+  const rootLabel = pitchClasses[root];
+  const qualityLabel = CHORD_QUALITY_LABELS[quality];
+
+  if (!Array.isArray(chord.customNotes) && chord.extensions && chord.extensions.length > 0) {
+    return `${rootLabel} ${qualityLabel} (${chord.extensions.join(", ")})`;
   }
-  return `${root} ${quality}`;
+
+  return `${rootLabel} ${qualityLabel}`;
 }
 
 export function formatPrimitiveChordName(

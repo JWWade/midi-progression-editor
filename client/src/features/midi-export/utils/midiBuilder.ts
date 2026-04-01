@@ -1,8 +1,8 @@
 import { Midi } from "@tonejs/midi";
 import type { Chord } from "@/features/current-chord/types";
+import { formatChordSymbol } from "@/features/current-chord";
 import { getChordPitchClasses } from "@/features/chord/utils";
 import { closeVoiceChord, minimalMotionVoicing } from "@/features/voice-leading";
-import { getChordName } from "@/features/chord/data/chordNames";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import {
@@ -210,7 +210,7 @@ function getChordSymbol(
   if (labelOverride && labelOverride.trim().length > 0) {
     return labelOverride.trim();
   }
-  return getChordName(chord.root, chord.quality, pitchClasses);
+  return formatChordSymbol(chord, pitchClasses);
 }
 
 /**

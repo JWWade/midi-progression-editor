@@ -5,7 +5,7 @@ import { getChordPitchClasses } from "@/features/chord/utils";
 import { getChordComplexity, getChordColor } from "@/features/color-language/utils/chordColorUtils";
 import type { Chord } from "@/features/current-chord/types";
 import { isCustomChord, getChordNotes } from "@/features/current-chord/utils/chordTypeGuards";
-import { formatPrimitiveChordName } from "@/features/current-chord/utils/chordName";
+import { formatChordSymbol, formatPrimitiveChordName } from "@/features/current-chord/utils/chordName";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import { playChord, playArpeggio, stopChord } from "@/features/audio";
 import type { ArpeggioHandle } from "@/features/audio";
@@ -44,13 +44,12 @@ export const ChordTile = memo(
   const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
   const accentColor = getChordColor(chord.quality, complexity);
-  const isNotesAsName = isCustomChord(chord) && !chord.primitiveShape;
   const chordName = isCustomChord(chord)
     ? (chord.primitiveShape === "equilateral-triangle"
       ? getChordName(chord.root, chord.quality, pitchClasses)
       : chord.primitiveShape
         ? formatPrimitiveChordName(chord, pitchClasses)
-        : chord.customNotes.map(i => pitchClasses[i]).join(" "))
+        : formatChordSymbol(chord, pitchClasses))
     : getChordName(chord.root, chord.quality, pitchClasses);
   const noteNames = noteIndices.map(i => pitchClasses[i]).join(" ");
 
@@ -131,9 +130,7 @@ export const ChordTile = memo(
       </div>
       <div className={styles.chordInfo}>
         <span className={styles.chordName}>{chordName}</span>
-        {!isNotesAsName && (
-          <span className={styles.chordNotes}>{noteNames}</span>
-        )}
+        <span className={styles.chordNotes}>{noteNames}</span>
       </div>
       {!isGhost && (
         <div className={styles.tileActions}>
