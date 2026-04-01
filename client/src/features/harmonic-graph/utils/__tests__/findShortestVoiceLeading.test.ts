@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import { findShortestVoiceLeading } from "../findShortestVoiceLeading";
 import { buildChordGraph } from "../buildChordGraph";
 import {
+  getDefaultChordGraph,
+} from "../findShortestVoiceLeading";
+import {
   canonicalizeChord,
   chordDistance,
   chordDistanceFlexible,
@@ -268,6 +271,29 @@ describe("findShortestVoiceLeading — options object (Phase 3)", () => {
     expect(result).not.toBeNull();
     expect(result!.totalDistance).toBeGreaterThanOrEqual(0);
   });
+
+// ---------------------------------------------------------------------------
+// findShortestVoiceLeading — default graph cache
+// ---------------------------------------------------------------------------
+
+describe("findShortestVoiceLeading — default graph cache", () => {
+  it("returns a stable default graph reference", () => {
+    const a = getDefaultChordGraph();
+    const b = getDefaultChordGraph();
+    expect(a).toBe(b);
+  });
+
+  it("default graph has expected triad-T node count", () => {
+    const graph = getDefaultChordGraph();
+    expect(graph.nodes).toHaveLength(19);
+  });
+
+  it("still allows a caller-supplied graph override", () => {
+    const sparseGraph = buildChordGraph(0);
+    const result = findShortestVoiceLeading([0, 4, 7], [0, 3, 7], sparseGraph);
+    expect(result).toBeNull();
+  });
+});
 
   it("options with canonicalization:'T' produces the same result as the legacy number API", () => {
     const legacyResult = findShortestVoiceLeading([0, 4, 7], [0, 3, 7]);
