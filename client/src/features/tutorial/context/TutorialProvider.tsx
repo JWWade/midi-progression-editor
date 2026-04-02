@@ -9,6 +9,7 @@ import {
 import { TutorialContext } from './TutorialContext';
 import type {
   TutorialAppContext,
+  TutorialA11yDiagnostic,
   TutorialExperienceMode,
   TutorialPersistedState,
   TutorialStep,
@@ -17,9 +18,10 @@ import {
   ALL_TUTORIAL_STEPS,
   TUTORIAL_CONTENT_VERSION,
 } from '../data/tutorials';
-import { resolveActiveStep } from '../utils/triggerManager';
+import { findEligibleSteps } from '../utils/triggerManager';
 import { isStepAllowedInMode } from '../utils/modeFiltering';
 import { assertValidTutorialDefinitions } from '../utils/validateTutorialDefinitions';
+import { emitTutorialEvent } from '../utils/tutorialTelemetry';
 import { TutorialTooltip } from '../components/TutorialTooltip';
 import { TutorialModal } from '../components/TutorialModal';
 import { createLogger } from '@/shared/utils/logger';
@@ -299,10 +301,12 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     [state.experienceMode],
   );
 
-  const activeStep: TutorialStep | null = useMemo(() => {
-    if (state.dismissed) return null;
-    if (state.paused) return null;
-    return resolveActiveStep(allowedSteps, {
+  // Compute all currently eligible steps (passes trigger evaluation).
+  // Used to emit `step_eligible` events for funnel analysis.
+  const eligibleSteps = useMemo(() => {
+    if (state.dismissed) return [];
+    if (state.paused) return [];
+    return findEligibleSteps(allowedSteps, {
       completedSteps: completedSet,
       skippedSteps: skippedSet,
       pendingAction: state.pendingAction,
@@ -312,15 +316,21 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     });
   }, [
     state.dismissed,
+    state.paused,
     state.pendingAction,
     state.appContext,
     state.isIdle,
     state.idleSeconds,
-    state.paused,
     allowedSteps,
     completedSet,
     skippedSet,
   ]);
+
+  const activeStep: TutorialStep | null = useMemo(() => {
+    if (eligibleSteps.length === 0) return null;
+    const sorted = [...eligibleSteps].sort((a, b) => b.priority - a.priority);
+    return sorted[0];
+  }, [eligibleSteps]);
 
   // ── Step progress ─────────────────────────────────────────────────────
   // `totalSteps` is the number of steps not yet completed or skipped (across
@@ -351,6 +361,55 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     }
   }, [state.pendingAction]);
 
+  // ── Telemetry: step_eligible ──────────────────────────────────────────
+  // Emit a `step_eligible` event the first time each step passes trigger
+  // evaluation.  We deduplicate via a ref so repeated renders don't spam.
+  // The reported-eligible set is cleared whenever completed/skipped sets
+  // change (a step becoming completed removes it from future eligibility).
+  const reportedEligibleRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    for (const step of eligibleSteps) {
+      if (reportedEligibleRef.current.has(step.id)) continue;
+      reportedEligibleRef.current.add(step.id);
+      emitTutorialEvent({
+        event: 'step_eligible',
+        stepId: step.id,
+        feature: step.feature,
+        triggerType: step.trigger.type,
+        contentVersion: TUTORIAL_CONTENT_VERSION,
+      });
+    }
+  }, [eligibleSteps]);
+
+  // Clear reported-eligible tracking whenever the completed/skipped sets
+  // change so that a reset can re-report eligibility correctly.
+  useEffect(() => {
+    reportedEligibleRef.current = new Set();
+  }, [completedSet, skippedSet]);
+
+  // ── Telemetry: step_shown ─────────────────────────────────────────────
+  // Emit `step_shown` whenever a new step becomes the active step.
+  // Also record the timestamp so immediate-close can be detected later.
+  const prevActiveStepIdRef = useRef<string | null>(null);
+  const stepShownAtRef = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    const id = activeStep?.id ?? null;
+    if (id !== null && id !== prevActiveStepIdRef.current) {
+      prevActiveStepIdRef.current = id;
+      stepShownAtRef.current.set(id, Date.now());
+      emitTutorialEvent({
+        event: 'step_shown',
+        stepId: id,
+        feature: activeStep!.feature,
+        triggerType: activeStep!.trigger.type,
+        contentVersion: TUTORIAL_CONTENT_VERSION,
+      });
+    } else if (id === null) {
+      prevActiveStepIdRef.current = null;
+    }
+  }, [activeStep]);
+
   // ── Public API ────────────────────────────────────────────────────────
 
   const fireEvent = useCallback((eventName: string) => {
@@ -362,27 +421,94 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'UPDATE_APP_CONTEXT', ctx });
   }, []);
 
-  const dismiss = useCallback(() => {
-    if (activeStep) {
-      log.debug('dismiss step', activeStep.id);
-      dispatch({ type: 'COMPLETE_STEP', stepId: activeStep.id });
-    }
-  }, [activeStep]);
+  const dismiss = useCallback(
+    (a11y?: TutorialA11yDiagnostic) => {
+      if (activeStep) {
+        log.debug('dismiss step', activeStep.id);
+        const shownAt = stepShownAtRef.current.get(activeStep.id);
+        const immediateClose =
+          shownAt !== undefined && Date.now() - shownAt < 1000;
+        if (immediateClose) {
+          log.warn('Immediate close detected for step', activeStep.id, {
+            elapsedMs: shownAt !== undefined ? Date.now() - shownAt : null,
+          });
+        }
+        // Use the recorded focus result from mount; fall back to the caller-
+        // supplied value; assume success only as a last resort (e.g. programmatic
+        // dismissals where no diagnostic has been reported yet).
+        const focusSuccess =
+          focusResultRef.current.get(activeStep.id) ??
+          a11y?.focusSuccess ??
+          true;
+        emitTutorialEvent({
+          event: 'step_completed',
+          stepId: activeStep.id,
+          feature: activeStep.feature,
+          triggerType: activeStep.trigger.type,
+          contentVersion: TUTORIAL_CONTENT_VERSION,
+          a11y: { ...a11y, focusSuccess, immediateClose },
+        });
+        stepShownAtRef.current.delete(activeStep.id);
+        focusResultRef.current.delete(activeStep.id);
+        dispatch({ type: 'COMPLETE_STEP', stepId: activeStep.id });
+      }
+    },
+    [activeStep],
+  );
 
-  const skip = useCallback(() => {
-    if (activeStep) {
-      log.debug('skip step', activeStep.id);
-      dispatch({ type: 'SKIP_STEP', stepId: activeStep.id });
-    }
-  }, [activeStep]);
+  const skip = useCallback(
+    (a11y?: TutorialA11yDiagnostic) => {
+      if (activeStep) {
+        log.debug('skip step', activeStep.id);
+        const shownAt = stepShownAtRef.current.get(activeStep.id);
+        const immediateClose =
+          shownAt !== undefined && Date.now() - shownAt < 1000;
+        if (immediateClose) {
+          log.warn('Immediate close (skip) detected for step', activeStep.id, {
+            elapsedMs: shownAt !== undefined ? Date.now() - shownAt : null,
+          });
+        }
+        const focusSuccess =
+          focusResultRef.current.get(activeStep.id) ??
+          a11y?.focusSuccess ??
+          true;
+        emitTutorialEvent({
+          event: 'step_skipped',
+          stepId: activeStep.id,
+          feature: activeStep.feature,
+          triggerType: activeStep.trigger.type,
+          contentVersion: TUTORIAL_CONTENT_VERSION,
+          a11y: { ...a11y, focusSuccess, immediateClose },
+        });
+        stepShownAtRef.current.delete(activeStep.id);
+        focusResultRef.current.delete(activeStep.id);
+        dispatch({ type: 'SKIP_STEP', stepId: activeStep.id });
+      }
+    },
+    [activeStep],
+  );
 
   const skipAll = useCallback(() => {
     log.debug('skipAll');
+    emitTutorialEvent({
+      event: 'tutorial_dismissed_all',
+      stepId: null,
+      feature: null,
+      triggerType: null,
+      contentVersion: TUTORIAL_CONTENT_VERSION,
+    });
     dispatch({ type: 'SKIP_ALL' });
   }, []);
 
   const reset = useCallback(() => {
     log.debug('reset');
+    emitTutorialEvent({
+      event: 'tutorial_reset',
+      stepId: null,
+      feature: null,
+      triggerType: null,
+      contentVersion: TUTORIAL_CONTENT_VERSION,
+    });
     dispatch({ type: 'RESET' });
   }, []);
 
@@ -396,6 +522,26 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     log.debug('snooze', duration);
     dispatch({ type: 'SNOOZE', until: Date.now() + duration });
   }, []);
+
+  // ── Accessibility diagnostics callback ────────────────────────────────
+  // Passed to tutorial UI components so they can report focus success/failure
+  // and input method back to the provider for telemetry and warnings.
+  // Focus results are stored per-step so that close events can report the
+  // actual focus state from mount rather than assuming success.
+  const focusResultRef = useRef<Map<string, boolean>>(new Map());
+
+  const handleFocusDiagnostic = useCallback(
+    (stepId: string, diagnostic: TutorialA11yDiagnostic) => {
+      focusResultRef.current.set(stepId, diagnostic.focusSuccess);
+      if (!diagnostic.focusSuccess) {
+        log.warn('Focus failed to move to tutorial UI element', {
+          stepId,
+          ...diagnostic,
+        });
+      }
+    },
+    [],
+  );
 
   const value = useMemo(
     () => ({
@@ -448,6 +594,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
           onSkip={skip}
           onSkipAll={skipAll}
           onSnooze={snooze}
+          onFocusDiagnostic={handleFocusDiagnostic}
         />
       )}
       {activeStep?.uiType === 'modal' && (
@@ -459,6 +606,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
           onSkip={skip}
           onSkipAll={skipAll}
           onSnooze={snooze}
+          onFocusDiagnostic={handleFocusDiagnostic}
         />
       )}
     </TutorialContext.Provider>

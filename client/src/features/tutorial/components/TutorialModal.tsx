@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import type { TutorialStep } from '../types';
+import { useEffect, useRef, useCallback } from 'react';
+import type { TutorialStep, TutorialA11yDiagnostic } from '../types';
 import styles from './TutorialModal.module.css';
 
 export interface TutorialModalProps {
@@ -8,11 +8,16 @@ export interface TutorialModalProps {
   stepIndex: number;
   /** Total number of remaining (not yet completed/skipped) steps. */
   totalSteps: number;
-  onDismiss: () => void;
-  onSkip: () => void;
+  onDismiss: (a11y?: TutorialA11yDiagnostic) => void;
+  onSkip: (a11y?: TutorialA11yDiagnostic) => void;
   onSkipAll: () => void;
   /** Temporarily pause tutorial prompts. */
   onSnooze: () => void;
+  /**
+   * Called once on mount with focus diagnostics so the provider can record
+   * accessibility outcomes and emit warnings when focus fails.
+   */
+  onFocusDiagnostic?: (stepId: string, diagnostic: TutorialA11yDiagnostic) => void;
 }
 
 /**
@@ -29,6 +34,7 @@ export function TutorialModal({
   onSkip,
   onSkipAll,
   onSnooze,
+  onFocusDiagnostic,
 }: TutorialModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -44,9 +50,14 @@ export function TutorialModal({
     };
   }, []);
 
-  // Move focus into the dialog on mount.
+  // Move focus into the dialog on mount and report accessibility diagnostics.
   useEffect(() => {
     dialogRef.current?.focus();
+    const focusSuccess = document.activeElement === dialogRef.current;
+    onFocusDiagnostic?.(step.id, { focusSuccess });
+    // Intentionally omitting `onFocusDiagnostic` and `step.id` from deps
+    // — this diagnostic should fire exactly once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Keyboard: Escape → dismiss; Tab focus trap within dialog.
@@ -54,7 +65,7 @@ export function TutorialModal({
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        onDismiss();
+        onDismiss({ focusSuccess: true, inputMethod: 'keyboard' });
         return;
       }
 
@@ -82,12 +93,22 @@ export function TutorialModal({
     return () => window.removeEventListener('keydown', handleKey, { capture: true });
   }, [onDismiss]);
 
+  // Detect input method from a click event detail.
+  const getInputMethod = useCallback(
+    (e: React.MouseEvent): 'keyboard' | 'pointer' =>
+      e.detail === 0 ? 'keyboard' : 'pointer',
+    [],
+  );
+
   const showProgress = stepIndex > 0 && totalSteps > 0;
 
   return (
     <div
       className={styles.backdrop}
-      onClick={onDismiss}
+      onClick={(e) => {
+        e.stopPropagation();
+        onDismiss({ focusSuccess: true, inputMethod: 'pointer' });
+      }}
       aria-hidden="true"
     >
       <div
@@ -125,7 +146,7 @@ export function TutorialModal({
           <button
             type="button"
             className={styles.primaryBtn}
-            onClick={onDismiss}
+            onClick={(e) => onDismiss({ focusSuccess: true, inputMethod: getInputMethod(e) })}
             autoFocus
           >
             Got it
@@ -133,7 +154,7 @@ export function TutorialModal({
           <button
             type="button"
             className={styles.secondaryBtn}
-            onClick={onSkip}
+            onClick={(e) => onSkip({ focusSuccess: true, inputMethod: getInputMethod(e) })}
           >
             Skip for now
           </button>

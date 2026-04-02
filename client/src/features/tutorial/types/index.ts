@@ -143,6 +143,98 @@ export interface TutorialPersistedState {
   experienceMode: TutorialExperienceMode;
 }
 
+// ── Telemetry event model ─────────────────────────────────────────────────
+
+/**
+ * Named events emitted by the tutorial engine.
+ *
+ * Payload shape is documented in {@link TutorialEventPayload}.
+ * No user-entered content is ever included — only structural metadata.
+ *
+ * | Event                  | When fired                                           |
+ * |------------------------|------------------------------------------------------|
+ * | `step_eligible`        | A step passes trigger evaluation for the first time  |
+ * | `step_shown`           | The step is actually rendered to the user            |
+ * | `step_completed`       | User clicked "Got it" (positive completion)          |
+ * | `step_skipped`         | User clicked "Skip" (deferred, not completed)        |
+ * | `tutorial_dismissed_all` | User disabled all tutorials permanently            |
+ * | `tutorial_reset`       | Tutorial progress was reset programmatically         |
+ */
+export type TutorialEventName =
+  | 'step_eligible'
+  | 'step_shown'
+  | 'step_completed'
+  | 'step_skipped'
+  | 'tutorial_dismissed_all'
+  | 'tutorial_reset';
+
+/**
+ * Metadata attached to every tutorial telemetry event.
+ *
+ * **Privacy guardrails** (enforced by design):
+ * - `stepId` and `feature` are structural identifiers defined by authors, not
+ *   user-entered content.
+ * - `sessionOffsetMs` is relative to session start so it never reveals the
+ *   user's wall-clock time or timezone.
+ * - No free-form text, UI copy, CSS selectors, or PII is ever included.
+ * - The payload shape is bounded to this interface; additional keys must be
+ *   added here explicitly so privacy review remains possible.
+ */
+export interface TutorialEventPayload {
+  /** The name of the event. */
+  event: TutorialEventName;
+  /**
+   * Step ID that the event relates to.
+   * `null` for tutorial-level events (`tutorial_dismissed_all`, `tutorial_reset`).
+   */
+  stepId: string | null;
+  /**
+   * Feature the step belongs to (e.g. `"progression-sidebar"`).
+   * `null` for tutorial-level events.
+   */
+  feature: string | null;
+  /**
+   * The trigger variant that made this step eligible.
+   * `null` for tutorial-level events.
+   */
+  triggerType: TutorialTrigger['type'] | null;
+  /** Tutorial content version at the time of the event (semver string). */
+  contentVersion: string;
+  /**
+   * Milliseconds elapsed since the page session started.
+   * Session-relative — does not reveal wall-clock time or timezone.
+   */
+  sessionOffsetMs: number;
+  /**
+   * Accessibility diagnostics attached to `step_shown`, `step_completed`, and
+   * `step_skipped` events when the information is available.
+   */
+  a11y?: TutorialA11yDiagnostic;
+}
+
+/**
+ * Accessibility diagnostic snapshot reported by tutorial UI components.
+ * Attached to `step_shown` events and close events when available.
+ */
+export interface TutorialA11yDiagnostic {
+  /**
+   * `true` when the browser successfully moved focus to the tutorial UI element
+   * on mount (verified by checking `document.activeElement` after the attempt).
+   */
+  focusSuccess: boolean;
+  /**
+   * Input method inferred at the time the step was closed, where detectable.
+   * `"keyboard"` when the close button was activated without a pointer click
+   * (`MouseEvent.detail === 0`).  `"pointer"` otherwise.
+   */
+  inputMethod?: 'keyboard' | 'pointer';
+  /**
+   * `true` when the step was dismissed in under one second — a signal of
+   * friction or an abnormal / automated close pattern.
+   */
+  immediateClose?: boolean;
+}
+
 // ── React context value ───────────────────────────────────────────────────
 
 export interface TutorialContextValue {
@@ -181,9 +273,9 @@ export interface TutorialContextValue {
    */
   updateAppContext: (ctx: Partial<TutorialAppContext>) => void;
   /** Mark the active step as completed and hide it. */
-  dismiss: () => void;
+  dismiss: (a11y?: TutorialA11yDiagnostic) => void;
   /** Mark the active step as skipped (not completed) and hide it. */
-  skip: () => void;
+  skip: (a11y?: TutorialA11yDiagnostic) => void;
   /** Permanently disable all tutorials for this user. */
   skipAll: () => void;
   /** Reset all tutorial progress (completed + skipped + dismissed flag). */
