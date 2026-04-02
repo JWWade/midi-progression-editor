@@ -59,6 +59,25 @@ export function evaluateTrigger(
 }
 
 /**
+ * Return all steps that are currently eligible: not completed, not skipped,
+ * and with a trigger condition that evaluates to `true`.
+ *
+ * This is the lower-level primitive used by both {@link resolveActiveStep}
+ * (which picks the single winner) and the telemetry layer (which needs the
+ * full eligible set to emit `step_eligible` events for funnel analysis).
+ */
+export function findEligibleSteps(
+  steps: readonly TutorialStep[],
+  ctx: TriggerContext,
+): TutorialStep[] {
+  return steps.filter((step) => {
+    if (ctx.completedSteps.has(step.id)) return false;
+    if (ctx.skippedSteps.has(step.id)) return false;
+    return evaluateTrigger(step.trigger, ctx);
+  });
+}
+
+/**
  * Given a list of tutorial steps, return the single highest-priority step
  * that is:
  *  1. Not already completed or skipped.
@@ -70,11 +89,7 @@ export function resolveActiveStep(
   steps: readonly TutorialStep[],
   ctx: TriggerContext,
 ): TutorialStep | null {
-  const eligible = steps.filter((step) => {
-    if (ctx.completedSteps.has(step.id)) return false;
-    if (ctx.skippedSteps.has(step.id)) return false;
-    return evaluateTrigger(step.trigger, ctx);
-  });
+  const eligible = findEligibleSteps(steps, ctx);
 
   if (eligible.length === 0) return null;
 

@@ -1,5 +1,5 @@
-import { useLayoutEffect, useEffect, useRef } from 'react';
-import type { TutorialStep } from '../types';
+import { useLayoutEffect, useEffect, useRef, useCallback } from 'react';
+import type { TutorialStep, TutorialA11yDiagnostic } from '../types';
 import styles from './TutorialTooltip.module.css';
 
 export interface TutorialTooltipProps {
@@ -8,11 +8,16 @@ export interface TutorialTooltipProps {
   stepIndex: number;
   /** Total number of remaining (not yet completed/skipped) steps. */
   totalSteps: number;
-  onDismiss: () => void;
-  onSkip: () => void;
+  onDismiss: (a11y?: TutorialA11yDiagnostic) => void;
+  onSkip: (a11y?: TutorialA11yDiagnostic) => void;
   onSkipAll: () => void;
   /** Temporarily pause tutorial prompts. */
   onSnooze: () => void;
+  /**
+   * Called once on mount with focus diagnostics so the provider can record
+   * accessibility outcomes and emit warnings when focus fails.
+   */
+  onFocusDiagnostic?: (stepId: string, diagnostic: TutorialA11yDiagnostic) => void;
 }
 
 /**
@@ -32,6 +37,7 @@ export function TutorialTooltip({
   onSkip,
   onSkipAll,
   onSnooze,
+  onFocusDiagnostic,
 }: TutorialTooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const arrowRef = useRef<HTMLSpanElement>(null);
@@ -107,22 +113,34 @@ export function TutorialTooltip({
     };
   }, [step.targetSelector]);
 
-  // Keyboard: Escape → dismiss
+  // Keyboard: Escape → dismiss (keyboard input method)
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        onDismiss();
+        onDismiss({ focusSuccess: true, inputMethod: 'keyboard' });
       }
     };
     window.addEventListener('keydown', handleKey, { capture: true });
     return () => window.removeEventListener('keydown', handleKey, { capture: true });
   }, [onDismiss]);
 
-  // Move focus into tooltip on mount for accessibility.
+  // Move focus into tooltip on mount and report accessibility diagnostics.
   useEffect(() => {
     tooltipRef.current?.focus();
+    const focusSuccess = document.activeElement === tooltipRef.current;
+    onFocusDiagnostic?.(step.id, { focusSuccess });
+    // Intentionally omitting `onFocusDiagnostic` and `step.id` from deps
+    // — this diagnostic should fire exactly once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Detect input method from a click event detail.
+  const getInputMethod = useCallback(
+    (e: React.MouseEvent): 'keyboard' | 'pointer' =>
+      e.detail === 0 ? 'keyboard' : 'pointer',
+    [],
+  );
 
   // Whether this is a centred banner (no anchor) — determines initial class.
   // After mount, the layout effect will adjust if a target is found.
@@ -167,7 +185,7 @@ export function TutorialTooltip({
         <button
           type="button"
           className={styles.primaryBtn}
-          onClick={onDismiss}
+          onClick={(e) => onDismiss({ focusSuccess: true, inputMethod: getInputMethod(e) })}
           autoFocus
         >
           Got it
@@ -175,7 +193,7 @@ export function TutorialTooltip({
         <button
           type="button"
           className={styles.secondaryBtn}
-          onClick={onSkip}
+          onClick={(e) => onSkip({ focusSuccess: true, inputMethod: getInputMethod(e) })}
         >
           Skip
         </button>
