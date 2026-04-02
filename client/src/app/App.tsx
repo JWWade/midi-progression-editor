@@ -118,7 +118,8 @@ export default function App() {
     // Spread into a new object so ChromaticCircle's loadChord effect always fires.
     setSendBackChord({ ...chord });
     setLiveRegionText(`${formatChordName(chord, pitchClasses)} loaded into chromatic circle`);
-  }, [pitchClasses]);
+    fireEvent('chordClicked');
+  }, [pitchClasses, fireEvent]);
 
   const handleLoadJsonClick = useCallback(() => {
     loadJsonInputRef.current?.click();

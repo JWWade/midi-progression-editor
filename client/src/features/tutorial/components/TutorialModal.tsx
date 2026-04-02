@@ -109,7 +109,6 @@ export function TutorialModal({
         e.stopPropagation();
         onDismiss({ focusSuccess: true, inputMethod: 'pointer' });
       }}
-      aria-hidden="true"
     >
       <div
         ref={dialogRef}

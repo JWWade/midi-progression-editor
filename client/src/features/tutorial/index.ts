@@ -40,3 +40,11 @@ export {
   getTutorialEventLog,
   clearTutorialEventLog,
 } from './utils/tutorialTelemetry';
+export {
+  TUTORIAL_ACTION_EVENTS,
+  REGISTERED_ACTION_EVENT_NAMES,
+} from './constants/tutorialEvents';
+export type {
+  TutorialActionEventEntry,
+  TutorialActionEventName,
+} from './constants/tutorialEvents';
