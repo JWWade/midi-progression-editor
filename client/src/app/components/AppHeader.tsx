@@ -25,6 +25,14 @@ export function AppHeader({
   const { useFlats, toggleEnharmonic } = useEnharmonic();
 
   return (
+    <>
+    {theme === 'retro' && (
+      <div className={styles.retroBanner} aria-hidden="true">
+        <span className={styles.retroBannerText}>
+          ★ MIDI SEQUENCER PRO ★ BUILD CHORD PROGRESSIONS ★ EXPORT MIDI ★ PLAY YOUR MUSIC ★ HAVE FUN ★ ADD CHORDS ★ EXPLORE HARMONY ★
+        </span>
+      </div>
+    )}
     <header className={styles.header}>
       <div className={styles.toggles}>
         {/* Show Centroid toggle */}
@@ -111,5 +119,6 @@ export function AppHeader({
         </button>
       </div>
     </header>
+    </>
   );
 }

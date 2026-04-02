@@ -252,10 +252,13 @@
   border-left: 4px solid #ff00ff;
   box-shadow: 1px 1px 0 #ffffff inset;
   background-color: #0a0a4a;
+  transition: box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 [data-theme="retro"] .tile:hover {
   background-color: rgba(255, 0, 255, 0.15);
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.5), 1px 1px 0 #ffffff inset;
+  border-left-color: #00ffff;
 }
 
 [data-theme="retro"] .chordName {
@@ -263,6 +266,25 @@
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
 }
 
+[data-theme="retro"] .tile:hover .chordName {
+  animation: retroNeonPulse 1.5s ease-in-out infinite;
+}
+
 [data-theme="retro"] .chordNotes {
   color: #ffff00;
+}
+
+[data-theme="retro"] .tilePlaying {
+  outline: 2px solid #00ffff;
+  background-color: rgba(0, 255, 255, 0.12);
+  box-shadow: 0 0 16px rgba(0, 255, 255, 0.5), 1px 1px 0 #ffffff inset;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="retro"] .tile {
+    transition: none;
+  }
+  [data-theme="retro"] .tile:hover .chordName {
+    animation: none;
+  }
 }

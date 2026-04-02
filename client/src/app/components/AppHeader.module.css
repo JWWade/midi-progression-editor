@@ -175,3 +175,34 @@
   accent-color: #00ffff;
   border: 2px solid #808080;
 }
+
+/* ── Retro: scrolling marquee banner ─────────────────────────────────────── */
+.retroBanner {
+  width: 100%;
+  overflow: hidden;
+  height: 24px;
+  line-height: 24px;
+  background: linear-gradient(90deg, #000066 0%, #000080 50%, #000066 100%);
+  border-bottom: 2px solid #ff00ff;
+  box-shadow: 0 2px 8px rgba(255, 0, 255, 0.4);
+  position: relative;
+}
+
+.retroBannerText {
+  display: inline-block;
+  white-space: nowrap;
+  color: #ffff00;
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 8px #ffff00, 0 0 16px rgba(255, 255, 0, 0.5);
+  animation: retroMarquee 22s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retroBannerText {
+    animation: none;
+    padding-left: 1rem;
+  }
+}
