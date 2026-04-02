@@ -9,6 +9,7 @@ import {
 import { TutorialContext } from './TutorialContext';
 import type {
   TutorialAppContext,
+  TutorialExperienceMode,
   TutorialPersistedState,
   TutorialStep,
 } from '../types';
@@ -17,6 +18,7 @@ import {
   TUTORIAL_CONTENT_VERSION,
 } from '../data/tutorials';
 import { resolveActiveStep } from '../utils/triggerManager';
+import { isStepAllowedInMode } from '../utils/modeFiltering';
 import { assertValidTutorialDefinitions } from '../utils/validateTutorialDefinitions';
 import { TutorialTooltip } from '../components/TutorialTooltip';
 import { TutorialModal } from '../components/TutorialModal';
@@ -39,6 +41,10 @@ const STORAGE_KEY = 'tutorial_state_v1';
 
 const IDLE_POLL_MS = 1000;
 
+// ── Default snooze duration (30 minutes in ms) ────────────────────────────
+
+export const DEFAULT_SNOOZE_DURATION_MS = 30 * 60 * 1000;
+
 // ── Persisted-state helpers ───────────────────────────────────────────────
 
 function loadPersistedState(): TutorialPersistedState {
@@ -57,7 +63,14 @@ function loadPersistedState(): TutorialPersistedState {
           log.info('Tutorial content version changed; resetting progress.');
           return freshState();
         }
-        return parsed as TutorialPersistedState;
+        // Merge in new fields with defaults for backward compatibility
+        return {
+          ...freshState(),
+          ...parsed,
+          experienceMode: isValidMode(parsed.experienceMode)
+            ? parsed.experienceMode
+            : 'guided',
+        };
       }
     }
   } catch {
@@ -66,12 +79,19 @@ function loadPersistedState(): TutorialPersistedState {
   return freshState();
 }
 
+function isValidMode(
+  value: unknown,
+): value is TutorialExperienceMode {
+  return value === 'guided' || value === 'standard' || value === 'minimal';
+}
+
 function freshState(): TutorialPersistedState {
   return {
     completedSteps: [],
     skippedSteps: [],
     tutorialVersion: TUTORIAL_CONTENT_VERSION,
     dismissed: false,
+    experienceMode: 'guided',
   };
 }
 
@@ -91,6 +111,16 @@ interface ProviderState extends TutorialPersistedState {
   pendingAction: string | null;
   idleSeconds: number;
   isIdle: boolean;
+  /**
+   * `true` while a snooze is active.  Session-only — not persisted across
+   * page reloads — so that a 30-minute snooze doesn't survive a refresh.
+   */
+  paused: boolean;
+  /**
+   * Unix timestamp (ms) after which the current snooze expires.
+   * `null` when not snoozed.  Session-only.
+   */
+  snoozedUntil: number | null;
 }
 
 type Action =
@@ -102,7 +132,10 @@ type Action =
   | { type: 'CLEAR_ACTION' }
   | { type: 'UPDATE_APP_CONTEXT'; ctx: Partial<TutorialAppContext> }
   | { type: 'TICK_IDLE' }
-  | { type: 'RESET_IDLE' };
+  | { type: 'RESET_IDLE' }
+  | { type: 'SET_MODE'; mode: TutorialExperienceMode }
+  | { type: 'SNOOZE'; until: number }
+  | { type: 'CLEAR_SNOOZE' };
 
 function reducer(state: ProviderState, action: Action): ProviderState {
   switch (action.type) {
@@ -131,6 +164,8 @@ function reducer(state: ProviderState, action: Action): ProviderState {
         pendingAction: null,
         idleSeconds: 0,
         isIdle: false,
+        paused: false,
+        snoozedUntil: null,
       };
     }
 
@@ -154,6 +189,15 @@ function reducer(state: ProviderState, action: Action): ProviderState {
     case 'RESET_IDLE':
       return { ...state, idleSeconds: 0, isIdle: false };
 
+    case 'SET_MODE':
+      return { ...state, experienceMode: action.mode };
+
+    case 'SNOOZE':
+      return { ...state, snoozedUntil: action.until, paused: true };
+
+    case 'CLEAR_SNOOZE':
+      return { ...state, snoozedUntil: null, paused: false };
+
     default:
       return state;
   }
@@ -170,6 +214,8 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       pendingAction: null,
       idleSeconds: 0,
       isIdle: false,
+      paused: false,
+      snoozedUntil: null,
     };
   }, []);
 
@@ -183,6 +229,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       skippedSteps: state.skippedSteps,
       tutorialVersion: state.tutorialVersion,
       dismissed: state.dismissed,
+      experienceMode: state.experienceMode,
     };
     // Shallow comparison to avoid unnecessary writes
     const prev = prevPersistedRef.current;
@@ -191,7 +238,8 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       prev.dismissed === persisted.dismissed &&
       prev.tutorialVersion === persisted.tutorialVersion &&
       prev.completedSteps === persisted.completedSteps &&
-      prev.skippedSteps === persisted.skippedSteps
+      prev.skippedSteps === persisted.skippedSteps &&
+      prev.experienceMode === persisted.experienceMode
     ) {
       return;
     }
@@ -202,7 +250,20 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     state.skippedSteps,
     state.tutorialVersion,
     state.dismissed,
+    state.experienceMode,
   ]);
+
+  // ── Auto-clear snooze when it expires ────────────────────────────────
+  useEffect(() => {
+    if (state.snoozedUntil === null) return;
+    const remaining = state.snoozedUntil - Date.now();
+    if (remaining <= 0) {
+      dispatch({ type: 'CLEAR_SNOOZE' });
+      return;
+    }
+    const id = setTimeout(() => dispatch({ type: 'CLEAR_SNOOZE' }), remaining);
+    return () => clearTimeout(id);
+  }, [state.snoozedUntil]);
 
   // ── Idle detection ────────────────────────────────────────────────────
   useEffect(() => {
@@ -232,9 +293,16 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     [state.skippedSteps],
   );
 
+  // Filter steps based on the current experience mode before resolution.
+  const allowedSteps = useMemo(
+    () => ALL_TUTORIAL_STEPS.filter((s) => isStepAllowedInMode(s, state.experienceMode)),
+    [state.experienceMode],
+  );
+
   const activeStep: TutorialStep | null = useMemo(() => {
     if (state.dismissed) return null;
-    return resolveActiveStep(ALL_TUTORIAL_STEPS, {
+    if (state.paused) return null;
+    return resolveActiveStep(allowedSteps, {
       completedSteps: completedSet,
       skippedSteps: skippedSet,
       pendingAction: state.pendingAction,
@@ -248,9 +316,27 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     state.appContext,
     state.isIdle,
     state.idleSeconds,
+    state.paused,
+    allowedSteps,
     completedSet,
     skippedSet,
   ]);
+
+  // ── Step progress ─────────────────────────────────────────────────────
+  // `totalSteps` is the number of steps not yet completed or skipped (across
+  // all modes so the count is stable as the user changes modes).
+  // `stepIndex` is the 1-based rank of the active step within the remaining
+  // steps sorted by priority.
+  const { stepIndex, totalSteps } = useMemo(() => {
+    const remaining = ALL_TUTORIAL_STEPS.filter(
+      (s) => !completedSet.has(s.id) && !skippedSet.has(s.id),
+    );
+    const sorted = [...remaining].sort((a, b) => b.priority - a.priority);
+    const idx = activeStep
+      ? sorted.findIndex((s) => s.id === activeStep.id) + 1
+      : 0;
+    return { stepIndex: idx, totalSteps: sorted.length };
+  }, [activeStep, completedSet, skippedSet]);
 
   // Clear action-based pending event after it has been consumed (i.e., a step
   // became active or no step matched).  This prevents the same event from
@@ -300,30 +386,53 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'RESET' });
   }, []);
 
+  const setExperienceMode = useCallback((mode: TutorialExperienceMode) => {
+    log.debug('setExperienceMode', mode);
+    dispatch({ type: 'SET_MODE', mode });
+  }, []);
+
+  const snooze = useCallback((durationMs?: number) => {
+    const duration = durationMs ?? DEFAULT_SNOOZE_DURATION_MS;
+    log.debug('snooze', duration);
+    dispatch({ type: 'SNOOZE', until: Date.now() + duration });
+  }, []);
+
   const value = useMemo(
     () => ({
       activeStep,
       completedSteps: state.completedSteps,
       skippedSteps: state.skippedSteps,
       dismissed: state.dismissed,
+      experienceMode: state.experienceMode,
+      paused: state.paused,
+      stepIndex,
+      totalSteps,
       fireEvent,
       updateAppContext,
       dismiss,
       skip,
       skipAll,
       reset,
+      setExperienceMode,
+      snooze,
     }),
     [
       activeStep,
       state.completedSteps,
       state.skippedSteps,
       state.dismissed,
+      state.experienceMode,
+      state.paused,
+      stepIndex,
+      totalSteps,
       fireEvent,
       updateAppContext,
       dismiss,
       skip,
       skipAll,
       reset,
+      setExperienceMode,
+      snooze,
     ],
   );
 
@@ -333,17 +442,23 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       {activeStep?.uiType === 'tooltip' && (
         <TutorialTooltip
           step={activeStep}
+          stepIndex={stepIndex}
+          totalSteps={totalSteps}
           onDismiss={dismiss}
           onSkip={skip}
           onSkipAll={skipAll}
+          onSnooze={snooze}
         />
       )}
       {activeStep?.uiType === 'modal' && (
         <TutorialModal
           step={activeStep}
+          stepIndex={stepIndex}
+          totalSteps={totalSteps}
           onDismiss={dismiss}
           onSkip={skip}
           onSkipAll={skipAll}
+          onSnooze={snooze}
         />
       )}
     </TutorialContext.Provider>

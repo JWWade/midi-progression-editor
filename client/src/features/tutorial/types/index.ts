@@ -110,6 +110,23 @@ export interface TutorialAppContext {
   isPlaying: boolean;
 }
 
+// ── Experience modes ──────────────────────────────────────────────────────
+
+/**
+ * Controls how interruptive and frequent tutorial prompts are:
+ *
+ * - `"guided"`   — All steps may auto-trigger including state-based and idle
+ *                  prompts.  Highest interruption frequency.  Recommended for
+ *                  first-time users.
+ * - `"standard"` — Action-triggered steps and modal onboarding steps still
+ *                  fire.  Pure idle and state-based tooltip steps are
+ *                  suppressed.  Balanced interruption for returning users.
+ * - `"minimal"`  — Only modal steps (essential onboarding) are shown.  All
+ *                  tooltip steps are suppressed regardless of trigger type.
+ *                  Lowest interruption for power users.
+ */
+export type TutorialExperienceMode = 'guided' | 'standard' | 'minimal';
+
 // ── Persisted state ───────────────────────────────────────────────────────
 
 export interface TutorialPersistedState {
@@ -117,8 +134,13 @@ export interface TutorialPersistedState {
   skippedSteps: string[];
   /** Stored tutorial data version; mismatch triggers a full reset. */
   tutorialVersion: string;
-  /** `true` when the user has dismissed all tutorials permanently. */
+  /** `true` when the user has permanently dismissed all tutorials. */
   dismissed: boolean;
+  /**
+   * Controls which steps auto-trigger.  Defaults to `"guided"` for new
+   * users.  Persisted so the user's preference survives page reloads.
+   */
+  experienceMode: TutorialExperienceMode;
 }
 
 // ── React context value ───────────────────────────────────────────────────
@@ -130,6 +152,24 @@ export interface TutorialContextValue {
   skippedSteps: ReadonlyArray<string>;
   /** `true` when the user has permanently dismissed all tutorials. */
   dismissed: boolean;
+  /**
+   * The current experience mode controlling which steps auto-trigger.
+   * `"guided"` → all steps; `"standard"` → action + modal only;
+   * `"minimal"` → modal only.
+   */
+  experienceMode: TutorialExperienceMode;
+  /**
+   * `true` while a snooze is active (tutorials are temporarily paused).
+   * Automatically becomes `false` when the snooze duration expires.
+   */
+  paused: boolean;
+  /**
+   * 1-based index of the active step within all remaining (not yet completed
+   * or skipped) steps, sorted by priority.  `0` when no step is active.
+   */
+  stepIndex: number;
+  /** Total number of steps that have not yet been completed or skipped. */
+  totalSteps: number;
   /**
    * Fire a named action event.  Any step whose trigger is
    * `{ type: "onAction", action: eventName }` becomes eligible.
@@ -148,4 +188,12 @@ export interface TutorialContextValue {
   skipAll: () => void;
   /** Reset all tutorial progress (completed + skipped + dismissed flag). */
   reset: () => void;
+  /** Change the interruption level for this user session. */
+  setExperienceMode: (mode: TutorialExperienceMode) => void;
+  /**
+   * Temporarily pause all tutorial prompts for `durationMs` milliseconds
+   * (default: 30 minutes).  Tutorials resume automatically when the duration
+   * expires.
+   */
+  snooze: (durationMs?: number) => void;
 }
