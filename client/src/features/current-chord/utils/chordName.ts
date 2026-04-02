@@ -8,8 +8,8 @@ import type { PrimitiveShape } from "../types";
 export const PRIMITIVE_SHAPE_LABELS: Record<PrimitiveShape, string> = {
   "equilateral-triangle": "Equilateral Triangle",
   "suspended-triangle": "sus4",
-  square: "Square",
-  rectangle: "Rectangle",
+  square: "Diminished",
+  rectangle: "Dominant 7",
 };
 
 export const CHORD_QUALITY_LABELS: Record<ChordType, string> = {

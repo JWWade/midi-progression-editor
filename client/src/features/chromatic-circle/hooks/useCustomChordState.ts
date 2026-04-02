@@ -18,8 +18,8 @@ import type { CustomChordState } from "../types";
 const PRIMITIVE_SHAPE_META: Record<PrimitiveShape, { quality: ChordType; label: string }> = {
   "equilateral-triangle": { quality: "aug", label: "equilateral triangle" },
   "suspended-triangle": { quality: "major", label: "sus4 triangle" },
-  rectangle: { quality: "dom7", label: "rectangle" },
-  square: { quality: "dim", label: "square" },
+  rectangle: { quality: "dom7", label: "dominant 7" },
+  square: { quality: "dim", label: "diminished" },
 };
 interface UseCustomChordStateOptions {
   selectedChordName: string;

@@ -161,9 +161,9 @@ describe("formatPrimitiveChordName", () => {
     expect(formatPrimitiveChordName(chord)).toBe("C sus4");
   });
 
-  it("returns '<root> Square' for square shape", () => {
-    const chord: Chord = { root: 7, quality: "major", primitiveShape: "square" };
-    expect(formatPrimitiveChordName(chord)).toBe("G Square");
+  it("returns '<root> Diminished' for square shape", () => {
+    const chord: Chord = { root: 7, quality: "dim", primitiveShape: "square" };
+    expect(formatPrimitiveChordName(chord)).toBe("G Diminished");
   });
 
   it("returns '<root> Equilateral Triangle' for equilateral-triangle shape", () => {
