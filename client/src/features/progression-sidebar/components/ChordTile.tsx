@@ -19,6 +19,7 @@ interface ChordTileProps {
   isLast: boolean;
   isNew?: boolean;
   isPlaying?: boolean;
+  activeArpeggioPitchClass?: number | null;
   isGhost?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -39,7 +40,7 @@ type TilePlayMode = "chord" | "arpeggio" | null;
 // in behaviour per tile even when their reference changes.
 export const ChordTile = memo(
   forwardRef<HTMLLIElement, ChordTileProps>(
-    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
+    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, activeArpeggioPitchClass = null, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
@@ -51,7 +52,9 @@ export const ChordTile = memo(
         ? formatPrimitiveChordName(chord, pitchClasses)
         : formatChordSymbol(chord, pitchClasses))
     : getChordName(chord.root, chord.quality, pitchClasses);
-  const noteNames = noteIndices.map(i => pitchClasses[i]).join(" ");
+  const activePitchClass = activeArpeggioPitchClass === null
+    ? null
+    : ((activeArpeggioPitchClass % 12) + 12) % 12;
 
   // ── Inline audio playback state ────────────────────────────────────────
   const [tilePlayMode, setTilePlayMode] = useState<TilePlayMode>(null);
@@ -130,7 +133,21 @@ export const ChordTile = memo(
       </div>
       <div className={styles.chordInfo}>
         <span className={styles.chordName}>{chordName}</span>
-        <span className={styles.chordNotes}>{noteNames}</span>
+        <span className={styles.chordNotes}>
+          {noteIndices.map((noteIndex, noteSlotIndex) => {
+            const noteName = pitchClasses[noteIndex];
+            const isActive = activePitchClass === noteIndex;
+            return (
+              <span
+                key={`${noteIndex}-${noteSlotIndex}`}
+                className={`${styles.noteToken}${isActive ? ` ${styles.noteActive}` : ""}`}
+              >
+                {noteName}
+                {noteSlotIndex < noteIndices.length - 1 ? " " : ""}
+              </span>
+            );
+          })}
+        </span>
       </div>
       {!isGhost && (
         <div className={styles.tileActions}>
@@ -203,6 +220,7 @@ export const ChordTile = memo(
     prev.isLast === next.isLast &&
     prev.isNew === next.isNew &&
     prev.isPlaying === next.isPlaying &&
+    prev.activeArpeggioPitchClass === next.activeArpeggioPitchClass &&
     prev.isGhost === next.isGhost,
 );
 

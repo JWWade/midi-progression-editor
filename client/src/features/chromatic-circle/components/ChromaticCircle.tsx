@@ -54,6 +54,8 @@ interface ChromaticCircleProps {
   externalChord?: Chord | null;
   /** When true, renders a pulsing ring to indicate active playback. */
   isPlaybackActive?: boolean;
+  /** Pitch class currently sounding during arpeggiated playback (0..11). */
+  playingPitchClass?: number | null;
   /**
    * When non-null, programmatically loads this chord into the circle's
    * internal selection state. Each distinct object reference triggers a load,
@@ -83,6 +85,7 @@ export function ChromaticCircle({
   showIntervals: propShowIntervals = false,
   externalChord,
   isPlaybackActive = false,
+  playingPitchClass = null,
   loadChord,
 }: ChromaticCircleProps) {
   const { theme } = useTheme();
@@ -382,6 +385,10 @@ export function ChromaticCircle({
   );
 
   const circleTransition = prefersReducedMotion ? undefined : "fill 0.4s ease";
+  const activeArpeggioPitchClass =
+    playingPitchClass === null
+      ? null
+      : ((playingPitchClass % 12) + 12) % 12;
 
   return (
     <div style={{ position: "relative", maxWidth: "100%", width: "100%" }}>
@@ -533,6 +540,7 @@ export function ChromaticCircle({
                 x={x}
                 y={y}
                 noteStyle={noteStyle}
+                isArpeggioActive={isPlaybackActive && activeArpeggioPitchClass === i}
                 isDropTarget={isDragging && dragTargetIndex === i}
                 isSelected={isSelected}
                 isInFromChord={isInFromChord}

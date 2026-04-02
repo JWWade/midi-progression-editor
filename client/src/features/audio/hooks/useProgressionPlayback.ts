@@ -9,11 +9,13 @@ import type { Chord } from "@/features/current-chord/types";
 import type { ChordNoteInfo } from "@/features/chord/types";
 import type { ArpeggioPattern } from "../types/arpeggioPattern";
 import { DEFAULT_ARPEGGIO_PATTERN } from "../types/arpeggioPattern";
-import { generateArpeggioSequence } from "../utils/arpeggioUtils";
+import { planLiveArpeggioPlayback } from "../utils/arpeggioUtils";
+import type { ArpeggioHandle } from "../utils/audioUtils";
 
 export interface UseProgressionPlaybackResult {
   isPlaying: boolean;
   playingIndex: number | null;
+  playingPitchClass: number | null;
   loop: boolean;
   play: () => void;
   stop: () => void;
@@ -34,11 +36,14 @@ export function useProgressionPlayback(
   const { pitchClasses } = useEnharmonic();
   const [isPlaying, setIsPlaying] = useState(false);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [playingPitchClass, setPlayingPitchClass] = useState<number | null>(null);
   const [loop, setLoop] = useState(false);
   const [arpeggioEnabled, setArpeggioEnabled] = useState(false);
   const [arpeggioPattern, setArpeggioPattern] = useState<ArpeggioPattern>(DEFAULT_ARPEGGIO_PATTERN);
 
   const cancelledRef = useRef(false);
+  const activeArpeggioRef = useRef<ArpeggioHandle | null>(null);
+  const arpeggioUiTimerIdsRef = useRef<number[]>([]);
   // Keep a ref so the running loop always reads the latest duration without
   // needing to restart playback when the user changes the value.
   const chordDurationMsRef = useRef(chordDurationMs);
@@ -59,12 +64,23 @@ export function useProgressionPlayback(
   const arpeggioPatternRef = useRef(arpeggioPattern);
   useEffect(() => { arpeggioPatternRef.current = arpeggioPattern; }, [arpeggioPattern]);
 
+  const clearArpeggioUiTimers = useCallback(() => {
+    for (const timerId of arpeggioUiTimerIdsRef.current) {
+      window.clearTimeout(timerId);
+    }
+    arpeggioUiTimerIdsRef.current = [];
+  }, []);
+
   const stop = useCallback(() => {
     cancelledRef.current = true;
+    activeArpeggioRef.current?.cancel();
+    activeArpeggioRef.current = null;
+    clearArpeggioUiTimers();
     stopChord();
     setIsPlaying(false);
     setPlayingIndex(null);
-  }, []);
+    setPlayingPitchClass(null);
+  }, [clearArpeggioUiTimers]);
 
   const toggleLoop = useCallback(() => {
     setLoop((prev) => !prev);
@@ -91,17 +107,51 @@ export function useProgressionPlayback(
             : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses);
 
           setPlayingIndex(i);
+          setPlayingPitchClass(null);
 
           if (arpeggioEnabledRef.current) {
             const pattern = arpeggioPatternRef.current;
-            const sequence = generateArpeggioSequence(notes, pattern);
-            // Divide chord time evenly among all sequence steps.
-            const noteDurationMs = sequence.length > 0
-              ? Math.round(chordDurationMsRef.current / sequence.length)
-              : chordDurationMsRef.current;
-            const handle = playArpeggio(sequence, { duration: noteDurationMs, audioParams });
+            const scheduledNotes = planLiveArpeggioPlayback(
+              notes,
+              pattern,
+              chordDurationMsRef.current,
+            );
+            clearArpeggioUiTimers();
+            for (const step of scheduledNotes) {
+              const timerId = window.setTimeout(() => {
+                if (!cancelledRef.current) {
+                  setPlayingPitchClass(step.note.index);
+                }
+              }, step.startOffsetMs);
+              arpeggioUiTimerIdsRef.current.push(timerId);
+            }
+            const clearTimerId = window.setTimeout(() => {
+              if (!cancelledRef.current) {
+                setPlayingPitchClass(null);
+              }
+            }, chordDurationMsRef.current);
+            arpeggioUiTimerIdsRef.current.push(clearTimerId);
+
+            const handle = playArpeggio(
+              scheduledNotes.map((step) => step.note),
+              {
+                audioParams,
+                startOffsetsMs: scheduledNotes.map((step) => step.startOffsetMs),
+                noteDurationsMs: scheduledNotes.map((step) => step.durationMs),
+                totalDurationMs: chordDurationMsRef.current,
+              },
+            );
+            activeArpeggioRef.current = handle;
             await handle.done;
+            clearArpeggioUiTimers();
+            setPlayingPitchClass(null);
+            if (activeArpeggioRef.current === handle) {
+              activeArpeggioRef.current = null;
+            }
           } else {
+            activeArpeggioRef.current = null;
+            clearArpeggioUiTimers();
+            setPlayingPitchClass(null);
             await playChord(notes, { duration: chordDurationMsRef.current, audioParams });
           }
 
@@ -110,24 +160,28 @@ export function useProgressionPlayback(
       } while (!cancelledRef.current && loopRef.current);
 
       if (!cancelledRef.current) {
+        clearArpeggioUiTimers();
         setIsPlaying(false);
         setPlayingIndex(null);
+        setPlayingPitchClass(null);
       }
     };
 
     run();
-  }, [chords, pitchClasses, audioParams]);
+  }, [chords, pitchClasses, audioParams, clearArpeggioUiTimers]);
 
   useEffect(() => {
     return () => {
       cancelledRef.current = true;
+      clearArpeggioUiTimers();
       stopChord();
     };
-  }, []);
+  }, [clearArpeggioUiTimers]);
 
   return {
     isPlaying,
     playingIndex,
+    playingPitchClass,
     loop,
     play,
     stop,

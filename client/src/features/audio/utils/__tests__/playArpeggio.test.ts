@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * Tests for playArpeggio — sequential note playback utility.
+ * Tests for playArpeggio — scheduled note playback utility.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -141,16 +141,41 @@ describe("playArpeggio — cancel", () => {
 });
 
 describe("playArpeggio — plays notes sequentially", () => {
-  it("plays one note immediately upon invocation", async () => {
+  it("schedules all notes immediately upon invocation", async () => {
     vi.useFakeTimers();
     const { playArpeggio } = await importFresh();
 
-    // Start arpeggio but don't advance timers
     playArpeggio([{ index: 0 }, { index: 4 }, { index: 7 }], { duration: 100 });
 
-    // One oscillator should be created for the first note right away
     const oscillators = createdNodes.filter((n) => n.start !== undefined);
-    expect(oscillators.length).toBeGreaterThanOrEqual(1);
+    expect(oscillators).toHaveLength(3);
+    expect(oscillators[0]!.start).toHaveBeenCalledWith(0);
+    expect(oscillators[1]!.start).toHaveBeenCalledWith(0.1);
+    expect(oscillators[2]!.start).toHaveBeenCalledWith(0.2);
+
+    vi.runAllTimers();
+    vi.useRealTimers();
+  });
+
+  it("accepts explicit start offsets and note durations", async () => {
+    vi.useFakeTimers();
+    const { playArpeggio } = await importFresh();
+
+    playArpeggio(
+      [{ index: 0 }, { index: 4 }],
+      {
+        startOffsetsMs: [0, 250],
+        noteDurationsMs: [300, 500],
+        totalDurationMs: 750,
+      },
+    );
+
+    const oscillators = createdNodes.filter((n) => n.start !== undefined);
+    expect(oscillators).toHaveLength(2);
+    expect(oscillators[0]!.start).toHaveBeenCalledWith(0);
+    expect(oscillators[0]!.stop).toHaveBeenCalledWith(0.3);
+    expect(oscillators[1]!.start).toHaveBeenCalledWith(0.25);
+    expect(oscillators[1]!.stop).toHaveBeenCalledWith(0.75);
 
     vi.runAllTimers();
     vi.useRealTimers();

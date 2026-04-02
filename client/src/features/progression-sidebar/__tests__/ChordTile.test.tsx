@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChordTile } from "../components/ChordTile";
+import styles from "../components/ChordTile.module.css";
 import { EnharmonicProvider } from "@/app/providers/EnharmonicProvider";
 import type { Chord } from "@/features/current-chord/types";
 
@@ -129,6 +130,20 @@ describe("ChordTile — existing controls still present", () => {
   it("shows inferred symbol and note list for rerooted custom chords", () => {
     renderTile(EGC_CUSTOM);
     expect(screen.getByText("Em")).not.toBeNull();
-    expect(screen.getByText("E G C")).not.toBeNull();
+    expect(screen.getByText("E")).not.toBeNull();
+    expect(screen.getByText("G")).not.toBeNull();
+    expect(screen.getByText("C")).not.toBeNull();
+  });
+
+  it("highlights the active arpeggio note when provided", () => {
+    renderTile(Cmaj, { activeArpeggioPitchClass: 4 });
+    const activeNote = screen.getByText("E");
+    expect(activeNote.className).toContain(styles.noteActive);
+  });
+
+  it("does not highlight notes when active arpeggio note is null", () => {
+    renderTile(Cmaj, { activeArpeggioPitchClass: null });
+    const note = screen.getByText("E");
+    expect(note.className).not.toContain(styles.noteActive);
   });
 });

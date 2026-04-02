@@ -127,3 +127,68 @@ export function generateArpeggioSequence<T extends { index: number }>(
   const ordered = applyArpeggioDirection(notes, pattern.direction);
   return applyRepeats(ordered, pattern.repeats);
 }
+
+export interface ScheduledArpeggioNote<T> {
+  note: T;
+  startOffsetMs: number;
+  durationMs: number;
+}
+
+const DEFAULT_LIVE_BEATS_PER_CHORD = 4;
+
+/**
+ * Plans live arpeggio playback inside a fixed chord slot.
+ *
+ * The progression player treats each chord duration as a 4-beat window and
+ * schedules arpeggio steps within that window using the selected subdivision
+ * and swing values. Notes that would begin after the chord window ends are
+ * omitted so playback advances cleanly to the next chord.
+ */
+export function planLiveArpeggioPlayback<T extends { index: number }>(
+  notes: ReadonlyArray<T>,
+  pattern: ArpeggioPattern,
+  chordDurationMs: number,
+  beatsPerChord: number = DEFAULT_LIVE_BEATS_PER_CHORD,
+): ScheduledArpeggioNote<T>[] {
+  if (notes.length === 0 || chordDurationMs <= 0) {
+    return [];
+  }
+
+  const sequence = generateArpeggioSequence(notes, pattern);
+  if (sequence.length === 0) {
+    return [];
+  }
+
+  const secondsPerBeat = chordDurationMs / 1000 / Math.max(1, beatsPerChord);
+  const noteSpanMs = getSubdivisionBeats(pattern.subdivision) * secondsPerBeat * 1000;
+  const offsetsMs = computeArpeggioStartOffsets(
+    sequence.length,
+    secondsPerBeat,
+    pattern.subdivision,
+    pattern.swingPercent,
+  ).map((offset) => offset * 1000);
+
+  const scheduled = sequence
+    .map((note, index) => ({
+      note,
+      startOffsetMs: offsetsMs[index] ?? index * noteSpanMs,
+    }))
+    .filter((step) => step.startOffsetMs < chordDurationMs);
+
+  return scheduled.map((step, index) => {
+    const nextStartOffsetMs = scheduled[index + 1]?.startOffsetMs;
+    const maxDurationMs = Math.max(0, chordDurationMs - step.startOffsetMs);
+    const durationMs = Math.min(
+      maxDurationMs,
+      nextStartOffsetMs === undefined
+        ? maxDurationMs
+        : Math.max(noteSpanMs, nextStartOffsetMs - step.startOffsetMs),
+    );
+
+    return {
+      note: step.note,
+      startOffsetMs: step.startOffsetMs,
+      durationMs,
+    };
+  });
+}

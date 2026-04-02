@@ -5,6 +5,7 @@ import {
   generateArpeggioSequence,
   getSubdivisionBeats,
   computeArpeggioStartOffsets,
+  planLiveArpeggioPlayback,
 } from "../arpeggioUtils";
 import type { ArpeggioPattern } from "../../types/arpeggioPattern";
 
@@ -191,5 +192,39 @@ describe("generateArpeggioSequence", () => {
 
   it("handles an empty note array", () => {
     expect(generateArpeggioSequence([], upOnce)).toEqual([]);
+  });
+});
+
+describe("planLiveArpeggioPlayback", () => {
+  const upOnce: ArpeggioPattern = {
+    direction: "up",
+    subdivision: "eighth",
+    swingPercent: 0,
+    repeats: 1,
+  };
+
+  it("maps an arpeggio into timed steps within the chord slot", () => {
+    const steps = planLiveArpeggioPlayback(CMaj, upOnce, 1200);
+
+    expect(steps).toHaveLength(3);
+    expect(steps.map((step) => step.note.index)).toEqual([0, 4, 7]);
+    expect(steps.map((step) => step.startOffsetMs)).toEqual([0, 150, 300]);
+    expect(steps.map((step) => step.durationMs)).toEqual([150, 150, 900]);
+  });
+
+  it("drops steps that would begin after the chord window ends", () => {
+    const steps = planLiveArpeggioPlayback(
+      CMaj,
+      { ...upOnce, subdivision: "quarter", repeats: 2 },
+      1200,
+    );
+
+    expect(steps.map((step) => step.note.index)).toEqual([0, 4, 7, 0]);
+    expect(steps.map((step) => step.startOffsetMs)).toEqual([
+      expect.closeTo(0, 6),
+      expect.closeTo(300, 6),
+      expect.closeTo(600, 6),
+      expect.closeTo(900, 6),
+    ]);
   });
 });

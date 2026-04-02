@@ -49,6 +49,8 @@ interface ProgressionSidebarProps {
   arpeggioEnabled?: boolean;
   /** Active arpeggio pattern for "Play All". */
   arpeggioPattern?: ArpeggioPattern;
+  /** Pitch class currently sounding in arpeggiated playback. */
+  playingPitchClass?: number | null;
   onToggleArpeggio?: () => void;
   onSetArpeggioPattern?: (pattern: ArpeggioPattern) => void;
 }
@@ -163,6 +165,7 @@ export function ProgressionSidebar({
   onSendBack,
   arpeggioEnabled = false,
   arpeggioPattern,
+  playingPitchClass = null,
   onToggleArpeggio,
   onSetArpeggioPattern,
 }: ProgressionSidebarProps) {
@@ -232,6 +235,7 @@ export function ProgressionSidebar({
           isLast={ci === chordCount - 1}
           isNew={newTileNodeIndex === nodeIndex}
           isPlaying={playingIndex === ci}
+          activeArpeggioPitchClass={playingIndex === ci ? playingPitchClass : null}
           onMoveUp={() => onMoveUp(ci)}
           onMoveDown={() => onMoveDown(ci)}
           onDelete={() => onDelete(ci)}

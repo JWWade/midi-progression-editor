@@ -16,6 +16,8 @@ interface NoteNodeProps {
   x: number;
   y: number;
   noteStyle: NoteStyle;
+  /** True when this note is the currently sounding arpeggio step. */
+  isArpeggioActive?: boolean;
   /** True when this note is the current drag-and-drop target. */
   isDropTarget: boolean;
   /** True when this note is selected in the tone info panel (not as a chord vertex). */
@@ -43,6 +45,7 @@ export const NoteNode = memo(function NoteNode({
   x,
   y,
   noteStyle,
+  isArpeggioActive = false,
   isDropTarget,
   isSelected,
   isInFromChord,
@@ -57,7 +60,13 @@ export const NoteNode = memo(function NoteNode({
     <g
       role="button"
       tabIndex={0}
-      aria-label={isInFromChord ? `${label}, chord tone` : label}
+      aria-label={
+        isArpeggioActive
+          ? `${label}, currently sounding`
+          : isInFromChord
+            ? `${label}, chord tone`
+            : label
+      }
       aria-pressed={isSelected}
       data-note-index={index}
       data-note-label={label}
@@ -120,6 +129,21 @@ export const NoteNode = memo(function NoteNode({
           stroke={noteStyle.fill}
           strokeWidth={2}
           opacity={0.7}
+          pointerEvents="none"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Active arpeggio-step ring */}
+      {isArpeggioActive && (
+        <circle
+          cx={x}
+          cy={y}
+          r={NODE_RADIUS + 10}
+          fill="none"
+          stroke={noteStyle.fill}
+          strokeWidth={3}
+          opacity={0.8}
           pointerEvents="none"
           aria-hidden="true"
         />

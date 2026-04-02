@@ -58,6 +58,16 @@
   line-height: 1.2;
 }
 
+.noteToken {
+  transition: color 0.1s ease, text-shadow 0.1s ease;
+}
+
+.noteActive {
+  color: var(--accent-color, var(--color-accent, #4f46e5));
+  text-shadow: 0 0 8px color-mix(in srgb, var(--accent-color, #4f46e5) 55%, transparent);
+  font-weight: 600;
+}
+
 /* ── Right-hand action area (playback + order controls) ──────────────────── */
 .tileActions {
   flex-shrink: 0;

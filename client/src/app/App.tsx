@@ -59,7 +59,19 @@ export default function App() {
 
   const { applyBridge, undoPending, undoBridge } = useBridgeApply(chords, setChords);
 
-  const { isPlaying, playingIndex, loop, play: onPlay, stop: onStop, toggleLoop, arpeggioEnabled, arpeggioPattern, toggleArpeggio, setArpeggioPattern } = useProgressionPlayback(chords, audioParams, chordDurationMs);
+  const {
+    isPlaying,
+    playingIndex,
+    playingPitchClass,
+    loop,
+    play: onPlay,
+    stop: onStop,
+    toggleLoop,
+    arpeggioEnabled,
+    arpeggioPattern,
+    toggleArpeggio,
+    setArpeggioPattern,
+  } = useProgressionPlayback(chords, audioParams, chordDurationMs);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
 
   const {
@@ -203,6 +215,7 @@ export default function App() {
             initialChordName={startupSelection.chordName}
             externalChord={playingChord}
             isPlaybackActive={isPlaying}
+            playingPitchClass={playingPitchClass}
             onCurrentChordChange={handleCurrentChordChange}
             onKeyScaleChange={handleKeyScaleChange}
             selectedScale={keyScale}
@@ -264,6 +277,7 @@ export default function App() {
             onSendBack={handleSendChordToCircle}
             arpeggioEnabled={arpeggioEnabled}
             arpeggioPattern={arpeggioPattern}
+            playingPitchClass={playingPitchClass}
             onToggleArpeggio={toggleArpeggio}
             onSetArpeggioPattern={setArpeggioPattern}
           />
