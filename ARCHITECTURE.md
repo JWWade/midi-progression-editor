@@ -166,6 +166,18 @@ client/
 │   │   │   ├── types/                   # BridgeSuggestion, BridgeType, BridgeRequest
 │   │   │   └── utils/                   # suggestBridges, buildBridge, scoreCandidate, bridgeLabel
 │   │   │
+│   │   ├── negative-harmony/             # Negative harmony pitch-class reflection transform
+│   │   │   ├── types/                   # Axis, TransformScope, NegativeHarmonyResult
+│   │   │   └── utils/                   # reflectPitchClass, applyNegativeHarmony
+│   │   │
+│   │   ├── tutorial/                     # Interactive first-use tutorial (tooltips & modals)
+│   │   │   ├── components/              # TutorialTooltip, TutorialModal
+│   │   │   ├── context/                 # TutorialContext, TutorialProvider
+│   │   │   ├── data/                    # tutorials.ts (TUTORIAL_CONTENT_VERSION, ALL_TUTORIAL_STEPS)
+│   │   │   ├── hooks/                   # useTutorial
+│   │   │   ├── types/                   # TutorialStep, TutorialDefinition, etc.
+│   │   │   └── utils/                   # triggerManager (action/state/idle/composite triggers)
+│   │   │
 │   │   └── voice-leading/                # Voice-leading path utilities
 │   │       └── utils/                   # closeVoiceChord, minimalMotionVoicing
 │   │

@@ -66,7 +66,7 @@ src/
 │   └── store/              # Global state management (placeholder)
 │
 └── features/               # Feature modules (feature-based architecture)
-    ├── audio/              # In-browser chord playback (Web Audio API)
+    ├── audio/              # In-browser chord playback (Web Audio API, chord and arpeggio mode)
     ├── chord/              # Core chord data, types, and utilities
     ├── chord-animation/    # Animated chord shape transitions (easeInOutCubic, 260 ms)
     ├── chord-geometry/     # Polygon vertex and centroid calculations
@@ -80,8 +80,10 @@ src/
     ├── ii-v-suggestions/   # Harmonic bridge suggestions (ii–V, tritone substitutions, backchains)
     ├── legend/             # Visual legend (chord quality colors, note opacity levels)
     ├── midi-export/        # MIDI file export (configurable BPM, beats/chord)
+    ├── negative-harmony/   # Negative harmony pitch-class reflection transform
     ├── progression-sidebar/# Chord progression sidebar (up to 8 chords, session-only)
     ├── scale/              # Scale generation and diatonic highlighting (8 modes)
+    ├── tutorial/           # Interactive first-use tutorial (tooltips & modals, localStorage persistence)
     └── voice-leading/      # Voice-leading path utilities
 ```
 

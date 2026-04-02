@@ -1,6 +1,6 @@
 # Documentation Audit — Parametric MIDI Sequencer
 
-**Audit date:** 2026-03-30
+**Audit date:** 2026-04-02 (updated; original 2026-03-30)
 **Auditor:** Copilot (automated audit via ISSUE-E9-08)
 **Scope:** All documentation artefacts — Markdown files, inline docs, schema/model
 definitions, code comments used as documentation, living documents.
@@ -14,18 +14,20 @@ root-level guides, a `/docs` folder with audit and reference files, a `/docs/spi
 subdirectory for exploratory research, and inline documentation embedded directly
 in source files.
 
-Documentation is generally of high quality and well-structured. This audit
-identified **two stale facts**, **two naming inconsistencies**, **two undocumented
-features**, and **one missing navigation artefact** (a central docs index). All
-gaps are catalogued below with recommended actions.
+Documentation is generally of high quality and well-structured. The initial audit
+(2026-03-30) identified **two stale facts**, **two naming inconsistencies**, **two
+undocumented features**, and **one missing navigation artefact**. All gaps from the
+initial audit were resolved. A follow-up pass (2026-04-02) found four additional gaps
+— two undocumented feature modules, two missing docs/README.md entries — and resolved
+all of them.
 
 | Category | Count | Action required |
 |---|---|---|
-| Canonical | 15 | Maintain — no changes |
+| Canonical | 17 | Maintain — no changes |
 | Derived | 4 | Keep in sync with upstream sources |
-| Stale | 2 | Fix immediately (inaccurate facts) |
+| Stale | 2 | ✅ Fixed (initial audit) |
 | Redundant | 0 | None found |
-| Missing | 3 | Create or update |
+| Missing | 7 | ✅ All fixed across both audit passes |
 
 ---
 
@@ -35,22 +37,25 @@ gaps are catalogued below with recommended actions.
 
 | File | Classification | Description | Notes |
 |---|---|---|---|
-| `README.md` | Canonical | Project overview, quick start, feature list, troubleshooting | Accurate and complete. Feature list does not include `harmonic-graph` module. |
-| `ARCHITECTURE.md` | Canonical | Full system architecture, layer diagrams, feature module table | Accurate. Matches implementation. |
+| `README.md` | Canonical | Project overview, quick start, feature list, troubleshooting | **Fixed (2026-04-02)**: removed BOM character, fixed double spaces, added `negative-harmony`, `tutorial`, `harmonic-graph`, `ii-v-suggestions` to feature list and project structure. |
+| `ARCHITECTURE.md` | Canonical | Full system architecture, layer diagrams, feature module table | **Fixed (2026-04-02)**: added `negative-harmony/` and `tutorial/` to directory tree. |
 | `CONTRIBUTING.md` | Canonical | Setup, testing, linting, PR workflow | Accurate. |
 
 ### 2.2 `/docs` — Reference and audit documents
 
 | File | Classification | Description | Notes |
 |---|---|---|---|
-| `docs/feature-module-convention.md` | Canonical | Folder structure, barrel export rules, feature table | **Fixed**: corrected `easeInOutQuad, 350 ms` → `easeInOutCubic, 260 ms`; added `harmonic-graph` to feature table. |
+| `docs/feature-module-convention.md` | Canonical | Folder structure, barrel export rules, feature table | **Fixed (initial)**: corrected `easeInOutQuad, 350 ms` → `easeInOutCubic, 260 ms`; added `harmonic-graph`. **Fixed (2026-04-02)**: added `negative-harmony` and `tutorial`. |
 | `docs/geometric-harmony-system.md` | Canonical | Coordinate system, intervals, polygon geometry, color schema, voice-leading formulas, animation rules, ii–V bridge model | Accurate and authoritative. Last updated 2026-03-21. |
+| `docs/glossary.md` | Canonical | Normative vocabulary for code, UI, and music-theory concepts | **Previously missing from `docs/README.md`**. Added to Reference Documents table (2026-04-02). |
 | `docs/accessibility-audit.md` | Canonical | WCAG compliance audit, keyboard navigation, screen reader gaps | Accurate. |
 | `docs/architecture-audit.md` | Canonical | Structural risk assessment, layer analysis, architectural recommendations | Accurate. |
 | `docs/data-model-audit.md` | Canonical | Schema inventory, six gap findings and fixes, stability assessment | Accurate. |
 | `docs/design-system-audit.md` | Canonical | CSS architecture, design tokens, color system, component catalogue | Accurate. |
+| `docs/dx-audit.md` | Canonical | Developer experience — setup, tooling, scripts, error handling, API evolution | Accurate. |
 | `docs/performance-audit.md` | Canonical | Render bottlenecks, state management, optimization recommendations | Accurate. |
 | `docs/tech-debt-audit.md` | Canonical | Technical debt inventory, refactoring candidates | Accurate. |
+| `docs/testing-audit.md` | Canonical | Test coverage inventory, gap analysis, and recommended tests | **Previously missing from `docs/README.md`**. Added to Audit Reports table (2026-04-02). |
 
 ### 2.3 `/docs/spikes` — Exploratory research documents
 
@@ -58,18 +63,21 @@ gaps are catalogued below with recommended actions.
 |---|---|---|---|
 | `docs/spikes/SPIKE-architecture-boundaries.md` | Canonical | Service layer patterns, cross-cutting concerns | Accurate. Follows SPIKE- naming convention. |
 | `docs/spikes/SPIKE-audiocontext-currenttime-sequencing.md` | Canonical | Web Audio API timing strategies | Accurate. Follows SPIKE- naming convention. |
+| `docs/spikes/SPIKE-cross-size-voice-leading.md` | Canonical | Cross-size chord distance for flexible voice-leading paths | **Previously missing from `docs/README.md`**. Added to Spike Investigations table (2026-04-02). |
 | `docs/spikes/SPIKE-design-system.md` | Canonical | Open design questions: icons, tokens, motion | Accurate. Follows SPIKE- naming convention. |
+| `docs/spikes/SPIKE-dx-setup.md` | Canonical | Prerequisite-check scripts and `generate:api` hardening | Accurate. Follows SPIKE- naming convention. |
+| `docs/spikes/SPIKE-ii-v-bridges.md` | Canonical | ii–V bridge and tritone substitution investigation | **Naming fixed (initial)**: renamed from `ii-v-bridges.md`. |
 | `docs/spikes/SPIKE-performance-hotspots.md` | Canonical | Critical bottleneck identification | Accurate. Follows SPIKE- naming convention. |
+| `docs/spikes/SPIKE-quartal-diatonic.md` | Canonical | Quartal harmony theory and diatonic generation | **Naming fixed (initial)**: renamed from `quartal-diatonic.md`. |
 | `docs/spikes/SPIKE-synchronized-chromatic-circle-animation.md` | Canonical | Synchronized polygon morphing design | Accurate. Follows SPIKE- naming convention. |
-| `docs/spikes/ii-v-bridges.md` | Canonical | ii–V bridge and tritone substitution investigation | **Naming fixed**: renamed to `SPIKE-ii-v-bridges.md`. |
-| `docs/spikes/quartal-diatonic.md` | Canonical | Quartal harmony theory and diatonic generation | **Naming fixed**: renamed to `SPIKE-quartal-diatonic.md`. |
+| `docs/spikes/negative-harmony.md` | Canonical | Architectural readiness and prototype for negative harmony transform | **Previously missing from `docs/README.md`**. Added to Spike Investigations table (2026-04-02). Does not follow SPIKE- naming convention — noted but not renamed. |
 | `docs/spikes/security-audit.md` | Canonical | Security vulnerability assessment | **Placement**: this is an audit document, not a spike. Noted but not moved — no consumers depend on its location. |
 
 ### 2.4 Sub-project README files
 
 | File | Classification | Description | Notes |
 |---|---|---|---|
-| `client/README.md` | Derived | Frontend tech stack, scripts, project structure, API client, testing | **Fixed**: corrected `easeInOutQuad, 350 ms` → `easeInOutCubic, 260 ms`; added `harmonic-graph` to feature list. |
+| `client/README.md` | Derived | Frontend tech stack, scripts, project structure, API client, testing | **Fixed (initial)**: corrected `easeInOutQuad, 350 ms` → `easeInOutCubic, 260 ms`; added `harmonic-graph`. **Fixed (2026-04-02)**: added `negative-harmony` and `tutorial`. |
 | `server/README.md` | Canonical | Backend scope, controllers, domain capabilities, architecture notes | Accurate. |
 | `server/CONTROLLER-REVIEW.md` | Canonical | Live controller walkthrough plan and session log | Working document; intentionally incomplete. |
 
@@ -143,12 +151,49 @@ though no functional harm results.
 **Action:** Note the mismatch here; leave the file in place to avoid breaking
 any existing links. Consider moving it to `docs/` in a future cleanup pass.
 
+### 3.7 ~~Missing: `negative-harmony` and `tutorial` feature modules in all documentation~~ — **Fixed (2026-04-02)**
+
+Two feature modules existed in `client/src/features/` but were not documented
+anywhere:
+
+- `negative-harmony/` — Negative harmony pitch-class reflection transform.
+  Implements `reflectPitchClass(p, centre) = ((2*centre - p) % 12 + 12) % 12`
+  with axis `centre = tonicRoot + 3.5`. Exports `reflectPitchClasses`,
+  `applyNegativeHarmonyToChord`, `applyNegativeHarmony`.
+- `tutorial/` — Interactive first-use tutorial. Provides `TutorialProvider`,
+  `useTutorial()` hook, trigger manager (action/state/idle/composite), localStorage
+  persistence, and `TutorialTooltip` / `TutorialModal` UI components.
+
+Both modules were added to:
+- `README.md` — feature list (About section) and Project Structure
+- `ARCHITECTURE.md` — directory tree
+- `docs/feature-module-convention.md` — Feature Overview table
+- `client/README.md` — project structure
+
+### 3.8 ~~Missing: `testing-audit.md`, `glossary.md`, two spikes from `docs/README.md`~~ — **Fixed (2026-04-02)**
+
+Four documents existed on disk but were not linked from `docs/README.md`:
+
+- `docs/testing-audit.md` — Added to Audit Reports table.
+- `docs/glossary.md` — Added to Reference Documents table.
+- `docs/spikes/SPIKE-cross-size-voice-leading.md` — Added to Spike Investigations table.
+- `docs/spikes/negative-harmony.md` — Added to Spike Investigations table.
+  Note: this file does not follow the `SPIKE-*.md` naming convention. The mismatch
+  is noted but the file is not renamed to avoid breaking existing links.
+
+### 3.9 ~~Stale: Root `README.md` formatting issues~~ — **Fixed (2026-04-02)**
+
+Two cosmetic issues in `README.md` were corrected:
+- UTF-8 BOM character (`\uFEFF`) at the start of the file — removed.
+- Section headers "Terminal 1  Backend" and "Terminal 2  Frontend" used double
+  spaces instead of an em dash — corrected to `Terminal 1 — Backend` / `Terminal 2 — Frontend`.
+
 ---
 
 ## 4. Conflicts Identified
 
 No conflicts (two documents asserting different canonical facts about the same
-concept) were found. The stale items in §3.2 and §3.3 are redundancies between
+concept) were found. The stale items in §3.2, §3.3, and §3.9 are redundancies between
 documentation and the source of truth in code — not conflicts between two
 documentation sources.
 
@@ -178,22 +223,28 @@ The current structure is clear and should be preserved:
     ├── README.md          # Central docs index
     ├── feature-module-convention.md
     ├── geometric-harmony-system.md
+    ├── glossary.md
     ├── accessibility-audit.md
     ├── architecture-audit.md
     ├── data-model-audit.md
     ├── design-system-audit.md
     ├── documentation-audit.md
+    ├── dx-audit.md
     ├── performance-audit.md
     ├── tech-debt-audit.md
+    ├── testing-audit.md
     └── spikes/
         ├── SPIKE-architecture-boundaries.md
         ├── SPIKE-audiocontext-currenttime-sequencing.md
+        ├── SPIKE-cross-size-voice-leading.md
         ├── SPIKE-design-system.md
+        ├── SPIKE-dx-setup.md
         ├── SPIKE-ii-v-bridges.md
         ├── SPIKE-performance-hotspots.md
         ├── SPIKE-quartal-diatonic.md
         ├── SPIKE-synchronized-chromatic-circle-animation.md
-        └── security-audit.md  # placement mismatch noted; not moved
+        ├── negative-harmony.md  # naming mismatch noted; not renamed
+        └── security-audit.md   # placement mismatch noted; not moved
 ```
 
 No structural changes (new top-level categories, moved directories) are required.
@@ -210,8 +261,12 @@ research) is an adequate and intuitive separation.
 | High | Fix stale easing/duration in feature-module-convention | ✅ Done | `docs/feature-module-convention.md` |
 | High | Fix stale easing/duration in client README | ✅ Done | `client/README.md` |
 | High | Add `harmonic-graph` to feature tables | ✅ Done | `docs/feature-module-convention.md`, `client/README.md` |
+| High | Add `negative-harmony` and `tutorial` to all feature tables | ✅ Done | `README.md`, `ARCHITECTURE.md`, `docs/feature-module-convention.md`, `client/README.md` |
+| High | Add missing docs to `docs/README.md` index | ✅ Done | `docs/README.md` (glossary, testing-audit, 2 spikes) |
+| High | Fix BOM and formatting in root `README.md` | ✅ Done | `README.md` |
 | Medium | Rename ii-v-bridges spike to follow convention | ✅ Done | `docs/spikes/SPIKE-ii-v-bridges.md` |
 | Medium | Rename quartal-diatonic spike to follow convention | ✅ Done | `docs/spikes/SPIKE-quartal-diatonic.md` |
+| Low | Consider renaming `negative-harmony.md` to `SPIKE-negative-harmony.md` | ⬜ Deferred | `docs/spikes/negative-harmony.md` |
 | Low | Consider moving security-audit to `docs/` | ⬜ Deferred | `docs/spikes/security-audit.md` |
 
 ---
@@ -237,4 +292,4 @@ made alongside this audit must pass all checks above.
 
 ---
 
-**Last Updated:** 2026-03-30
+**Last Updated:** 2026-04-02
