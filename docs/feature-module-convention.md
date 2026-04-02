@@ -64,8 +64,10 @@ export type { MyType } from './types';
 | `ii-v-suggestions` | Harmonic bridge suggestions (ii–V, tritone substitutions, backchains) |
 | `legend` | Visual legend component |
 | `midi-export` | MIDI file export (BPM, beats/chord) |
+| `negative-harmony` | Negative harmony pitch-class reflection transform (`reflectPitchClass`, `applyNegativeHarmony`) |
 | `progression-sidebar` | Chord progression sidebar (max 8 chords, session-only) |
 | `scale` | Scale generation and display |
+| `tutorial` | Interactive first-use tutorial — tooltip and modal UI, trigger manager, localStorage persistence |
 | `voice-leading` | Voice-leading path utilities |
 
 ### `chord-animation` vs `chord-morphing`
