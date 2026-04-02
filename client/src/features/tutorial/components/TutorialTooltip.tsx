@@ -4,9 +4,15 @@ import styles from './TutorialTooltip.module.css';
 
 export interface TutorialTooltipProps {
   step: TutorialStep;
+  /** 1-based position of this step within remaining steps (0 = unknown). */
+  stepIndex: number;
+  /** Total number of remaining (not yet completed/skipped) steps. */
+  totalSteps: number;
   onDismiss: () => void;
   onSkip: () => void;
   onSkipAll: () => void;
+  /** Temporarily pause tutorial prompts. */
+  onSnooze: () => void;
 }
 
 /**
@@ -20,12 +26,27 @@ export interface TutorialTooltipProps {
  */
 export function TutorialTooltip({
   step,
+  stepIndex,
+  totalSteps,
   onDismiss,
   onSkip,
   onSkipAll,
+  onSnooze,
 }: TutorialTooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const arrowRef = useRef<HTMLSpanElement>(null);
+
+  // Capture the element that had focus before the tooltip mounted so we can
+  // restore it when the tooltip is dismissed.
+  const returnFocusRef = useRef<Element | null>(null);
+  useEffect(() => {
+    returnFocusRef.current = document.activeElement;
+    return () => {
+      if (returnFocusRef.current instanceof HTMLElement) {
+        returnFocusRef.current.focus();
+      }
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const el = tooltipRef.current;
@@ -106,6 +127,8 @@ export function TutorialTooltip({
   // Whether this is a centred banner (no anchor) — determines initial class.
   // After mount, the layout effect will adjust if a target is found.
   const hasTarget = Boolean(step.targetSelector);
+  const showProgress = stepIndex > 0 && totalSteps > 0;
+  const descId = `tutorial-tooltip-desc-${step.id}`;
 
   return (
     <div
@@ -113,6 +136,7 @@ export function TutorialTooltip({
       role="dialog"
       aria-modal="false"
       aria-label={`Tutorial tip: ${step.title}`}
+      aria-describedby={descId}
       className={`${styles.tooltip} ${hasTarget ? '' : styles.centered}`}
       tabIndex={-1}
     >
@@ -130,9 +154,14 @@ export function TutorialTooltip({
           💡
         </span>
         <strong className={styles.title}>{step.title}</strong>
+        {showProgress && (
+          <span className={styles.progress} aria-label={`Step ${stepIndex} of ${totalSteps}`}>
+            {stepIndex}/{totalSteps}
+          </span>
+        )}
       </div>
 
-      <p className={styles.description}>{step.description}</p>
+      <p id={descId} className={styles.description}>{step.description}</p>
 
       <div className={styles.actions}>
         <button
@@ -149,6 +178,14 @@ export function TutorialTooltip({
           onClick={onSkip}
         >
           Skip
+        </button>
+        <button
+          type="button"
+          className={styles.snoozeBtn}
+          onClick={onSnooze}
+          aria-label="Snooze tutorial hints for 30 minutes"
+        >
+          Snooze
         </button>
         <button
           type="button"

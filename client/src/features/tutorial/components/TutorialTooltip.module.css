@@ -184,6 +184,38 @@
   border-radius: 2px;
 }
 
+/* ── Progress indicator ──────────────────────────────────────────────── */
+.progress {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ── Snooze button ───────────────────────────────────────────────────── */
+.snoozeBtn {
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: inherit;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.snoozeBtn:hover {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+}
+
+.snoozeBtn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 /* ── Retro theme overrides ───────────────────────────────────────────── */
 [data-theme="retro"] .tooltip {
   border-radius: 0;
@@ -196,4 +228,16 @@
   border-radius: 0;
   border: 2px solid;
   border-color: #dfdfdf #404040 #404040 #dfdfdf;
+}
+
+[data-theme="retro"] .snoozeBtn {
+  border-radius: 0;
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .tooltip,
+  .centered {
+    animation: none;
+  }
 }

@@ -4,9 +4,15 @@ import styles from './TutorialModal.module.css';
 
 export interface TutorialModalProps {
   step: TutorialStep;
+  /** 1-based position of this step within remaining steps (0 = unknown). */
+  stepIndex: number;
+  /** Total number of remaining (not yet completed/skipped) steps. */
+  totalSteps: number;
   onDismiss: () => void;
   onSkip: () => void;
   onSkipAll: () => void;
+  /** Temporarily pause tutorial prompts. */
+  onSnooze: () => void;
 }
 
 /**
@@ -17,11 +23,26 @@ export interface TutorialModalProps {
  */
 export function TutorialModal({
   step,
+  stepIndex,
+  totalSteps,
   onDismiss,
   onSkip,
   onSkipAll,
+  onSnooze,
 }: TutorialModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Capture the element that had focus before the modal mounted so we can
+  // restore it when the modal is dismissed.
+  const returnFocusRef = useRef<Element | null>(null);
+  useEffect(() => {
+    returnFocusRef.current = document.activeElement;
+    return () => {
+      if (returnFocusRef.current instanceof HTMLElement) {
+        returnFocusRef.current.focus();
+      }
+    };
+  }, []);
 
   // Move focus into the dialog on mount.
   useEffect(() => {
@@ -61,6 +82,8 @@ export function TutorialModal({
     return () => window.removeEventListener('keydown', handleKey, { capture: true });
   }, [onDismiss]);
 
+  const showProgress = stepIndex > 0 && totalSteps > 0;
+
   return (
     <div
       className={styles.backdrop}
@@ -85,6 +108,15 @@ export function TutorialModal({
           {step.title}
         </h2>
 
+        {showProgress && (
+          <p
+            className={styles.progressText}
+            aria-label={`Step ${stepIndex} of ${totalSteps}`}
+          >
+            {stepIndex} of {totalSteps}
+          </p>
+        )}
+
         <p id="tutorial-modal-desc" className={styles.description}>
           {step.description}
         </p>
@@ -107,13 +139,23 @@ export function TutorialModal({
           </button>
         </div>
 
-        <button
-          type="button"
-          className={styles.disableBtn}
-          onClick={onSkipAll}
-        >
-          Disable all hints
-        </button>
+        <div className={styles.footerActions}>
+          <button
+            type="button"
+            className={styles.snoozeBtn}
+            onClick={onSnooze}
+            aria-label="Snooze tutorial hints for 30 minutes"
+          >
+            Snooze (30 min)
+          </button>
+          <button
+            type="button"
+            className={styles.disableBtn}
+            onClick={onSkipAll}
+          >
+            Disable all hints
+          </button>
+        </div>
       </div>
     </div>
   );
