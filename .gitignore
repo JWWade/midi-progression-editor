@@ -10,3 +10,9 @@ client/dist/
 .vs/
 .vscode/
 *.user
+
+# Local-only private notes/diagrams
+docs/private-workflow-diagram.md
+
+# Future EPICs and issues
+issues\future-epics.md
