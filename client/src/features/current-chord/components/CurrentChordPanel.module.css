@@ -313,17 +313,21 @@
   color: #ff69b4;
   text-shadow: 0 0 6px #ff69b4;
   letter-spacing: 0.2em;
+  animation: retroNeonPulse 3s ease-in-out infinite;
+  animation-delay: 1.2s;
 }
 
 [data-theme="retro"] .chordName {
   color: #00ffff;
   text-shadow: 0 0 12px #00ffff, 0 0 24px rgba(0, 255, 255, 0.4);
   font-family: "Comic Sans MS", "Comic Sans", cursive;
+  animation: retroNeonPulse 2s ease-in-out infinite;
 }
 
 [data-theme="retro"] .placeholder {
   color: #ffff00;
   text-shadow: 0 0 8px #ffff00;
+  animation: retroBlink 1.8s step-end infinite;
 }
 
 [data-theme="retro"] .quality {
@@ -342,4 +346,12 @@
 
 [data-theme="retro"] .noteSeparator {
   color: #ff00ff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="retro"] .sectionLabel,
+  [data-theme="retro"] .chordName,
+  [data-theme="retro"] .placeholder {
+    animation: none;
+  }
 }

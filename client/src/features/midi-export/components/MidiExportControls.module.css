@@ -136,3 +136,70 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ── Retro theme overrides ────────────────────────────────────────────────── */
+[data-theme="retro"] .exportControls {
+  border-top: 2px solid #ff00ff;
+  background-color: var(--color-bg-surface);
+}
+
+[data-theme="retro"] .label {
+  color: #ffff00;
+  text-shadow: 0 0 6px #ffff00;
+  letter-spacing: 0.08em;
+}
+
+[data-theme="retro"] .bpmNumber {
+  color: #00ffff;
+  text-shadow: 0 0 8px #00ffff, 0 0 16px rgba(0, 255, 255, 0.5);
+  font-family: "Courier New", "Courier", monospace;
+  animation: retroFlicker 5s ease-in-out infinite;
+}
+
+[data-theme="retro"] .tempoLabel {
+  color: #ff69b4;
+  text-shadow: 0 0 6px #ff69b4;
+}
+
+[data-theme="retro"] .exportButton {
+  background: linear-gradient(135deg, #8800aa 0%, #ff00ff 50%, #8800aa 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid !important;
+  border-color: #ff88ff #660066 #660066 #ff88ff !important;
+  border-radius: 0 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 2px 2px 0 #440044, 0 0 10px rgba(255, 0, 255, 0.5) !important;
+  transition: none !important;
+  animation: retroGlow 2.5s ease-in-out infinite !important;
+}
+
+[data-theme="retro"] .exportButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #aa00cc 0%, #ff44ff 50%, #aa00cc 100%) !important;
+  opacity: 1 !important;
+  box-shadow: 2px 2px 0 #440044, 0 0 20px rgba(255, 0, 255, 0.8) !important;
+  animation: none !important;
+}
+
+[data-theme="retro"] .exportButton:active:not(:disabled) {
+  border-color: #660066 #ff88ff #ff88ff #660066 !important;
+  box-shadow: -1px -1px 0 #440044, 0 0 10px rgba(255, 0, 255, 0.5) !important;
+}
+
+[data-theme="retro"] .exportButton:disabled {
+  background: linear-gradient(135deg, #440066 0%, #880088 50%, #440066 100%) !important;
+  color: #aa88aa !important;
+  opacity: 1 !important;
+  box-shadow: 1px 1px 0 #440044 !important;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="retro"] .bpmNumber {
+    animation: none;
+  }
+  [data-theme="retro"] .exportButton {
+    animation: none !important;
+  }
+}
