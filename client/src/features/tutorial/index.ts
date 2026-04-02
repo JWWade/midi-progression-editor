@@ -17,3 +17,12 @@ export { useTutorial } from './hooks/useTutorial';
 export { TUTORIAL_CONTENT_VERSION, ALL_TUTORIAL_STEPS } from './data/tutorials';
 export { resolveActiveStep, evaluateTrigger } from './utils/triggerManager';
 export type { TriggerContext } from './utils/triggerManager';
+export {
+  validateTutorialDefinitions,
+  assertValidTutorialDefinitions,
+} from './utils/validateTutorialDefinitions';
+export type {
+  ValidationResult,
+  ValidationError,
+  ValidationWarning,
+} from './utils/validateTutorialDefinitions';

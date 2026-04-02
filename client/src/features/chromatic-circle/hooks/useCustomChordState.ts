@@ -20,6 +20,7 @@ const PRIMITIVE_SHAPE_META: Record<PrimitiveShape, { quality: ChordType; label: 
   "suspended-triangle": { quality: "major", label: "sus4 triangle" },
   rectangle: { quality: "dom7", label: "dominant 7" },
   square: { quality: "dim", label: "diminished" },
+  "symmetrical-trapezoid": { quality: "maj7", label: "major 7 trapezoid" },
 };
 interface UseCustomChordStateOptions {
   selectedChordName: string;
