@@ -15,6 +15,7 @@ export const EQUILATERAL_TRIANGLE_INTERVALS = [0, 4, 8] as const;
 export const SUSPENDED_TRIANGLE_INTERVALS = [0, 5, 7] as const;
 export const SQUARE_INTERVALS = [0, 3, 6, 9] as const;
 export const RECTANGLE_INTERVALS = [0, 4, 6, 10] as const;
+export const SYMMETRICAL_TRAPEZOID_INTERVALS = [0, 4, 7, 11] as const;
 
 const ROLES: ChordNoteInfo["role"][] = ["root", "third", "fifth", "seventh"];
 
@@ -124,6 +125,8 @@ export function getPrimitiveNoteIndices(root: number, shape: PrimitiveShape): nu
         ? SUSPENDED_TRIANGLE_INTERVALS
         : shape === "rectangle"
           ? RECTANGLE_INTERVALS
-          : SQUARE_INTERVALS;
+          : shape === "symmetrical-trapezoid"
+            ? SYMMETRICAL_TRAPEZOID_INTERVALS
+            : SQUARE_INTERVALS;
   return intervals.map((interval) => (root + interval) % 12);
 }

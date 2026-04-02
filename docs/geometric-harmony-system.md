@@ -363,6 +363,7 @@ sets that do not necessarily correspond to named tertian chords:
 | `"suspended-triangle"` | [0, 5, 7] | Sus4 voicing; non-equilateral triangle |
 | `"square"` | [0, 3, 6, 9] | Fully diminished seventh; four equal segments |
 | `"rectangle"` | [0, 4, 6, 10] | Dom7♭5 spacing; opposite pairs equal |
+| `"symmetrical-trapezoid"` | [0, 4, 7, 11] | Major 7 voicing; symmetrical trapezoid shape |
 
 Source: `client/src/features/chord/utils/transpose.ts`,
 `client/src/features/current-chord/types/index.ts`
