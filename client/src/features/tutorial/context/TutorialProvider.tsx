@@ -17,11 +17,19 @@ import {
   TUTORIAL_CONTENT_VERSION,
 } from '../data/tutorials';
 import { resolveActiveStep } from '../utils/triggerManager';
+import { assertValidTutorialDefinitions } from '../utils/validateTutorialDefinitions';
 import { TutorialTooltip } from '../components/TutorialTooltip';
 import { TutorialModal } from '../components/TutorialModal';
 import { createLogger } from '@/shared/utils/logger';
 
 const log = createLogger('tutorial');
+
+// ── Development-time validation ───────────────────────────────────────────
+// Runs once at module load in dev mode.  Throws on authoring errors so
+// problems are caught before they reach users.
+if (import.meta.env.DEV) {
+  assertValidTutorialDefinitions(ALL_TUTORIAL_STEPS);
+}
 
 // ── LocalStorage key ──────────────────────────────────────────────────────
 

@@ -10,6 +10,7 @@ export const PRIMITIVE_SHAPE_LABELS: Record<PrimitiveShape, string> = {
   "suspended-triangle": "sus4",
   square: "Diminished",
   rectangle: "Dominant 7",
+  "symmetrical-trapezoid": "Major 7",
 };
 
 export const CHORD_QUALITY_LABELS: Record<ChordType, string> = {
