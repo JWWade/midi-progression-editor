@@ -282,8 +282,16 @@ describe("getPrimitiveNoteIndices", () => {
     expect(getPrimitiveNoteIndices(0, "rectangle")).toEqual([0, 4, 6, 10]);
   });
 
+  it("symmetrical-trapezoid from root 0 → [0,4,7,11]", () => {
+    expect(getPrimitiveNoteIndices(0, "symmetrical-trapezoid")).toEqual([0, 4, 7, 11]);
+  });
+
+  it("symmetrical-trapezoid from root 2 (D) → [2,6,9,1]", () => {
+    expect(getPrimitiveNoteIndices(2, "symmetrical-trapezoid")).toEqual([2, 6, 9, 1]);
+  });
+
   it("all results are in range 0–11 for every shape and root", () => {
-    const shapes = ["equilateral-triangle", "suspended-triangle", "square", "rectangle"] as const;
+    const shapes = ["equilateral-triangle", "suspended-triangle", "square", "rectangle", "symmetrical-trapezoid"] as const;
     for (const shape of shapes) {
       for (let root = 0; root < 12; root++) {
         for (const idx of getPrimitiveNoteIndices(root, shape)) {

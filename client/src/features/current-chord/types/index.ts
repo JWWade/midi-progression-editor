@@ -1,7 +1,7 @@
 import type { ChordType } from "@/features/chord/types";
 import type { ChordExtension } from "@/features/chord/types";
 
-export type PrimitiveShape = "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle";
+export type PrimitiveShape = "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | "symmetrical-trapezoid";
 
 /**
  * Core domain model representing a single chord in the progression editor.
