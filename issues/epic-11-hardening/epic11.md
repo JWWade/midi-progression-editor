@@ -47,6 +47,13 @@ Recent fixes addressed immediate user-visible issues, but this epic hardens the 
 4. [ISSUE-E11-04](./ISSUE-E11-04.md) — Consolidate chord identity scoring and policy
 5. [ISSUE-E11-05](./ISSUE-E11-05.md) — Add parity and edge-case regression test net
 6. [ISSUE-E11-06](./ISSUE-E11-06.md) — Document hardening ownership and guardrails
+7. [ISSUE-E11-07](./ISSUE-E11-07.md) — Fix CI/security branch coverage blind spot on develop
+8. [ISSUE-E11-08](./ISSUE-E11-08.md) — Add API rate limiting and request-size guardrails
+9. [ISSUE-E11-09](./ISSUE-E11-09.md) — Reject invalid customNotes instead of silently discarding values
+10. [ISSUE-E11-10](./ISSUE-E11-10.md) — Add frontend API timeout and cancellation controls
+11. [ISSUE-E11-11](./ISSUE-E11-11.md) — Add structured server exception logging and trace correlation
+12. [ISSUE-E11-12](./ISSUE-E11-12.md) — Remove insecure HTTP API fallback outside local development
+13. [ISSUE-E11-13](./ISSUE-E11-13.md) — Eliminate silent audio preview failures and add diagnostics
 
 ## Recommended Execution Order
 
@@ -56,6 +63,13 @@ Recent fixes addressed immediate user-visible issues, but this epic hardens the 
 4. ISSUE-E11-04
 5. ISSUE-E11-05
 6. ISSUE-E11-06
+7. ISSUE-E11-07
+8. ISSUE-E11-09
+9. ISSUE-E11-08
+10. ISSUE-E11-11
+11. ISSUE-E11-12
+12. ISSUE-E11-10
+13. ISSUE-E11-13
 
 ## Expected Outcome
 
