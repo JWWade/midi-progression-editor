@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -7,6 +10,7 @@ using System.Text.Json;
 public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
+    private readonly WebApplicationFactory<Program> _factory;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -15,6 +19,7 @@ public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicatio
 
     public ProgressionControllerIntegrationTests(WebApplicationFactory<Program> factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -47,6 +52,47 @@ public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicatio
     {
         var response = await PostAnalyzeAsync("""{"chords": [{"root":"C","quality":"NotAQuality"}]}""");
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(12)]
+    [InlineData(99)]
+    public async Task PostAnalyze_CustomNotesOutOfRange_Returns400(int invalidValue)
+    {
+        var body = $$"""
+        {
+            "chords": [
+                { "root": "C", "quality": "Major", "customNotes": [0, 4, 7, {{invalidValue}}] }
+            ]
+        }
+        """;
+
+        var response = await PostAnalyzeAsync(body);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task PostAnalyze_CustomNotesWithDuplicates_Returns400()
+    {
+        var response = await PostAnalyzeAsync(
+            """{"chords": [{"root":"C","quality":"Major","customNotes":[0,4,7,7]}]}""");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task PostAnalyze_CustomNotesTooLong_Returns400()
+    {
+        var longCustomNotes = string.Join(",", Enumerable.Range(0, 13).Select(v => v % 12));
+        var body = $$"""{"chords":[{"root":"C","quality":"Major","customNotes":[{{longCustomNotes}}]}]}""";
+
+        var response = await PostAnalyzeAsync(body);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
     // ── Problem Details – content-type and schema ──────────────────────────────
@@ -100,6 +146,15 @@ public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicatio
         Assert.Empty(dto!.Steps);
         Assert.Equal(1.0, dto.ContinuityScore);
         Assert.Single(dto.TensionTrend);
+    }
+
+    [Fact]
+    public async Task PostAnalyze_CustomNotesValid_Returns200()
+    {
+        var response = await PostAnalyzeAsync(
+            """{"chords": [{"root":"C","quality":"Major","customNotes":[0,4,7]}]}""");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -199,6 +254,59 @@ public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicatio
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    [Fact]
+    public async Task PostAnalyze_ExceedsRateLimit_Returns429()
+    {
+        var body = """{"chords": [{"root":"C","quality":"Major"}]}""";
+        HttpStatusCode? terminalStatusCode = null;
+
+        for (int i = 0; i < 70; i++)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/Progression/analyze")
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Add("X-RateLimit-Key", "integration-rate-limit-test");
+
+            var response = await _client.SendAsync(request);
+            terminalStatusCode = response.StatusCode;
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                break;
+        }
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, terminalStatusCode);
+    }
+
+    [Fact]
+    public async Task PostAnalyze_UnhandledException_Returns500WithTraceId()
+    {
+        using var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Production");
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<IProgressionService>();
+                services.AddSingleton<IProgressionService, ThrowingProgressionService>();
+            });
+        });
+
+        using var client = factory.CreateClient();
+        var response = await client.PostAsync(
+            "/Progression/analyze",
+            new StringContent("""{"chords":[{"root":"C","quality":"Major"}]}""", Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        Assert.Equal(500, doc.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal("An unexpected error occurred.", doc.RootElement.GetProperty("title").GetString());
+
+        var traceId = doc.RootElement.GetProperty("traceId").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(traceId));
+    }
+
     // ── Lowercase frontend quality strings ────────────────────────────────────
 
     [Theory]
@@ -229,5 +337,11 @@ public class ProgressionControllerIntegrationTests : IClassFixture<WebApplicatio
     {
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<ProgressionAnalyzeResponseDto>(json, JsonOptions);
+    }
+
+    private sealed class ThrowingProgressionService : IProgressionService
+    {
+        public ProgressionAnalyzeResponseDto Analyze(List<ChordRef> chords)
+            => throw new InvalidOperationException("Simulated unhandled exception for integration testing.");
     }
 }

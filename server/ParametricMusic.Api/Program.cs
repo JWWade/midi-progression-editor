@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.OpenApi;
 using ParametricMusic.Api.Services;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +31,23 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddProblemDetails();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("ProgressionAnalyzePolicy", httpContext =>
+    {
+        var partitionKey = httpContext.Request.Headers["X-RateLimit-Key"].FirstOrDefault() ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+});
 
 // Register harmony-engine services for constructor injection in controllers.
 // Singletons are safe here because all services are stateless pure functions.
@@ -64,14 +83,35 @@ if (!app.Environment.IsDevelopment())
     {
         exceptionHandlerApp.Run(async context =>
         {
+            var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+            var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+            var traceId = context.TraceIdentifier;
+
+            if (exception is not null)
+            {
+                logger.LogError(
+                    exception,
+                    "Unhandled exception while processing {Method} {Path}. TraceId: {TraceId}",
+                    context.Request.Method,
+                    context.Request.Path,
+                    traceId);
+            }
+
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.Response.ContentType = "application/problem+json";
-            await context.Response.WriteAsJsonAsync(new { title = "An unexpected error occurred.", status = 500 });
+            var payload = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                title = "An unexpected error occurred.",
+                status = 500,
+                traceId,
+            });
+            await context.Response.WriteAsync(payload);
         });
     });
 }
 
 app.UseCors("LocalDev");
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

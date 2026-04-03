@@ -47,3 +47,12 @@ API endpoints are publicly callable and currently lack ASP.NET Core rate limitin
 ## Severity
 
 High
+
+## Implementation Status
+
+- [x] Added fixed-window rate limiting policy `ProgressionAnalyzePolicy` in `Program.cs`.
+- [x] Enabled `UseRateLimiter()` middleware in API startup pipeline.
+- [x] Applied endpoint rate limiting to `POST /Progression/analyze`.
+- [x] Added `customNotes` maximum length guardrail (`MaxLength(12)`) at request model boundary.
+- [x] Added integration coverage for oversized `customNotes` and throttling (`429`) behavior.
+- [ ] End-to-end Kestrel request-body-size enforcement verification (TestServer does not support `IHttpMaxRequestBodySizeFeature`).

@@ -8,7 +8,7 @@ namespace ParametricMusic.Api.Models;
 /// Identifies a chord either by its named root + quality or by an explicit
 /// set of pitch classes (for custom / non-tertian chords).
 /// </summary>
-public class ChordRef
+public class ChordRef : IValidatableObject
 {
     [JsonPropertyName("root")]
     [Required]
@@ -28,11 +28,39 @@ public class ChordRef
     /// that do not map to a named tertian quality.  When present and
     /// non-empty, the analyzer uses these pitch classes directly instead of
     /// deriving them from <see cref="Root"/> and <see cref="Quality"/>.
-    /// Out-of-range values are silently discarded.
+    /// Values must be in the inclusive range 0–11 and duplicates are not allowed.
     /// </summary>
     [JsonPropertyName("customNotes")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [MaxLength(12, ErrorMessage = "customNotes must not exceed 12 pitch classes.")]
     public int[]? CustomNotes { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (CustomNotes is null)
+            yield break;
+
+        var seen = new HashSet<int>();
+
+        for (int i = 0; i < CustomNotes.Length; i++)
+        {
+            var pitchClass = CustomNotes[i];
+            if (pitchClass is < 0 or > 11)
+            {
+                yield return new ValidationResult(
+                    $"customNotes[{i}] must be between 0 and 11.",
+                    [nameof(CustomNotes)]);
+                continue;
+            }
+
+            if (!seen.Add(pitchClass))
+            {
+                yield return new ValidationResult(
+                    $"customNotes contains duplicate value {pitchClass}.",
+                    [nameof(CustomNotes)]);
+            }
+        }
+    }
 }
 
 public class ProgressionAnalyzeRequestDto

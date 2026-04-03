@@ -1,12 +1,137 @@
 import createClient, { type Client } from "openapi-fetch";
 import type { components, paths } from "../generated";
 
-// Configure API client with base URL from environment.
-// Falls back to http://localhost:5110 for local development only —
-// set VITE_API_BASE_URL in .env.local (see .env.example) for any other environment.
-const baseUrl =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://localhost:5110";
+interface ApiRuntimeEnv {
+  DEV: boolean;
+  MODE?: string;
+  VITE_API_BASE_URL?: string;
+}
+
+export interface RequestControlOptions {
+  timeoutMs?: number;
+  signal?: AbortSignal;
+}
+
+export type ApiRequestErrorCode = "aborted" | "timeout" | "network";
+
+export class ApiRequestError extends Error {
+  constructor(
+    public readonly code: ApiRequestErrorCode,
+    message: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
+
+export function isApiRequestError(error: unknown): error is ApiRequestError {
+  return error instanceof ApiRequestError;
+}
+
+const DEFAULT_REQUEST_TIMEOUT_MS = 8000;
+
+export function resolveApiBaseUrl(env: ApiRuntimeEnv): string {
+  const configuredBaseUrl = env.VITE_API_BASE_URL?.trim();
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  if (env.DEV) {
+    return "http://localhost:5110";
+  }
+
+  const mode = env.MODE ?? "production";
+  throw new Error(
+    `Missing VITE_API_BASE_URL for ${mode} mode. Set an explicit API URL in your environment configuration.`,
+  );
+}
+
+const baseUrl = resolveApiBaseUrl(import.meta.env);
+
+function combineAbortSignals(signals: AbortSignal[]): {
+  signal: AbortSignal;
+  cleanup: () => void;
+} {
+  const controller = new AbortController();
+
+  if (signals.some((signal) => signal.aborted)) {
+    controller.abort();
+    return { signal: controller.signal, cleanup: () => undefined };
+  }
+
+  const abort = () => controller.abort();
+  for (const signal of signals) {
+    signal.addEventListener("abort", abort, { once: true });
+  }
+
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      for (const signal of signals) {
+        signal.removeEventListener("abort", abort);
+      }
+    },
+  };
+}
+
+function toApiRequestError(error: unknown, didTimeout: boolean, signal?: AbortSignal): ApiRequestError {
+  if (didTimeout) {
+    return new ApiRequestError("timeout", "API request timed out.", error);
+  }
+
+  if (signal?.aborted) {
+    return new ApiRequestError("aborted", "API request was aborted.", error);
+  }
+
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return new ApiRequestError("aborted", "API request was aborted.", error);
+  }
+
+  if (error instanceof Error) {
+    return new ApiRequestError("network", error.message, error);
+  }
+
+  return new ApiRequestError("network", `API request failed: ${String(error)}`, error);
+}
+
+export async function requestWithTimeout<T>(
+  request: (signal: AbortSignal) => Promise<T>,
+  options: RequestControlOptions = {},
+): Promise<T> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+  const timeoutController = new AbortController();
+  const signals = [timeoutController.signal];
+  if (options.signal) {
+    signals.push(options.signal);
+  }
+
+  const { signal, cleanup } = combineAbortSignals(signals);
+  let didTimeout = false;
+  const timeoutId = globalThis.setTimeout(() => {
+    didTimeout = true;
+    timeoutController.abort();
+  }, timeoutMs);
+
+  const abortError = () => new DOMException("Aborted", "AbortError");
+  const abortPromise = new Promise<never>((_, reject) => {
+    if (signal.aborted) {
+      reject(abortError());
+      return;
+    }
+
+    signal.addEventListener("abort", () => reject(abortError()), { once: true });
+  });
+
+  try {
+    return await Promise.race([request(signal), abortPromise]);
+  } catch (error) {
+    throw toApiRequestError(error, didTimeout, options.signal);
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+    cleanup();
+  }
+}
 
 /**
  * Pre-configured API client instance
@@ -46,15 +171,21 @@ const MIDI_TO_NOTE: Record<number, Note> = {
   11: "B",
 };
 
-export async function getHealth(): Promise<HealthResponse> {
-  const { data, error } = await client.GET("/Health");
-  if (error !== undefined) {
-    throw new Error(`Failed to fetch health status: ${String(error)}`);
-  }
-  return data;
+export async function getHealth(options: RequestControlOptions = {}): Promise<HealthResponse> {
+  return requestWithTimeout(async (signal) => {
+    const { data, error } = await client.GET("/Health", { signal });
+    if (error !== undefined) {
+      throw new ApiRequestError("network", `Failed to fetch health status: ${String(error)}`);
+    }
+    return data;
+  }, options);
 }
 
-export async function getScaleFromRoot(midiRoot: number, scaleType: ScaleType = "Major"): Promise<number[]> {
+export async function getScaleFromRoot(
+  midiRoot: number,
+  scaleType: ScaleType = "Major",
+  options: RequestControlOptions = {},
+): Promise<number[]> {
   // Convert MIDI note number to Note enum
   const noteIndex = midiRoot % 12;
   const note = MIDI_TO_NOTE[noteIndex];
@@ -63,14 +194,17 @@ export async function getScaleFromRoot(midiRoot: number, scaleType: ScaleType = 
     throw new Error(`Invalid note index: ${noteIndex}`);
   }
 
-  const { data, error } = await client.POST("/Scale/from-root", {
-    params: { query: { note } },
-    body: { scaleType },
-  });
-  if (error !== undefined) {
-    throw new Error(`Failed to fetch scale for root ${midiRoot}: ${String(error)}`);
-  }
-  return (data ?? []).map((noteInfo) => noteInfo.index ?? 0);
+  return requestWithTimeout(async (signal) => {
+    const { data, error } = await client.POST("/Scale/from-root", {
+      params: { query: { note } },
+      body: { scaleType },
+      signal,
+    });
+    if (error !== undefined) {
+      throw new ApiRequestError("network", `Failed to fetch scale for root ${midiRoot}: ${String(error)}`);
+    }
+    return (data ?? []).map((noteInfo) => noteInfo.index ?? 0);
+  }, options);
 }
 
 // Re-export all generated types and operations

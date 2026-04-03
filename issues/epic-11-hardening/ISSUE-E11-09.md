@@ -47,3 +47,11 @@ When `customNotes` contains out-of-range values, the analyzer silently filters t
 ## Severity
 
 Medium
+
+## Implementation Status
+
+- [x] `ChordRef.CustomNotes` now validates each element is within `0..11`.
+- [x] Duplicate `customNotes` values now produce validation failures.
+- [x] `ProgressionAnalyzer.GetSortedPitchClasses` no longer silently discards invalid values.
+- [x] Integration tests verify invalid `customNotes` payloads return `400`.
+- [x] Service tests verify invalid `customNotes` inputs throw instead of falling back.

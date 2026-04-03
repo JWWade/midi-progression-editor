@@ -78,8 +78,10 @@ export default function App() {
     isPreviewPlaying,
     previewBridge,
     previewInsertAfterIndex,
+    previewError,
     startPreview: onPreviewBridge,
     stopPreview: onStopPreview,
+    clearPreviewError,
   } = useBridgePreview(chordDurationMs, audioParams);
 
   // ARIA live region: announce chord name on each playback step; clear when stopped.
@@ -294,6 +296,12 @@ export default function App() {
         <Toast
           message={importError}
           action={{ label: 'Dismiss', onClick: () => setImportError(null) }}
+        />
+      )}
+      {previewError && (
+        <Toast
+          message={previewError}
+          action={{ label: 'Dismiss', onClick: clearPreviewError }}
         />
       )}
       <input

@@ -43,3 +43,10 @@ The API client falls back to `http://localhost:5110` whenever `VITE_API_BASE_URL
 ## Severity
 
 Medium
+
+## Implementation Status
+
+- [x] API client fallback to `http://localhost:5110` is now restricted to development mode only.
+- [x] Non-development startup now fails fast when `VITE_API_BASE_URL` is missing or blank.
+- [x] Added unit tests covering dev fallback, explicit URL usage, and non-dev failure paths.
+- [ ] Manual preview/prod deployment validation using environment-specific build pipeline.

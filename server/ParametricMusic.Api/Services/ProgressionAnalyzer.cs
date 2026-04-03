@@ -54,8 +54,7 @@ public class ProgressionAnalyzer : IProgressionService
     /// <summary>
     /// Resolves the sorted pitch-class array for a chord specified by root note name and quality.
     /// When <see cref="ChordRef.CustomNotes"/> is provided and non-empty, those pitch classes are used
-    /// directly instead of deriving them from root and quality. Out-of-range values (outside 0–11) are
-    /// silently discarded; duplicates are collapsed.
+    /// directly instead of deriving them from root and quality.
     /// </summary>
     /// <param name="chordRef">A chord reference containing a root note name, quality, and optional custom notes.</param>
     /// <returns>A sorted array of MIDI pitch classes (0–11) for the chord's tones.</returns>
@@ -65,16 +64,10 @@ public class ProgressionAnalyzer : IProgressionService
     /// </exception>
     private static int[] GetSortedPitchClasses(ChordRef chordRef)
     {
-        // When custom notes are provided, use them directly (filter out of range, deduplicate, sort).
         if (chordRef.CustomNotes is { Length: > 0 } customNotes)
         {
-            var valid = customNotes
-                .Where(pc => pc is >= 0 and <= 11)
-                .Distinct()
-                .OrderBy(pc => pc)
-                .ToArray();
-            if (valid.Length > 0)
-                return valid;
+            ValidateCustomNotes(customNotes);
+            return [.. customNotes.Order()];
         }
 
         if (!NoteExtensions.TryParse(chordRef.Root, out var note))
@@ -86,6 +79,21 @@ public class ProgressionAnalyzer : IProgressionService
 
         var rootIndex = (int)note;
         return [.. intervals.Select(i => (rootIndex + i) % 12).Order()];
+    }
+
+    private static void ValidateCustomNotes(int[] customNotes)
+    {
+        var seen = new HashSet<int>();
+
+        for (int i = 0; i < customNotes.Length; i++)
+        {
+            var pitchClass = customNotes[i];
+            if (pitchClass is < 0 or > 11)
+                throw new ArgumentException($"customNotes[{i}] must be between 0 and 11.");
+
+            if (!seen.Add(pitchClass))
+                throw new ArgumentException($"customNotes contains duplicate value {pitchClass}.");
+        }
     }
 
     /// <summary>
