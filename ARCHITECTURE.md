@@ -59,6 +59,54 @@
 4. **Backend** processes requests via Controllers and returns JSON
 5. **Frontend** renders responses using React components
 
+### Hardening Contracts (Epic 11, ISSUE-E11-01)
+
+The following contracts are canonical for geometry and custom-chord identity logic. Any new feature or refactor that touches these paths must preserve these boundaries.
+
+#### Visual Geometry Contract
+
+All rendered polygon inputs must be derived in this order:
+
+1. Normalize note values to pitch classes in 0..11.
+2. Deduplicate pitch classes.
+3. Circularly order notes for polygon traversal.
+4. Root-rotate ordering when root context exists.
+
+Do not create alternative ordering pipelines in rendering call sites.
+
+#### Custom-Chord Identity Contract
+
+Custom note-set labeling must follow one policy:
+
+1. Exact-match path: map to a known quality/pattern only when the full canonical match succeeds.
+2. Non-exact fallback path: when exact match fails, use deterministic fallback scoring/classification that avoids misleading labels.
+3. Display formatting path: apply naming/formatting only after identity resolution is complete.
+
+Do not collapse exact and fallback paths into ad-hoc UI heuristics.
+
+#### Ownership Boundaries
+
+- Low-level pitch-class operations: `client/src/features/chord/utils/`
+- Polygon ordering and geometry derivation: `client/src/features/chromatic-circle/utils/`
+- Identity scoring and policy: `client/src/features/current-chord/utils/`
+- Display naming formatting: `client/src/features/current-chord/utils/`
+
+Call sites in UI components should consume these utilities, not reimplement them.
+
+#### Migration Constraints and Non-Goals
+
+Migration constraints:
+
+- Prefer moving duplicated logic into canonical modules before adding new behavior.
+- Preserve current public API shapes unless a migration note is provided.
+- Add parity/regression tests whenever ownership moves across modules.
+
+Non-goals for this hardening lane:
+
+- Introducing new chord families or theory models.
+- Backend contract redesign.
+- UI redesign work unrelated to geometry/identity correctness.
+
 ---
 
 ## Frontend Architecture

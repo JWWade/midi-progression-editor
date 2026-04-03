@@ -51,10 +51,10 @@ Define which modules own:
 
 ## Acceptance Criteria
 
-- [ ] Contracts are written and discoverable in project docs.
-- [ ] Ownership boundaries are explicit enough to guide code review decisions.
-- [ ] Non-goals are documented to prevent scope creep.
+- [x] Contracts are written and discoverable in project docs.
+- [x] Ownership boundaries are explicit enough to guide code review decisions.
+- [x] Non-goals are documented to prevent scope creep.
 
 ## Verification
 
-- [ ] Team can identify one canonical module per responsibility without ambiguity.
+- [x] Team can identify one canonical module per responsibility without ambiguity.

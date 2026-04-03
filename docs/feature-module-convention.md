@@ -86,3 +86,47 @@ cd client
 npm run lint   # zero warnings allowed
 npm run build  # no TypeScript errors
 ```
+
+## Hardening Ownership Map (E11-01)
+
+For geometry and custom-chord identity, ownership is fixed to avoid cross-feature drift.
+
+### Canonical Module Ownership
+
+| Responsibility | Canonical Module |
+|---|---|
+| Low-level pitch-class normalization and deduplication | `features/chord/utils/` |
+| Polygon ordering and geometry derivation for rendering | `features/chromatic-circle/utils/` |
+| Custom-chord identity scoring and policy | `features/current-chord/utils/` |
+| Display naming and formatting after identity resolution | `features/current-chord/utils/` |
+
+### Contract Guardrails for Reviews
+
+Reviewers should reject changes that:
+
+- Reimplement pitch-class normalization or ordering inside component files.
+- Introduce separate identity heuristics in non-canonical modules.
+- Apply display formatting before identity policy resolution.
+
+### Geometry Derivation Contract
+
+Every polygon render path must use inputs that are:
+
+1. Normalized to pitch classes in 0..11.
+2. Deduplicated.
+3. Circularly ordered.
+4. Root-rotated when root context is known.
+
+### Identity Resolution Contract
+
+Custom note-set resolution must follow:
+
+1. Exact-match path.
+2. Deterministic non-exact fallback path.
+3. Display formatting path.
+
+### Non-Goals
+
+- No new chord taxonomy in this hardening pass.
+- No backend API model expansion in this hardening pass.
+- No visual redesign scoped under geometry/identity hardening issues.
