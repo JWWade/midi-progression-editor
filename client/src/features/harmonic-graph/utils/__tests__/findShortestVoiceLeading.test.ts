@@ -2,8 +2,12 @@ import { describe, it, expect } from "vitest";
 import { findShortestVoiceLeading } from "../findShortestVoiceLeading";
 import { buildChordGraph } from "../buildChordGraph";
 import {
+  getDefaultChordGraph,
+} from "../findShortestVoiceLeading";
+import {
   canonicalizeChord,
   chordDistance,
+  chordDistanceFlexible,
   chordMatching,
 } from "@/features/voice-leading";
 
@@ -268,6 +272,29 @@ describe("findShortestVoiceLeading — options object (Phase 3)", () => {
     expect(result!.totalDistance).toBeGreaterThanOrEqual(0);
   });
 
+// ---------------------------------------------------------------------------
+// findShortestVoiceLeading — default graph cache
+// ---------------------------------------------------------------------------
+
+describe("findShortestVoiceLeading — default graph cache", () => {
+  it("returns a stable default graph reference", () => {
+    const a = getDefaultChordGraph();
+    const b = getDefaultChordGraph();
+    expect(a).toBe(b);
+  });
+
+  it("default graph has expected triad-T node count", () => {
+    const graph = getDefaultChordGraph();
+    expect(graph.nodes).toHaveLength(19);
+  });
+
+  it("still allows a caller-supplied graph override", () => {
+    const sparseGraph = buildChordGraph(0);
+    const result = findShortestVoiceLeading([0, 4, 7], [0, 3, 7], sparseGraph);
+    expect(result).toBeNull();
+  });
+});
+
   it("options with canonicalization:'T' produces the same result as the legacy number API", () => {
     const legacyResult = findShortestVoiceLeading([0, 4, 7], [0, 3, 7]);
     const optionsResult = findShortestVoiceLeading(
@@ -353,5 +380,56 @@ describe("findShortestVoiceLeading — options object (Phase 3)", () => {
       triadGraph,
     );
     expect(result).toBeNull();
+  });
+
+  it("finds a triad-to-seventh path with mixed-size graph and flexible weightFn", () => {
+    const graph = buildChordGraph({
+      sizes: [3, 4],
+      weightFn: (a, b) => chordDistanceFlexible(a, b, { penalty: 2 }),
+    });
+
+    const result = findShortestVoiceLeading(
+      [0, 4, 7],
+      [0, 4, 7, 10],
+      graph,
+    );
+
+    expect(result).not.toBeNull();
+    const first = result!.nodes[0];
+    const last = result!.nodes[result!.nodes.length - 1];
+    expect(first.pcs).toHaveLength(3);
+    expect(last.pcs).toHaveLength(4);
+    expect(result!.totalDistance).toBeGreaterThanOrEqual(2);
+  });
+
+  it("auto-builds mixed-size graph via graphOptions and finds triad-to-seventh path", () => {
+    const result = findShortestVoiceLeading(
+      [0, 4, 7],
+      [0, 4, 7, 10],
+      undefined,
+      {
+        graphOptions: { sizes: [3, 4] },
+        weightFn: (a, b) => chordDistanceFlexible(a, b, { penalty: 2 }),
+      },
+    );
+
+    expect(result).not.toBeNull();
+    expect(result!.nodes[0].pcs).toHaveLength(3);
+    expect(result!.nodes[result!.nodes.length - 1].pcs).toHaveLength(4);
+  });
+
+  it("uses graphOptions canonicalization when canonicalization option is omitted", () => {
+    const result = findShortestVoiceLeading(
+      [0, 4, 7],
+      [0, 5, 8],
+      undefined,
+      {
+        graphOptions: { sizes: [3], canonicalization: "TI" },
+      },
+    );
+
+    expect(result).not.toBeNull();
+    expect(result!.totalDistance).toBe(0);
+    expect(result!.nodes).toHaveLength(1);
   });
 });

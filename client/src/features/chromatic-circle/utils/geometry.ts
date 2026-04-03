@@ -1,4 +1,8 @@
 import type { ChordType } from "@/features/chord/types";
+import {
+  normalizePitchClass,
+  uniqueSortedPitchClasses,
+} from "@/features/chord/utils/pitchClass";
 
 export interface Point {
   x: number;
@@ -47,4 +51,31 @@ export function calculatePolygonPoints(
       y: cy - circleRadius * Math.cos(angle),
     };
   });
+}
+
+/**
+ * Returns note indices in a stable circular order suitable for polygon drawing.
+ *
+ * - Removes duplicates.
+ * - Sorts notes in ascending chromatic index (clockwise ring order).
+ * - If `preferredRoot` is present in the set, rotates the ordered list so the
+ *   root is first while preserving circular order.
+ */
+export function orderPolygonNoteIndices(
+  noteIndices: readonly number[],
+  preferredRoot?: number,
+): number[] {
+  const unique = uniqueSortedPitchClasses(noteIndices);
+
+  if (unique.length <= 1 || preferredRoot === undefined) {
+    return unique;
+  }
+
+  const normalizedRoot = normalizePitchClass(preferredRoot);
+  const rootPos = unique.indexOf(normalizedRoot);
+  if (rootPos <= 0) {
+    return unique;
+  }
+
+  return [...unique.slice(rootPos), ...unique.slice(0, rootPos)];
 }

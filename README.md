@@ -1,4 +1,4 @@
-﻿# Parametric MIDI Sequencer  Web Prototype
+# Parametric MIDI Sequencer — Web Prototype
 
 [![CI](https://github.com/JWWade/midi-progression-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/JWWade/midi-progression-editor/actions/workflows/ci.yml)
 
@@ -17,9 +17,24 @@
 - Inspect individual tones: view note name, chord role, interval from root, and frequency
 - Switch between **Info mode** (click a note to inspect it) and **Select mode** (click notes to build a custom selection)
 - Toggle dark/light theme with persistent preference (stored in localStorage)
-- Play back chords with in-browser audio
+- Play back chords with in-browser audio (chord or arpeggio mode)
 - Export chord progressions as standard MIDI files (`.mid`) with configurable BPM and beats-per-chord
 - Generate scales from any root note via the backend API
+- Apply **negative harmony** transforms to chords and progressions
+- Get **ii–V bridge suggestions** (tritone substitutions, backchains) between chords
+- Explore the **harmonic graph**: shortest voice-leading path (Dijkstra) across all chord qualities
+- Follow an interactive **tutorial** that guides first-time users through core features
+
+## Architecture Overview
+
+```mermaid
+flowchart LR
+   U[User in Browser] --> F[React + TypeScript Frontend]
+   F -->|HTTP/JSON| A[ASP.NET Core Web API]
+   A --> S[Music Services]
+   F --> E[MIDI Export]
+   E --> O[.mid Output File]
+```
 
 ## Prerequisites
 
@@ -46,7 +61,7 @@ Both launchers start the backend on http://localhost:5110 and the frontend on ht
 
 ### Option 3: Manual Setup
 
-**Terminal 1  Backend**
+**Terminal 1 — Backend**
 
 ```bash
 cd server/ParametricMusic.Api
@@ -58,7 +73,7 @@ dotnet run
 - Swagger UI: http://localhost:5110/swagger
 - Health check: GET http://localhost:5110/health
 
-**Terminal 2  Frontend**
+**Terminal 2 — Frontend**
 
 ```bash
 cd client
@@ -68,6 +83,12 @@ npm run dev
 ```
 
 - App: http://localhost:5173
+
+## UI Preview
+
+![MIDI Progression Editor interface preview](docs/images/chromatic-circle-interface.png)
+
+The preview highlights the chromatic circle workspace, progression sidebar, and inspector panel.
 
 ## Environment Variables
 
@@ -168,7 +189,7 @@ midi-progression-editor/
           routes/         # Client-side routing (placeholder)
           store/          # Global state management (placeholder)
        features/    # Feature modules
-          audio/              # In-browser chord audio playback
+          audio/              # In-browser chord audio playback (chord and arpeggio mode)
           chord/              # Core chord data, types & utilities
           chord-animation/    # Animated chord shape transitions
           chord-geometry/     # Polygon vertex calculations
@@ -180,11 +201,12 @@ midi-progression-editor/
           current-chord/      # Current-chord info panel
           harmonic-graph/     # Harmonic relationship graph; shortest voice-leading path (Dijkstra)
           ii-v-suggestions/   # Harmonic bridge suggestions (ii–V, tritone substitutions, backchains)
-          intent-capture/     # User intent capture (IntentStore, captureIntent, Cmd/Ctrl+. hotkey)
           legend/             # Visual legend (chord quality colours, note opacity levels)
           midi-export/        # MIDI file export (BPM, beats/chord)
+          negative-harmony/   # Negative harmony pitch-class reflection transform
           progression-sidebar/ # Chord progression sidebar (max 8 chords)
           scale/              # Scale generation & display (8 modes)
+          tutorial/           # Interactive first-use tutorial (tooltips & modals)
           voice-leading/      # Voice-leading path utilities
        shared/      # Shared components, hooks, types & utilities
           types/CursorMode.ts # 'info' | 'select' cursor modes

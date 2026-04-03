@@ -154,11 +154,16 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed walkthrough and [docs/feat
 
 ## Making Changes
 
-1. **Create a branch** off `main`.
+1. **Create a branch** off `develop`.
 2. **Write or update tests** for your changes (see the existing test files in `__tests__/` subdirectories for examples).
 3. **Run lint and tests** locally before pushing (`npm run lint && npm test` for the frontend; `dotnet test` for the backend).
 4. **Regenerate the API client** if you changed any backend endpoint (`npm run generate:api` with the backend running).
-5. **Open a PR** against `main`. The CI pipeline will lint, test, and build both sides automatically.
+5. **Open a PR** against `develop`. The CI pipeline will lint, test, and build both sides automatically.
+
+### Required Checks Policy
+
+- CI and Security workflows are expected to run for pull requests targeting `develop` and `main`.
+- Configure repository branch protection so required checks block merges when CI or security scans fail.
 
 ---
 

@@ -47,6 +47,7 @@
 .controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -258,11 +259,15 @@
 
 [data-theme="retro"] .heading {
   color: #ffffff;
-  text-shadow: 0 0 8px #00ffff;
+  text-shadow: 0 0 8px #00ffff, 0 0 16px rgba(0, 255, 255, 0.4);
+  animation: retroNeonPulse 2.4s ease-in-out infinite;
+  animation-delay: 0.8s;
 }
 
 [data-theme="retro"] .count {
   color: #ffff00;
+  text-shadow: 0 0 6px #ffff00;
+  animation: retroFlicker 6s ease-in-out infinite;
 }
 
 [data-theme="retro"] .emptyMessage {
@@ -271,10 +276,43 @@
 }
 
 [data-theme="retro"] .emptyIcon {
-  opacity: 0.8;
-  filter: drop-shadow(0 0 8px #ff00ff);
+  opacity: 0.9;
+  filter: drop-shadow(0 0 10px #ff00ff);
+  animation: retroBounce 1.4s ease-in-out infinite;
 }
 
 [data-theme="retro"] .resetNote {
   color: #ff69b4;
+}
+
+[data-theme="retro"] .fullIndicator {
+  color: #ff69b4;
+  text-shadow: 0 0 6px #ff69b4;
+  border-top-color: #ff00ff;
+}
+
+[data-theme="retro"] .durationLabel {
+  color: #ffff00;
+  text-shadow: 0 0 4px #ffff00;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="retro"] .heading,
+  [data-theme="retro"] .count,
+  [data-theme="retro"] .emptyIcon {
+    animation: none;
+  }
+}
+
+/* ── Screen-reader-only utility (ARIA live region) ───────────────────────── */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

@@ -143,6 +143,11 @@ export const CircleControls = memo(function CircleControls({
       color: ChordQualityColors.dom7.base,
       fillColor: ChordQualityColors.dom7.fill,
     },
+    symmetricalTrapezoid: {
+      pitchClasses: [0, 4, 7, 11] as const,
+      color: ChordQualityColors.maj7.base,
+      fillColor: ChordQualityColors.maj7.fill,
+    },
   };
 
   return (
@@ -256,6 +261,21 @@ export const CircleControls = memo(function CircleControls({
                 color={templateIconProps.rectangle.color}
                 fillColor={templateIconProps.rectangle.fillColor}
                 isSelected={activeShape === "rectangle"}
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectShape("symmetrical-trapezoid")}
+              title="Select symmetrical trapezoid primitive (major 7)"
+              aria-label="Select symmetrical trapezoid primitive"
+              aria-pressed={activeShape === "symmetrical-trapezoid"}
+              style={getShapeButtonStyle(activeShape === "symmetrical-trapezoid")}
+            >
+              <TemplateShapeIcon
+                pitchClasses={templateIconProps.symmetricalTrapezoid.pitchClasses}
+                color={templateIconProps.symmetricalTrapezoid.color}
+                fillColor={templateIconProps.symmetricalTrapezoid.fillColor}
+                isSelected={activeShape === "symmetrical-trapezoid"}
               />
             </button>
             <button

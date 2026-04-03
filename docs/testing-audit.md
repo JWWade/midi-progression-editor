@@ -34,7 +34,6 @@ Coverage was run with `npm run test:coverage` (v8 provider).
 - `harmonic-graph/utils/*` (98–100%)
 - `chord-morphing/utils/*`, `chord-geometry/utils/*`, `chord-inspection/utils/*` (100%)
 - `ii-v-suggestions/utils/*` (94–100%)
-- `intent-capture/services/*` (100%)
 - `scale/utils/*` (scales, intervals: 100%)
 - `progression-sidebar/utils/*` (snapshotIO, pairMetrics: 100%)
 - `shared/types/*` (harmonySnapshot: 100%)

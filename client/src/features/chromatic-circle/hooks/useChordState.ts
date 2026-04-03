@@ -38,6 +38,7 @@ export function useChordState({
     handleRandomChord,
     handleMutateChord,
     handleSelectPrimitiveShape,
+    handleRerootChord,
   } = useCustomChordState({
     selectedChordName,
     setSelectedChordName,
@@ -150,5 +151,6 @@ export function useChordState({
     handleSelectPrimitiveShape,
     handleRandomChord,
     handleMutateChord,
+    handleRerootChord,
   };
 }

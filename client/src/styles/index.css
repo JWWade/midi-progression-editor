@@ -156,6 +156,56 @@ button:focus-visible {
   --color-accent-hover: #ff66ff;
 }
 
+/* ── Retro: keyframe animations ──────────────────────────────────────────── */
+@keyframes retroNeonPulse {
+  0%, 100% {
+    text-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 12px currentColor, 0 0 24px currentColor, 0 0 40px currentColor;
+  }
+}
+
+@keyframes retroRainbow {
+  0%   { color: #ff00ff; }
+  14%  { color: #ff4488; }
+  28%  { color: #ff8800; }
+  42%  { color: #ffff00; }
+  57%  { color: #00ff88; }
+  71%  { color: #00ffff; }
+  85%  { color: #8844ff; }
+  100% { color: #ff00ff; }
+}
+
+@keyframes retroBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes retroBounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-7px); }
+  60% { transform: translateY(-3px); }
+}
+
+@keyframes retroMarquee {
+  0%   { transform: translateX(110%); }
+  100% { transform: translateX(-110%); }
+}
+
+@keyframes retroFlicker {
+  0%, 90%, 100% { opacity: 1; }
+  92% { opacity: 0.75; }
+  94% { opacity: 1; }
+  96% { opacity: 0.55; }
+  98% { opacity: 1; }
+}
+
+@keyframes retroGlow {
+  0%, 100% { box-shadow: 0 0 6px #ff00ff, 0 0 10px #ff00ff, 2px 2px 0 #440044; }
+  50% { box-shadow: 0 0 12px #ff00ff, 0 0 24px #ff00ff, 0 0 36px rgba(255, 0, 255, 0.5), 2px 2px 0 #440044; }
+}
+
 /* ── Retro: starfield page background ───────────────────────────────────── */
 [data-theme="retro"] body {
   background-color: #000033;
@@ -177,6 +227,7 @@ button:focus-visible {
 [data-theme="retro"] h2,
 [data-theme="retro"] h3 {
   text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  animation: retroNeonPulse 2.4s ease-in-out infinite;
 }
 
 /* ── Retro: Windows 95 raised button bevel ───────────────────────────────── */
@@ -251,6 +302,58 @@ button:focus-visible {
 option {
   background-color: var(--color-bg-surface);
   color: var(--color-text-primary);
+}
+
+/* ── Retro: neon focus ring ──────────────────────────────────────────────── */
+[data-theme="retro"] button:focus-visible,
+[data-theme="retro"] input:focus-visible,
+[data-theme="retro"] select:focus-visible {
+  outline: 3px solid #ff00ff !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px #000033, 0 0 12px #ff00ff !important;
+}
+
+/* ── Retro: range/slider neon track ─────────────────────────────────────── */
+[data-theme="retro"] input[type="range"] {
+  height: 8px !important;
+  border-radius: 0 !important;
+  border: 2px inset !important;
+  border-color: #808080 #dfdfdf #dfdfdf #808080 !important;
+  background: linear-gradient(to right, #ff00ff, #8800ff, #0000ff) !important;
+  cursor: pointer !important;
+}
+
+[data-theme="retro"] input[type="range"]::-webkit-slider-thumb {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 16px !important;
+  height: 24px !important;
+  border-radius: 0 !important;
+  background: linear-gradient(to bottom, #eeeeee, #aaaaaa) !important;
+  border: 2px solid !important;
+  border-color: #ffffff #808080 #808080 #ffffff !important;
+  box-shadow: 1px 1px 0 #404040, -1px -1px 0 #ffffff inset !important;
+  cursor: pointer !important;
+}
+
+[data-theme="retro"] input[type="range"]::-moz-range-thumb {
+  width: 16px !important;
+  height: 24px !important;
+  border-radius: 0 !important;
+  background: linear-gradient(to bottom, #eeeeee, #aaaaaa) !important;
+  border: 2px solid !important;
+  border-color: #ffffff #808080 #808080 #ffffff !important;
+  box-shadow: 1px 1px 0 #404040 !important;
+  cursor: pointer !important;
+}
+
+/* ── Retro: prefers-reduced-motion — disable all retro animations ─────────── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="retro"] h1,
+  [data-theme="retro"] h2,
+  [data-theme="retro"] h3 {
+    animation: none;
+  }
 }
 
 /* ── Globally shared accessibility utility ───────────────────────────────── */

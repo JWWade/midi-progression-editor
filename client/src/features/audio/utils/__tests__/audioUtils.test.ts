@@ -170,7 +170,7 @@ describe("playChord natural-end cleanup", () => {
     const compressorNode = createdNodes.find((n) => n.threshold !== undefined);
     const oscillators = createdNodes.filter((n) => n.start !== undefined);
 
-    expect(gainNodes).toHaveLength(2);
+    expect(gainNodes).toHaveLength(3);
     expect(compressorNode).toBeDefined();
 
     // Nodes are not yet disconnected while the chord is sounding.

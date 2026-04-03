@@ -6,6 +6,23 @@ export interface ChordNode {
   pcs: number[];
 }
 
+/**
+ * A canonical graph node enriched with an inferred named-chord interpretation.
+ *
+ * Note: `root`/`quality` are inferred from `pcs` and are intended for display
+ * and labeling; canonical equivalence classes may admit multiple spellings.
+ */
+export interface DescribedChordNode extends ChordNode {
+  /** Inferred root pitch class (0–11). */
+  root: number;
+  /** Inferred chord quality. */
+  quality: import("@/features/chord/types").ChordType;
+  /** Compact chord symbol (e.g. C, Em, Gq). */
+  symbol: string;
+  /** Jaccard confidence score from the nearest-chord matcher (0–1). */
+  matchScore: number;
+}
+
 /** A weighted, undirected edge between two chord nodes. */
 export interface ChordEdge {
   /** `id` of the source node. */

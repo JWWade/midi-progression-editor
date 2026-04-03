@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { getChordName } from "@/features/chord/data/chordNames";
 import {
+  formatChordSymbol,
   formatChordName,
   formatPrimitiveChordName,
   CHORD_QUALITY_LABELS,
+  resolveChordIdentity,
 } from "@/features/current-chord/utils/chordName";
 import type { ChordType } from "@/features/chord/types";
 import type { Chord } from "@/features/current-chord/types";
@@ -111,6 +113,60 @@ describe("formatChordName", () => {
     const chord: Chord = { root: 3, quality: "minor" };
     expect(formatChordName(chord, flatPitchClasses)).toBe("Eb Minor");
   });
+
+  it("formats a rerooted custom E-G-C chord as E Minor", () => {
+    const chord: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
+    expect(formatChordName(chord)).toBe("E Minor");
+  });
+});
+
+describe("resolveChordIdentity", () => {
+  it("keeps named chord identity unchanged", () => {
+    const chord: Chord = { root: 0, quality: "major" };
+    expect(resolveChordIdentity(chord)).toEqual({ root: 0, quality: "major" });
+  });
+
+  it("anchors custom chord inference to the selected root", () => {
+    const eMinorLike: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
+    const gQuartalLike: Chord = { root: 7, quality: "major", customNotes: [7, 0, 4] };
+
+    expect(resolveChordIdentity(eMinorLike)).toEqual({ root: 4, quality: "minor" });
+    expect(resolveChordIdentity(gQuartalLike)).toEqual({ root: 7, quality: "quartal" });
+  });
+
+  it("does not label non-exact 4-note custom sets as quartal", () => {
+    const ambiguousFourNoteSet: Chord = {
+      root: 0,
+      quality: "quartal",
+      customNotes: [0, 10, 1, 5],
+    };
+
+    const resolved = resolveChordIdentity(ambiguousFourNoteSet);
+    expect(resolved.root).toBe(0);
+    expect(resolved.quality).not.toBe("quartal");
+  });
+
+  it("resolves noisy out-of-range custom notes to the same identity as normalized notes", () => {
+    const normalized: Chord = { root: 0, quality: "major", customNotes: [0, 4, 7] };
+    const noisy: Chord = { root: 0, quality: "major", customNotes: [12, -8, 4, 19, 7, 0] };
+
+    expect(resolveChordIdentity(noisy)).toEqual(resolveChordIdentity(normalized));
+  });
+});
+
+describe("formatChordSymbol", () => {
+  it("formats named chords as compact symbols", () => {
+    const chord: Chord = { root: 0, quality: "major" };
+    expect(formatChordSymbol(chord)).toBe("C");
+  });
+
+  it("formats rerooted custom chords as compact inferred symbols", () => {
+    const eMinorLike: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
+    const gQuartalLike: Chord = { root: 7, quality: "major", customNotes: [7, 0, 4] };
+
+    expect(formatChordSymbol(eMinorLike)).toBe("Em");
+    expect(formatChordSymbol(gQuartalLike)).toBe("Gq");
+  });
 });
 
 describe("formatPrimitiveChordName", () => {
@@ -124,9 +180,9 @@ describe("formatPrimitiveChordName", () => {
     expect(formatPrimitiveChordName(chord)).toBe("C sus4");
   });
 
-  it("returns '<root> Square' for square shape", () => {
-    const chord: Chord = { root: 7, quality: "major", primitiveShape: "square" };
-    expect(formatPrimitiveChordName(chord)).toBe("G Square");
+  it("returns '<root> Diminished' for square shape", () => {
+    const chord: Chord = { root: 7, quality: "dim", primitiveShape: "square" };
+    expect(formatPrimitiveChordName(chord)).toBe("G Diminished");
   });
 
   it("returns '<root> Equilateral Triangle' for equilateral-triangle shape", () => {

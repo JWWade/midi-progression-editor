@@ -254,32 +254,6 @@
   letter-spacing: 0.02em;
 }
 
-/* ── Capture idea button (shown when progression is full) ───────────────── */
-.captureButton {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 4px 10px;
-  border: 1.5px dashed var(--color-text-muted, #888);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-  white-space: nowrap;
-}
-
-.captureButton:hover {
-  background-color: color-mix(in srgb, var(--color-accent, #4f46e5) 10%, transparent);
-  color: var(--color-accent, #4f46e5);
-  border-color: var(--color-accent, #4f46e5);
-}
-
-.captureButton:focus-visible {
-  outline: 2px solid var(--color-accent, #4f46e5);
-  outline-offset: 2px;
-}
-
 [data-theme="dark"] .fullMessage {
   color: var(--color-text-muted);
 }
@@ -339,17 +313,21 @@
   color: #ff69b4;
   text-shadow: 0 0 6px #ff69b4;
   letter-spacing: 0.2em;
+  animation: retroNeonPulse 3s ease-in-out infinite;
+  animation-delay: 1.2s;
 }
 
 [data-theme="retro"] .chordName {
   color: #00ffff;
   text-shadow: 0 0 12px #00ffff, 0 0 24px rgba(0, 255, 255, 0.4);
   font-family: "Comic Sans MS", "Comic Sans", cursive;
+  animation: retroNeonPulse 2s ease-in-out infinite;
 }
 
 [data-theme="retro"] .placeholder {
   color: #ffff00;
   text-shadow: 0 0 8px #ffff00;
+  animation: retroBlink 1.8s step-end infinite;
 }
 
 [data-theme="retro"] .quality {
@@ -368,4 +346,12 @@
 
 [data-theme="retro"] .noteSeparator {
   color: #ff00ff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="retro"] .sectionLabel,
+  [data-theme="retro"] .chordName,
+  [data-theme="retro"] .placeholder {
+    animation: none;
+  }
 }

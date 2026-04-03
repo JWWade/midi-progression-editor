@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect } fr
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { getDiatonicIndices, PITCH_CLASSES, FLAT_PITCH_CLASSES } from "../utils";
 import { getCircleColorForTheme } from "../utils/circleColors";
-import { calculatePolygonPoints } from "../utils/geometry";
+import { calculatePolygonPoints, orderPolygonNoteIndices } from "../utils/geometry";
 import {
   VIEWBOX_SIZE,
   CENTER,
@@ -11,6 +11,8 @@ import {
   CIRCLE_PADDING,
 } from "../constants/visualConstants";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { getChordName } from "@/features/chord/data/chordNames";
+import { rerootChord } from "@/features/chord/utils/rerootChord";
 import type { ChordType } from "@/features/chord/types";
 import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import type { ScaleType } from "@/features/scale/types";
@@ -52,6 +54,14 @@ interface ChromaticCircleProps {
   externalChord?: Chord | null;
   /** When true, renders a pulsing ring to indicate active playback. */
   isPlaybackActive?: boolean;
+  /** Pitch class currently sounding during arpeggiated playback (0..11). */
+  playingPitchClass?: number | null;
+  /**
+   * When non-null, programmatically loads this chord into the circle's
+   * internal selection state. Each distinct object reference triggers a load,
+   * so spread a new object (`{ ...chord }`) to re-send the same chord.
+   */
+  loadChord?: Chord | null;
 }
 
 /**
@@ -75,6 +85,8 @@ export function ChromaticCircle({
   showIntervals: propShowIntervals = false,
   externalChord,
   isPlaybackActive = false,
+  playingPitchClass = null,
+  loadChord,
 }: ChromaticCircleProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
@@ -85,6 +97,11 @@ export function ChromaticCircle({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
+
+  /** Ephemeral announcement shown while hovering / focusing a chord vertex. */
+  const [previewAnnouncement, setPreviewAnnouncement] = useState("");
+  /** Track which chord vertex note is currently being hovered/previewed (for R key re-root). */
+  const hoveredVertexNoteRef = useRef<number | null>(null);
 
   const deselectTone = useCallback(() => setSelectedTone(null), []);
 
@@ -112,6 +129,7 @@ export function ChromaticCircle({
     handleSelectPrimitiveShape,
     handleRandomChord,
     handleMutateChord,
+    handleRerootChord,
   } = useChordState({
     onCurrentChordChange,
     onKeyScaleChange,
@@ -128,6 +146,28 @@ export function ChromaticCircle({
     },
     [setSelectedChordName, setCustomFromChord],
   );
+
+  // When a chord is sent back from the progression sidebar, load it into the
+  // circle's internal selection state. Each new object reference triggers a
+  // fresh load so that re-sending the same chord works correctly.
+  useEffect(() => {
+    if (!loadChord) return;
+    if (loadChord.customNotes) {
+      const customState = {
+        root: loadChord.root,
+        quality: loadChord.quality,
+        customNotes: loadChord.customNotes,
+        primitiveShape: loadChord.primitiveShape,
+      };
+      setCustomFromChord(customState);
+      onCurrentChordChange?.(loadChord);
+    } else {
+      setCustomFromChord(null);
+      setSelectedChordName(getChordName(loadChord.root, loadChord.quality));
+      // onCurrentChordChange is fired by the existing effect in useChordState
+      // once effectiveRoot/effectiveQuality update.
+    }
+  }, [loadChord, setCustomFromChord, setSelectedChordName, onCurrentChordChange]);
 
   // Ref that always holds the latest mutable state consumed by the stable note
   // event handlers below. Updated via useLayoutEffect (after each render) to
@@ -219,7 +259,31 @@ export function ChromaticCircle({
           activeElement.tagName === "SELECT" ||
           activeElement.tagName === "TEXTAREA" ||
           activeElement.isContentEditable);
-      if (isInFormControl || !e.ctrlKey) return;
+      if (isInFormControl) return;
+
+      // Handle R key to re-root from either selected note-node or hovered vertex.
+      if (e.key === "r" || e.key === "R") {
+        e.preventDefault();
+        const selectedIndex = selectedTone?.note.index;
+        const chordIndices = noteHandlerStateRef.current.chordIndices;
+
+        if (selectedIndex !== undefined && chordIndices.includes(selectedIndex)) {
+          const pitchClassLabel = pitchClasses[selectedIndex];
+          handleRerootChord(selectedIndex, pitchClassLabel);
+          return;
+        }
+
+        if (hoveredVertexNoteRef.current !== null) {
+          const noteIndex = hoveredVertexNoteRef.current;
+          const pitchClassLabel = pitchClasses[noteIndex];
+          handleRerootChord(noteIndex, pitchClassLabel);
+          return;
+        }
+
+        return;
+      }
+
+      if (!e.ctrlKey) return;
       if (e.key === "ArrowRight") {
         e.preventDefault();
         handleRotateChord("clockwise");
@@ -230,7 +294,7 @@ export function ChromaticCircle({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [deselectTone, handleRotateChord]);
+  }, [deselectTone, handleRotateChord, handleRerootChord, pitchClasses, selectedTone]);
 
   useEffect(() => {
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -272,6 +336,7 @@ export function ChromaticCircle({
         }))
       : transposeChord(baseIntervals, rootIndex, pitchClasses);
   const chordIndices = chordNotes.map((n) => n.index);
+  const orderedChordIndices = orderPolygonNoteIndices(chordIndices, rootIndex);
 
   // Sync noteHandlerStateRef with the latest derived values and state.  Using
   // useLayoutEffect ensures the ref is updated before the browser paints and
@@ -283,7 +348,7 @@ export function ChromaticCircle({
     noteHandlerStateRef.current.isDragging = isDragging;
     noteHandlerStateRef.current.handleNoteClick = handleNoteClick;
     noteHandlerStateRef.current.rootIndex = rootIndex;
-    noteHandlerStateRef.current.chordIndices = chordIndices;
+    noteHandlerStateRef.current.chordIndices = orderedChordIndices;
     noteHandlerStateRef.current.chordType = chordType;
   }, [
     suppressNextClick,
@@ -291,11 +356,11 @@ export function ChromaticCircle({
     isDragging,
     handleNoteClick,
     rootIndex,
-    chordIndices,
+    orderedChordIndices,
     chordType,
   ]);
 
-  const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
+  const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, orderedChordIndices);
 
   const { morphedPoints: fromMorphedPoints, morphProgress } = useChordMorphing(
     fromPoints,
@@ -321,6 +386,10 @@ export function ChromaticCircle({
   );
 
   const circleTransition = prefersReducedMotion ? undefined : "fill 0.4s ease";
+  const activeArpeggioPitchClass =
+    playingPitchClass === null
+      ? null
+      : ((playingPitchClass % 12) + 12) % 12;
 
   return (
     <div style={{ position: "relative", maxWidth: "100%", width: "100%" }}>
@@ -394,35 +463,59 @@ export function ChromaticCircle({
             showCentroid={propShowCentroid}
             centroid={fromCentroid}
             showIntervals={propShowIntervals}
-            chordIndices={chordIndices}
+            chordIndices={orderedChordIndices}
             pulse={pulseCount}
           />
 
-          {/* Chord polygon vertices */}
-          <g role="group" aria-label="From chord notes">
-          {chordNotes.map((note, i) => {
+          {/* Chord polygon vertices — click or press R/Enter/Space to re-root the chord */}
+          <g role="group" aria-label="Chord vertices — press R on a vertex to set it as root">
+          {orderedChordIndices.map((noteIndex, i) => {
             const point = fromPoints[i];
             const interval = baseIntervals[i];
-            const isSelected =
-              selectedTone?.isChordVertex === true &&
-              selectedTone?.note.index === note.index;
+            const isRoot = noteIndex === rootIndex;
+            const noteName = pitchClasses[noteIndex];
+
+            // Build accessible label: role name from the current root, action hint.
+            const roleLabel = getToneRole(interval, chordType);
+            const ariaLabel = isRoot
+              ? `${noteName}, current chord root`
+              : `${noteName}, vertex, ${roleLabel} from ${pitchClasses[rootIndex]}, press R to set as root`;
+
             if (point === undefined) return null;
             return (
               <ChordVertex
-                key={`from-vertex-${note.index}`}
-                noteName={note.name}
+                key={`from-vertex-${noteIndex}`}
                 point={point}
-                isSelected={isSelected}
+                isRoot={isRoot}
+                isSelected={false}
                 strokeColor={strokeColor}
-                onActivate={(e) => {
-                  e.stopPropagation();
-                  handleNoteClick(note.name, {
-                    note,
-                    frequency: noteIndexToFrequency(note.index),
-                    enharmonicEquivalent: getEnharmonicEquivalent(note.index, note.name),
-                    scaleDegree: getToneRole(interval, chordType),
-                    isChordVertex: true,
-                  });
+                ariaLabel={ariaLabel}
+                onRerootCommit={() => {
+                  handleRerootChord(noteIndex, noteName);
+                  setPreviewAnnouncement("");
+                }}
+                onRerootPreview={() => {
+                  hoveredVertexNoteRef.current = noteIndex;
+                  if (isRoot) {
+                    setPreviewAnnouncement(`${noteName} is the current chord root`);
+                    return;
+                  }
+                  const { quality, matchScore } = rerootChord(orderedChordIndices, noteIndex);
+                  const chordLabel = getChordName(noteIndex, quality, pitchClasses);
+                  if (matchScore === 1) {
+                    setPreviewAnnouncement(
+                      `Preview: ${noteName} as root. ${chordLabel} chord`,
+                    );
+                  } else {
+                    const noteNames = orderedChordIndices.map((idx) => pitchClasses[idx]).join(", ");
+                    setPreviewAnnouncement(
+                      `Preview: ${noteName} as root. No exact match. Notes: ${noteNames}`,
+                    );
+                  }
+                }}
+                onRerootPreviewClear={() => {
+                  hoveredVertexNoteRef.current = null;
+                  setPreviewAnnouncement("");
                 }}
               />
             );
@@ -449,6 +542,7 @@ export function ChromaticCircle({
                 x={x}
                 y={y}
                 noteStyle={noteStyle}
+                isArpeggioActive={isPlaybackActive && activeArpeggioPitchClass === i}
                 isDropTarget={isDragging && dragTargetIndex === i}
                 isSelected={isSelected}
                 isInFromChord={isInFromChord}
@@ -464,7 +558,7 @@ export function ChromaticCircle({
         </svg>
       </div>
 
-      {/* Accessible live region for drag/rotation announcements */}
+      {/* Accessible live region for drag/rotation/re-root commit announcements */}
       <div
         role="status"
         aria-live="polite"
@@ -480,6 +574,25 @@ export function ChromaticCircle({
         }}
       >
         {moveAnnouncement}
+      </div>
+
+      {/* Accessible live region for ephemeral re-root preview announcements */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: "hidden",
+          clip: "rect(0, 0, 0, 0)",
+          border: 0,
+        }}
+      >
+        {previewAnnouncement}
       </div>
 
       <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />

@@ -8,37 +8,62 @@ import {
 } from "../constants/visualConstants";
 
 interface ChordVertexProps {
-  noteName: string;
   point: Point;
+  /** True when this vertex is the current root of the chord. */
+  isRoot: boolean;
+  /** True when this vertex is visually highlighted as selected. */
   isSelected: boolean;
   strokeColor: string;
-  onActivate: (e: React.MouseEvent | React.KeyboardEvent) => void;
+  /** Full accessible label for the vertex (note, interval, and available actions). */
+  ariaLabel: string;
+  /** Called when the user commits re-rooting (click / Enter / Space / R). */
+  onRerootCommit: () => void;
+  /** Called on mouse-enter or focus to start an ephemeral preview. */
+  onRerootPreview: () => void;
+  /** Called on mouse-leave or blur to clear the preview. */
+  onRerootPreviewClear: () => void;
 }
 
 /**
- * A single clickable vertex dot rendered at a chord polygon corner.
- * Highlights when selected and supports keyboard activation.
+ * A single vertex dot rendered at a chord polygon corner.
+ *
+ * Clicking or pressing Enter, Space, or R commits a chord re-root to this note.
+ * Hovering or focusing the vertex triggers an ephemeral preview (announced via
+ * an external aria-live region).  Blurring or mouse-leaving clears the preview.
  *
  * Wrapped with React.memo so it only re-renders when its own props change.
  */
 export const ChordVertex = memo(function ChordVertex({
-  noteName,
   point,
+  isRoot,
   isSelected,
   strokeColor,
-  onActivate,
+  ariaLabel,
+  onRerootCommit,
+  onRerootPreview,
+  onRerootPreviewClear,
 }: ChordVertexProps) {
+  const isHighlighted = isRoot || isSelected;
+
   return (
     <g
       role="button"
       tabIndex={0}
-      aria-label={`${noteName} in chord`}
-      aria-pressed={isSelected}
-      onClick={onActivate}
+      aria-label={ariaLabel}
+      aria-pressed={isRoot}
+      onClick={(e) => {
+        e.stopPropagation();
+        onRerootCommit();
+      }}
+      onMouseEnter={onRerootPreview}
+      onMouseLeave={onRerootPreviewClear}
+      onFocus={onRerootPreview}
+      onBlur={onRerootPreviewClear}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onActivate(e);
+          e.stopPropagation();
+          onRerootCommit();
         }
       }}
       style={{ cursor: "pointer" }}
@@ -46,13 +71,13 @@ export const ChordVertex = memo(function ChordVertex({
       <circle
         cx={point.x}
         cy={point.y}
-        r={isSelected ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS}
-        fill={isSelected ? VERTEX_SELECTED_FILL : strokeColor}
-        stroke={isSelected ? VERTEX_SELECTED_STROKE : "none"}
-        strokeWidth={isSelected ? 2 : 0}
+        r={isHighlighted ? VERTEX_RADIUS_SELECTED : VERTEX_RADIUS}
+        fill={isHighlighted ? VERTEX_SELECTED_FILL : strokeColor}
+        stroke={isHighlighted ? VERTEX_SELECTED_STROKE : "none"}
+        strokeWidth={isHighlighted ? 2 : 0}
         aria-hidden="true"
       />
-      {isSelected && (
+      {isHighlighted && (
         <circle
           cx={point.x}
           cy={point.y}

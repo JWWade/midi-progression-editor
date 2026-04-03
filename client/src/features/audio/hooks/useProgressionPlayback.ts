@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { playChord, stopChord } from "../utils/audioUtils";
+import { playChord, stopChord, playArpeggio } from "../utils/audioUtils";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { isCustomChord } from "@/features/current-chord/utils/chordTypeGuards";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
@@ -7,14 +7,25 @@ import type { AudioParams } from "../constants/audioConfig";
 import { DEFAULT_AUDIO_PARAMS } from "../constants/audioConfig";
 import type { Chord } from "@/features/current-chord/types";
 import type { ChordNoteInfo } from "@/features/chord/types";
+import type { ArpeggioPattern } from "../types/arpeggioPattern";
+import { DEFAULT_ARPEGGIO_PATTERN } from "../types/arpeggioPattern";
+import { planLiveArpeggioPlayback } from "../utils/arpeggioUtils";
+import type { ArpeggioHandle } from "../utils/audioUtils";
 
 export interface UseProgressionPlaybackResult {
   isPlaying: boolean;
   playingIndex: number | null;
+  playingPitchClass: number | null;
   loop: boolean;
   play: () => void;
   stop: () => void;
   toggleLoop: () => void;
+  /** Whether "Play All" uses arpeggiated note sequences instead of block chords. */
+  arpeggioEnabled: boolean;
+  /** Active arpeggio pattern applied during "Play All". */
+  arpeggioPattern: ArpeggioPattern;
+  toggleArpeggio: () => void;
+  setArpeggioPattern: (pattern: ArpeggioPattern) => void;
 }
 
 export function useProgressionPlayback(
@@ -25,8 +36,14 @@ export function useProgressionPlayback(
   const { pitchClasses } = useEnharmonic();
   const [isPlaying, setIsPlaying] = useState(false);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [playingPitchClass, setPlayingPitchClass] = useState<number | null>(null);
   const [loop, setLoop] = useState(false);
+  const [arpeggioEnabled, setArpeggioEnabled] = useState(false);
+  const [arpeggioPattern, setArpeggioPattern] = useState<ArpeggioPattern>(DEFAULT_ARPEGGIO_PATTERN);
+
   const cancelledRef = useRef(false);
+  const activeArpeggioRef = useRef<ArpeggioHandle | null>(null);
+  const arpeggioUiTimerIdsRef = useRef<number[]>([]);
   // Keep a ref so the running loop always reads the latest duration without
   // needing to restart playback when the user changes the value.
   const chordDurationMsRef = useRef(chordDurationMs);
@@ -40,15 +57,37 @@ export function useProgressionPlayback(
     loopRef.current = loop;
   }, [loop]);
 
+  // Keep refs for arpeggio state so the async run loop reads the latest values.
+  const arpeggioEnabledRef = useRef(arpeggioEnabled);
+  useEffect(() => { arpeggioEnabledRef.current = arpeggioEnabled; }, [arpeggioEnabled]);
+
+  const arpeggioPatternRef = useRef(arpeggioPattern);
+  useEffect(() => { arpeggioPatternRef.current = arpeggioPattern; }, [arpeggioPattern]);
+
+  const clearArpeggioUiTimers = useCallback(() => {
+    for (const timerId of arpeggioUiTimerIdsRef.current) {
+      window.clearTimeout(timerId);
+    }
+    arpeggioUiTimerIdsRef.current = [];
+  }, []);
+
   const stop = useCallback(() => {
     cancelledRef.current = true;
+    activeArpeggioRef.current?.cancel();
+    activeArpeggioRef.current = null;
+    clearArpeggioUiTimers();
     stopChord();
     setIsPlaying(false);
     setPlayingIndex(null);
-  }, []);
+    setPlayingPitchClass(null);
+  }, [clearArpeggioUiTimers]);
 
   const toggleLoop = useCallback(() => {
     setLoop((prev) => !prev);
+  }, []);
+
+  const toggleArpeggio = useCallback(() => {
+    setArpeggioEnabled((prev) => !prev);
   }, []);
 
   const play = useCallback(() => {
@@ -68,27 +107,88 @@ export function useProgressionPlayback(
             : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses);
 
           setPlayingIndex(i);
-          await playChord(notes, { duration: chordDurationMsRef.current, audioParams });
+          setPlayingPitchClass(null);
+
+          if (arpeggioEnabledRef.current) {
+            const pattern = arpeggioPatternRef.current;
+            const scheduledNotes = planLiveArpeggioPlayback(
+              notes,
+              pattern,
+              chordDurationMsRef.current,
+            );
+            clearArpeggioUiTimers();
+            for (const step of scheduledNotes) {
+              const timerId = window.setTimeout(() => {
+                if (!cancelledRef.current) {
+                  setPlayingPitchClass(step.note.index);
+                }
+              }, step.startOffsetMs);
+              arpeggioUiTimerIdsRef.current.push(timerId);
+            }
+            const clearTimerId = window.setTimeout(() => {
+              if (!cancelledRef.current) {
+                setPlayingPitchClass(null);
+              }
+            }, chordDurationMsRef.current);
+            arpeggioUiTimerIdsRef.current.push(clearTimerId);
+
+            const handle = playArpeggio(
+              scheduledNotes.map((step) => step.note),
+              {
+                audioParams,
+                startOffsetsMs: scheduledNotes.map((step) => step.startOffsetMs),
+                noteDurationsMs: scheduledNotes.map((step) => step.durationMs),
+                totalDurationMs: chordDurationMsRef.current,
+              },
+            );
+            activeArpeggioRef.current = handle;
+            await handle.done;
+            clearArpeggioUiTimers();
+            setPlayingPitchClass(null);
+            if (activeArpeggioRef.current === handle) {
+              activeArpeggioRef.current = null;
+            }
+          } else {
+            activeArpeggioRef.current = null;
+            clearArpeggioUiTimers();
+            setPlayingPitchClass(null);
+            await playChord(notes, { duration: chordDurationMsRef.current, audioParams });
+          }
 
           if (cancelledRef.current) break;
         }
       } while (!cancelledRef.current && loopRef.current);
 
       if (!cancelledRef.current) {
+        clearArpeggioUiTimers();
         setIsPlaying(false);
         setPlayingIndex(null);
+        setPlayingPitchClass(null);
       }
     };
 
     run();
-  }, [chords, pitchClasses, audioParams]);
+  }, [chords, pitchClasses, audioParams, clearArpeggioUiTimers]);
 
   useEffect(() => {
     return () => {
       cancelledRef.current = true;
+      clearArpeggioUiTimers();
       stopChord();
     };
-  }, []);
+  }, [clearArpeggioUiTimers]);
 
-  return { isPlaying, playingIndex, loop, play, stop, toggleLoop };
+  return {
+    isPlaying,
+    playingIndex,
+    playingPitchClass,
+    loop,
+    play,
+    stop,
+    toggleLoop,
+    arpeggioEnabled,
+    arpeggioPattern,
+    toggleArpeggio,
+    setArpeggioPattern,
+  };
 }

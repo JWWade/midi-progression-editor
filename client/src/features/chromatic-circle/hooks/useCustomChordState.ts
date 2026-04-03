@@ -10,6 +10,7 @@ import {
   CHORD_INTERVALS,
 } from "@/features/chord/utils/transpose";
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
+import { rerootChord } from "@/features/chord/utils/rerootChord";
 import { CHORD_NAME_TO_DATA, getChordName } from "@/features/chord/data/chordNames";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { CustomChordState } from "../types";
@@ -17,8 +18,9 @@ import type { CustomChordState } from "../types";
 const PRIMITIVE_SHAPE_META: Record<PrimitiveShape, { quality: ChordType; label: string }> = {
   "equilateral-triangle": { quality: "aug", label: "equilateral triangle" },
   "suspended-triangle": { quality: "major", label: "sus4 triangle" },
-  rectangle: { quality: "dom7", label: "rectangle" },
-  square: { quality: "dim", label: "square" },
+  rectangle: { quality: "dom7", label: "dominant 7" },
+  square: { quality: "dim", label: "diminished" },
+  "symmetrical-trapezoid": { quality: "maj7", label: "major 7 trapezoid" },
 };
 interface UseCustomChordStateOptions {
   selectedChordName: string;
@@ -34,6 +36,7 @@ export interface CustomChordStateResult {
   handleRandomChord: () => void;
   handleMutateChord: () => void;
   handleSelectPrimitiveShape: (shape: PrimitiveShape) => void;
+  handleRerootChord: (newRoot: number, pitchClassLabel: string) => void;
 }
 
 export function useCustomChordState({
@@ -171,6 +174,53 @@ export function useCustomChordState({
     [customFromChord, selectedChordName, onCurrentChordChange, onAnnounce],
   );
 
+  const handleRerootChord = useCallback(
+    (newRoot: number, pitchClassLabel: string) => {
+      const currentNotes =
+        customFromChord?.customNotes ??
+        CHORD_INTERVALS[CHORD_NAME_TO_DATA[selectedChordName].type].map(
+          (i) => (CHORD_NAME_TO_DATA[selectedChordName].root + i) % 12,
+        );
+
+      // Find the index of newRoot in currentNotes
+      const rootIndex = currentNotes.indexOf(newRoot);
+      
+      // Reorder notes so newRoot is first (voicing inversion)
+      const rotatedNotes =
+        rootIndex === -1
+          ? currentNotes // newRoot not in chord, keep original order
+          : [
+              ...currentNotes.slice(rootIndex),
+              ...currentNotes.slice(0, rootIndex),
+            ];
+
+      const { root, quality, matchScore } = rerootChord(rotatedNotes, newRoot);
+
+      if (matchScore === 1) {
+        setCustomFromChord(null);
+        setSelectedChordName(getChordName(root, quality));
+        onCurrentChordChange?.({ root, quality });
+        onAnnounce?.(`Root set to ${pitchClassLabel}. ${getChordName(root, quality)} chord`);
+      } else {
+        const newChord: CustomChordState = { root, quality, customNotes: rotatedNotes };
+        setCustomFromChord(newChord);
+        onCurrentChordChange?.(newChord);
+        const noteNames = rotatedNotes.map((i) => PITCH_CLASSES[i]).join(", ");
+        onAnnounce?.(
+          `Root set to ${pitchClassLabel}. No exact chord match. Notes: ${noteNames}`,
+        );
+      }
+    },
+    [
+      customFromChord,
+      selectedChordName,
+      setSelectedChordName,
+      setCustomFromChord,
+      onCurrentChordChange,
+      onAnnounce,
+    ],
+  );
+
   return {
     customFromChord,
     setCustomFromChord,
@@ -179,5 +229,6 @@ export function useCustomChordState({
     handleRandomChord,
     handleMutateChord,
     handleSelectPrimitiveShape,
+    handleRerootChord,
   };
 }

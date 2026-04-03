@@ -1,5 +1,6 @@
 import type { Chord } from "@/features/current-chord/types";
 import type { ScaleContext } from "@/shared/types/ScaleContext";
+import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import { useMidiExport } from "../hooks/useMidiExport";
 import { getBpmTempoLabel } from "../utils/bpmTempoLabel";
 import { NoteValueSelector } from "./NoteValueSelector";
@@ -10,11 +11,13 @@ interface MidiExportControlsProps {
   chords: Chord[];
   disabled: boolean;
   scaleContext: ScaleContext | null;
+  /** When provided, MIDI export uses arpeggiated note sequences. */
+  arpeggioPattern?: ArpeggioPattern;
 }
 
-export function MidiExportControls({ chords, disabled, scaleContext }: MidiExportControlsProps) {
+export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPattern }: MidiExportControlsProps) {
   const { bpm, setBpm, beatsPerChord, setBeatsPerChord, exportMidi } =
-    useMidiExport(chords);
+    useMidiExport(chords, arpeggioPattern, scaleContext);
 
   const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
 

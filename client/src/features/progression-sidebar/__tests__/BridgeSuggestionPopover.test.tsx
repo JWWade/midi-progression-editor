@@ -29,7 +29,7 @@ function makeSuggestion(
 }
 
 const diatonicSuggestion = makeSuggestion([Dm7, G7], "diatonic-ii-v", 0.75);
-const tritoneSubSuggestion = makeSuggestion([Am7], "incomplete-ii", 0.4);
+const incompleteIISuggestion = makeSuggestion([Am7], "incomplete-ii", 0.4);
 
 // ── Default prop factory ─────────────────────────────────────────────────────
 
@@ -66,6 +66,72 @@ function renderPopover(
   );
 }
 
+// ── Tab bar ──────────────────────────────────────────────────────────────────
+
+describe("BridgeSuggestionPopover — tab bar", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(cleanup);
+
+  it("renders a tab for each unique bridge type in suggestions", () => {
+    renderPopover(
+      makeProps({ suggestions: [diatonicSuggestion, incompleteIISuggestion] }),
+    );
+
+    // "ii–V" tab for diatonic-ii-v, "Pre-ii" tab for incomplete-ii
+    expect(screen.getByRole("tab", { name: "ii–V" })).not.toBeNull();
+    expect(screen.getByRole("tab", { name: "Pre-ii" })).not.toBeNull();
+  });
+
+  it("renders a single tab when all suggestions share the same type", () => {
+    const second = makeSuggestion([G7], "diatonic-ii-v", 0.5);
+    renderPopover(makeProps({ suggestions: [diatonicSuggestion, second] }));
+
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs).toHaveLength(1);
+  });
+
+  it("defaults to the first tab (highest-scored type) as selected", () => {
+    renderPopover(
+      makeProps({ suggestions: [diatonicSuggestion, incompleteIISuggestion] }),
+    );
+
+    const firstTab = screen.getByRole("tab", { name: "ii–V" });
+    expect(firstTab.getAttribute("aria-selected")).toBe("true");
+
+    const secondTab = screen.getByRole("tab", { name: "Pre-ii" });
+    expect(secondTab.getAttribute("aria-selected")).toBe("false");
+  });
+
+  it("switching tabs updates the active selection and shows only that tab's suggestions", async () => {
+    renderPopover(
+      makeProps({ suggestions: [diatonicSuggestion, incompleteIISuggestion] }),
+    );
+
+    // Initially the diatonic suggestion is visible
+    expect(screen.queryByRole("button", { name: /Preview bridge.*Dm7/i })).not.toBeNull();
+
+    // Click the "Pre-ii" tab
+    await userEvent.click(screen.getByRole("tab", { name: "Pre-ii" }));
+
+    // The second tab is now selected
+    expect(screen.getByRole("tab", { name: "Pre-ii" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByRole("tab", { name: "ii–V" }).getAttribute("aria-selected")).toBe("false");
+
+    // The incomplete-ii suggestion (Am7) is now visible
+    expect(screen.queryByRole("button", { name: /Preview bridge.*Am7/i })).not.toBeNull();
+    // The diatonic suggestion (Dm7) is no longer visible
+    expect(screen.queryByRole("button", { name: /Preview bridge.*Dm7/i })).toBeNull();
+  });
+
+  it("does not render a tablist when suggestions is empty", () => {
+    renderPopover(makeProps({ suggestions: [] }));
+    expect(screen.queryByRole("tablist")).toBeNull();
+  });
+});
+
 // ── 6. Renders suggestion rows ───────────────────────────────────────────────
 
 describe("BridgeSuggestionPopover — suggestion rows", () => {
@@ -75,11 +141,13 @@ describe("BridgeSuggestionPopover — suggestion rows", () => {
 
   afterEach(cleanup);
 
-  it("renders a row for each suggestion with a ▶ preview button", () => {
-    renderPopover(makeProps({ suggestions: [diatonicSuggestion, tritoneSubSuggestion] }));
+  it("shows only the active tab's suggestions — one preview button per visible row", () => {
+    // Two suggestions of different types: only the first tab is active by default
+    renderPopover(makeProps({ suggestions: [diatonicSuggestion, incompleteIISuggestion] }));
 
+    // Only the diatonic suggestion is visible on the default "ii–V" tab
     const previewButtons = screen.getAllByRole("button", { name: /Preview bridge/i });
-    expect(previewButtons).toHaveLength(2);
+    expect(previewButtons).toHaveLength(1);
   });
 
   it("renders the label text for the suggestion", () => {

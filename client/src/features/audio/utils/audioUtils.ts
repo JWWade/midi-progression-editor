@@ -7,11 +7,17 @@ export interface PlayOptions {
   audioParams?: AudioParams;
 }
 
-let activeOscillators: OscillatorNode[] = [];
-let activeEnvelopeGain: GainNode | null = null;
-let activeMasterGain: GainNode | null = null;
-let activeCompressor: DynamicsCompressorNode | null = null;
 let audioCtx: AudioContext | null = null;
+
+interface PlaybackSession {
+  done: Promise<void>;
+  registerOscillator: (oscillator: OscillatorNode) => void;
+  registerNode: (node: AudioNode) => void;
+  scheduleTimeout: (callback: () => void, delayMs: number) => void;
+  stop: () => void;
+}
+
+let activeSession: PlaybackSession | null = null;
 
 export function initAudioContext(): AudioContext {
   if (!audioCtx || audioCtx.state === "closed") {
@@ -29,38 +35,251 @@ function noteIndexToFrequency(noteIndex: number, octave: number): number {
 
 /** Stops all playing oscillators and disconnects every active audio node. */
 export function stopChord(): void {
-  for (const osc of activeOscillators) {
-    try {
-      osc.stop();
-    } catch {
-      // already stopped
-    }
-    try {
-      osc.disconnect();
-    } catch {
-      // already disconnected
-    }
-  }
-  activeOscillators = [];
+  activeSession?.stop();
+  activeSession = null;
+}
 
-  try {
-    activeEnvelopeGain?.disconnect();
-  } catch {
-    // already disconnected
+export interface ArpeggioHandle {
+  /** Cancels ongoing arpeggio playback immediately. */
+  cancel: () => void;
+  /** Resolves when all notes have finished (or playback was cancelled). */
+  done: Promise<void>;
+}
+
+interface PlayArpeggioOptions extends PlayOptions {
+  startOffsetsMs?: ReadonlyArray<number>;
+  noteDurationsMs?: ReadonlyArray<number>;
+  totalDurationMs?: number;
+}
+
+function createPlaybackSession(): PlaybackSession {
+  const oscillators: OscillatorNode[] = [];
+  const nodes: AudioNode[] = [];
+  const timeoutIds: number[] = [];
+  let isStopped = false;
+  let resolveDone: (() => void) | null = null;
+
+  const done = new Promise<void>((resolve) => {
+    resolveDone = resolve;
+  });
+
+  const session: PlaybackSession = {
+    done,
+    registerOscillator: (oscillator) => {
+      oscillators.push(oscillator);
+    },
+    registerNode: (node) => {
+      nodes.push(node);
+    },
+    scheduleTimeout: (callback, delayMs) => {
+      const timeoutId = window.setTimeout(callback, delayMs);
+      timeoutIds.push(timeoutId);
+    },
+    stop: () => {
+      if (isStopped) {
+        return;
+      }
+
+      isStopped = true;
+
+      for (const timeoutId of timeoutIds) {
+        window.clearTimeout(timeoutId);
+      }
+
+      for (const oscillator of oscillators) {
+        try {
+          oscillator.stop();
+        } catch {
+          // already stopped
+        }
+        try {
+          oscillator.disconnect();
+        } catch {
+          // already disconnected
+        }
+      }
+
+      for (const node of nodes) {
+        try {
+          node.disconnect();
+        } catch {
+          // already disconnected
+        }
+      }
+
+      if (activeSession === session) {
+        activeSession = null;
+      }
+      resolveDone?.();
+      resolveDone = null;
+    },
+  };
+
+  return session;
+}
+
+function createOutputChain(
+  ctx: AudioContext,
+  audioParams: AudioParams,
+  session: PlaybackSession,
+): GainNode {
+  const masterGainNode = ctx.createGain();
+  masterGainNode.gain.value = audioParams.masterVolume;
+
+  const compressor = ctx.createDynamicsCompressor();
+  compressor.threshold.value = audioParams.compressorThreshold;
+  compressor.ratio.value = audioParams.compressorRatio;
+  compressor.knee.value = 6;
+  compressor.attack.value = 0.003;
+  compressor.release.value = 0.25;
+
+  masterGainNode.connect(compressor);
+  compressor.connect(ctx.destination);
+
+  session.registerNode(masterGainNode);
+  session.registerNode(compressor);
+
+  return masterGainNode;
+}
+
+function scheduleEnvelope(
+  envelopeGainNode: GainNode,
+  startTime: number,
+  durationSec: number,
+  scaleFactor: number,
+  audioParams: AudioParams,
+): void {
+  const endTime = startTime + Math.max(0, durationSec);
+  const attackPeakGain = audioParams.attackPeak * scaleFactor;
+  const sustainGain = audioParams.sustainLevel * scaleFactor;
+  const attackEndTime = Math.min(endTime, startTime + audioParams.attackTime);
+  const decayEndTime = Math.min(endTime, attackEndTime + audioParams.decayTime);
+  const releaseStartTime = Math.max(
+    decayEndTime,
+    endTime - Math.min(audioParams.releaseTime, durationSec),
+  );
+
+  envelopeGainNode.gain.setValueAtTime(0, startTime);
+
+  if (attackEndTime > startTime) {
+    envelopeGainNode.gain.linearRampToValueAtTime(attackPeakGain, attackEndTime);
+  } else {
+    envelopeGainNode.gain.setValueAtTime(attackPeakGain, attackEndTime);
   }
-  try {
-    activeMasterGain?.disconnect();
-  } catch {
-    // already disconnected
+
+  if (decayEndTime > attackEndTime) {
+    envelopeGainNode.gain.linearRampToValueAtTime(sustainGain, decayEndTime);
+  } else {
+    envelopeGainNode.gain.setValueAtTime(sustainGain, decayEndTime);
   }
-  try {
-    activeCompressor?.disconnect();
-  } catch {
-    // already disconnected
+
+  if (releaseStartTime > decayEndTime) {
+    envelopeGainNode.gain.setValueAtTime(sustainGain, releaseStartTime);
   }
-  activeEnvelopeGain = null;
-  activeMasterGain = null;
-  activeCompressor = null;
+
+  envelopeGainNode.gain.linearRampToValueAtTime(0, endTime);
+}
+
+function scheduleNotePlayback(
+  ctx: AudioContext,
+  session: PlaybackSession,
+  masterGainNode: GainNode,
+  noteIndex: number,
+  octave: number,
+  startTime: number,
+  durationSec: number,
+  audioParams: AudioParams,
+  simultaneousNoteCount: number,
+): void {
+  const envelopeGainNode = ctx.createGain();
+  envelopeGainNode.connect(masterGainNode);
+  session.registerNode(envelopeGainNode);
+
+  const scaleFactor = audioParams.scaleGainByNoteCount
+    ? 1 / Math.max(1, simultaneousNoteCount)
+    : 1;
+  scheduleEnvelope(envelopeGainNode, startTime, durationSec, scaleFactor, audioParams);
+
+  const oscillator = ctx.createOscillator();
+  oscillator.type = audioParams.oscillatorType;
+  oscillator.frequency.value = noteIndexToFrequency(noteIndex, octave);
+  oscillator.connect(envelopeGainNode);
+  oscillator.start(startTime);
+  oscillator.stop(startTime + durationSec);
+  session.registerOscillator(oscillator);
+}
+
+/**
+ * Plays the given notes one by one in sequence (arpeggiated).
+ *
+ * Returns a handle with:
+ * - `cancel()` — stop playback early and silence any playing note.
+ * - `done` — a Promise that resolves once all notes have played or playback
+ *   is cancelled.
+ *
+ * @param notes        Ordered list of note indices to play.
+ * @param options      Standard `PlayOptions`; `duration` is per-note (default 280 ms).
+ */
+export function playArpeggio(
+  notes: ReadonlyArray<{ index: number }>,
+  options: PlayArpeggioOptions = {},
+): ArpeggioHandle {
+  const { duration = 280, octave = 4, audioParams = DEFAULT_AUDIO_PARAMS } = options;
+  stopChord();
+
+  const run = async (): Promise<ArpeggioHandle> => {
+    const ctx = initAudioContext();
+
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+    }
+
+    const session = createPlaybackSession();
+    activeSession = session;
+
+    const now = ctx.currentTime;
+    const masterGainNode = createOutputChain(ctx, audioParams, session);
+    const startOffsetsMs = notes.map((_, index) => options.startOffsetsMs?.[index] ?? index * duration);
+    const noteDurationsMs = notes.map((_, index) => Math.max(0, options.noteDurationsMs?.[index] ?? duration));
+    const fallbackTotalDurationMs = notes.reduce((maxEnd, _, index) => {
+      const end = (startOffsetsMs[index] ?? 0) + (noteDurationsMs[index] ?? duration);
+      return Math.max(maxEnd, end);
+    }, 0);
+    const totalDurationMs = Math.max(
+      0,
+      options.totalDurationMs ?? fallbackTotalDurationMs,
+    );
+
+    notes.forEach((note, index) => {
+      scheduleNotePlayback(
+        ctx,
+        session,
+        masterGainNode,
+        note.index,
+        octave,
+        now + (startOffsetsMs[index] ?? 0) / 1000,
+        (noteDurationsMs[index] ?? duration) / 1000,
+        audioParams,
+        1,
+      );
+    });
+
+    session.scheduleTimeout(() => session.stop(), totalDurationMs);
+
+    return {
+      cancel: () => session.stop(),
+      done: session.done,
+    };
+  };
+
+  const pendingHandle = run();
+
+  return {
+    cancel: () => {
+      pendingHandle.then((handle) => handle.cancel());
+    },
+    done: pendingHandle.then((handle) => handle.done),
+  };
 }
 
 export async function playChord(
@@ -79,104 +298,24 @@ export async function playChord(
 
   const now = ctx.currentTime;
   const durationSec = duration / 1000;
+  const session = createPlaybackSession();
+  activeSession = session;
+  const masterGainNode = createOutputChain(ctx, audioParams, session);
 
-  // Create envelope (ADSR) gain node
-  const envelopeGainNode = ctx.createGain();
-
-  // Create master volume node
-  const masterGainNode = ctx.createGain();
-  masterGainNode.gain.value = audioParams.masterVolume;
-
-  // Create and connect compressor for safety (always on)
-  const compressor = ctx.createDynamicsCompressor();
-  compressor.threshold.value = audioParams.compressorThreshold;
-  compressor.ratio.value = audioParams.compressorRatio;
-  compressor.knee.value = 6;
-  compressor.attack.value = 0.003;
-  compressor.release.value = 0.25;
-
-  // Signal chain: envelope → master volume → compressor → output
-  envelopeGainNode.connect(masterGainNode);
-  masterGainNode.connect(compressor);
-  compressor.connect(ctx.destination);
-
-  // Track nodes so stopChord() can disconnect them if called early
-  activeEnvelopeGain = envelopeGainNode;
-  activeMasterGain = masterGainNode;
-  activeCompressor = compressor;
-
-  // Scale the attack peak by note count if enabled
-  const scaleFactor = audioParams.scaleGainByNoteCount ? 1 / notes.length : 1;
-  const attackPeakGain = audioParams.attackPeak * scaleFactor;
-
-  // ADSR envelope on the envelope gain node
-  envelopeGainNode.gain.setValueAtTime(0, now);
-  envelopeGainNode.gain.linearRampToValueAtTime(attackPeakGain, now + audioParams.attackTime);
-  envelopeGainNode.gain.linearRampToValueAtTime(
-    audioParams.sustainLevel * scaleFactor,
-    now + audioParams.attackTime + audioParams.decayTime,
-  );
-  envelopeGainNode.gain.setValueAtTime(
-    audioParams.sustainLevel * scaleFactor,
-    now + durationSec - audioParams.releaseTime,
-  );
-  envelopeGainNode.gain.linearRampToValueAtTime(0, now + durationSec);
-
-  // Create and start oscillators
   for (const note of notes) {
-    const frequency = noteIndexToFrequency(note.index, octave);
-    const osc = ctx.createOscillator();
-    osc.type = audioParams.oscillatorType;
-    osc.frequency.value = frequency;
-    osc.connect(envelopeGainNode);
-    osc.start(now);
-    osc.stop(now + durationSec);
-    activeOscillators.push(osc);
+    scheduleNotePlayback(
+      ctx,
+      session,
+      masterGainNode,
+      note.index,
+      octave,
+      now,
+      durationSec,
+      audioParams,
+      notes.length,
+    );
   }
 
-  // Snapshot this call's oscillator list so the cleanup closure below doesn't
-  // accidentally disconnect nodes that belong to a subsequent playChord call.
-  const oscillatorsForThisCall = activeOscillators.slice();
-
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Disconnect oscillators created in this call (local snapshot).
-      // stopChord() may have already disconnected these; the try-catch silently
-      // swallows errors from nodes that are already disconnected.
-      for (const osc of oscillatorsForThisCall) {
-        try {
-          osc.disconnect();
-        } catch {
-          // already disconnected by stopChord
-        }
-      }
-
-      // Disconnect the shared audio chain using local closure references so we
-      // always clean up even when stopChord() already cleared the module refs.
-      // The try-catch handles the case where stopChord() disconnected first.
-      try {
-        envelopeGainNode.disconnect();
-      } catch {
-        // already disconnected by stopChord
-      }
-      try {
-        masterGainNode.disconnect();
-      } catch {
-        // already disconnected by stopChord
-      }
-      try {
-        compressor.disconnect();
-      } catch {
-        // already disconnected by stopChord
-      }
-
-      // Clear module-level refs only if they still point to our nodes —
-      // a subsequent playChord call may have already replaced them.
-      if (activeEnvelopeGain === envelopeGainNode) activeEnvelopeGain = null;
-      if (activeMasterGain === masterGainNode) activeMasterGain = null;
-      if (activeCompressor === compressor) activeCompressor = null;
-
-      resolve();
-    }, duration);
-  });
+  session.scheduleTimeout(() => session.stop(), duration);
+  return session.done;
 }

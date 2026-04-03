@@ -1,6 +1,10 @@
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { ChordNoteInfo, ChordType } from "../types";
 import type { PrimitiveShape } from "@/features/current-chord/types";
+import {
+  dedupeNormalizedPitchClasses,
+  normalizePitchClass,
+} from "./pitchClass";
 
 export const MAJOR_INTERVALS = [0, 4, 7] as const;
 export const MINOR_INTERVALS = [0, 3, 7] as const;
@@ -15,6 +19,7 @@ export const EQUILATERAL_TRIANGLE_INTERVALS = [0, 4, 8] as const;
 export const SUSPENDED_TRIANGLE_INTERVALS = [0, 5, 7] as const;
 export const SQUARE_INTERVALS = [0, 3, 6, 9] as const;
 export const RECTANGLE_INTERVALS = [0, 4, 6, 10] as const;
+export const SYMMETRICAL_TRAPEZOID_INTERVALS = [0, 4, 7, 11] as const;
 
 const ROLES: ChordNoteInfo["role"][] = ["root", "third", "fifth", "seventh"];
 
@@ -45,7 +50,7 @@ export function transposeChord(
   pitchClasses: readonly string[] = PITCH_CLASSES,
 ): ChordNoteInfo[] {
   return baseIntervals.map((interval, i) => {
-    const index = (interval + rootIndex) % 12;
+    const index = normalizePitchClass(interval + rootIndex);
     return {
       index,
       name: pitchClasses[index],
@@ -83,21 +88,21 @@ export function getChordNoteIndices(root: number, quality: ChordType): number[] 
  * Positive values move clockwise on the chromatic circle.
  */
 export function rotateChordNotes(noteIndices: number[], semitones: number): number[] {
-  return noteIndices.map((index) => ((index + semitones) % 12 + 12) % 12);
+  return noteIndices.map((index) => normalizePitchClass(index + semitones));
 }
 
 /**
  * Returns a wrapped root index after semitone rotation.
  */
 export function rotateNamedChordRoot(root: number, semitones: number): number {
-  return ((root + semitones) % 12 + 12) % 12;
+  return normalizePitchClass(root + semitones);
 }
 
 /**
  * Removes duplicate pitch classes while preserving first-seen order.
  */
 export function dedupePitchClasses(noteIndices: number[]): number[] {
-  return [...new Set(noteIndices)];
+  return dedupeNormalizedPitchClasses(noteIndices);
 }
 
 /**
@@ -110,7 +115,7 @@ export function dedupePitchClasses(noteIndices: number[]): number[] {
  * mirrorChordAboutRoot([0, 4, 7], 0) // → [0, 8, 5]
  */
 export function mirrorChordAboutRoot(noteIndices: number[], root: number): number[] {
-  return noteIndices.map((note) => ((2 * root - note) % 12 + 12) % 12);
+  return noteIndices.map((note) => normalizePitchClass(2 * root - note));
 }
 
 /**
@@ -124,6 +129,8 @@ export function getPrimitiveNoteIndices(root: number, shape: PrimitiveShape): nu
         ? SUSPENDED_TRIANGLE_INTERVALS
         : shape === "rectangle"
           ? RECTANGLE_INTERVALS
-          : SQUARE_INTERVALS;
-  return intervals.map((interval) => (root + interval) % 12);
+          : shape === "symmetrical-trapezoid"
+            ? SYMMETRICAL_TRAPEZOID_INTERVALS
+            : SQUARE_INTERVALS;
+  return intervals.map((interval) => normalizePitchClass(root + interval));
 }
