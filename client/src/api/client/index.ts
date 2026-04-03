@@ -15,12 +15,17 @@ export interface RequestControlOptions {
 export type ApiRequestErrorCode = "aborted" | "timeout" | "network";
 
 export class ApiRequestError extends Error {
+  readonly code: ApiRequestErrorCode;
+  override readonly cause?: unknown;
+
   constructor(
-    public readonly code: ApiRequestErrorCode,
+    code: ApiRequestErrorCode,
     message: string,
-    public readonly cause?: unknown,
+    cause?: unknown,
   ) {
     super(message);
+    this.code = code;
+    this.cause = cause;
     this.name = "ApiRequestError";
   }
 }
