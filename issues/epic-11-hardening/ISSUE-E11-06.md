@@ -30,10 +30,10 @@ This is the sustainability layer for E11: after refactors and tests are in place
 
 ## Acceptance Criteria
 
-- [ ] Documentation clearly identifies single-source ownership boundaries.
-- [ ] Contributors have a concise checklist for extending chord rendering logic safely.
-- [ ] Guardrail recommendations are actionable and repository-appropriate.
+- [x] Documentation clearly identifies single-source ownership boundaries.
+- [x] Contributors have a concise checklist for extending chord rendering logic safely.
+- [x] Guardrail recommendations are actionable and repository-appropriate.
 
 ## Verification
 
-- [ ] A new contributor can identify canonical modules for geometry and identity logic in under five minutes from docs alone.
+- [x] A new contributor can identify canonical modules for geometry and identity logic in under five minutes from docs alone.

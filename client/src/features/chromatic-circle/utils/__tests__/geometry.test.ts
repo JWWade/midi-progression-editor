@@ -96,8 +96,16 @@ describe("orderPolygonNoteIndices", () => {
     expect(orderPolygonNoteIndices([10, 0, 1, 10, 6])).toEqual([0, 1, 6, 10]);
   });
 
+  it("normalizes out-of-range and negative note indices", () => {
+    expect(orderPolygonNoteIndices([-1, 11, 23, 12, 0, -12])).toEqual([0, 11]);
+  });
+
   it("rotates ordered indices so preferred root is first when present", () => {
     expect(orderPolygonNoteIndices([0, 4, 7], 7)).toEqual([7, 0, 4]);
+  });
+
+  it("applies root rotation even when preferred root is out-of-range", () => {
+    expect(orderPolygonNoteIndices([0, 4, 7], 19)).toEqual([7, 0, 4]);
   });
 
   it("keeps sorted order when preferred root is absent", () => {

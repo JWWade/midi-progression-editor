@@ -1,4 +1,8 @@
 import type { ChordType } from "@/features/chord/types";
+import {
+  normalizePitchClass,
+  uniqueSortedPitchClasses,
+} from "@/features/chord/utils/pitchClass";
 
 export interface Point {
   x: number;
@@ -61,14 +65,13 @@ export function orderPolygonNoteIndices(
   noteIndices: readonly number[],
   preferredRoot?: number,
 ): number[] {
-  const unique = [...new Set(noteIndices.map((n) => ((n % 12) + 12) % 12))]
-    .sort((a, b) => a - b);
+  const unique = uniqueSortedPitchClasses(noteIndices);
 
   if (unique.length <= 1 || preferredRoot === undefined) {
     return unique;
   }
 
-  const normalizedRoot = ((preferredRoot % 12) + 12) % 12;
+  const normalizedRoot = normalizePitchClass(preferredRoot);
   const rootPos = unique.indexOf(normalizedRoot);
   if (rootPos <= 0) {
     return unique;

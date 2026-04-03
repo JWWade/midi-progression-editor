@@ -1,7 +1,11 @@
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordName } from "@/features/chord/data/chordNames";
+import { findBestQualityForRoot } from "@/features/chord/utils/chordIdentity";
 import { rerootChord } from "@/features/chord/utils/rerootChord";
 import { CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import {
+  dedupeNormalizedPitchClasses,
+} from "@/features/chord/utils/pitchClass";
 import type { ChordType } from "@/features/chord/types";
 import type { Chord } from "../types";
 import type { PrimitiveShape } from "../types";
@@ -35,7 +39,7 @@ function inferBestQualityForCardinality(
   noteIndices: readonly number[],
   root: number,
 ): ChordType {
-  const normalized = noteIndices.map((n) => ((n % 12) + 12) % 12);
+  const normalized = dedupeNormalizedPitchClasses(noteIndices);
   const noteSet = new Set(normalized);
   const noteCount = noteSet.size;
 
@@ -44,24 +48,7 @@ function inferBestQualityForCardinality(
     (quality) => CHORD_INTERVALS[quality].length === noteCount,
   );
   const pool = candidates.length > 0 ? candidates : allQualities;
-
-  let bestQuality: ChordType = pool[0] ?? "major";
-  let bestScore = -1;
-
-  for (const quality of pool) {
-    const intervals = CHORD_INTERVALS[quality];
-    const chordNotes = intervals.map((interval) => (root + interval) % 12);
-    const intersection = chordNotes.filter((n) => noteSet.has(n)).length;
-    const union = new Set([...normalized, ...chordNotes]).size;
-    const score = union === 0 ? 0 : intersection / union;
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestQuality = quality;
-    }
-  }
-
-  return bestQuality;
+  return findBestQualityForRoot([...noteSet], root, pool).quality;
 }
 
 export function resolveChordIdentity(chord: Chord): ResolvedChordIdentity {

@@ -145,6 +145,13 @@ describe("resolveChordIdentity", () => {
     expect(resolved.root).toBe(0);
     expect(resolved.quality).not.toBe("quartal");
   });
+
+  it("resolves noisy out-of-range custom notes to the same identity as normalized notes", () => {
+    const normalized: Chord = { root: 0, quality: "major", customNotes: [0, 4, 7] };
+    const noisy: Chord = { root: 0, quality: "major", customNotes: [12, -8, 4, 19, 7, 0] };
+
+    expect(resolveChordIdentity(noisy)).toEqual(resolveChordIdentity(normalized));
+  });
 });
 
 describe("formatChordSymbol", () => {

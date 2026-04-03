@@ -29,11 +29,11 @@ Recent regressions showed that circle and panel paths could drift when only one 
 
 ## Acceptance Criteria
 
-- [ ] Circle and panel render identical polygon topology for identical chord input.
-- [ ] No caller bypasses canonical ordering for polygon rendering.
-- [ ] Geometry tests cover root-rotation and out-of-order input cases.
-- [ ] `npm run lint` passes.
-- [ ] `npm test` passes for geometry and affected rendering tests.
+- [x] Circle and panel render identical polygon topology for identical chord input.
+- [x] No caller bypasses canonical ordering for polygon rendering.
+- [x] Geometry tests cover root-rotation and out-of-order input cases.
+- [x] `npm run lint` passes.
+- [x] `npm test` passes for geometry and affected rendering tests.
 
 ## Verification Commands
 

@@ -35,10 +35,10 @@ Test coverage should include:
 
 ## Acceptance Criteria
 
-- [ ] New tests fail on known drift scenarios and pass after hardening.
-- [ ] Circle/panel parity assertions exist for both geometry and identity.
-- [ ] Test suite remains deterministic and stable.
-- [ ] `npm test` passes.
+- [x] New tests fail on known drift scenarios and pass after hardening.
+- [x] Circle/panel parity assertions exist for both geometry and identity.
+- [x] Test suite remains deterministic and stable.
+- [x] `npm test` passes.
 
 ## Verification Commands
 

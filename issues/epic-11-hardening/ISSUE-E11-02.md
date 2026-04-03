@@ -39,11 +39,11 @@ Suggested:
 
 ## Acceptance Criteria
 
-- [ ] No duplicated inline pitch-class normalization formulas remain in targeted paths.
-- [ ] Deduplication behavior is consistent across geometry and identity call paths.
-- [ ] Unit tests cover normalization and dedupe edge cases.
-- [ ] `npm run lint` passes.
-- [ ] `npm test` passes for affected suites.
+- [x] No duplicated inline pitch-class normalization formulas remain in targeted paths.
+- [x] Deduplication behavior is consistent across geometry and identity call paths.
+- [x] Unit tests cover normalization and dedupe edge cases.
+- [x] `npm run lint` passes.
+- [x] `npm test` passes for affected suites.
 
 ## Verification Commands
 

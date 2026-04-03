@@ -33,11 +33,11 @@ Root-anchored inference, global nearest inference, and display-layer fallback lo
 
 ## Acceptance Criteria
 
-- [ ] Identity inference behavior is consistent across circle and panel displays.
-- [ ] Duplicate scoring implementations are reduced to one shared core.
-- [ ] Regression tests cover exact and non-exact custom-note scenarios.
-- [ ] `npm run lint` passes.
-- [ ] `npm test` passes for chord naming and identity suites.
+- [x] Identity inference behavior is consistent across circle and panel displays.
+- [x] Duplicate scoring implementations are reduced to one shared core.
+- [x] Regression tests cover exact and non-exact custom-note scenarios.
+- [x] `npm run lint` passes.
+- [x] `npm test` passes for chord naming and identity suites.
 
 ## Verification Commands
 

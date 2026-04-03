@@ -148,3 +148,19 @@ npm run build
 ```
 
 Output goes to `dist/`. The build runs TypeScript type-checking (`tsc -b`) before the Vite bundle step.
+
+## Geometry/Identity Hardening Checklist
+
+When changing chord rendering or custom-chord labeling, use this checklist before opening a PR:
+
+1. Keep pitch-class normalization and dedupe logic in `src/features/chord/utils/pitchClass.ts`.
+2. Keep polygon ordering logic in `src/features/chromatic-circle/utils/geometry.ts` (`orderPolygonNoteIndices`).
+3. Keep chord identity scoring/policy in `src/features/chord/utils/chordIdentity.ts` and `src/features/current-chord/utils/chordName.ts`.
+4. Ensure both circle and panel rendering paths consume canonical ordering utilities (no inline note ordering in components).
+5. Add or update parity tests for geometry and identity when behavior changes.
+
+## Guardrail Recommendations
+
+- Prefer utility imports over inline modulo formulas for pitch-class wrapping.
+- During review, flag direct usage of ad hoc normalization patterns like `((x % 12) + 12) % 12` in feature components.
+- Consider adding a CI grep guard that fails when component files introduce inline pitch-class normalization formulas.

@@ -31,3 +31,11 @@ export {
   getPrimitiveNoteIndices,
 } from "./utils/transpose";
 export { findNearestChord } from "./utils/findNearestChord";
+export {
+  normalizePitchClass,
+  normalizePitchClasses,
+  dedupeNormalizedPitchClasses,
+  uniqueSortedPitchClasses,
+  findBestChordIdentity,
+  findBestQualityForRoot,
+} from "./utils";

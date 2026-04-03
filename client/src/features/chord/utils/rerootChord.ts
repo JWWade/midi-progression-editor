@@ -1,5 +1,5 @@
-import { CHORD_INTERVALS } from "./transpose";
 import type { ChordType } from "../types";
+import { findBestQualityForRoot } from "./chordIdentity";
 
 /**
  * Reinterprets an existing pitch set with `newRoot` as the tonal centre.
@@ -17,21 +17,7 @@ export function rerootChord(
   noteIndices: number[],
   newRoot: number,
 ): { root: number; quality: ChordType; matchScore: number } {
-  const noteSet = new Set(noteIndices);
-  let bestQuality: ChordType = "major";
-  let bestScore = 0;
+  const { quality, matchScore } = findBestQualityForRoot(noteIndices, newRoot);
 
-  for (const [quality, intervals] of Object.entries(CHORD_INTERVALS)) {
-    const chordNotes = intervals.map((interval) => (newRoot + interval) % 12);
-    const intersection = chordNotes.filter((n) => noteSet.has(n)).length;
-    const union = new Set([...noteIndices, ...chordNotes]).size;
-    const score = union === 0 ? 0 : intersection / union;
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestQuality = quality as ChordType;
-    }
-  }
-
-  return { root: newRoot, quality: bestQuality, matchScore: bestScore };
+  return { root: newRoot, quality, matchScore };
 }
