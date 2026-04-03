@@ -1,6 +1,7 @@
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import { getChordName } from "@/features/chord/data/chordNames";
 import { rerootChord } from "@/features/chord/utils/rerootChord";
+import { CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import type { ChordType } from "@/features/chord/types";
 import type { Chord } from "../types";
 import type { PrimitiveShape } from "../types";
@@ -30,10 +31,54 @@ export interface ResolvedChordIdentity {
   quality: ChordType;
 }
 
+function inferBestQualityForCardinality(
+  noteIndices: readonly number[],
+  root: number,
+): ChordType {
+  const normalized = noteIndices.map((n) => ((n % 12) + 12) % 12);
+  const noteSet = new Set(normalized);
+  const noteCount = noteSet.size;
+
+  const allQualities = Object.keys(CHORD_INTERVALS) as ChordType[];
+  const candidates = allQualities.filter(
+    (quality) => CHORD_INTERVALS[quality].length === noteCount,
+  );
+  const pool = candidates.length > 0 ? candidates : allQualities;
+
+  let bestQuality: ChordType = pool[0] ?? "major";
+  let bestScore = -1;
+
+  for (const quality of pool) {
+    const intervals = CHORD_INTERVALS[quality];
+    const chordNotes = intervals.map((interval) => (root + interval) % 12);
+    const intersection = chordNotes.filter((n) => noteSet.has(n)).length;
+    const union = new Set([...normalized, ...chordNotes]).size;
+    const score = union === 0 ? 0 : intersection / union;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestQuality = quality;
+    }
+  }
+
+  return bestQuality;
+}
+
 export function resolveChordIdentity(chord: Chord): ResolvedChordIdentity {
   if (Array.isArray(chord.customNotes) && chord.customNotes.length > 0) {
-    const { root, quality } = rerootChord(chord.customNotes, chord.root);
-    return { root, quality };
+    const { root, quality, matchScore } = rerootChord(chord.customNotes, chord.root);
+
+    // Only accept reroot quality as authoritative when the note set is an
+    // exact structural match. Otherwise, choose the best quality within the
+    // same chord cardinality to avoid misleading labels (e.g. 4-note -> quartal).
+    if (matchScore === 1) {
+      return { root, quality };
+    }
+
+    return {
+      root,
+      quality: inferBestQualityForCardinality(chord.customNotes, root),
+    };
   }
 
   return { root: chord.root, quality: chord.quality };

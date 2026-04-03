@@ -123,6 +123,12 @@ interface ProviderState extends TutorialPersistedState {
    * `null` when not snoozed.  Session-only.
    */
   snoozedUntil: number | null;
+  /**
+   * The currently displayed tutorial step id. Once set, the step remains
+   * visible until user action (dismiss/skip/skipAll/reset) or mode filtering
+   * removes it.
+   */
+  activeStepId: string | null;
 }
 
 type Action =
@@ -137,7 +143,8 @@ type Action =
   | { type: 'RESET_IDLE' }
   | { type: 'SET_MODE'; mode: TutorialExperienceMode }
   | { type: 'SNOOZE'; until: number }
-  | { type: 'CLEAR_SNOOZE' };
+  | { type: 'CLEAR_SNOOZE' }
+  | { type: 'SET_ACTIVE_STEP'; stepId: string | null };
 
 function reducer(state: ProviderState, action: Action): ProviderState {
   switch (action.type) {
@@ -145,18 +152,33 @@ function reducer(state: ProviderState, action: Action): ProviderState {
       const completed = state.completedSteps.includes(action.stepId)
         ? state.completedSteps
         : [...state.completedSteps, action.stepId];
-      return { ...state, completedSteps: completed, pendingAction: null };
+      return {
+        ...state,
+        completedSteps: completed,
+        pendingAction: null,
+        activeStepId: null,
+      };
     }
 
     case 'SKIP_STEP': {
       const skipped = state.skippedSteps.includes(action.stepId)
         ? state.skippedSteps
         : [...state.skippedSteps, action.stepId];
-      return { ...state, skippedSteps: skipped, pendingAction: null };
+      return {
+        ...state,
+        skippedSteps: skipped,
+        pendingAction: null,
+        activeStepId: null,
+      };
     }
 
     case 'SKIP_ALL':
-      return { ...state, dismissed: true, pendingAction: null };
+      return {
+        ...state,
+        dismissed: true,
+        pendingAction: null,
+        activeStepId: null,
+      };
 
     case 'RESET': {
       const fresh = freshState();
@@ -168,6 +190,7 @@ function reducer(state: ProviderState, action: Action): ProviderState {
         isIdle: false,
         paused: false,
         snoozedUntil: null,
+        activeStepId: null,
       };
     }
 
@@ -200,6 +223,9 @@ function reducer(state: ProviderState, action: Action): ProviderState {
     case 'CLEAR_SNOOZE':
       return { ...state, snoozedUntil: null, paused: false };
 
+    case 'SET_ACTIVE_STEP':
+      return { ...state, activeStepId: action.stepId };
+
     default:
       return state;
   }
@@ -218,6 +244,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       isIdle: false,
       paused: false,
       snoozedUntil: null,
+      activeStepId: null,
     };
   }, []);
 
@@ -327,10 +354,40 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   ]);
 
   const activeStep: TutorialStep | null = useMemo(() => {
+    if (state.dismissed || state.paused) return null;
+
+    if (state.activeStepId !== null) {
+      const pinned = allowedSteps.find((s) => s.id === state.activeStepId);
+      if (
+        pinned &&
+        !completedSet.has(pinned.id) &&
+        !skippedSet.has(pinned.id)
+      ) {
+        return pinned;
+      }
+    }
+
     if (eligibleSteps.length === 0) return null;
     const sorted = [...eligibleSteps].sort((a, b) => b.priority - a.priority);
     return sorted[0];
-  }, [eligibleSteps]);
+  }, [
+    eligibleSteps,
+    state.dismissed,
+    state.paused,
+    state.activeStepId,
+    allowedSteps,
+    completedSet,
+    skippedSet,
+  ]);
+
+  // Keep reducer state in sync with the selected active step so action-based
+  // steps remain visible after `pendingAction` is consumed.
+  useEffect(() => {
+    const nextActiveStepId = activeStep?.id ?? null;
+    if (nextActiveStepId !== state.activeStepId) {
+      dispatch({ type: 'SET_ACTIVE_STEP', stepId: nextActiveStepId });
+    }
+  }, [activeStep, state.activeStepId]);
 
   // ── Step progress ─────────────────────────────────────────────────────
   // `totalSteps` is the number of steps not yet completed or skipped (across

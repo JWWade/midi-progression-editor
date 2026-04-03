@@ -63,32 +63,48 @@ export function TutorialTooltip({
 
       if (!step.targetSelector) {
         el.classList.add(styles.centered);
+        el.style.top = '';
+        el.style.left = '';
         return;
       }
 
       const target = document.querySelector(step.targetSelector);
       if (!target) {
         el.classList.add(styles.centered);
+        el.style.top = '';
+        el.style.left = '';
         return;
       }
 
       const rect = target.getBoundingClientRect();
       const tipRect = el.getBoundingClientRect();
       const viewportH = window.innerHeight;
+      const viewportW = window.innerWidth;
       const MARGIN = 12;
 
-      const spaceBelow = viewportH - rect.bottom;
+      const spaceBelow = viewportH - rect.bottom - MARGIN;
+      const spaceAbove = rect.top - MARGIN;
       const placement: 'below' | 'above' =
-        spaceBelow >= tipRect.height + MARGIN ? 'below' : 'above';
+        spaceBelow >= tipRect.height
+          ? 'below'
+          : spaceAbove >= tipRect.height
+            ? 'above'
+            : spaceBelow >= spaceAbove
+              ? 'below'
+              : 'above';
 
-      const top =
+      const rawTop =
         placement === 'below'
           ? rect.bottom + MARGIN
           : rect.top - tipRect.height - MARGIN;
+      const top = Math.min(
+        Math.max(rawTop, MARGIN),
+        Math.max(MARGIN, viewportH - tipRect.height - MARGIN),
+      );
 
       const left = Math.min(
         Math.max(rect.left + rect.width / 2 - tipRect.width / 2, MARGIN),
-        window.innerWidth - tipRect.width - MARGIN,
+        viewportW - tipRect.width - MARGIN,
       );
 
       el.classList.remove(styles.centered);

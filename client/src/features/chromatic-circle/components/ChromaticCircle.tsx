@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect } fr
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { getDiatonicIndices, PITCH_CLASSES, FLAT_PITCH_CLASSES } from "../utils";
 import { getCircleColorForTheme } from "../utils/circleColors";
-import { calculatePolygonPoints } from "../utils/geometry";
+import { calculatePolygonPoints, orderPolygonNoteIndices } from "../utils/geometry";
 import {
   VIEWBOX_SIZE,
   CENTER,
@@ -336,6 +336,7 @@ export function ChromaticCircle({
         }))
       : transposeChord(baseIntervals, rootIndex, pitchClasses);
   const chordIndices = chordNotes.map((n) => n.index);
+  const orderedChordIndices = orderPolygonNoteIndices(chordIndices, rootIndex);
 
   // Sync noteHandlerStateRef with the latest derived values and state.  Using
   // useLayoutEffect ensures the ref is updated before the browser paints and
@@ -347,7 +348,7 @@ export function ChromaticCircle({
     noteHandlerStateRef.current.isDragging = isDragging;
     noteHandlerStateRef.current.handleNoteClick = handleNoteClick;
     noteHandlerStateRef.current.rootIndex = rootIndex;
-    noteHandlerStateRef.current.chordIndices = chordIndices;
+    noteHandlerStateRef.current.chordIndices = orderedChordIndices;
     noteHandlerStateRef.current.chordType = chordType;
   }, [
     suppressNextClick,
@@ -355,11 +356,11 @@ export function ChromaticCircle({
     isDragging,
     handleNoteClick,
     rootIndex,
-    chordIndices,
+    orderedChordIndices,
     chordType,
   ]);
 
-  const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, chordIndices);
+  const fromPoints = calculatePolygonPoints(CENTER, CENTER, RING_RADIUS, orderedChordIndices);
 
   const { morphedPoints: fromMorphedPoints, morphProgress } = useChordMorphing(
     fromPoints,
@@ -462,52 +463,53 @@ export function ChromaticCircle({
             showCentroid={propShowCentroid}
             centroid={fromCentroid}
             showIntervals={propShowIntervals}
-            chordIndices={chordIndices}
+            chordIndices={orderedChordIndices}
             pulse={pulseCount}
           />
 
           {/* Chord polygon vertices — click or press R/Enter/Space to re-root the chord */}
           <g role="group" aria-label="Chord vertices — press R on a vertex to set it as root">
-          {chordNotes.map((note, i) => {
+          {orderedChordIndices.map((noteIndex, i) => {
             const point = fromPoints[i];
             const interval = baseIntervals[i];
-            const isRoot = note.index === rootIndex;
+            const isRoot = noteIndex === rootIndex;
+            const noteName = pitchClasses[noteIndex];
 
             // Build accessible label: role name from the current root, action hint.
             const roleLabel = getToneRole(interval, chordType);
             const ariaLabel = isRoot
-              ? `${note.name}, current chord root`
-              : `${note.name}, vertex, ${roleLabel} from ${pitchClasses[rootIndex]}, press R to set as root`;
+              ? `${noteName}, current chord root`
+              : `${noteName}, vertex, ${roleLabel} from ${pitchClasses[rootIndex]}, press R to set as root`;
 
             if (point === undefined) return null;
             return (
               <ChordVertex
-                key={`from-vertex-${note.index}`}
+                key={`from-vertex-${noteIndex}`}
                 point={point}
                 isRoot={isRoot}
                 isSelected={false}
                 strokeColor={strokeColor}
                 ariaLabel={ariaLabel}
                 onRerootCommit={() => {
-                  handleRerootChord(note.index, note.name);
+                  handleRerootChord(noteIndex, noteName);
                   setPreviewAnnouncement("");
                 }}
                 onRerootPreview={() => {
-                  hoveredVertexNoteRef.current = note.index;
+                  hoveredVertexNoteRef.current = noteIndex;
                   if (isRoot) {
-                    setPreviewAnnouncement(`${note.name} is the current chord root`);
+                    setPreviewAnnouncement(`${noteName} is the current chord root`);
                     return;
                   }
-                  const { quality, matchScore } = rerootChord(chordIndices, note.index);
-                  const chordLabel = getChordName(note.index, quality, pitchClasses);
+                  const { quality, matchScore } = rerootChord(orderedChordIndices, noteIndex);
+                  const chordLabel = getChordName(noteIndex, quality, pitchClasses);
                   if (matchScore === 1) {
                     setPreviewAnnouncement(
-                      `Preview: ${note.name} as root. ${chordLabel} chord`,
+                      `Preview: ${noteName} as root. ${chordLabel} chord`,
                     );
                   } else {
-                    const noteNames = chordIndices.map((idx) => pitchClasses[idx]).join(", ");
+                    const noteNames = orderedChordIndices.map((idx) => pitchClasses[idx]).join(", ");
                     setPreviewAnnouncement(
-                      `Preview: ${note.name} as root. No exact match. Notes: ${noteNames}`,
+                      `Preview: ${noteName} as root. No exact match. Notes: ${noteNames}`,
                     );
                   }
                 }}

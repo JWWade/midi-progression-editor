@@ -157,6 +157,7 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
       <div className={styles.thumbnail}>
         <ChordThumbnail
           noteIndices={noteIndices}
+          rootIndex={resolvedIdentity?.root ?? chord?.root}
           quality={chord?.quality ?? "major"}
           complexity={complexity}
           size={80}

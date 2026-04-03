@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { calculatePolygonPoints, CHORD_SHAPES } from "../geometry";
+import {
+  calculatePolygonPoints,
+  CHORD_SHAPES,
+  orderPolygonNoteIndices,
+} from "../geometry";
 
 describe("CHORD_SHAPES", () => {
   it("maps all triads to 'triangle'", () => {
@@ -84,5 +88,19 @@ describe("calculatePolygonPoints", () => {
       const dist = Math.hypot(p.x - cx, p.y - cy);
       expect(dist).toBeCloseTo(r, 5);
     }
+  });
+});
+
+describe("orderPolygonNoteIndices", () => {
+  it("deduplicates and sorts note indices in circular order", () => {
+    expect(orderPolygonNoteIndices([10, 0, 1, 10, 6])).toEqual([0, 1, 6, 10]);
+  });
+
+  it("rotates ordered indices so preferred root is first when present", () => {
+    expect(orderPolygonNoteIndices([0, 4, 7], 7)).toEqual([7, 0, 4]);
+  });
+
+  it("keeps sorted order when preferred root is absent", () => {
+    expect(orderPolygonNoteIndices([1, 5, 10, 0], 7)).toEqual([0, 1, 5, 10]);
   });
 });

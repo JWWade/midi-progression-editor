@@ -48,3 +48,31 @@ export function calculatePolygonPoints(
     };
   });
 }
+
+/**
+ * Returns note indices in a stable circular order suitable for polygon drawing.
+ *
+ * - Removes duplicates.
+ * - Sorts notes in ascending chromatic index (clockwise ring order).
+ * - If `preferredRoot` is present in the set, rotates the ordered list so the
+ *   root is first while preserving circular order.
+ */
+export function orderPolygonNoteIndices(
+  noteIndices: readonly number[],
+  preferredRoot?: number,
+): number[] {
+  const unique = [...new Set(noteIndices.map((n) => ((n % 12) + 12) % 12))]
+    .sort((a, b) => a - b);
+
+  if (unique.length <= 1 || preferredRoot === undefined) {
+    return unique;
+  }
+
+  const normalizedRoot = ((preferredRoot % 12) + 12) % 12;
+  const rootPos = unique.indexOf(normalizedRoot);
+  if (rootPos <= 0) {
+    return unique;
+  }
+
+  return [...unique.slice(rootPos), ...unique.slice(0, rootPos)];
+}

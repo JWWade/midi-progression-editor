@@ -133,6 +133,18 @@ describe("resolveChordIdentity", () => {
     expect(resolveChordIdentity(eMinorLike)).toEqual({ root: 4, quality: "minor" });
     expect(resolveChordIdentity(gQuartalLike)).toEqual({ root: 7, quality: "quartal" });
   });
+
+  it("does not label non-exact 4-note custom sets as quartal", () => {
+    const ambiguousFourNoteSet: Chord = {
+      root: 0,
+      quality: "quartal",
+      customNotes: [0, 10, 1, 5],
+    };
+
+    const resolved = resolveChordIdentity(ambiguousFourNoteSet);
+    expect(resolved.root).toBe(0);
+    expect(resolved.quality).not.toBe("quartal");
+  });
 });
 
 describe("formatChordSymbol", () => {
