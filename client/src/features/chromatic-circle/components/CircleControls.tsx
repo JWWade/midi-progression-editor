@@ -157,7 +157,7 @@ export const CircleControls = memo(function CircleControls({
         {/* ── Transform ─────────────────────────────────────────────── */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
           <span style={SECTION_LABEL_STYLE}>Transform</span>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, auto)", gap: 10 }}>
             <button
               type="button"
               onClick={handleRotateCounterclockwise}
@@ -166,6 +166,15 @@ export const CircleControls = memo(function CircleControls({
               style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
             >
               <span style={{ ...ROTATE_ICON_STYLE, transform: "rotate(-90deg)" }}>↺</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleRotateClockwise}
+              title="Rotate clockwise by one semitone (Ctrl+Right)"
+              aria-label="Rotate chord clockwise"
+              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
+            >
+              <span style={{ ...ROTATE_ICON_STYLE, transform: "rotate(90deg)" }}>↻</span>
             </button>
             <button
               type="button"
@@ -185,15 +194,6 @@ export const CircleControls = memo(function CircleControls({
             >
               ⊛
             </button>
-            <button
-              type="button"
-              onClick={handleRotateClockwise}
-              title="Rotate clockwise by one semitone (Ctrl+Right)"
-              aria-label="Rotate chord clockwise"
-              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
-            >
-              <span style={{ ...ROTATE_ICON_STYLE, transform: "rotate(90deg)" }}>↻</span>
-            </button>
           </div>
         </div>
 
@@ -202,7 +202,7 @@ export const CircleControls = memo(function CircleControls({
         {/* ── Templates ─────────────────────────────────────────────── */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
           <span style={SECTION_LABEL_STYLE}>Templates</span>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, auto)", gap: 10 }}>
             <button
               type="button"
               onClick={() => onSelectShape("equilateral-triangle")}
