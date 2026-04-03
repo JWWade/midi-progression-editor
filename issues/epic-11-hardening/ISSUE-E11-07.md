@@ -45,3 +45,10 @@ Current workflow triggers are scoped to `main` only. The repository default bran
 ## Severity
 
 High
+
+## Implementation Status
+
+- [x] Workflow triggers updated in `.github/workflows/ci.yml` for `develop` and `main`.
+- [x] Workflow triggers updated in `.github/workflows/security.yml` for `develop` and `main`.
+- [x] `CONTRIBUTING.md` updated to document PR target branch and required-check expectations.
+- [ ] Repository branch protection rules aligned (GitHub settings; manual repo admin action).
