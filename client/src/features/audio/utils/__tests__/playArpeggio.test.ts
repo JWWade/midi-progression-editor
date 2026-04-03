@@ -15,7 +15,13 @@ type MockNode = {
   disconnect: Mock;
   start?: Mock;
   stop?: Mock;
-  gain?: { setValueAtTime: Mock; linearRampToValueAtTime: Mock; value: number };
+  gain?: {
+    setValueAtTime: Mock;
+    linearRampToValueAtTime: Mock;
+    exponentialRampToValueAtTime: Mock;
+    cancelScheduledValues: Mock;
+    value: number;
+  };
   frequency?: { value: number };
   type?: string;
   threshold?: { value: number };
@@ -39,7 +45,13 @@ function makeMockAudioContext() {
     resume: vi.fn().mockResolvedValue(undefined),
     createGain: vi.fn(() => {
       const node = makeMockNode({
-        gain: { value: 1, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
+        gain: {
+          value: 1,
+          setValueAtTime: vi.fn(),
+          linearRampToValueAtTime: vi.fn(),
+          exponentialRampToValueAtTime: vi.fn(),
+          cancelScheduledValues: vi.fn(),
+        },
       });
       createdNodes.push(node);
       return node;
@@ -115,6 +127,7 @@ describe("playArpeggio — cancel", () => {
 
     // Cancel immediately after the first note starts
     handle.cancel();
+    vi.advanceTimersByTime(20);
 
     const oscillators = createdNodes.filter((n) => n.start !== undefined);
     expect(oscillators.length).toBeGreaterThan(0);
@@ -173,9 +186,9 @@ describe("playArpeggio — plays notes sequentially", () => {
     const oscillators = createdNodes.filter((n) => n.start !== undefined);
     expect(oscillators).toHaveLength(2);
     expect(oscillators[0]!.start).toHaveBeenCalledWith(0);
-    expect(oscillators[0]!.stop).toHaveBeenCalledWith(0.3);
+    expect(oscillators[0]!.stop).toHaveBeenCalledWith(0.305);
     expect(oscillators[1]!.start).toHaveBeenCalledWith(0.25);
-    expect(oscillators[1]!.stop).toHaveBeenCalledWith(0.75);
+    expect(oscillators[1]!.stop).toHaveBeenCalledWith(0.755);
 
     vi.runAllTimers();
     vi.useRealTimers();

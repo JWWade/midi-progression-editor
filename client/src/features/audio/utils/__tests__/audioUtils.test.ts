@@ -11,7 +11,13 @@ type MockNode = {
   disconnect: Mock;
   start?: Mock;
   stop?: Mock;
-  gain?: { setValueAtTime: Mock; linearRampToValueAtTime: Mock; value: number };
+  gain?: {
+    setValueAtTime: Mock;
+    linearRampToValueAtTime: Mock;
+    exponentialRampToValueAtTime: Mock;
+    cancelScheduledValues: Mock;
+    value: number;
+  };
   frequency?: { value: number };
   type?: string;
   threshold?: { value: number };
@@ -46,6 +52,8 @@ function makeMockAudioContext() {
           value: 1,
           setValueAtTime: vi.fn(),
           linearRampToValueAtTime: vi.fn(),
+          exponentialRampToValueAtTime: vi.fn(),
+          cancelScheduledValues: vi.fn(),
         },
       });
       createdNodes.push(node);
@@ -116,6 +124,7 @@ describe("stopChord", () => {
     expect(oscillators).toHaveLength(3);
 
     stopChord();
+    vi.advanceTimersByTime(20);
 
     for (const osc of oscillators) {
       expect(osc.stop).toHaveBeenCalled();
@@ -141,6 +150,7 @@ describe("stopChord", () => {
     expect(compressorNode).toBeDefined();
 
     stopChord();
+    vi.advanceTimersByTime(20);
 
     for (const g of gainNodes) {
       expect(g.disconnect).toHaveBeenCalled();

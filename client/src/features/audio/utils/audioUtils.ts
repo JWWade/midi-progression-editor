@@ -9,10 +9,15 @@ export interface PlayOptions {
 
 let audioCtx: AudioContext | null = null;
 
+const GAIN_FLOOR = 0.0001;
+const STOP_BUFFER_SEC = 0.005;
+const CANCEL_FADE_SEC = 0.01;
+
 interface PlaybackSession {
   done: Promise<void>;
   registerOscillator: (oscillator: OscillatorNode) => void;
   registerNode: (node: AudioNode) => void;
+  registerMasterGain: (ctx: AudioContext, gainNode: GainNode) => void;
   scheduleTimeout: (callback: () => void, delayMs: number) => void;
   stop: () => void;
 }
@@ -55,6 +60,7 @@ interface PlayArpeggioOptions extends PlayOptions {
 function createPlaybackSession(): PlaybackSession {
   const oscillators: OscillatorNode[] = [];
   const nodes: AudioNode[] = [];
+  const masterGains: Array<{ ctx: AudioContext; gainNode: GainNode }> = [];
   const timeoutIds: number[] = [];
   let isStopped = false;
   let resolveDone: (() => void) | null = null;
@@ -71,6 +77,9 @@ function createPlaybackSession(): PlaybackSession {
     registerNode: (node) => {
       nodes.push(node);
     },
+    registerMasterGain: (ctx, gainNode) => {
+      masterGains.push({ ctx, gainNode });
+    },
     scheduleTimeout: (callback, delayMs) => {
       const timeoutId = window.setTimeout(callback, delayMs);
       timeoutIds.push(timeoutId);
@@ -86,32 +95,55 @@ function createPlaybackSession(): PlaybackSession {
         window.clearTimeout(timeoutId);
       }
 
-      for (const oscillator of oscillators) {
-        try {
-          oscillator.stop();
-        } catch {
-          // already stopped
-        }
-        try {
-          oscillator.disconnect();
-        } catch {
-          // already disconnected
-        }
-      }
-
-      for (const node of nodes) {
-        try {
-          node.disconnect();
-        } catch {
-          // already disconnected
-        }
-      }
-
       if (activeSession === session) {
         activeSession = null;
       }
-      resolveDone?.();
-      resolveDone = null;
+
+      const cleanup = () => {
+        for (const oscillator of oscillators) {
+          try {
+            oscillator.stop();
+          } catch {
+            // already stopped
+          }
+          try {
+            oscillator.disconnect();
+          } catch {
+            // already disconnected
+          }
+        }
+
+        for (const node of nodes) {
+          try {
+            node.disconnect();
+          } catch {
+            // already disconnected
+          }
+        }
+
+        resolveDone?.();
+        resolveDone = null;
+      };
+
+      if (masterGains.length === 0) {
+        cleanup();
+        return;
+      }
+
+      for (const { ctx, gainNode } of masterGains) {
+        const now = ctx.currentTime;
+        try {
+          gainNode.gain.cancelScheduledValues(now);
+          gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+          gainNode.gain.linearRampToValueAtTime(0, now + CANCEL_FADE_SEC);
+        } catch {
+          // if the node is already disconnected, continue with cleanup timer
+        }
+      }
+
+      const cleanupDelayMs = Math.ceil(CANCEL_FADE_SEC * 1000) + 5;
+      const cleanupTimeoutId = window.setTimeout(cleanup, cleanupDelayMs);
+      timeoutIds.push(cleanupTimeoutId);
     },
   };
 
@@ -125,6 +157,7 @@ function createOutputChain(
 ): GainNode {
   const masterGainNode = ctx.createGain();
   masterGainNode.gain.value = audioParams.masterVolume;
+  session.registerMasterGain(ctx, masterGainNode);
 
   const compressor = ctx.createDynamicsCompressor();
   compressor.threshold.value = audioParams.compressorThreshold;
@@ -177,7 +210,8 @@ function scheduleEnvelope(
     envelopeGainNode.gain.setValueAtTime(sustainGain, releaseStartTime);
   }
 
-  envelopeGainNode.gain.linearRampToValueAtTime(0, endTime);
+  envelopeGainNode.gain.exponentialRampToValueAtTime(GAIN_FLOOR, endTime);
+  envelopeGainNode.gain.setValueAtTime(0, endTime);
 }
 
 function scheduleNotePlayback(
@@ -205,7 +239,7 @@ function scheduleNotePlayback(
   oscillator.frequency.value = noteIndexToFrequency(noteIndex, octave);
   oscillator.connect(envelopeGainNode);
   oscillator.start(startTime);
-  oscillator.stop(startTime + durationSec);
+  oscillator.stop(startTime + durationSec + STOP_BUFFER_SEC);
   session.registerOscillator(oscillator);
 }
 
