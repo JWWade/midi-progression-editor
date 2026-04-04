@@ -245,6 +245,16 @@ button:focus-visible {
   background-color: #d4d4d4 !important;
 }
 
+/* ── Retro: circle controls — dark background so colored SVG shapes are readable ── */
+[data-theme="retro"] [data-circle-controls] button {
+  background-color: #000033 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="retro"] [data-circle-controls] button:hover:not(:disabled) {
+  background-color: #000066 !important;
+}
+
 [data-theme="retro"] button:active:not(:disabled) {
   border-color: #808080 #dfdfdf #dfdfdf #808080 !important;
   box-shadow: -1px -1px 0 #ffffff inset, 1px 1px 0 #404040 inset !important;

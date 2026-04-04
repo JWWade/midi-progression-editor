@@ -153,7 +153,7 @@ export const CircleControls = memo(function CircleControls({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", marginTop: 12, alignItems: "center", gap: 10 }}>
+    <div data-circle-controls style={{ display: "flex", flexDirection: "column", marginTop: 12, alignItems: "center", gap: 10 }}>
       <div style={{ display: "inline-flex", alignItems: "stretch", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
 
         {/* ── Transform ─────────────────────────────────────────────── */}

@@ -57,6 +57,11 @@ export function useProgressionPlayback(
     loopRef.current = loop;
   }, [loop]);
 
+  // Keep a ref so the running loop always reads the latest audio params without
+  // needing to restart playback when the user changes volume or tone mid-playback.
+  const audioParamsRef = useRef(audioParams);
+  useEffect(() => { audioParamsRef.current = audioParams; }, [audioParams]);
+
   // Keep refs for arpeggio state so the async run loop reads the latest values.
   const arpeggioEnabledRef = useRef(arpeggioEnabled);
   useEffect(() => { arpeggioEnabledRef.current = arpeggioEnabled; }, [arpeggioEnabled]);
@@ -135,7 +140,7 @@ export function useProgressionPlayback(
             const handle = playArpeggio(
               scheduledNotes.map((step) => step.note),
               {
-                audioParams,
+                audioParams: audioParamsRef.current,
                 startOffsetsMs: scheduledNotes.map((step) => step.startOffsetMs),
                 noteDurationsMs: scheduledNotes.map((step) => step.durationMs),
                 totalDurationMs: chordDurationMsRef.current,
@@ -152,7 +157,7 @@ export function useProgressionPlayback(
             activeArpeggioRef.current = null;
             clearArpeggioUiTimers();
             setPlayingPitchClass(null);
-            await playChord(notes, { duration: chordDurationMsRef.current, audioParams });
+            await playChord(notes, { duration: chordDurationMsRef.current, audioParams: audioParamsRef.current });
           }
 
           if (cancelledRef.current) break;
@@ -168,7 +173,7 @@ export function useProgressionPlayback(
     };
 
     run();
-  }, [chords, pitchClasses, audioParams, clearArpeggioUiTimers]);
+  }, [chords, pitchClasses, clearArpeggioUiTimers]);
 
   useEffect(() => {
     return () => {
