@@ -15,6 +15,7 @@
   box-sizing: border-box;
   text-align: center;
   transition: background-color 0.35s ease;
+  container-type: inline-size;
 }
 
 /* ── Section label ("Current Chord") ────────────────────────────────────── */
@@ -30,11 +31,12 @@
 /* ── Primary chord name ─────────────────────────────────────────────────── */
 .chordName {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 28px;
+  font-size: clamp(14px, 8cqi, 28px);
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1.2;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 /* ── No-chord placeholder ───────────────────────────────────────────────── */

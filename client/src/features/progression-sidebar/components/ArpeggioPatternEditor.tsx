@@ -12,7 +12,6 @@ interface ArpeggioPatternEditorProps {
 
 const DIRECTIONS: ArpeggioDirection[] = ["up", "down", "up-down", "random"];
 const SUBDIVISIONS: ArpeggioSubdivision[] = ["quarter", "eighth", "sixteenth", "triplet"];
-const REPEAT_OPTIONS = [1, 2, 3, 4];
 
 export function ArpeggioPatternEditor({ pattern, onChange }: ArpeggioPatternEditorProps) {
   function update<K extends keyof ArpeggioPattern>(key: K, value: ArpeggioPattern[K]) {
@@ -96,25 +95,6 @@ export function ArpeggioPatternEditor({ pattern, onChange }: ArpeggioPatternEdit
         />
       </div>
 
-      {/* Repeats */}
-      <div className={styles.row}>
-        <label className={styles.label} htmlFor="arpeggio-repeats">
-          Repeats
-        </label>
-        <select
-          id="arpeggio-repeats"
-          className={styles.select}
-          value={pattern.repeats}
-          onChange={(e) => update("repeats", Number(e.target.value))}
-          aria-label="Number of arpeggio pattern repeats per chord"
-        >
-          {REPEAT_OPTIONS.map((r) => (
-            <option key={r} value={r}>
-              {r}×
-            </option>
-          ))}
-        </select>
-      </div>
     </div>
   );
 }
