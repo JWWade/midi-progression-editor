@@ -5,6 +5,7 @@ import {
   formatChordSymbol,
   formatPrimitiveChordName,
   resolveChordIdentity,
+  CHORD_QUALITY_LABELS,
 } from "../utils/chordName";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { getChordPitchClasses } from "@/features/chord/utils";
@@ -206,6 +207,12 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
               : formatChordName(chord, pitchClasses)
             }
           </span>
+          {isCustomChord(chord) && !chord.primitiveShape && resolvedIdentity && (
+            <div className={styles.rootQualityRow}>
+              <span className={styles.root}>{pitchClasses[resolvedIdentity.root]}</span>
+              <span className={styles.quality}>{CHORD_QUALITY_LABELS[resolvedIdentity.quality]}</span>
+            </div>
+          )}
           {/* Roman numeral — scale degree label */}
           {romanAnalysis && (
             <div className={styles.romanNumeralRow}>
