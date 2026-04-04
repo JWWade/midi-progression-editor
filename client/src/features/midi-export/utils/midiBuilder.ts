@@ -187,6 +187,77 @@ function injectKeySignature(
   return result;
 }
 /**
+ * Encode a non-negative integer as MIDI Variable-Length Quantity (VLQ) bytes.
+ */
+function encodeVLQ(value: number): number[] {
+  if (value === 0) return [0];
+  const bytes: number[] = [];
+  let v = value;
+  bytes.unshift(v & 0x7F);
+  v >>>= 7;
+  while (v > 0) {
+    bytes.unshift((v & 0x7F) | 0x80);
+    v >>>= 7;
+  }
+  return bytes;
+}
+
+/**
+ * Fix the conductor track (track 0) end-of-track delta time so that the
+ * conductor track extends to the true end of the piece.
+ *
+ * @tonejs/midi places the conductor track's EOT immediately after the last
+ * meta event — which is the chord-symbol marker at the *start* of the final
+ * chord.  Note tracks extend one full chord duration beyond that point.
+ * Notation software that determines piece length from the conductor track will
+ * see a discrepancy and render an extra empty measure at the end.
+ *
+ * This function patches the delta-time byte that precedes the EOT meta event
+ * (`0xFF 0x2F 0x00`) so it spans the remaining ticks to the piece's true end.
+ *
+ * MIDI format-1 byte layout (same as `injectKeySignature`):
+ *   0–13  : MThd chunk
+ *   14–17 : "MTrk" marker of conductor track
+ *   18–21 : conductor-track byte size, big-endian uint32
+ *   22+   : conductor-track events
+ */
+function extendConductorTrackEOT(
+  midiBytes: Uint8Array,
+  eotDeltaTicks: number,
+): Uint8Array {
+  if (eotDeltaTicks === 0) return midiBytes;
+
+  const SIZE_OFFSET  = 18;
+  const EVENTS_START = 22;
+
+  const ctkSize  = readBigEndianUint32(midiBytes, SIZE_OFFSET);
+  const eotStart = EVENTS_START + ctkSize - 4; // EOT: [0x00, 0xFF, 0x2F, 0x00]
+
+  // Safety check — bail if the bytes don't match the expected EOT pattern.
+  if (
+    midiBytes[eotStart]     !== 0x00 ||
+    midiBytes[eotStart + 1] !== 0xFF ||
+    midiBytes[eotStart + 2] !== 0x2F ||
+    midiBytes[eotStart + 3] !== 0x00
+  ) {
+    return midiBytes;
+  }
+
+  const vlq        = encodeVLQ(eotDeltaTicks);
+  const extraBytes = vlq.length - 1; // old delta was always 1 byte (0x00)
+
+  const result = new Uint8Array(midiBytes.length + extraBytes);
+  result.set(midiBytes.slice(0, eotStart), 0);
+  result.set(vlq, eotStart);
+  result.set([0xFF, 0x2F, 0x00], eotStart + vlq.length);
+  result.set(midiBytes.slice(eotStart + 4), eotStart + vlq.length + 3);
+
+  writeBigEndianUint32(result, SIZE_OFFSET, ctkSize + extraBytes);
+
+  return result;
+}
+
+/**
  * Fraction of the subdivision duration used as note-on time for arpeggiated
  * notes.  The remaining 10 % provides a subtle gap (articulation) between
  * consecutive arpeggiated notes so that DAWs render them as distinct events.
@@ -361,12 +432,26 @@ export function buildMidiFile(
     }
   });
 
-  const midiBytes = midi.toArray();
+  const rawMidi = midi.toArray();
+
+  // ── Fix conductor track EOT so it lands at the piece's true final tick ──────
+  // @tonejs/midi places the conductor EOT at the last chord-symbol tick (the
+  // *start* of the final chord).  Note tracks run one chord duration longer.
+  // This one-measure gap causes notation software to render a spurious extra
+  // measure at the end of the score.
+  const ppq = midi.header.ppq;
+  const finalTicks = chords.length * beatsPerChord * ppq;
+  const lastConductorEventTick =
+    includeChordSymbols && chords.length > 0
+      ? (chords.length - 1) * beatsPerChord * ppq
+      : 0;
+  const eotDelta = finalTicks - lastConductorEventTick;
+  const withFixedEOT = extendConductorTrackEOT(rawMidi, eotDelta);
 
   // ── Inject key signature bytes directly (bypasses @tonejs/midi encoder bug) ──
   if (keySigByte) {
-    return injectKeySignature(midiBytes, keySigByte.keyByte, keySigByte.scaleByte);
+    return injectKeySignature(withFixedEOT, keySigByte.keyByte, keySigByte.scaleByte);
   }
 
-  return midiBytes;
+  return withFixedEOT;
 }

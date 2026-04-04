@@ -77,6 +77,20 @@ function collectKeySignatureEvents(
   return results;
 }
 
+/**
+ * Return the absolute tick of the end-of-track event in the conductor track
+ * (track 0 in the raw MIDI bytes).
+ */
+function getConductorTrackEOTTick(bytes: Uint8Array): number {
+  const midiData = parseMidi(bytes);
+  const conductorTrack = midiData.tracks[0] ?? [];
+  let absoluteTick = 0;
+  for (const event of conductorTrack) {
+    absoluteTick += event.deltaTime;
+  }
+  return absoluteTick; // last delta accumulation = EOT position
+}
+
 /** Collect track name events from all tracks. */
 function collectTrackNames(bytes: Uint8Array): string[] {
   const midiData = parseMidi(bytes);
@@ -479,6 +493,46 @@ describe("buildMidiFile", () => {
       });
       const names = collectTrackNames(result);
       expect(names).toContain("Arpeggio");
+    });
+  });
+
+  describe("conductor track EOT placement", () => {
+    // The conductor track's end-of-track event must land at the piece's true
+    // final tick (numChords × beatsPerChord × ppq), not at the start of the
+    // last chord.  A misplaced EOT causes notation software to render an extra
+    // empty measure after the final chord.
+
+    it("places conductor track EOT at the piece's final tick for 2 chords (beatsPerChord=2)", () => {
+      // 2 chords × 2 beats × 480 ppq = 1920 ticks
+      const result = buildMidiFile([C_MAJOR, G_MAJOR], { beatsPerChord: 2 });
+      expect(getConductorTrackEOTTick(result)).toBe(1920);
+    });
+
+    it("places conductor track EOT at the piece's final tick for 1 chord", () => {
+      // 1 chord × 2 beats × 480 ppq = 960 ticks
+      const result = buildMidiFile([C_MAJOR], { beatsPerChord: 2 });
+      expect(getConductorTrackEOTTick(result)).toBe(960);
+    });
+
+    it("places conductor track EOT at the piece's final tick for 4 beatsPerChord", () => {
+      // 2 chords × 4 beats × 480 ppq = 3840 ticks
+      const result = buildMidiFile([C_MAJOR, G_MAJOR], { beatsPerChord: 4 });
+      expect(getConductorTrackEOTTick(result)).toBe(3840);
+    });
+
+    it("places conductor track EOT correctly when chord symbols are omitted", () => {
+      // Even without chord symbol meta events the EOT must extend to finalTicks.
+      // 2 chords × 2 beats × 480 ppq = 1920 ticks
+      const result = buildMidiFile([C_MAJOR, G_MAJOR], {
+        beatsPerChord: 2,
+        includeChordSymbols: false,
+      });
+      expect(getConductorTrackEOTTick(result)).toBe(1920);
+    });
+
+    it("places conductor track EOT at tick 0 for an empty chord list", () => {
+      const result = buildMidiFile([]);
+      expect(getConductorTrackEOTTick(result)).toBe(0);
     });
   });
 });
