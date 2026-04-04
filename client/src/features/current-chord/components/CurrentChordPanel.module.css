@@ -66,6 +66,52 @@
   letter-spacing: 0.02em;
 }
 
+/* ── Roman numeral row ──────────────────────────────────────────────────── */
+.romanNumeralRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.romanNumeral {
+  font-size: 18px;
+  font-weight: 700;
+  font-style: normal;
+  font-family: "Times New Roman", Times, serif;
+  color: var(--chord-quality-dark, #4f46e5);
+  letter-spacing: 0.02em;
+  min-width: 2ch;
+}
+
+.tonicSnapButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tonicSnapButton:hover:not(:disabled) {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
+}
+
+.tonicSnapButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ── Thumbnail wrapper ──────────────────────────────────────────────────── */
 .thumbnail {
   margin-bottom: 4px;
@@ -126,12 +172,14 @@
   animation: arrowSlide 0.35s ease;
 }
 
-/* ── Action row (play button) ───────────────────────────────────────────── */
+/* ── Action row (play + set-as-tonic) ──────────────────────────────────── */
 .actionRow {
   display: flex;
   gap: 8px;
   justify-content: center;
-  margin-top: 8px;
+  align-items: center;
+  margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 /* ── Notes display row ──────────────────────────────────────────────────── */

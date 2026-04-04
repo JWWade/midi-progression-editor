@@ -19,6 +19,8 @@ import { useEnharmonic } from './providers/useEnharmonic';
 import { VisualLegend } from '../features/legend';
 import { Toast } from '../shared/components/Toast/Toast';
 import { selectRandomDiatonicStartupChord } from '../features/chord/utils/selectRandomDiatonicStartupChord';
+import { KeyContextPanel } from '../features/scale';
+import { AudioDebugPanel } from '../features/audio/components/AudioDebugPanel';
 import { useTutorial } from '../features/tutorial';
 import styles from './App.module.css';
 
@@ -28,8 +30,8 @@ const DEFAULT_CHORD_DURATION_MS = 1200;
 export default function App() {
   const [startupSelection] = useState(() => selectRandomDiatonicStartupChord());
   const [currentChord, setCurrentChord] = useState<Chord | null>(startupSelection.chord);
-  const [keyRoot, setKeyRoot] = useState<number>(startupSelection.keyRoot);
-  const [keyScale, setKeyScale] = useState<ScaleType>(startupSelection.keyScale);
+  const [keyRoot, setKeyRoot] = useState<number>(0);
+  const [keyScale, setKeyScale] = useState<ScaleType>("major");
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
   const [chordDurationMs, setChordDurationMs] = useState(DEFAULT_CHORD_DURATION_MS);
 
@@ -42,6 +44,8 @@ export default function App() {
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Session import state
   const [importError, setImportError] = useState<string | null>(null);
@@ -111,10 +115,17 @@ export default function App() {
     fireEvent('chordSelected');
   }, [fireEvent]);
 
-  const handleKeyScaleChange = useCallback((root: number, scale: ScaleType) => {
-    setKeyRoot(root);
-    setKeyScale(scale);
-  }, []);
+  /**
+   * Single write path for all key context changes (E12-02).
+   * source identifies the call site for debugging; has no semantic effect.
+   */
+  const setKeyContext = useCallback(
+    (_action: { root: number; scale: ScaleType; source: "panel" | "tonicSnap" | "snapshot" | "startup" }) => {
+      setKeyRoot(_action.root);
+      setKeyScale(_action.scale);
+    },
+    [],
+  );
 
   const handleSendChordToCircle = useCallback((chord: Chord) => {
     // Spread into a new object so ChromaticCircle's loadChord effect always fires.
@@ -148,8 +159,7 @@ export default function App() {
         }
         setChords(snapshot.progression);
         if (snapshot.scaleContext) {
-          setKeyRoot(snapshot.scaleContext.root);
-          setKeyScale(snapshot.scaleContext.mode);
+          setKeyContext({ root: snapshot.scaleContext.root, scale: snapshot.scaleContext.mode, source: "snapshot" });
         }
         setImportError(null);
       };
@@ -158,7 +168,7 @@ export default function App() {
       };
       reader.readAsText(file);
     },
-    [setChords],
+    [setChords, setKeyContext],
   );
 
   const handleAddChord = useCallback(() => {
@@ -206,6 +216,28 @@ export default function App() {
         onLegendChange={setShowLegend}
         onLoadJson={handleLoadJsonClick}
       />
+      <div className={styles.keyContextBar}>
+        <button
+          className={styles.settingsToggle}
+          onClick={() => setIsSettingsOpen((v) => !v)}
+          aria-expanded={isSettingsOpen}
+          aria-label="Toggle settings panels"
+          title="Settings"
+        >
+          ⚙
+        </button>
+        {isSettingsOpen && (
+          <div className={styles.settingsCards}>
+            <KeyContextPanel
+              keyRoot={keyRoot}
+              keyScale={keyScale}
+              currentChordRoot={currentChord?.root ?? null}
+              onSetKeyContext={setKeyContext}
+            />
+            <AudioDebugPanel params={audioParams} onChange={setAudioParams} />
+          </div>
+        )}
+      </div>
       <div className={styles.primaryFlowContainer}>
         {/* Chromatic Circle - Left */}
         <section
@@ -220,8 +252,8 @@ export default function App() {
             isPlaybackActive={isPlaying}
             playingPitchClass={playingPitchClass}
             onCurrentChordChange={handleCurrentChordChange}
-            onKeyScaleChange={handleKeyScaleChange}
             selectedScale={keyScale}
+            keyRoot={keyRoot}
             showCentroid={showCentroid}
             showIntervals={showIntervals}
             loadChord={sendBackChord}
@@ -244,7 +276,9 @@ export default function App() {
             progressionLength={chords.length}
             maxProgressionLength={MAX_PROGRESSION_LENGTH}
             audioParams={audioParams}
-            onAudioParamsChange={setAudioParams}
+            keyRoot={keyRoot}
+            keyScale={keyScale}
+            onSetKeyContext={setKeyContext}
           />
         </section>
 

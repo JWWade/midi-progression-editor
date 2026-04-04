@@ -13,6 +13,7 @@ interface CircleControlsProps {
   selectedChordName: string;
   onChordChange: (name: string) => void;
   customFromChord: CustomChordState | null;
+  diatonicRoots?: Set<number>;
 }
 
 const BASE_BUTTON_STYLE: React.CSSProperties = {
@@ -112,6 +113,7 @@ export const CircleControls = memo(function CircleControls({
   selectedChordName,
   onChordChange,
   customFromChord,
+  diatonicRoots,
 }: CircleControlsProps) {
   const activeShape = customFromChord?.primitiveShape;
 
@@ -296,6 +298,7 @@ export const CircleControls = memo(function CircleControls({
         onChange={onChordChange}
         customChord={customFromChord}
         aria-label="Chord"
+        diatonicRoots={diatonicRoots}
       />
     </div>
   );

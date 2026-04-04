@@ -9,6 +9,7 @@ import {
   RING_RADIUS,
   RING_STROKE_WIDTH,
   CIRCLE_PADDING,
+  NODE_RADIUS,
 } from "../constants/visualConstants";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { getChordName } from "@/features/chord/data/chordNames";
@@ -45,9 +46,9 @@ interface ChromaticCircleProps {
   onCurrentChordChange?: (chord: Chord) => void;
   /** Initial named chord selected on first render (e.g. Dmaj7). */
   initialChordName?: string;
-  /** Called whenever the key root or scale mode changes. */
-  onKeyScaleChange?: (root: number, scale: ScaleType) => void;
   selectedScale?: ScaleType;
+  /** Key root pitch class (0–11) — renders the tonic marker on this node. */
+  keyRoot?: number;
   showCentroid?: boolean;
   showIntervals?: boolean;
   /** When non-null, overrides the user's internal chord selection for rendering and animation. */
@@ -79,8 +80,8 @@ function getEnharmonicEquivalent(noteIndex: number, currentName: string): string
 export function ChromaticCircle({
   onCurrentChordChange,
   initialChordName = "C",
-  onKeyScaleChange,
   selectedScale: propSelectedScale = "major",
+  keyRoot: propKeyRoot,
   showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
   externalChord,
@@ -132,8 +133,6 @@ export function ChromaticCircle({
     handleRerootChord,
   } = useChordState({
     onCurrentChordChange,
-    onKeyScaleChange,
-    selectedScale: propSelectedScale,
     initialChordName,
     pitchClasses,
   });
@@ -386,6 +385,12 @@ export function ChromaticCircle({
   );
 
   const circleTransition = prefersReducedMotion ? undefined : "fill 0.4s ease";
+
+  const keyDiatonicRoots = useMemo<Set<number>>(
+    () => new Set(getDiatonicIndices(propKeyRoot ?? rootIndex, propSelectedScale)),
+    [propKeyRoot, rootIndex, propSelectedScale],
+  );
+
   const activeArpeggioPitchClass =
     playingPitchClass === null
       ? null
@@ -533,26 +538,42 @@ export function ChromaticCircle({
               : getNoteStyle(i, [], chordType, diatonicIndices, chordComplexity);
             const isSelected =
               selectedTone?.note.index === i && selectedTone.isChordVertex !== true;
+            const isTonic = propKeyRoot !== undefined && i === propKeyRoot;
 
             return (
-              <NoteNode
-                key={`pitch-${i}-${label}`}
-                label={label}
-                index={i}
-                x={x}
-                y={y}
-                noteStyle={noteStyle}
-                isArpeggioActive={isPlaybackActive && activeArpeggioPitchClass === i}
-                isDropTarget={isDragging && dragTargetIndex === i}
-                isSelected={isSelected}
-                isInFromChord={isInFromChord}
-                onPointerDown={notePointerDownHandlers[i]!}
-                onPointerMove={handleNoteDragMove}
-                onPointerUp={handleNoteDragEnd}
-                onPointerCancel={handleNoteDragEnd}
-                onClick={stableNoteClick}
-                onKeyDown={stableNoteKeyDown}
-              />
+              <g key={`pitch-${i}-${label}`}>
+                <NoteNode
+                  label={label}
+                  index={i}
+                  x={x}
+                  y={y}
+                  noteStyle={noteStyle}
+                  isArpeggioActive={isPlaybackActive && activeArpeggioPitchClass === i}
+                  isDropTarget={isDragging && dragTargetIndex === i}
+                  isSelected={isSelected}
+                  isInFromChord={isInFromChord}
+                  onPointerDown={notePointerDownHandlers[i]!}
+                  onPointerMove={handleNoteDragMove}
+                  onPointerUp={handleNoteDragEnd}
+                  onPointerCancel={handleNoteDragEnd}
+                  onClick={stableNoteClick}
+                  onKeyDown={stableNoteKeyDown}
+                />
+                {/* Tonic marker: structural anchor rendered above node, below drag ring */}
+                {isTonic && (
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={NODE_RADIUS + 5}
+                    fill="none"
+                    stroke="#f59e0b"
+                    strokeWidth={2.5}
+                    opacity={0.9}
+                    pointerEvents="none"
+                    aria-hidden="true"
+                  />
+                )}
+              </g>
             );
           })}
         </svg>
@@ -606,6 +627,7 @@ export function ChromaticCircle({
         selectedChordName={selectedChordName}
         onChordChange={handleChordChange}
         customFromChord={customFromChord}
+        diatonicRoots={keyDiatonicRoots}
       />
     </div>
   );

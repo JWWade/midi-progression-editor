@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { getDiatonicIndices } from "@/features/scale/utils/scaleUtils";
 import { getChordName } from "@/features/chord/data/chordNames";
 import {
-  SCALE_TYPES,
   selectRandomDiatonicStartupChord,
   WESTERN_CHORD_TYPES,
 } from "../selectRandomDiatonicStartupChord";
@@ -37,21 +36,17 @@ describe("selectRandomDiatonicStartupChord", () => {
   });
 
   it("supports every key root and scale mode without throwing", () => {
-    for (let keyRoot = 0; keyRoot < 12; keyRoot += 1) {
-      for (let scaleIndex = 0; scaleIndex < SCALE_TYPES.length; scaleIndex += 1) {
-        const rng = fromSequence([
-          (keyRoot + 0.1) / 12,
-          (scaleIndex + 0.1) / SCALE_TYPES.length,
-          0,
-          0,
-        ]);
-        const selection = selectRandomDiatonicStartupChord(rng);
-        const diatonic = getDiatonicIndices(selection.keyRoot, selection.keyScale);
+    // Since E12-02 the key is fixed to C major (root 0, scale "major").
+    // The rng only influences chord selection within that fixed context.
+    // Verify diatonic membership holds for multiple rng seeds.
+    for (let seed = 0; seed < 12; seed += 1) {
+      const rng = fromSequence([seed / 12, 0]);
+      const selection = selectRandomDiatonicStartupChord(rng);
+      const diatonic = getDiatonicIndices(selection.keyRoot, selection.keyScale);
 
-        expect(selection.keyRoot).toBe(keyRoot);
-        expect(selection.keyScale).toBe(SCALE_TYPES[scaleIndex]);
-        expect(diatonic.has(selection.chord.root)).toBe(true);
-      }
+      expect(selection.keyRoot).toBe(0);
+      expect(selection.keyScale).toBe("major");
+      expect(diatonic.has(selection.chord.root)).toBe(true);
     }
   });
 });

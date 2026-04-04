@@ -25,8 +25,10 @@ function randomInt(maxExclusive: number, rng: () => number): number {
 export function selectRandomDiatonicStartupChord(
   rng: () => number = Math.random,
 ): RandomDiatonicStartupSelection {
-  const keyRoot = randomInt(12, rng);
-  const keyScale = SCALE_TYPES[randomInt(SCALE_TYPES.length, rng)] ?? "major";
+  // Key is always C major (E12-01). Startup chord is uniform random over the 7
+  // diatonic roots; quality is uniform random over western chord types.
+  const keyRoot = 0;
+  const keyScale: ScaleType = "major";
 
   const diatonicRoots = Array.from(getDiatonicIndices(keyRoot, keyScale));
   const chordRoot = diatonicRoots[randomInt(diatonicRoots.length, rng)] ?? keyRoot;

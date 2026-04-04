@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { ScaleType } from "@/features/scale/types";
 import type { Chord } from "@/features/current-chord";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
@@ -12,16 +11,12 @@ import { useCustomChordState } from "./useCustomChordState";
 
 interface UseChordStateOptions {
   onCurrentChordChange?: (chord: Chord) => void;
-  onKeyScaleChange?: (root: number, scale: ScaleType) => void;
-  selectedScale: ScaleType;
   initialChordName?: string;
   pitchClasses: readonly string[];
 }
 
 export function useChordState({
   onCurrentChordChange,
-  onKeyScaleChange,
-  selectedScale,
   initialChordName = "C",
   pitchClasses,
 }: UseChordStateOptions) {
@@ -120,10 +115,6 @@ export function useChordState({
       onCurrentChordChange?.({ root: effectiveRoot, quality: effectiveQuality });
     }
   }, [effectiveRoot, effectiveQuality, onCurrentChordChange, customFromChord]);
-
-  useEffect(() => {
-    onKeyScaleChange?.(effectiveRoot, selectedScale);
-  }, [effectiveRoot, selectedScale, onKeyScaleChange]);
 
   useEffect(() => {
     if (!moveAnnouncement) return;

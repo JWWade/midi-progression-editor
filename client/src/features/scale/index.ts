@@ -1,4 +1,5 @@
-export { ScalePlaceholder } from './components/ScalePlaceholder';
+export { KeyContextPanel } from './components/KeyContextPanel';
+export type { SetKeyContextAction } from './components/KeyContextPanel';
 
 // Types
 export type { ScaleType } from './types';

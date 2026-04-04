@@ -23,9 +23,11 @@ interface ChordGridProps {
   onChange: (chordName: string) => void;
   customChord?: { root: number; quality: ChordType; customNotes: number[] } | null;
   "aria-label"?: string;
+  /** Pitch classes (0–11) that are diatonic to the active key. Diatonic cells show a filled-dot indicator. */
+  diatonicRoots?: Set<number>;
 }
 
-export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabel }: ChordGridProps) {
+export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabel, diatonicRoots }: ChordGridProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { pitchClasses } = useEnharmonic();
@@ -178,66 +180,104 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
             ))}
           </div>
 
-          {PITCH_CLASSES.map((rootLabel, rootIndex) => (
-            <div key={rootLabel} role="row" style={{ display: "flex", alignItems: "center" }}>
-              <div
-                role="rowheader"
-                style={{
-                  width: 30,
-                  flexShrink: 0,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--color-text-secondary)",
-                  textAlign: "right",
-                  paddingRight: 5,
-                }}
-              >
-                {pitchClasses[rootIndex]}
-              </div>
-              {CHORD_TYPE_ORDER.map((type) => {
-                const chordName = getChordName(rootIndex, type);
-                const displayName = getChordName(rootIndex, type, pitchClasses);
-                const isSelected = chordName === value;
-                const color = ChordQualityColors[type];
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    role="gridcell"
-                    aria-selected={isSelected}
-                    onClick={() => handleSelect(chordName)}
-                    style={{
-                      width: 46,
-                      height: 26,
-                      flexShrink: 0,
-                      fontSize: 11,
-                      fontWeight: isSelected ? 700 : 400,
-                      cursor: "pointer",
-                      border: isSelected ? `1.5px solid ${color.base}` : "1px solid transparent",
-                      borderRadius: 4,
-                      background: isSelected ? color.light : "transparent",
-                      color: isSelected ? color.dark : "var(--color-text-primary)",
-                      textAlign: "center",
-                      padding: 0,
-                      transition: "background 0.08s",
-                    }}
-                    onMouseEnter={(event) => {
-                      if (!isSelected) {
-                        event.currentTarget.style.background = color.fill;
-                      }
-                    }}
-                    onMouseLeave={(event) => {
-                      if (!isSelected) {
-                        event.currentTarget.style.background = "transparent";
-                      }
-                    }}
-                  >
-                    {displayName}
-                  </button>
-                );
-              })}
+          {diatonicRoots !== undefined && (
+            <div
+              role="note"
+              style={{
+                fontSize: 10,
+                color: "var(--color-text-secondary)",
+                marginBottom: 4,
+                paddingLeft: 30,
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <span style={{ color: "#22c55e", fontWeight: 700 }}>●</span>
+              <span>= diatonic to active key</span>
             </div>
-          ))}
+          )}
+          {PITCH_CLASSES.map((rootLabel, rootIndex) => {
+            const isRootDiatonic = diatonicRoots?.has(rootIndex) ?? false;
+            return (
+              <div key={rootLabel} role="row" style={{ display: "flex", alignItems: "center" }}>
+                <div
+                  role="rowheader"
+                  style={{
+                    width: 30,
+                    flexShrink: 0,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--color-text-secondary)",
+                    textAlign: "right",
+                    paddingRight: 5,
+                    position: "relative",
+                  }}
+                >
+                  {isRootDiatonic && (
+                    <span
+                      aria-label="diatonic to active key"
+                      title="diatonic to active key"
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        color: "#22c55e",
+                        fontSize: 8,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ●
+                    </span>
+                  )}
+                  {pitchClasses[rootIndex]}
+                </div>
+                {CHORD_TYPE_ORDER.map((type) => {
+                  const chordName = getChordName(rootIndex, type);
+                  const displayName = getChordName(rootIndex, type, pitchClasses);
+                  const isSelected = chordName === value;
+                  const color = ChordQualityColors[type];
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      role="gridcell"
+                      aria-selected={isSelected}
+                      onClick={() => handleSelect(chordName)}
+                      style={{
+                        width: 46,
+                        height: 26,
+                        flexShrink: 0,
+                        fontSize: 11,
+                        fontWeight: isSelected ? 700 : 400,
+                        cursor: "pointer",
+                        border: isSelected ? `1.5px solid ${color.base}` : "1px solid transparent",
+                        borderRadius: 4,
+                        background: isSelected ? color.light : "transparent",
+                        color: isSelected ? color.dark : "var(--color-text-primary)",
+                        textAlign: "center",
+                        padding: 0,
+                        transition: "background 0.08s",
+                      }}
+                      onMouseEnter={(event) => {
+                        if (!isSelected) {
+                          event.currentTarget.style.background = color.fill;
+                        }
+                      }}
+                      onMouseLeave={(event) => {
+                        if (!isSelected) {
+                          event.currentTarget.style.background = "transparent";
+                        }
+                      }}
+                    >
+                      {displayName}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
