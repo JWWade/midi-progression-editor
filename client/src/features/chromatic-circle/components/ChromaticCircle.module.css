@@ -19,3 +19,17 @@
   outline-offset: 3px;
   border-radius: 50%;
 }
+
+/* ── Note node hover affordance ─────────────────────────────────────────── */
+@media (hover: hover) {
+  .chromaticSvg g[role="button"] {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 0.15s ease, filter 0.15s ease;
+  }
+
+  .chromaticSvg g[role="button"]:hover {
+    transform: scale(1.15);
+    filter: brightness(1.2);
+  }
+}

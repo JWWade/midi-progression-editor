@@ -1,0 +1,76 @@
+/* ── Wrapper label ───────────────────────────────────────────────────────── */
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Visually-hidden real checkbox ───────────────────────────────────────── */
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Track (the pill background) ────────────────────────────────────────── */
+.track {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  background-color: var(--color-border, #d1d5db);
+  border-radius: 10px;
+  transition: background-color 150ms ease;
+}
+
+.input:checked + .track {
+  background-color: var(--color-accent, #4f46e5);
+}
+
+/* ── Thumb (the sliding circle) ─────────────────────────────────────────── */
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 150ms ease;
+}
+
+.input:checked + .track .thumb {
+  transform: translateX(16px);
+}
+
+/* ── Focus ring ─────────────────────────────────────────────────────────── */
+.input:focus-visible + .track {
+  outline: 3px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* ── Label text ─────────────────────────────────────────────────────────── */
+.label {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .track,
+  .thumb {
+    transition: none;
+  }
+}

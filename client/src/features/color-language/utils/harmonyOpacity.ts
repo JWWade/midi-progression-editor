@@ -7,7 +7,7 @@ import { DIATONIC_OPACITY, CHROMATIC_OPACITY } from "@/features/chromatic-circle
  */
 export const CHORD_TONE_CHROMATIC_OPACITY = 0.7;
 const CHORD_TONE_CHROMATIC_OPACITY_DARK = 0.84;
-const CHROMATIC_OPACITY_DARK = 0.55;
+const CHROMATIC_OPACITY_DARK = 0.32;
 
 function isDarkTheme(): boolean {
   if (typeof document === "undefined") return false;

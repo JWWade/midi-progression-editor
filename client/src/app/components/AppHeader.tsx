@@ -1,5 +1,6 @@
 import { useTheme } from '../providers/useTheme';
 import { useEnharmonic } from '../providers/useEnharmonic';
+import { PillToggle } from '@/shared/components/PillToggle/PillToggle';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
@@ -35,41 +36,24 @@ export function AppHeader({
     )}
     <header className={styles.header}>
       <div className={styles.toggles}>
-        {/* Show Centroid toggle */}
-        <label htmlFor="show-centroid" className={styles.toggleLabel}>
-          <input
-            id="show-centroid"
-            type="checkbox"
-            checked={showCentroid}
-            onChange={(e) => onCentroidChange(e.target.checked)}
-            className={styles.checkbox}
-          />
-          Center
-        </label>
-
-        {/* Show Intervals toggle */}
-        <label htmlFor="show-intervals" className={styles.toggleLabel}>
-          <input
-            id="show-intervals"
-            type="checkbox"
-            checked={showIntervals}
-            onChange={(e) => onIntervalsChange(e.target.checked)}
-            className={styles.checkbox}
-          />
-          Intervals
-        </label>
-
-        {/* Show Legend toggle */}
-        <label htmlFor="show-legend" className={styles.toggleLabel}>
-          <input
-            id="show-legend"
-            type="checkbox"
-            checked={showLegend}
-            onChange={(e) => onLegendChange(e.target.checked)}
-            className={styles.checkbox}
-          />
-          Legend
-        </label>
+        <PillToggle
+          id="show-centroid"
+          checked={showCentroid}
+          onChange={onCentroidChange}
+          label="Center"
+        />
+        <PillToggle
+          id="show-intervals"
+          checked={showIntervals}
+          onChange={onIntervalsChange}
+          label="Intervals"
+        />
+        <PillToggle
+          id="show-legend"
+          checked={showLegend}
+          onChange={onLegendChange}
+          label="Legend"
+        />
       </div>
 
       <div className={styles.rightControls}>
