@@ -22,10 +22,8 @@ import { selectRandomDiatonicStartupChord } from '../features/chord/utils/select
 import { KeyContextPanel } from '../features/scale';
 import { AudioDebugPanel } from '../features/audio/components/AudioDebugPanel';
 import { useTutorial } from '../features/tutorial';
+import { getRandomBpmInRange } from '../features/midi-export/utils/bpmTempoLabel';
 import styles from './App.module.css';
-
-/** Default chord duration used for progression playback (milliseconds). */
-const DEFAULT_CHORD_DURATION_MS = 1200;
 
 export default function App() {
   const [startupSelection] = useState(() => selectRandomDiatonicStartupChord());
@@ -33,7 +31,9 @@ export default function App() {
   const [keyRoot, setKeyRoot] = useState<number>(0);
   const [keyScale, setKeyScale] = useState<ScaleType>("major");
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
-  const [chordDurationMs, setChordDurationMs] = useState(DEFAULT_CHORD_DURATION_MS);
+  const [bpm, setBpm] = useState(() => getRandomBpmInRange("Adagio", "Presto"));
+  const [beatsPerChord, setBeatsPerChord] = useState(4);
+  const chordDurationMs = useMemo(() => Math.round((60 / bpm) * beatsPerChord * 1000), [bpm, beatsPerChord]);
 
   // Chord sent back from the progression sidebar to the chromatic circle.
   // Spread into a new object on each send so the ChromaticCircle effect always
@@ -264,8 +264,10 @@ export default function App() {
             onStop={onStop}
             loop={loop}
             onToggleLoop={toggleLoop}
-            chordDurationMs={chordDurationMs}
-            onChordDurationChange={setChordDurationMs}
+            bpm={bpm}
+            onBpmChange={setBpm}
+            beatsPerChord={beatsPerChord}
+            onBeatsPerChordChange={setBeatsPerChord}
             scale={{ root: keyRoot, mode: keyScale }}
             onApplyBridge={applyBridge}
             onPreviewBridge={onPreviewBridge}

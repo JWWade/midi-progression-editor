@@ -34,8 +34,10 @@ interface ProgressionSidebarProps {
   onStop: () => void;
   loop: boolean;
   onToggleLoop: () => void;
-  chordDurationMs: number;
-  onChordDurationChange: (ms: number) => void;
+  bpm: number;
+  onBpmChange: (v: number) => void;
+  beatsPerChord: number;
+  onBeatsPerChordChange: (v: number) => void;
   scale?: ScaleContext | null;
   onApplyBridge?: (insertAfterIndex: number, bridge: Chord[]) => void;
   onPreviewBridge?: (source: Chord, bridge: Chord[], target: Chord, insertAfterIndex: number) => void;
@@ -54,12 +56,6 @@ interface ProgressionSidebarProps {
   onToggleArpeggio?: () => void;
   onSetArpeggioPattern?: (pattern: ArpeggioPattern) => void;
 }
-
-const DURATION_OPTIONS: { label: string; ms: number }[] = [
-  { label: "Slow", ms: 2000 },
-  { label: "Medium", ms: 1200 },
-  { label: "Fast", ms: 600 },
-];
 
 // ── Inner component: renders the gap between two chord tiles ─────────────
 
@@ -154,8 +150,10 @@ export function ProgressionSidebar({
   onStop,
   loop,
   onToggleLoop,
-  chordDurationMs,
-  onChordDurationChange,
+  bpm,
+  onBpmChange,
+  beatsPerChord,
+  onBeatsPerChordChange,
   scale = null,
   onApplyBridge,
   onPreviewBridge,
@@ -319,22 +317,6 @@ export function ProgressionSidebar({
             {isPlaying ? "■ Stop" : "▶ Play All"}
           </button>
           <div className={styles.playbackModifiers}>
-            <span className={styles.timingGroup}>
-              <label className={styles.durationLabel} htmlFor="chord-duration-select">
-                Speed
-              </label>
-              <select
-                id="chord-duration-select"
-                className={styles.durationSelect}
-                value={chordDurationMs}
-                aria-label="Chord duration"
-                onChange={(e) => onChordDurationChange(Number(e.target.value))}
-              >
-                {DURATION_OPTIONS.map(({ label, ms }) => (
-                  <option key={ms} value={ms}>{label}</option>
-                ))}
-              </select>
-            </span>
             <button
               className={`${styles.loopButton}${loop ? ` ${styles.loopButtonActive}` : ""}`}
               onClick={onToggleLoop}
@@ -407,7 +389,16 @@ export function ProgressionSidebar({
           Maximum {maxLength} chords reached
         </div>
       )}
-      <MidiExportControls chords={chords} disabled={chordCount === 0} scaleContext={scale ?? null} arpeggioPattern={arpeggioEnabled ? arpeggioPattern : undefined} />
+      <MidiExportControls
+        chords={chords}
+        disabled={chordCount === 0}
+        scaleContext={scale ?? null}
+        arpeggioPattern={arpeggioEnabled ? arpeggioPattern : undefined}
+        bpm={bpm}
+        setBpm={onBpmChange}
+        beatsPerChord={beatsPerChord}
+        setBeatsPerChord={onBeatsPerChordChange}
+      />
     </aside>
   );
 }

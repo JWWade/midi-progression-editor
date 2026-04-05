@@ -13,11 +13,14 @@ interface MidiExportControlsProps {
   scaleContext: ScaleContext | null;
   /** When provided, MIDI export uses arpeggiated note sequences. */
   arpeggioPattern?: ArpeggioPattern;
+  bpm: number;
+  setBpm: (v: number) => void;
+  beatsPerChord: number;
+  setBeatsPerChord: (v: number) => void;
 }
 
-export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPattern }: MidiExportControlsProps) {
-  const { bpm, setBpm, beatsPerChord, setBeatsPerChord, exportMidi } =
-    useMidiExport(chords, arpeggioPattern, scaleContext);
+export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPattern, bpm, setBpm, beatsPerChord, setBeatsPerChord }: MidiExportControlsProps) {
+  const { exportMidi } = useMidiExport(chords, arpeggioPattern, scaleContext, bpm, beatsPerChord);
 
   const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
 

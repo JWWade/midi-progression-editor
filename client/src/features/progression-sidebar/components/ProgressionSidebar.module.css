@@ -58,47 +58,6 @@
   gap: 6px;
 }
 
-/* Timing sub-group: Speed label + select, separated from toggle buttons */
-.timingGroup {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding-right: 8px;
-  border-right: 1px solid var(--color-border-subtle);
-  margin-right: 2px;
-}
-
-.durationLabel {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  cursor: default;
-}
-
-.durationSelect {
-  padding: 3px 6px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  background-color: var(--color-bg-sidebar);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 4px;
-  cursor: pointer;
-  appearance: none;
-  /* Minimal chevron via inline SVG background */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 6px center;
-  padding-right: 20px;
-}
-
-.durationSelect:focus-visible {
-  outline: 2px solid var(--color-accent, #4f46e5);
-  outline-offset: 1px;
-}
-
 .playAllButton {
   width: 100%;
   padding: 8px 16px;
@@ -307,11 +266,6 @@
   color: #ff69b4;
   text-shadow: 0 0 6px #ff69b4;
   border-top-color: #ff00ff;
-}
-
-[data-theme="retro"] .durationLabel {
-  color: #ffff00;
-  text-shadow: 0 0 4px #ffff00;
 }
 
 @media (prefers-reduced-motion: reduce) {
