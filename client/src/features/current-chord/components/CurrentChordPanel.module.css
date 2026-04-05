@@ -3,8 +3,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 24px 20px;
+  gap: 4px;
+  padding: 18px 20px;
   border-radius: 12px;
   /* Dynamic tint is injected via the --chord-panel-bg custom property */
   background-color: var(--chord-panel-bg, #f8f9fa);
@@ -92,12 +92,12 @@
   justify-content: center;
   min-height: 32px;
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: 12px;
   font-family: inherit;
   font-weight: 500;
   color: var(--color-text-secondary);
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
@@ -129,7 +129,7 @@
 
 /* ── Add-to-progression button ──────────────────────────────────────────── */
 .addButton {
-  margin-top: 16px;
+  margin-top: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -180,7 +180,7 @@
   gap: 8px;
   justify-content: center;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 8px;
   flex-wrap: wrap;
 }
 
@@ -202,6 +202,16 @@
   color: var(--chord-quality-dark, #4f46e5);
   user-select: none;
   letter-spacing: 0.03em;
+}
+
+.noteNames span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  background-color: color-mix(in srgb, var(--chord-quality-base, #4f46e5) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chord-quality-base, #4f46e5) 35%, transparent);
+  border-radius: 4px;
 }
 
 .noteSeparator {

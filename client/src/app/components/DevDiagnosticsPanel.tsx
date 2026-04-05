@@ -138,9 +138,43 @@ export function DevDiagnosticsPanel({
           </dd>
           <dd className={styles.row}>
             <span className={styles.key}>Volume</span>
+            <span className={styles.value}>{audioParams.masterVolume.toFixed(2)}</span>
+          </dd>
+          <dd className={styles.row}>
+            <span className={styles.key}>Attack peak</span>
+            <span className={styles.value}>{audioParams.attackPeak.toFixed(2)}</span>
+          </dd>
+          <dd className={styles.row}>
+            <span className={styles.key}>Attack time</span>
+            <span className={styles.value}>{audioParams.attackTime.toFixed(3)} s</span>
+          </dd>
+          <dd className={styles.row}>
+            <span className={styles.key}>Decay time</span>
+            <span className={styles.value}>{audioParams.decayTime.toFixed(3)} s</span>
+          </dd>
+          <dd className={styles.row}>
+            <span className={styles.key}>Sustain</span>
+            <span className={styles.value}>{audioParams.sustainLevel.toFixed(2)}</span>
+          </dd>
+          <dd className={styles.row}>
+            <span className={styles.key}>Release time</span>
+            <span className={styles.value}>{audioParams.releaseTime.toFixed(3)} s</span>
+          </dd>
+          <dd className={styles.row}>
+            <span className={styles.key}>Scale gain</span>
+            <span className={styles.value}>{audioParams.scaleGainByNoteCount ? 'yes' : 'no'}</span>
+          </dd>
+          <dd className={styles.row}>
+            <span className={styles.key}>Comp. threshold</span>
             <span className={styles.value}>
-              {audioParams.masterVolume.toFixed(2)}
+              {isFinite(audioParams.compressorThreshold)
+                ? `${audioParams.compressorThreshold} dB`
+                : 'off'}
             </span>
+          </dd>
+          <dd className={styles.row}>
+            <span className={styles.key}>Comp. ratio</span>
+            <span className={styles.value}>{audioParams.compressorRatio}:1</span>
           </dd>
         </div>
       </dl>

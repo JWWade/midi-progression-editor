@@ -182,14 +182,13 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
       style={panelStyle}
       aria-label="Current chord panel"
     >
-      <span className={styles.sectionLabel}>Current Chord</span>
       <div className={styles.thumbnail}>
         <ChordThumbnail
           noteIndices={noteIndices}
           rootIndex={resolvedIdentity?.root ?? chord?.root}
           quality={chord?.quality ?? "major"}
           complexity={complexity}
-          size={80}
+          size={72}
           diatonicIndices={diatonicIndices}
         />
       </div>
@@ -225,28 +224,6 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
               </span>
             </div>
           )}
-          <div className={styles.actionRow}>
-            <button
-              className={`${styles.playButton}${isPlaying ? ` ${styles.playButtonActive}` : ''}`}
-              onClick={handlePlay}
-              aria-label={isPlaying ? "Stop chord playback" : "Play chord"}
-              title={isPlaying ? "Stop" : "Play chord"}
-            >
-              {isPlaying ? '■ Stop' : '▶ Play'}
-            </button>
-            {onSetKeyContext && (
-              <button
-                type="button"
-                className={styles.tonicSnapButton}
-                onClick={handleSetAsTonic}
-                disabled={chord === null}
-                aria-label="Set key root to this chord's root"
-                title="Set as tonic"
-              >
-                Set as tonic
-              </button>
-            )}
-          </div>
           <div className={styles.notesRow}>
             <span
               className={styles.noteNames}
@@ -273,6 +250,28 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
             className="sr-only"
           >
             {copied ? 'Notes copied to clipboard' : ''}
+          </div>
+          <div className={styles.actionRow}>
+            <button
+              className={`${styles.playButton}${isPlaying ? ` ${styles.playButtonActive}` : ''}`}
+              onClick={handlePlay}
+              aria-label={isPlaying ? "Stop chord playback" : "Play chord"}
+              title={isPlaying ? "Stop" : "Play chord"}
+            >
+              {isPlaying ? '■ Stop' : '▶ Play'}
+            </button>
+            {onSetKeyContext && (
+              <button
+                type="button"
+                className={styles.tonicSnapButton}
+                onClick={handleSetAsTonic}
+                disabled={chord === null}
+                aria-label="Set key root to this chord's root"
+                title="Set as tonic"
+              >
+                Set as tonic
+              </button>
+            )}
           </div>
         </>
       )}
