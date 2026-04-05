@@ -6,8 +6,8 @@ import { ProgressionSidebar } from '../features/progression-sidebar';
 import { useProgression } from '../features/progression-sidebar/hooks/useProgression';
 import { useBridgePreview } from '../features/progression-sidebar/hooks/useBridgePreview';
 import { useBridgeApply } from '../features/progression-sidebar/hooks/useBridgeApply';
-import { importSnapshot } from '../features/progression-sidebar/utils/snapshotIO';
 import { MAX_PROGRESSION_LENGTH } from '../features/progression-sidebar/constants/progressionConfig';
+import { useFileImport } from './hooks/useFileImport';
 import { useProgressionPlayback } from '../features/audio';
 import type { AudioParams } from '../features/audio/constants/audioConfig';
 import { DEFAULT_AUDIO_PARAMS } from '../features/audio/constants/audioConfig';
@@ -46,10 +46,6 @@ export default function App() {
   const [showLegend, setShowLegend] = useState(false);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  // Session import state
-  const [importError, setImportError] = useState<string | null>(null);
-  const loadJsonInputRef = useRef<HTMLInputElement>(null);
 
   const { pitchClasses } = useEnharmonic();
   const { nodes, chords, addChord, moveChord, deleteChord, setChords } = useProgression();
@@ -127,49 +123,15 @@ export default function App() {
     [],
   );
 
+  const { importError, clearImportError, loadJsonInputRef, handleLoadJsonClick, handleFileChange } =
+    useFileImport(setChords, setKeyContext);
+
   const handleSendChordToCircle = useCallback((chord: Chord) => {
     // Spread into a new object so ChromaticCircle's loadChord effect always fires.
     setSendBackChord({ ...chord });
     setLiveRegionText(`${formatChordName(chord, pitchClasses)} loaded into chromatic circle`);
     fireEvent('chordClicked');
   }, [pitchClasses, fireEvent]);
-
-  const handleLoadJsonClick = useCallback(() => {
-    loadJsonInputRef.current?.click();
-  }, []);
-
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      // Reset value so re-selecting the same file triggers onChange again
-      e.target.value = '';
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result;
-        if (typeof text !== 'string') {
-          setImportError('Failed to read file.');
-          return;
-        }
-        const snapshot = importSnapshot(text);
-        if (!snapshot) {
-          setImportError('Invalid session file. The file does not contain a valid progression snapshot.');
-          return;
-        }
-        setChords(snapshot.progression);
-        if (snapshot.scaleContext) {
-          setKeyContext({ root: snapshot.scaleContext.root, scale: snapshot.scaleContext.mode, source: "snapshot" });
-        }
-        setImportError(null);
-      };
-      reader.onerror = () => {
-        setImportError('Failed to read file.');
-      };
-      reader.readAsText(file);
-    },
-    [setChords, setKeyContext],
-  );
 
   const handleAddChord = useCallback(() => {
     if (currentChord === null || addGuardRef.current) return;
@@ -329,7 +291,7 @@ export default function App() {
       {importError && (
         <Toast
           message={importError}
-          action={{ label: 'Dismiss', onClick: () => setImportError(null) }}
+          action={{ label: 'Dismiss', onClick: clearImportError }}
         />
       )}
       {previewError && (
