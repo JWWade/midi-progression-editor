@@ -87,7 +87,7 @@ export function getRomanNumeral(
   }
 
   const diff = semitones - nearestSemitones;
-  let accidental: "♭" | "♯" | null = null;
+  let accidental: "♭" | "♯";
   let degreeIndex = nearestDegreeIndex;
 
   if (diff === 1) {
