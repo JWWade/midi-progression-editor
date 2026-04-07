@@ -87,17 +87,12 @@ export function getRomanNumeral(
   }
 
   const diff = semitones - nearestSemitones;
-  let accidental: "♭" | "♯";
-  let degreeIndex = nearestDegreeIndex;
-
-  if (diff === 1) {
-    // One semitone above the nearest scale degree → sharp of that degree
-    accidental = "♯";
-  } else {
-    // One semitone below the next scale degree → flat of that degree
-    degreeIndex = (nearestDegreeIndex + 1) % intervals.length;
-    accidental = "♭";
-  }
+  // One semitone above → sharp of that degree; otherwise → flat of the next degree
+  const isSharp = diff === 1;
+  const accidental: "♭" | "♯" = isSharp ? "♯" : "♭";
+  const degreeIndex = isSharp
+    ? nearestDegreeIndex
+    : (nearestDegreeIndex + 1) % intervals.length;
 
   const useLower = MINOR_QUALITY_BASIS.has(chordQuality);
   const numeralStr = useLower ? DEGREE_LOWER[degreeIndex] : DEGREE_UPPER[degreeIndex];
