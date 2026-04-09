@@ -296,7 +296,7 @@ export interface components {
              * @description Chord quality (e.g. ParametricMusic.Api.Models.ChordQuality.Major, ParametricMusic.Api.Models.ChordQuality.Minor7).
              * @enum {string}
              */
-            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Major6" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Sus2" | "Major6" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
             /** @description Human-readable chord name combining root and quality (e.g. "C Major", "F# Minor 7th"). */
             displayName?: string | null;
             /**
@@ -309,7 +309,7 @@ export interface components {
         };
         ChordFromRootRequestDto: {
             /** @enum {string} */
-            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Major6" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Sus2" | "Major6" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
             /** @enum {string|null} */
             primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
         };
@@ -321,7 +321,7 @@ export interface components {
         ChordRef: {
             root: string;
             /** @enum {string} */
-            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Major6" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Sus2" | "Major6" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
             /** @enum {string|null} */
             primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
             /**

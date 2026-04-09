@@ -41,6 +41,7 @@ export interface ChordQualityColor {
  * | minor       | Blue / indigo | Cool, introspective  |
  * | dim         | Burgundy      | Dark, tense          |
  * | aug         | Teal          | Ethereal, lifted     |
+ * | sus2        | Sky blue      | Open, airy, suspended|
  * | maj7        | Gold-yellow   | Luminous, open       |
  * | min7        | Deep blue     | Rich, complex        |
  * | dom7        | Red-orange    | Warm, tense          |
@@ -79,6 +80,14 @@ export const ChordQualityColors: Record<ChordType, ChordQualityColor> = {
     dark:    "hsl(168, 65%, 20%)",
     deeper:  "hsl(168, 78%, 33%)",
     richest: "hsl(168, 88%, 26%)",
+  },
+  sus2: {
+    base:    "hsl(200, 65%, 52%)",
+    fill:    "hsla(200, 65%, 52%, 0.12)",
+    light:   "hsl(200, 65%, 95%)",
+    dark:    "hsl(200, 65%, 28%)",
+    deeper:  "hsl(200, 78%, 44%)",
+    richest: "hsl(200, 88%, 37%)",
   },
   maj7: {
     base:    "hsl(50, 70%, 52%)",

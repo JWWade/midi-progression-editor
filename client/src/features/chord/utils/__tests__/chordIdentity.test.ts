@@ -30,6 +30,13 @@ describe("findBestChordIdentity", () => {
     expect(result.matchScore).toBeCloseTo(1, 5);
   });
 
+  it("identifies Dsus2 from pitch classes [2, 4, 9]", () => {
+    const result = findBestChordIdentity([2, 4, 9]);
+    expect(result.root).toBe(2);
+    expect(result.quality).toBe("sus2");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
   it("returns a bounded score for empty input", () => {
     const result = findBestChordIdentity([]);
     expect(result.matchScore).toBeGreaterThanOrEqual(0);
