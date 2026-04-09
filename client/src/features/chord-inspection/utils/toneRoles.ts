@@ -56,6 +56,12 @@ const TONE_ROLES: Record<ChordType, Record<number, string>> = {
     7: "Perfect Fifth",
     10: "Minor Seventh",
   },
+  dom7sus4: {
+    0: "Root",
+    5: "Perfect Fourth",
+    7: "Perfect Fifth",
+    10: "Minor Seventh",
+  },
   halfdim7: {
     0: "Root",
     3: "Minor Third",

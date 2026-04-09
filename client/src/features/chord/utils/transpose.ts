@@ -18,6 +18,7 @@ export const MAJ6_INTERVALS = [0, 4, 7, 9] as const;
 export const MIN6_INTERVALS = [0, 3, 7, 9] as const;
 export const QUARTAL_INTERVALS = [0, 5, 10] as const;
 export const SUS2_INTERVALS = [0, 2, 7] as const;
+export const DOM7SUS4_INTERVALS = [0, 5, 7, 10] as const;
 export const EQUILATERAL_TRIANGLE_INTERVALS = [0, 4, 8] as const;
 export const SUSPENDED_TRIANGLE_INTERVALS = [0, 5, 7] as const;
 export const SQUARE_INTERVALS = [0, 3, 6, 9] as const;
@@ -26,9 +27,10 @@ export const SYMMETRICAL_TRAPEZOID_INTERVALS = [0, 4, 7, 11] as const;
 
 const DEFAULT_ROLES: ChordNoteInfo["role"][] = ["root", "third", "fifth", "seventh"];
 const ROLES_OVERRIDE: Partial<Record<ChordType, ChordNoteInfo["role"][]>> = {
-  sus2: ["root", "second", "fifth"],
-  maj6: ["root", "third", "fifth", "sixth"],
-  min6: ["root", "third", "fifth", "sixth"],
+  sus2:     ["root", "second", "fifth"],
+  maj6:     ["root", "third", "fifth", "sixth"],
+  min6:     ["root", "third", "fifth", "sixth"],
+  dom7sus4: ["root", "fourth", "fifth", "seventh"],
 };
 
 const DEFAULT_ROLE: ChordNoteInfo["role"] = "seventh";
@@ -81,6 +83,7 @@ export const CHORD_INTERVALS: Readonly<Record<ChordType, readonly number[]>> = {
   maj7:     MAJ7_INTERVALS,
   min7:     MIN7_INTERVALS,
   dom7:     DOM7_INTERVALS,
+  dom7sus4: DOM7SUS4_INTERVALS,
   halfdim7: HALFDIM7_INTERVALS,
   quartal:  QUARTAL_INTERVALS,
 };

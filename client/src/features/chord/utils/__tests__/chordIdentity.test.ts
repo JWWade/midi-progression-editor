@@ -46,6 +46,12 @@ describe("findBestChordIdentity", () => {
     expect(result.matchScore).toBeCloseTo(1, 5);
   });
 
+  it("identifies G7sus4 from pitch classes [7, 0, 2, 5]", () => {
+    const result = findBestQualityForRoot([7, 0, 2, 5], 7);
+    expect(result.quality).toBe("dom7sus4");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
   it("returns a bounded score for empty input", () => {
     const result = findBestChordIdentity([]);
     expect(result.matchScore).toBeGreaterThanOrEqual(0);

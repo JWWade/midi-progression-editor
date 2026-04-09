@@ -9,7 +9,7 @@ import type { Chord } from "@/features/current-chord/types";
 import type { ChordType } from "@/features/chord/types";
 
 const TRIAD_TYPES: ChordType[] = ["major", "minor", "dim", "aug", "sus2"];
-const SEVENTH_TYPES: ChordType[] = ["maj6", "min6", "maj7", "min7", "dom7", "halfdim7"];
+const SEVENTH_TYPES: ChordType[] = ["maj6", "min6", "maj7", "min7", "dom7", "dom7sus4", "halfdim7"];
 const ALL_CHORD_TYPES: ChordType[] = [...TRIAD_TYPES, ...SEVENTH_TYPES];
 
 describe("getChordComplexity", () => {
@@ -65,6 +65,11 @@ describe("getChordComplexity", () => {
 
   it("returns 'seventh' for halfdim7", () => {
     const chord: Chord = { root: 0, quality: "halfdim7" };
+    expect(getChordComplexity(chord)).toBe("seventh");
+  });
+
+  it("returns 'seventh' for dom7sus4", () => {
+    const chord: Chord = { root: 0, quality: "dom7sus4" };
     expect(getChordComplexity(chord)).toBe("seventh");
   });
 

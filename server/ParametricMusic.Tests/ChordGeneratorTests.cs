@@ -76,6 +76,29 @@ public class ChordGeneratorTests
         Assert.Equal(["C", "E", "G", "A"], result.NoteNames);
     }
 
+    [Fact]
+    public void BuildChord_CDom7Sus4_ReturnsExpectedPitchClasses()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.Dom7Sus4);
+        Assert.Equal([0, 5, 7, 10], result.PitchClasses);
+        Assert.Equal(["C", "F", "G", "A#"], result.NoteNames);
+    }
+
+    [Fact]
+    public void BuildChord_GDom7Sus4_ReturnsExpectedPitchClasses()
+    {
+        var result = _service.BuildChord(Note.G, ChordQuality.Dom7Sus4);
+        Assert.Equal([7, 0, 2, 5], result.PitchClasses);
+        Assert.Equal(["G", "C", "D", "F"], result.NoteNames);
+    }
+
+    [Fact]
+    public void BuildChord_CDom7Sus4_HasCorrectDisplayName()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.Dom7Sus4);
+        Assert.Equal("C Dom 7 Sus4", result.DisplayName);
+    }
+
     // ── Root B (index 11) – wrap-around ──────────────────────────────────────
 
     [Fact]

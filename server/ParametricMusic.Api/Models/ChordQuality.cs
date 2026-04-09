@@ -20,6 +20,8 @@ public enum ChordQuality
     Minor6,
     [Display(Name = "Dominant 7th", Description = "Dominant seventh chord (root, major 3rd, perfect 5th, minor 7th)")]
     Dominant7,
+    [Display(Name = "Dom 7 Sus4", Description = "Dominant seventh suspended fourth (root, perfect 4th, perfect 5th, minor 7th — no third)")]
+    Dom7Sus4,
     [Display(Name = "Major 7th", Description = "Major seventh chord (root, major 3rd, perfect 5th, major 7th)")]
     Major7,
     [Display(Name = "Minor 7th", Description = "Minor seventh chord (root, minor 3rd, perfect 5th, minor 7th)")]

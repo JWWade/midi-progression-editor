@@ -25,6 +25,7 @@ export const CHORD_QUALITY_LABELS: Record<ChordType, string> = {
   aug:   "Augmented",
   sus2:  "Suspended 2",
   dom7: "Dominant 7",
+  dom7sus4: "Dom 7 Sus4",
   maj7: "Major 7",
   maj6: "Major 6",
   min6: "Minor 6",
