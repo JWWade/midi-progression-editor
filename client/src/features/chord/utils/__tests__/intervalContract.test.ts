@@ -27,6 +27,8 @@ const BACKEND_CHORD_INTERVALS = {
   minor:    [0, 3, 7],
   dim:      [0, 3, 6],
   aug:      [0, 4, 8],
+  // Sixth chord
+  maj6:     [0, 4, 7, 9],
   // Seventh chords
   maj7:     [0, 4, 7, 11],
   min7:     [0, 3, 7, 10],
@@ -53,6 +55,10 @@ describe("CHORD_INTERVALS frontend↔backend contract", () => {
     expect(Array.from(CHORD_INTERVALS.aug)).toEqual(BACKEND_CHORD_INTERVALS.aug);
   });
 
+  it("major 6th matches backend", () => {
+    expect(Array.from(CHORD_INTERVALS.maj6)).toEqual(BACKEND_CHORD_INTERVALS.maj6);
+  });
+
   it("major 7th matches backend", () => {
     expect(Array.from(CHORD_INTERVALS.maj7)).toEqual(BACKEND_CHORD_INTERVALS.maj7);
   });
@@ -73,7 +79,7 @@ describe("CHORD_INTERVALS frontend↔backend contract", () => {
     expect(Array.from(CHORD_INTERVALS.quartal)).toEqual(BACKEND_CHORD_INTERVALS.quartal);
   });
 
-  it("all 9 chord qualities have a matching backend entry", () => {
+  it("all 10 chord qualities have a matching backend entry", () => {
     const backendQualities = Object.keys(BACKEND_CHORD_INTERVALS) as Array<keyof typeof BACKEND_CHORD_INTERVALS>;
     for (const quality of backendQualities) {
       expect(CHORD_INTERVALS[quality]).toBeDefined();

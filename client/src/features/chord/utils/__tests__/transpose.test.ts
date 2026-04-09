@@ -15,8 +15,8 @@ import {
 } from "../transpose";
 import type { ChordType } from "@/features/chord/types";
 
-const ALL_8_CHORD_TYPES: ChordType[] = [
-  "major", "minor", "dim", "aug", "maj7", "min7", "dom7", "halfdim7",
+const ALL_9_CHORD_TYPES: ChordType[] = [
+  "major", "minor", "dim", "aug", "maj6", "maj7", "min7", "dom7", "halfdim7",
 ];
 
 describe("DIM_INTERVALS and AUG_INTERVALS constants", () => {
@@ -75,6 +75,14 @@ describe("transposeChord", () => {
     expect(notes[3].role).toBe("seventh");
   });
 
+  it("assigns roles root/third/fifth/sixth for maj6 when chordType is provided", () => {
+    const notes = transposeChord(CHORD_INTERVALS.maj6, 0, undefined, "maj6");
+    expect(notes[0].role).toBe("root");
+    expect(notes[1].role).toBe("third");
+    expect(notes[2].role).toBe("fifth");
+    expect(notes[3].role).toBe("sixth");
+  });
+
   it("returns 3 notes for all triad types", () => {
     const triadTypes: ChordType[] = ["major", "minor", "dim", "aug"];
     for (const type of triadTypes) {
@@ -84,7 +92,7 @@ describe("transposeChord", () => {
   });
 
   it("returns 4 notes for all seventh chord types", () => {
-    const seventhTypes: ChordType[] = ["maj7", "min7", "dom7", "halfdim7"];
+    const seventhTypes: ChordType[] = ["maj6", "maj7", "min7", "dom7", "halfdim7"];
     for (const type of seventhTypes) {
       const notes = transposeChord(CHORD_INTERVALS[type], 0);
       expect(notes).toHaveLength(4);
@@ -112,15 +120,15 @@ describe("transposeChord", () => {
 });
 
 describe("CHORD_INTERVALS", () => {
-  it("contains an entry for every one of the 8 core chord types", () => {
-    for (const type of ALL_8_CHORD_TYPES) {
+  it("contains an entry for every one of the 9 core chord types", () => {
+    for (const type of ALL_9_CHORD_TYPES) {
       expect(CHORD_INTERVALS[type]).toBeDefined();
       expect(CHORD_INTERVALS[type].length).toBeGreaterThan(0);
     }
   });
 
   it("all intervals start with 0 (root position)", () => {
-    for (const type of ALL_8_CHORD_TYPES) {
+    for (const type of ALL_9_CHORD_TYPES) {
       expect(CHORD_INTERVALS[type][0]).toBe(0);
     }
   });
@@ -148,6 +156,10 @@ describe("getChordTriad", () => {
       expect(getChordTriad(type)).toBeUndefined();
     }
   });
+
+  it("returns undefined for maj6 (has its own distinct 4-note structure)", () => {
+    expect(getChordTriad("maj6")).toBeUndefined();
+  });
 });
 
 describe("getChordNoteIndices", () => {
@@ -163,8 +175,12 @@ describe("getChordNoteIndices", () => {
     expect(getChordNoteIndices(0, "maj7")).toEqual([0, 4, 7, 11]);
   });
 
+  it("returns [0,4,7,9] for C maj6 (root=0)", () => {
+    expect(getChordNoteIndices(0, "maj6")).toEqual([0, 4, 7, 9]);
+  });
+
   it("all returned indices are in range 0–11 for every chord type and root", () => {
-    for (const type of ALL_8_CHORD_TYPES) {
+    for (const type of ALL_9_CHORD_TYPES) {
       for (let root = 0; root < 12; root++) {
         for (const idx of getChordNoteIndices(root, type)) {
           expect(idx).toBeGreaterThanOrEqual(0);
@@ -175,7 +191,7 @@ describe("getChordNoteIndices", () => {
   });
 
   it("result length matches CHORD_INTERVALS length for that type", () => {
-    for (const type of ALL_8_CHORD_TYPES) {
+    for (const type of ALL_9_CHORD_TYPES) {
       const indices = getChordNoteIndices(0, type);
       expect(indices).toHaveLength(CHORD_INTERVALS[type].length);
     }

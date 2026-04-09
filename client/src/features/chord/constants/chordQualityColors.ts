@@ -88,6 +88,14 @@ export const ChordQualityColors: Record<ChordType, ChordQualityColor> = {
     deeper:  "hsl(50, 85%, 45%)",
     richest: "hsl(50, 95%, 38%)",
   },
+  maj6: {
+    base:    "hsl(62, 75%, 48%)",
+    fill:    "hsla(62, 75%, 48%, 0.12)",
+    light:   "hsl(62, 75%, 95%)",
+    dark:    "hsl(62, 75%, 26%)",
+    deeper:  "hsl(62, 88%, 41%)",
+    richest: "hsl(62, 95%, 34%)",
+  },
   min7: {
     base:    "hsl(240, 60%, 52%)",
     fill:    "hsla(240, 60%, 52%, 0.12)",
