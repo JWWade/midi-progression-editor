@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import type { LayoutMode } from './types/layoutMode';
 import { ChromaticCircle } from '../features/chromatic-circle';
 import { CurrentChordPanel, type Chord, formatChordName } from '../features/current-chord';
 import { getDiatonicIndices } from '../features/chromatic-circle/utils';
@@ -26,6 +27,7 @@ import { getRandomBpmInRange } from '../features/midi-export/utils/bpmTempoLabel
 import styles from './App.module.css';
 
 export default function App() {
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('focus');
   const [startupSelection] = useState(() => selectRandomDiatonicStartupChord());
   const [currentChord, setCurrentChord] = useState<Chord | null>(startupSelection.chord);
   const [keyRoot, setKeyRoot] = useState<number>(0);
@@ -138,13 +140,17 @@ export default function App() {
     addGuardRef.current = true;
     addChord(currentChord);
     fireEvent('chordAdded');
+    // Auto-advance: inspect → compose when a chord is added to the progression.
+    if (layoutMode === 'inspect') {
+      setLayoutMode('compose');
+    }
     // currentChord intentionally stays after adding so the panel remains
     // populated and the user can immediately add the same chord again
     // without re-selecting it on the circle.
     requestAnimationFrame(() => {
       addGuardRef.current = false;
     });
-  }, [currentChord, addChord, fireEvent]);
+  }, [currentChord, addChord, fireEvent, layoutMode]);
 
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 
@@ -152,6 +158,19 @@ export default function App() {
   useEffect(() => {
     updateAppContext({ progressionLength: chords.length, isPlaying });
   }, [chords.length, isPlaying, updateAppContext]);
+
+  // Auto-advance: focus → inspect when a chord is selected (skip initial mount).
+  const isMountedRef = useRef(false);
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
+    if (currentChord && layoutMode === 'focus') {
+      setLayoutMode('inspect');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentChord]);
 
   return (
     <AppErrorBoundary>
@@ -177,6 +196,8 @@ export default function App() {
         showLegend={showLegend}
         onLegendChange={setShowLegend}
         onLoadJson={handleLoadJsonClick}
+        layoutMode={layoutMode}
+        onLayoutModeChange={setLayoutMode}
       />
       <div className={styles.keyContextBar}>
         <button
@@ -200,7 +221,7 @@ export default function App() {
           </div>
         )}
       </div>
-      <div className={styles.primaryFlowContainer}>
+      <div className={`${styles.primaryFlowContainer} ${styles[`layout_${layoutMode}`]}`}>
         {/* Chromatic Circle - Left */}
         <section
           id="chromatic-circle"
@@ -223,66 +244,70 @@ export default function App() {
           {showLegend && <VisualLegend />}
         </section>
 
-        {/* Current Chord Panel - Center */}
-        <section
-          id="current-chord"
-          className={styles.panelArea}
-          role="region"
-          aria-label="Current Chord - Add to progression"
-        >
-          <CurrentChordPanel
-            chord={currentChord}
-            onAddChord={handleAddChord}
-            diatonicIndices={diatonicIndices}
-            isProgressionFull={isProgressionFull}
-            progressionLength={chords.length}
-            maxProgressionLength={MAX_PROGRESSION_LENGTH}
-            audioParams={audioParams}
-            keyRoot={keyRoot}
-            keyScale={keyScale}
-            onSetKeyContext={setKeyContext}
-          />
-        </section>
+        {/* Current Chord Panel - Center (hidden in focus mode) */}
+        {layoutMode !== 'focus' && (
+          <section
+            id="current-chord"
+            className={styles.panelArea}
+            role="region"
+            aria-label="Current Chord - Add to progression"
+          >
+            <CurrentChordPanel
+              chord={currentChord}
+              onAddChord={handleAddChord}
+              diatonicIndices={diatonicIndices}
+              isProgressionFull={isProgressionFull}
+              progressionLength={chords.length}
+              maxProgressionLength={MAX_PROGRESSION_LENGTH}
+              audioParams={audioParams}
+              keyRoot={keyRoot}
+              keyScale={keyScale}
+              onSetKeyContext={setKeyContext}
+            />
+          </section>
+        )}
 
-        {/* Progression Sidebar - Right */}
-        <section
-          id="chord-progression"
-          className={styles.sidebarArea}
-          role="region"
-          aria-label="Chord Progression - View and manage added chords"
-        >
-          <ProgressionSidebar
-            nodes={nodes}
-            chords={chords}
-            onMoveUp={(i) => moveChord(i, 'up')}
-            onMoveDown={(i) => moveChord(i, 'down')}
-            onDelete={deleteChord}
-            maxLength={MAX_PROGRESSION_LENGTH}
-            isPlaying={isPlaying}
-            playingIndex={playingIndex}
-            onPlay={onPlay}
-            onStop={onStop}
-            loop={loop}
-            onToggleLoop={toggleLoop}
-            bpm={bpm}
-            onBpmChange={setBpm}
-            beatsPerChord={beatsPerChord}
-            onBeatsPerChordChange={setBeatsPerChord}
-            scale={{ root: keyRoot, mode: keyScale }}
-            onApplyBridge={applyBridge}
-            onPreviewBridge={onPreviewBridge}
-            onStopPreview={onStopPreview}
-            previewBridge={previewBridge}
-            previewInsertAfterIndex={previewInsertAfterIndex}
-            isPreviewPlaying={isPreviewPlaying}
-            onSendBack={handleSendChordToCircle}
-            arpeggioEnabled={arpeggioEnabled}
-            arpeggioPattern={arpeggioPattern}
-            playingPitchClass={playingPitchClass}
-            onToggleArpeggio={toggleArpeggio}
-            onSetArpeggioPattern={setArpeggioPattern}
-          />
-        </section>
+        {/* Progression Sidebar - Right (compose mode only) */}
+        {layoutMode === 'compose' && (
+          <section
+            id="chord-progression"
+            className={styles.sidebarArea}
+            role="region"
+            aria-label="Chord Progression - View and manage added chords"
+          >
+            <ProgressionSidebar
+              nodes={nodes}
+              chords={chords}
+              onMoveUp={(i) => moveChord(i, 'up')}
+              onMoveDown={(i) => moveChord(i, 'down')}
+              onDelete={deleteChord}
+              maxLength={MAX_PROGRESSION_LENGTH}
+              isPlaying={isPlaying}
+              playingIndex={playingIndex}
+              onPlay={onPlay}
+              onStop={onStop}
+              loop={loop}
+              onToggleLoop={toggleLoop}
+              bpm={bpm}
+              onBpmChange={setBpm}
+              beatsPerChord={beatsPerChord}
+              onBeatsPerChordChange={setBeatsPerChord}
+              scale={{ root: keyRoot, mode: keyScale }}
+              onApplyBridge={applyBridge}
+              onPreviewBridge={onPreviewBridge}
+              onStopPreview={onStopPreview}
+              previewBridge={previewBridge}
+              previewInsertAfterIndex={previewInsertAfterIndex}
+              isPreviewPlaying={isPreviewPlaying}
+              onSendBack={handleSendChordToCircle}
+              arpeggioEnabled={arpeggioEnabled}
+              arpeggioPattern={arpeggioPattern}
+              playingPitchClass={playingPitchClass}
+              onToggleArpeggio={toggleArpeggio}
+              onSetArpeggioPattern={setArpeggioPattern}
+            />
+          </section>
+        )}
       </div>
       {undoPending && (
         <Toast
