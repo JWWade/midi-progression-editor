@@ -79,7 +79,7 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
     const offsets = isCustomChord(chord)
       ? indices.map(i => ((i - (indices[0] ?? 0)) + 12) % 12)
       : CHORD_INTERVALS[chord.quality];
-    return offsets.map((semitones, idx) => ({
+    return offsets.slice(0, indices.length).map((semitones, idx) => ({
       noteName: pitchClasses[indices[idx] ?? 0] ?? "",
       label: semitones === 0 ? "Root" : getIntervalName(semitones),
     }));
@@ -258,8 +258,8 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
           </div>
           {intervalRows.length > 0 && (
             <div className={styles.intervalsRow} aria-label="Chord intervals">
-              {intervalRows.map(({ noteName, label }) => (
-                <span key={noteName} className={styles.intervalItem}>
+              {intervalRows.map(({ noteName, label }, idx) => (
+                <span key={`${idx}-${noteName}`} className={styles.intervalItem}>
                   <span className={styles.intervalNote}>{noteName}</span>
                   <span className={styles.intervalLabel}>{label}</span>
                 </span>
