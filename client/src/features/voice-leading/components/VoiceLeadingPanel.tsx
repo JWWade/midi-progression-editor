@@ -6,6 +6,8 @@ interface Preset {
   label: string;
   startOctave: number;
   style: VoiceLeadingStyle;
+  /** Human-readable style label for display in tooltips. */
+  styleLabel: string;
 }
 
 const STYLE_OPTIONS: { value: VoiceLeadingStyle; label: string }[] = [
@@ -28,9 +30,9 @@ const MOTION_BIAS_OPTIONS: { value: MotionBias; label: string; title: string }[]
 ];
 
 const PRESETS: Preset[] = [
-  { label: 'Classic SATB', startOctave: 3, style: 'minimal' },
-  { label: 'Keyboard-Friendly', startOctave: 4, style: 'close' },
-  { label: 'Bass-Led', startOctave: 2, style: 'open' },
+  { label: 'Classic SATB', startOctave: 3, style: 'minimal', styleLabel: 'Smooth Stepwise' },
+  { label: 'Keyboard-Friendly', startOctave: 4, style: 'close', styleLabel: 'Tightly Stacked' },
+  { label: 'Bass-Led', startOctave: 2, style: 'open', styleLabel: 'Wide & Spacious' },
 ];
 
 interface VoiceLeadingPanelProps {
@@ -207,7 +209,7 @@ export function VoiceLeadingPanel({
               type="button"
               className={styles.presetButton}
               onClick={() => applyPreset(preset)}
-              title={`${preset.label}: octave ${preset.startOctave}, ${STYLE_OPTIONS.find((o) => o.value === preset.style)?.label}`}
+              title={`${preset.label}: octave ${preset.startOctave}, ${preset.styleLabel}`}
             >
               {preset.label}
             </button>
