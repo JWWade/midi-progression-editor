@@ -22,13 +22,14 @@ describe("CHORD_SHAPES", () => {
     expect(CHORD_SHAPES.maj6).toBe("quadrilateral");
     expect(CHORD_SHAPES.min6).toBe("quadrilateral");
     expect(CHORD_SHAPES.min7).toBe("quadrilateral");
+    expect(CHORD_SHAPES.minmaj7).toBe("quadrilateral");
     expect(CHORD_SHAPES.halfdim7).toBe("quadrilateral");
   });
 
   it("covers every ChordType with a defined shape", () => {
     const allTypes = [
       "major", "minor", "dim", "aug", "sus2", "quartal",
-      "dom7", "dom7sus4", "maj7", "maj6", "min6", "min7", "halfdim7",
+      "dom7", "dom7sus4", "maj7", "maj6", "min6", "min7", "minmaj7", "halfdim7",
     ] as const;
     for (const t of allTypes) {
       expect(CHORD_SHAPES[t]).toBeDefined();

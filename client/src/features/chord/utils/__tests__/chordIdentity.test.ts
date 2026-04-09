@@ -52,6 +52,27 @@ describe("findBestChordIdentity", () => {
     expect(result.matchScore).toBeCloseTo(1, 5);
   });
 
+  it("identifies Cminmaj7 from pitch classes [0, 3, 7, 11]", () => {
+    const result = findBestChordIdentity([0, 3, 7, 11]);
+    expect(result.root).toBe(0);
+    expect(result.quality).toBe("minmaj7");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
+  it("identifies Cm7 (not minmaj7) from pitch classes [0, 3, 7, 10] — one-semitone boundary", () => {
+    const result = findBestChordIdentity([0, 3, 7, 10]);
+    expect(result.root).toBe(0);
+    expect(result.quality).toBe("min7");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
+  it("identifies Cmaj7 (not minmaj7) from pitch classes [0, 4, 7, 11] — one-semitone boundary", () => {
+    const result = findBestChordIdentity([0, 4, 7, 11]);
+    expect(result.root).toBe(0);
+    expect(result.quality).toBe("maj7");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
   it("returns a bounded score for empty input", () => {
     const result = findBestChordIdentity([]);
     expect(result.matchScore).toBeGreaterThanOrEqual(0);

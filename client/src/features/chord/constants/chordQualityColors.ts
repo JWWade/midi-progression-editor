@@ -46,6 +46,7 @@ export interface ChordQualityColor {
  * | maj6        | Yellow-green  | Bright, major-flavored   |
  * | min6        | Teal-indigo   | Minor-flavored, distinct |
  * | min7        | Deep blue     | Rich, complex        |
+ * | minmaj7     | Indigo-violet | Minor-dark, haunting |
  * | dom7        | Red-orange    | Warm, tense          |
  * | dom7sus4    | Amber-orange  | Dominant, unresolved |
  * | halfdim7    | Muted purple  | Mysterious, shadowed |
@@ -123,6 +124,14 @@ export const ChordQualityColors: Record<ChordType, ChordQualityColor> = {
     dark:    "hsl(240, 60%, 30%)",
     deeper:  "hsl(240, 75%, 45%)",
     richest: "hsl(240, 88%, 38%)",
+  },
+  minmaj7: {
+    base:    "hsl(258, 55%, 48%)",
+    fill:    "hsla(258, 55%, 48%, 0.12)",
+    light:   "hsl(258, 55%, 95%)",
+    dark:    "hsl(258, 55%, 27%)",
+    deeper:  "hsl(258, 68%, 41%)",
+    richest: "hsl(258, 80%, 34%)",
   },
   dom7: {
     base:    "hsl(15, 85%, 52%)",

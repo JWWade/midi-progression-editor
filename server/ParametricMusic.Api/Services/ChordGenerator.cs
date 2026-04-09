@@ -25,6 +25,7 @@ public class ChordGenerator : IChordService
         [ChordQuality.Dom7Sus4]        = [0, 5, 7, 10],
         [ChordQuality.Major7]          = [0, 4, 7, 11],
         [ChordQuality.Minor7]          = [0, 3, 7, 10],
+        [ChordQuality.MinMaj7]         = [0, 3, 7, 11],
         [ChordQuality.HalfDiminished7] = [0, 3, 6, 10],
         [ChordQuality.Quartal]         = [0, 5, 10],
     };
@@ -42,6 +43,7 @@ public class ChordGenerator : IChordService
         [ChordQuality.Dom7Sus4]        = "Dom 7 Sus4",
         [ChordQuality.Major7]          = "Major 7th",
         [ChordQuality.Minor7]          = "Minor 7th",
+        [ChordQuality.MinMaj7]         = "Minor-Major 7",
         [ChordQuality.HalfDiminished7] = "Half-Diminished 7th",
         [ChordQuality.Quartal]         = "Quartal",
     };

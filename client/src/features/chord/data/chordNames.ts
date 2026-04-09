@@ -18,6 +18,7 @@ const CHORD_TYPE_ORDER: readonly ChordType[] = [
   "maj6",
   "min6",
   "min7",
+  "minmaj7",
   "halfdim7",
   "quartal",
 ];
@@ -34,6 +35,7 @@ const CHORD_TYPE_SUFFIXES: Record<ChordType, string> = {
   maj6: "6",
   min6: "m6",
   min7: "m7",
+  minmaj7: "m(maj7)",
   halfdim7: "ø7",
   quartal: "q",
 };

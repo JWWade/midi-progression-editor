@@ -61,6 +61,21 @@ public class ChordGeneratorTests
     }
 
     [Fact]
+    public void BuildChord_CMinMaj7_ReturnsExpectedPitchClasses()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.MinMaj7);
+        Assert.Equal([0, 3, 7, 11], result.PitchClasses);
+        Assert.Equal(["C", "D#", "G", "B"], result.NoteNames);
+    }
+
+    [Fact]
+    public void BuildChord_CMinMaj7_HasCorrectDisplayName()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.MinMaj7);
+        Assert.Equal("C Minor-Major 7", result.DisplayName);
+    }
+
+    [Fact]
     public void BuildChord_CHalfDiminished7_ReturnsExpectedPitchClasses()
     {
         var result = _service.BuildChord(Note.C, ChordQuality.HalfDiminished7);

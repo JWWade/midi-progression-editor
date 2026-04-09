@@ -111,6 +111,7 @@ describe("findNearestChord", () => {
       min6: [0, 3, 7, 9],
       maj7: [0, 4, 7, 11],
       min7: [0, 3, 7, 10],
+      minmaj7: [0, 3, 7, 11],
       dom7: [0, 4, 7, 10],
       halfdim7: [0, 3, 6, 10],
       quartal: [0, 5, 10],
