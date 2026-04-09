@@ -13,7 +13,7 @@ import styles from "./ChordQualityIcon.module.css";
  * | aug       | 0, 4, 8       | Equilateral triangle  |
  * | dim       | 0, 3, 6       | Isosceles triangle    |
  * | dom7      | 0, 4, 7, 10   | Isosceles trapezoid   |
- * | maj6      | 0, 4, 7, 9    | Quadrilateral         |
+ * | maj6      | 0, 4, 7, 9    | Scalene quadrilateral |
  * | maj7      | 0, 4, 7, 11   | Kite                  |
  * | min7      | 0, 3, 7, 10   | Kite                  |
  * | halfdim7  | 0, 3, 6, 10   | Rectangle             |
