@@ -15,7 +15,7 @@ import {
 } from "../transpose";
 import type { ChordType } from "@/features/chord/types";
 
-const ALL_8_CHORD_TYPES: ChordType[] = [
+const ALL_9_CHORD_TYPES: ChordType[] = [
   "major", "minor", "dim", "aug", "maj6", "maj7", "min7", "dom7", "halfdim7",
 ];
 
@@ -121,14 +121,14 @@ describe("transposeChord", () => {
 
 describe("CHORD_INTERVALS", () => {
   it("contains an entry for every one of the 9 core chord types", () => {
-    for (const type of ALL_8_CHORD_TYPES) {
+    for (const type of ALL_9_CHORD_TYPES) {
       expect(CHORD_INTERVALS[type]).toBeDefined();
       expect(CHORD_INTERVALS[type].length).toBeGreaterThan(0);
     }
   });
 
   it("all intervals start with 0 (root position)", () => {
-    for (const type of ALL_8_CHORD_TYPES) {
+    for (const type of ALL_9_CHORD_TYPES) {
       expect(CHORD_INTERVALS[type][0]).toBe(0);
     }
   });
@@ -180,7 +180,7 @@ describe("getChordNoteIndices", () => {
   });
 
   it("all returned indices are in range 0–11 for every chord type and root", () => {
-    for (const type of ALL_8_CHORD_TYPES) {
+    for (const type of ALL_9_CHORD_TYPES) {
       for (let root = 0; root < 12; root++) {
         for (const idx of getChordNoteIndices(root, type)) {
           expect(idx).toBeGreaterThanOrEqual(0);
@@ -191,7 +191,7 @@ describe("getChordNoteIndices", () => {
   });
 
   it("result length matches CHORD_INTERVALS length for that type", () => {
-    for (const type of ALL_8_CHORD_TYPES) {
+    for (const type of ALL_9_CHORD_TYPES) {
       const indices = getChordNoteIndices(0, type);
       expect(indices).toHaveLength(CHORD_INTERVALS[type].length);
     }
