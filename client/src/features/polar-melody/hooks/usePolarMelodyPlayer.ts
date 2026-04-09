@@ -31,11 +31,16 @@ export function usePolarMelodyPlayer(
   const intervalRef = useRef<number | null>(null);
   const stepRef = useRef(0);
   const sequenceRef = useRef(sequence);
+  const playNoteRef = useRef(playNote);
 
-  // Keep sequenceRef current without restarting playback
+  // Keep refs current without restarting playback
   useEffect(() => {
     sequenceRef.current = sequence;
   }, [sequence]);
+
+  useEffect(() => {
+    playNoteRef.current = playNote;
+  }, [playNote]);
 
   const clearTimer = useCallback(() => {
     if (intervalRef.current !== null) {
@@ -43,6 +48,37 @@ export function usePolarMelodyPlayer(
       intervalRef.current = null;
     }
   }, []);
+
+  /** Shared interval tick: advance step, update state, play the note. */
+  const makeTickCallback = useCallback(
+    (stepMs: number) => () => {
+      const seq = sequenceRef.current;
+      if (seq.length === 0) return;
+
+      const step = stepRef.current % seq.length;
+      const pitchClass = seq[step]!;
+
+      setCurrentStep(step);
+      setCurrentPitchClass(pitchClass);
+
+      // Fire-and-forget — do not await so the interval stays on schedule.
+      void playNoteRef.current([{ index: pitchClass, name: "", role: "root" }], {
+        duration: stepMs / 1000 - 0.02,
+      });
+
+      stepRef.current = (step + 1) % seq.length;
+    },
+    [],
+  );
+
+  /** Start an interval timer for the given BPM. */
+  const startTimer = useCallback(
+    (currentBpm: number) => {
+      const stepMs = (60 / currentBpm) * 0.25 * 1000;
+      intervalRef.current = window.setInterval(makeTickCallback(stepMs), stepMs);
+    },
+    [makeTickCallback],
+  );
 
   const stop = useCallback(() => {
     clearTimer();
@@ -58,26 +94,8 @@ export function usePolarMelodyPlayer(
 
     setIsPlaying(true);
     stepRef.current = 0;
-
-    // Sixteenth note duration: (60 / bpm) * 0.25 seconds
-    const stepMs = (60 / bpm) * 0.25 * 1000;
-
-    intervalRef.current = window.setInterval(() => {
-      const seq = sequenceRef.current;
-      if (seq.length === 0) return;
-
-      const step = stepRef.current % seq.length;
-      const pitchClass = seq[step]!;
-
-      setCurrentStep(step);
-      setCurrentPitchClass(pitchClass);
-
-      // Play the note (don't await — fire-and-forget)
-      void playNote([{ index: pitchClass, name: "", role: "root" }], { duration: stepMs / 1000 - 0.02 });
-
-      stepRef.current = (step + 1) % seq.length;
-    }, stepMs);
-  }, [isPlaying, bpm, playNote]);
+    startTimer(bpm);
+  }, [isPlaying, bpm, startTimer]);
 
   // Clean up timer on unmount
   useEffect(() => {
@@ -93,24 +111,10 @@ export function usePolarMelodyPlayer(
       bpmRef.current = bpm;
       if (isPlaying) {
         clearTimer();
-        const stepMs = (60 / bpm) * 0.25 * 1000;
-        intervalRef.current = window.setInterval(() => {
-          const seq = sequenceRef.current;
-          if (seq.length === 0) return;
-
-          const step = stepRef.current % seq.length;
-          const pitchClass = seq[step]!;
-
-          setCurrentStep(step);
-          setCurrentPitchClass(pitchClass);
-
-          void playNote([{ index: pitchClass, name: "", role: "root" }], { duration: stepMs / 1000 - 0.02 });
-
-          stepRef.current = (step + 1) % seq.length;
-        }, stepMs);
+        startTimer(bpm);
       }
     }
-  }, [bpm, isPlaying, clearTimer, playNote]);
+  }, [bpm, isPlaying, clearTimer, startTimer]);
 
   return { isPlaying, currentStep, currentPitchClass, play, stop };
 }

@@ -18,7 +18,7 @@ export interface PolarMelodyParams {
 
 export const POLAR_MELODY_PRESETS = {
   rose:      { label: "Rose",      A: 1, B: 1, k: 4  },
-  limaçon:   { label: "Limaçon",   A: 2, B: 1, k: 1  },
+  limacon:   { label: "Limaçon",   A: 2, B: 1, k: 1  },
   butterfly: { label: "Butterfly", A: 1, B: 1, k: 6  },
   complex:   { label: "Complex",   A: 1, B: 1, k: 10 },
 } as const;
