@@ -6,4 +6,5 @@ export {
   dedupeNormalizedPitchClasses,
   uniqueSortedPitchClasses,
 } from "./pitchClass";
-export { findBestChordIdentity, findBestQualityForRoot } from "./chordIdentity";
+export type { ChordCandidate } from "./chordIdentity";
+export { findBestChordIdentity, findBestQualityForRoot, findChordCandidates } from "./chordIdentity";

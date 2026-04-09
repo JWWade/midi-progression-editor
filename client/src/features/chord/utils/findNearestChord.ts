@@ -2,12 +2,14 @@ import type { ChordType } from "../types";
 import { findBestChordIdentity } from "./chordIdentity";
 
 /**
- * Find the named chord (root + quality) that requires the fewest note changes
- * to match the given custom note set.
- * 
- * Uses Jaccard similarity (intersection over union) to find the best-fit chord.
- * Returns a "best-fit" chord for display purposes when the note set doesn't
- * match any of the 96 predefined chords.
+ * Find the named chord (root + quality) whose weighted tone score best
+ * matches the given pitch-class set. The fifth is weighted lower than the
+ * root, third, and seventh, so incomplete voicings (e.g. C–E–B for Cmaj7)
+ * resolve to cleaner labels than flat Jaccard matching.
+ *
+ * Returns matchScore === 1 only when all canonical tones are present and
+ * no extra notes exist, preserving the "perfect match → no customNotes"
+ * contract used by useChordState and useCustomChordState.
  */
 export function findNearestChord(noteIndices: number[]): {
   root: number;
