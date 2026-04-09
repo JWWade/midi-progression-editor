@@ -30,6 +30,7 @@ public class ChordControllerIntegrationTests : IClassFixture<WebApplicationFacto
     [InlineData("C", "Dom7Sus4",        new[] { 0, 5, 7, 10 },   new[] { "C", "F", "G", "A#" })]
     [InlineData("C", "Major7",          new[] { 0, 4, 7, 11 },   new[] { "C", "E", "G", "B" })]
     [InlineData("C", "Minor7",          new[] { 0, 3, 7, 10 },   new[] { "C", "D#", "G", "A#" })]
+    [InlineData("C", "MinMaj7",          new[] { 0, 3, 7, 11 },   new[] { "C", "D#", "G", "B" })]
     [InlineData("C", "HalfDiminished7", new[] { 0, 3, 6, 10 },   new[] { "C", "D#", "F#", "A#" })]
     public async Task PostChordFromRoot_RootC_AllQualities_Returns200WithExpectedPayload(
         string note, string quality, int[] expectedPitchClasses, string[] expectedNoteNames)

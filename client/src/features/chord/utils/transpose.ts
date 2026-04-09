@@ -12,6 +12,7 @@ export const DIM_INTERVALS   = [0, 3, 6] as const;
 export const AUG_INTERVALS   = [0, 4, 8] as const;
 export const MAJ7_INTERVALS = [0, 4, 7, 11] as const;
 export const MIN7_INTERVALS = [0, 3, 7, 10] as const;
+export const MINMAJ7_INTERVALS = [0, 3, 7, 11] as const;
 export const DOM7_INTERVALS = [0, 4, 7, 10] as const;
 export const HALFDIM7_INTERVALS = [0, 3, 6, 10] as const;
 export const MAJ6_INTERVALS = [0, 4, 7, 9] as const;
@@ -82,6 +83,7 @@ export const CHORD_INTERVALS: Readonly<Record<ChordType, readonly number[]>> = {
   min6:     MIN6_INTERVALS,
   maj7:     MAJ7_INTERVALS,
   min7:     MIN7_INTERVALS,
+  minmaj7:  MINMAJ7_INTERVALS,
   dom7:     DOM7_INTERVALS,
   dom7sus4: DOM7SUS4_INTERVALS,
   halfdim7: HALFDIM7_INTERVALS,
