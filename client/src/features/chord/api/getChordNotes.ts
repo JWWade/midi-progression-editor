@@ -10,7 +10,7 @@ import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
  *   for full root-transposition support. Kept for backward compatibility.
  */
 export function getChordNotes(chordType: ChordType): ChordNoteInfo[] {
-  return transposeChord(CHORD_INTERVALS[chordType], 0).map((note) => ({
+  return transposeChord(CHORD_INTERVALS[chordType], 0, PITCH_CLASSES, chordType).map((note) => ({
     ...note,
     name: PITCH_CLASSES[note.index],
   }));
