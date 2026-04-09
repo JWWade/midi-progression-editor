@@ -15,8 +15,9 @@ import {
   canonicalizeChord,
   chordDistance,
   pitchClassDistance,
+  hybridDistance,
 } from "@/features/voice-leading";
-import type { CanonicalizationMode } from "@/features/voice-leading";
+import type { CanonicalizationMode, HybridParams } from "@/features/voice-leading";
 import type { ChordGraph, ChordEdge, ChordNode, WeightFn } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -191,4 +192,35 @@ export function buildChordGraph(
   }
 
   return { nodes, edges };
+}
+
+// ---------------------------------------------------------------------------
+// buildHybridChordGraph
+// ---------------------------------------------------------------------------
+
+/**
+ * Convenience factory that builds a chord graph using the hybrid harmonic
+ * distance metric at a given blend parameter `t`.
+ *
+ * Equivalent to:
+ * ```ts
+ * buildChordGraph({
+ *   ...graphOptions,
+ *   weightFn: (a, b) => hybridDistance(a, b, { ...params, t }),
+ * });
+ * ```
+ *
+ * @param t            - Graph/geometry blend in [0, 1] (0 = graph-only, 1 = geom-only).
+ * @param params       - Optional additional {@link HybridParams} overrides.
+ * @param graphOptions - Optional {@link BuildChordGraphOptions} (excluding `weightFn`).
+ */
+export function buildHybridChordGraph(
+  t: number,
+  params?: Partial<HybridParams>,
+  graphOptions?: Omit<BuildChordGraphOptions, "weightFn">,
+): ChordGraph {
+  return buildChordGraph({
+    ...graphOptions,
+    weightFn: (a, b) => hybridDistance(a, b, { ...params, t }),
+  });
 }
