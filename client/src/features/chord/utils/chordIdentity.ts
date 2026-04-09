@@ -21,7 +21,7 @@ export interface ChordCandidate {
 
 const ALL_QUALITIES = Object.keys(CHORD_INTERVALS) as ChordType[];
 
-// Role assignment per chord type — mirrors ROLES_OVERRIDE in transpose.ts
+// Role assignment per chord type — mirrors the ROLES_OVERRIDE logic in transpose.ts
 const DEFAULT_CHORD_ROLES: ChordNoteInfo["role"][] = ["root", "third", "fifth", "seventh"];
 const CHORD_ROLES_OVERRIDE: Partial<Record<ChordType, ChordNoteInfo["role"][]>> = {
   sus2:     ["root", "second", "fifth"],
@@ -29,6 +29,8 @@ const CHORD_ROLES_OVERRIDE: Partial<Record<ChordType, ChordNoteInfo["role"][]>> 
   min6:     ["root", "third", "fifth", "sixth"],
   dom7sus4: ["root", "fourth", "fifth", "seventh"],
 };
+// All current chord types have at most 4 tones; "seventh" is the correct default
+// for any additional tones that exceed DEFAULT_CHORD_ROLES length.
 const DEFAULT_CHORD_ROLE: ChordNoteInfo["role"] = "seventh";
 
 const TONE_WEIGHTS: Record<ChordNoteInfo["role"], number> = {
