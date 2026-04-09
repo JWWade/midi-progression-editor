@@ -4,10 +4,40 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-  gap: 2rem;
+  gap: 1rem;
   background-color: var(--color-bg-header);
   border-bottom: 1px solid var(--color-border);
   flex-wrap: wrap;
+}
+
+/* ── Left / right balanced columns for natural brand centering ───────────── */
+.leftSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.rightSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* ── Brand / wordmark ────────────────────────────────────────────────────── */
+.brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.brandName {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  white-space: nowrap;
 }
 
 /* ── Toggle buttons group ───────────────────────────────────────────────── */
@@ -46,7 +76,7 @@
   align-items: center;
   gap: 1rem;
   border-left: 1px solid var(--color-border);
-  padding-left: 1.5rem;
+  padding-left: 1rem;
 }
 
 /* ── Theme toggle button ─────────────────────────────────────────────────── */
@@ -174,6 +204,21 @@
     gap: 1rem;
   }
 
+  .leftSection {
+    justify-content: center;
+  }
+
+  .brand {
+    justify-content: center;
+    order: -1;
+  }
+
+  .rightSection {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
   .toggles {
     justify-content: center;
     gap: 1rem;
@@ -224,6 +269,21 @@
 [data-theme="retro"] .checkbox {
   accent-color: #00ffff;
   border: 2px solid #808080;
+}
+
+/* ── Retro: brand wordmark with neon glow ────────────────────────────────── */
+/* Comic Sans is intentional here — matches the retro theme's global font-family */
+[data-theme="retro"] .brandName {
+  color: #00ffff;
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  text-shadow: 0 0 8px #00ffff, 0 0 16px rgba(0, 255, 255, 0.5);
+  animation: retroNeonPulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="retro"] .brandName {
+    animation: none;
+  }
 }
 
 /* ── Retro: scrolling marquee banner ─────────────────────────────────────── */
