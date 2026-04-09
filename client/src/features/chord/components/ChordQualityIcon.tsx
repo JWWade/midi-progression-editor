@@ -20,6 +20,7 @@ import styles from "./ChordQualityIcon.module.css";
  * | major     | 0, 4, 7       | Scalene triangle      |
  * | minor     | 0, 3, 7       | Scalene triangle      |
  * | quartal   | 0, 5, 10      | Scalene triangle      |
+ * | sus2      | 0, 2, 7       | Scalene triangle      |
  */
 const QUALITY_PITCH_CLASSES: Record<ChordType, readonly number[]> = {
   aug:      [0, 4, 8],
@@ -32,6 +33,7 @@ const QUALITY_PITCH_CLASSES: Record<ChordType, readonly number[]> = {
   major:    [0, 4, 7],
   minor:    [0, 3, 7],
   quartal:  [0, 5, 10],
+  sus2:     [0, 2, 7],
 };
 
 /**

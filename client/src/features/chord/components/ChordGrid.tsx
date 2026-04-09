@@ -15,7 +15,6 @@ const QUALITY_LABELS: Record<ChordType, string> = {
   dom7: "7",
   maj6: "6",
   maj7: "maj7",
-  maj6: "6",
   min7: "m7",
   halfdim7: "m7b5",
   quartal: "q",
