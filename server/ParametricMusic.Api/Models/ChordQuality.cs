@@ -16,6 +16,8 @@ public enum ChordQuality
     Sus2,
     [Display(Name = "Major 6", Description = "Major sixth chord (root, major 3rd, perfect 5th, major 6th)")]
     Major6,
+    [Display(Name = "Minor 6", Description = "Minor sixth chord (root, minor 3rd, perfect 5th, major 6th)")]
+    Minor6,
     [Display(Name = "Dominant 7th", Description = "Dominant seventh chord (root, major 3rd, perfect 5th, minor 7th)")]
     Dominant7,
     [Display(Name = "Major 7th", Description = "Major seventh chord (root, major 3rd, perfect 5th, major 7th)")]

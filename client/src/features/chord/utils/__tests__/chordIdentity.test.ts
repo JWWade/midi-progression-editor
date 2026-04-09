@@ -37,6 +37,15 @@ describe("findBestChordIdentity", () => {
     expect(result.matchScore).toBeCloseTo(1, 5);
   });
 
+  it("identifies Am6 from pitch classes [9, 0, 4, 6]", () => {
+    // Am6 {A,C,E,F#} shares pitch classes with F#ø7; algorithm returns the first
+    // perfect match encountered (root=6, halfdim7) due to greedy root ordering.
+    // Use findBestQualityForRoot to confirm min6 is identified when root is known.
+    const result = findBestQualityForRoot([9, 0, 4, 6], 9);
+    expect(result.quality).toBe("min6");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
   it("returns a bounded score for empty input", () => {
     const result = findBestChordIdentity([]);
     expect(result.matchScore).toBeGreaterThanOrEqual(0);
