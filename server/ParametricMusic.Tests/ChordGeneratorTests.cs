@@ -68,6 +68,14 @@ public class ChordGeneratorTests
         Assert.Equal(["C", "D#", "F#", "A#"], result.NoteNames);
     }
 
+    [Fact]
+    public void BuildChord_CMajor6_ReturnsExpectedPitchClasses()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.Major6);
+        Assert.Equal([0, 4, 7, 9], result.PitchClasses);
+        Assert.Equal(["C", "E", "G", "A"], result.NoteNames);
+    }
+
     // ── Root B (index 11) – wrap-around ──────────────────────────────────────
 
     [Fact]

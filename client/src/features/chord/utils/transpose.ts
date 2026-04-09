@@ -14,6 +14,7 @@ export const MAJ7_INTERVALS = [0, 4, 7, 11] as const;
 export const MIN7_INTERVALS = [0, 3, 7, 10] as const;
 export const DOM7_INTERVALS = [0, 4, 7, 10] as const;
 export const HALFDIM7_INTERVALS = [0, 3, 6, 10] as const;
+export const MAJ6_INTERVALS = [0, 4, 7, 9] as const;
 export const QUARTAL_INTERVALS = [0, 5, 10] as const;
 export const EQUILATERAL_TRIANGLE_INTERVALS = [0, 4, 8] as const;
 export const SUSPENDED_TRIANGLE_INTERVALS = [0, 5, 7] as const;
@@ -21,7 +22,10 @@ export const SQUARE_INTERVALS = [0, 3, 6, 9] as const;
 export const RECTANGLE_INTERVALS = [0, 4, 6, 10] as const;
 export const SYMMETRICAL_TRAPEZOID_INTERVALS = [0, 4, 7, 11] as const;
 
-const ROLES: ChordNoteInfo["role"][] = ["root", "third", "fifth", "seventh"];
+const DEFAULT_ROLES: ChordNoteInfo["role"][] = ["root", "third", "fifth", "seventh"];
+const ROLES_OVERRIDE: Partial<Record<ChordType, ChordNoteInfo["role"][]>> = {
+  maj6: ["root", "third", "fifth", "sixth"],
+};
 
 const DEFAULT_ROLE: ChordNoteInfo["role"] = "seventh";
 
@@ -48,13 +52,15 @@ export function transposeChord(
   baseIntervals: readonly number[],
   rootIndex: number,
   pitchClasses: readonly string[] = PITCH_CLASSES,
+  chordType?: ChordType,
 ): ChordNoteInfo[] {
+  const roles = chordType !== undefined ? (ROLES_OVERRIDE[chordType] ?? DEFAULT_ROLES) : DEFAULT_ROLES;
   return baseIntervals.map((interval, i) => {
     const index = normalizePitchClass(interval + rootIndex);
     return {
       index,
       name: pitchClasses[index],
-      role: ROLES[i] ?? DEFAULT_ROLE,
+      role: roles[i] ?? DEFAULT_ROLE,
     };
   });
 }
@@ -65,6 +71,7 @@ export const CHORD_INTERVALS: Readonly<Record<ChordType, readonly number[]>> = {
   minor:    MINOR_INTERVALS,
   dim:      DIM_INTERVALS,
   aug:      AUG_INTERVALS,
+  maj6:     MAJ6_INTERVALS,
   maj7:     MAJ7_INTERVALS,
   min7:     MIN7_INTERVALS,
   dom7:     DOM7_INTERVALS,
