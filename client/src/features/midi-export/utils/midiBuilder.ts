@@ -2,7 +2,13 @@ import { Midi } from "@tonejs/midi";
 import type { Chord } from "@/features/current-chord/types";
 import { formatChordSymbol } from "@/features/current-chord";
 import { getChordPitchClasses } from "@/features/chord/utils";
-import { closeVoiceChord, minimalMotionVoicing } from "@/features/voice-leading";
+import {
+  closeVoiceChord,
+  minimalMotionVoicing,
+  openVoiceChord,
+  chordMatchingFlexible,
+} from "@/features/voice-leading";
+import type { VoiceLeadingStyle, MotionBias } from "@/features/voice-leading";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import {
@@ -19,6 +25,28 @@ export interface MidiExportOptions {
   beatsPerChord: number;
   /** Starting octave for the first chord (2–6). Default: 4. */
   startOctave: number;
+  /**
+   * Voice-leading algorithm used to voice chords during export.
+   * - `'close'`    — close position for every chord (Tightly Stacked).
+   * - `'minimal'`  — close position for chord 1, minimal-motion for subsequent (default).
+   * - `'open'`     — open (spread) voicing for every chord (Wide & Spacious).
+   * - `'flexible'` — optimal cross-chord assignment via chordMatchingFlexible.
+   */
+  voiceLeadingStyle: VoiceLeadingStyle;
+  /**
+   * Penalty for unmatched voices in cross-size transitions (0–4). Default: 2.
+   * Maps to the `penalty` parameter in `chordMatchingFlexible`.
+   * Only audibly meaningful for the `'flexible'` style when the progression
+   * contains chords of mixed voice count.
+   */
+  strictness: number;
+  /**
+   * Directional tie-break preference for `minimalMotionVoicing`.
+   * - `'neutral'` (default): no preference — keep the rounded base candidate.
+   * - `'down'`: prefer the lower MIDI note on a tie.
+   * - `'up'`: prefer the higher MIDI note on a tie.
+   */
+  motionBias: MotionBias;
   /**
    * When `true` (default), a MIDI Text meta event (0x01) and a Marker meta
    * event (0x06) are written at the start tick of every chord so that
@@ -268,6 +296,9 @@ const DEFAULT_OPTIONS: MidiExportOptions = {
   bpm: DEFAULT_BPM,
   beatsPerChord: DEFAULT_BEATS_PER_CHORD,
   startOctave: DEFAULT_OCTAVE,
+  voiceLeadingStyle: 'minimal',
+  strictness: 2,
+  motionBias: 'neutral',
   includeChordSymbols: true,
   chordLabels: [],
 };
@@ -294,6 +325,72 @@ function toMidiMetaUtf8Text(text: string): string {
 }
 
 /**
+ * Voice a chord using chordMatchingFlexible for optimal cross-chord assignment.
+ * Each matched voice is placed at the octave closest to the corresponding
+ * previous MIDI note; unmatched voices anchor to the last previous note.
+ */
+function flexibleVoicing(
+  prevMidi: number[],
+  nextPitchClasses: number[],
+  strictness: number,
+  motionBias: MotionBias,
+): number[] {
+  if (prevMidi.length === 0) return [];
+
+  const prevPCs = prevMidi.map((m) => ((m % 12) + 12) % 12);
+  const { mapping } = chordMatchingFlexible(prevPCs, nextPitchClasses, { penalty: strictness });
+
+  // Place each matched next pitch class near its matched prev voice.
+  // Use a sparse array and fill unmatched slots from the last prev voice.
+  const result: (number | undefined)[] = new Array(nextPitchClasses.length);
+
+  for (const { fromIdx, toIdx } of mapping) {
+    const prevNote = prevMidi[Math.min(fromIdx, prevMidi.length - 1)]!;
+    const pc = nextPitchClasses[toIdx]!;
+    const k = Math.round((prevNote - pc) / 12);
+    const base = 12 * k + pc;
+    const candidates = [base - 12, base, base + 12];
+    let best = base;
+    for (const candidate of candidates) {
+      const candDist = Math.abs(candidate - prevNote);
+      const bestDist = Math.abs(best - prevNote);
+      if (candDist < bestDist) {
+        best = candidate;
+      } else if (candDist === bestDist) {
+        if (motionBias === 'down' && candidate < best) best = candidate;
+        else if (motionBias === 'up' && candidate > best) best = candidate;
+      }
+    }
+    result[toIdx] = best;
+  }
+
+  // Fill unmatched slots (new voices from size expansion) near the last prev note.
+  const lastPrev = prevMidi[prevMidi.length - 1]!;
+  for (let i = 0; i < nextPitchClasses.length; i++) {
+    if (result[i] === undefined) {
+      const pc = nextPitchClasses[i]!;
+      const k = Math.round((lastPrev - pc) / 12);
+      const base = 12 * k + pc;
+      const candidates = [base - 12, base, base + 12];
+      let best = base;
+      for (const candidate of candidates) {
+        const candDist = Math.abs(candidate - lastPrev);
+        const bestDist = Math.abs(best - lastPrev);
+        if (candDist < bestDist) {
+          best = candidate;
+        } else if (candDist === bestDist) {
+          if (motionBias === 'down' && candidate < best) best = candidate;
+          else if (motionBias === 'up' && candidate > best) best = candidate;
+        }
+      }
+      result[i] = best;
+    }
+  }
+
+  return result as number[];
+}
+
+/**
  * Converts a chord progression into raw MIDI bytes.
  *
  * @param chords  - Array of chords to export.
@@ -308,6 +405,9 @@ export function buildMidiFile(
     bpm,
     beatsPerChord,
     startOctave,
+    voiceLeadingStyle,
+    strictness,
+    motionBias,
     includeChordSymbols,
     chordLabels,
     arpeggioPattern,
@@ -358,10 +458,25 @@ export function buildMidiFile(
   let prevMidi: number[] = [];
   for (let i = 0; i < chords.length; i++) {
     const pitchClasses = getChordPitchClasses(chords[i]!);
-    const midiNotes =
-      i === 0
-        ? closeVoiceChord(pitchClasses, startOctave)
-        : minimalMotionVoicing(prevMidi, pitchClasses);
+    let midiNotes: number[];
+
+    if (voiceLeadingStyle === 'close') {
+      midiNotes = closeVoiceChord(pitchClasses, startOctave);
+    } else if (voiceLeadingStyle === 'open') {
+      midiNotes = openVoiceChord(pitchClasses, startOctave);
+    } else if (voiceLeadingStyle === 'flexible') {
+      midiNotes =
+        i === 0
+          ? closeVoiceChord(pitchClasses, startOctave)
+          : flexibleVoicing(prevMidi, pitchClasses, strictness, motionBias);
+    } else {
+      // 'minimal' (default): close position for chord 1, minimal motion for subsequent
+      midiNotes =
+        i === 0
+          ? closeVoiceChord(pitchClasses, startOctave)
+          : minimalMotionVoicing(prevMidi, pitchClasses, motionBias);
+    }
+
     allVoicings.push(midiNotes);
     prevMidi = midiNotes;
   }
