@@ -5,6 +5,7 @@ import {
   AUG_INTERVALS,
   MAJOR_INTERVALS,
   MINOR_INTERVALS,
+  MIN6_INTERVALS,
   SUS2_INTERVALS,
   CHORD_INTERVALS,
   getChordTriad,
@@ -18,7 +19,7 @@ import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { ChordType } from "@/features/chord/types";
 
 const ALL_9_CHORD_TYPES: ChordType[] = [
-  "major", "minor", "dim", "aug", "maj6", "maj7", "min7", "dom7", "halfdim7",
+  "major", "minor", "dim", "aug", "maj6", "min6", "maj7", "min7", "dom7", "halfdim7",
 ];
 describe("DIM_INTERVALS and AUG_INTERVALS constants", () => {
   it("DIM_INTERVALS is [0, 3, 6]", () => {
@@ -78,6 +79,14 @@ describe("transposeChord", () => {
 
   it("assigns roles root/third/fifth/sixth for maj6 when chordType is provided", () => {
     const notes = transposeChord(CHORD_INTERVALS.maj6, 0, undefined, "maj6");
+    expect(notes[0].role).toBe("root");
+    expect(notes[1].role).toBe("third");
+    expect(notes[2].role).toBe("fifth");
+    expect(notes[3].role).toBe("sixth");
+  });
+
+  it("assigns roles root/third/fifth/sixth for min6 when chordType is provided", () => {
+    const notes = transposeChord(MIN6_INTERVALS, 9, PITCH_CLASSES, "min6");
     expect(notes[0].role).toBe("root");
     expect(notes[1].role).toBe("third");
     expect(notes[2].role).toBe("fifth");
@@ -190,6 +199,10 @@ describe("getChordNoteIndices", () => {
 
   it("returns [0,4,7,9] for C maj6 (root=0)", () => {
     expect(getChordNoteIndices(0, "maj6")).toEqual([0, 4, 7, 9]);
+  });
+
+  it("returns [0,3,7,9] for C min6 (root=0)", () => {
+    expect(getChordNoteIndices(0, "min6")).toEqual([0, 3, 7, 9]);
   });
 
   it("all returned indices are in range 0–11 for every chord type and root", () => {

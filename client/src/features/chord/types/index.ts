@@ -6,7 +6,7 @@ export interface ChordNoteInfo {
   role: ChordRole;
 }
 
-export type ChordType = "major" | "minor" | "dim" | "aug" | "sus2" | "maj6" | "maj7" | "min7" | "dom7" | "halfdim7" | "quartal";
+export type ChordType = "major" | "minor" | "dim" | "aug" | "sus2" | "maj6" | "min6" | "maj7" | "min7" | "dom7" | "halfdim7" | "quartal";
 
 /**
  * The set of valid chord extension labels.
@@ -18,6 +18,7 @@ export type ChordExtension = "9" | "b9" | "#9" | "11" | "#11" | "13" | "b13";
 
 export const SEVENTH_CHORD_TYPES: ReadonlySet<ChordType> = new Set([
   "maj6",
+  "min6",
   "maj7",
   "min7",
   "dom7",

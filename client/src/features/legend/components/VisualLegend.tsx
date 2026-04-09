@@ -17,6 +17,7 @@ const CHORD_QUALITY_ENTRIES: { type: ChordType; label: string }[] = [
   { type: "sus2",     label: "Sus 2" },
   { type: "maj7",     label: "Maj 7" },
   { type: "maj6",     label: "Major 6" },
+  { type: "min6",     label: "Minor 6" },
   { type: "min7",     label: "Min 7" },
   { type: "dom7",     label: "Dom 7" },
   { type: "halfdim7", label: "ø 7" },
@@ -25,7 +26,7 @@ const CHORD_QUALITY_ENTRIES: { type: ChordType; label: string }[] = [
 
 /** Seventh-chord types rendered with a quadrilateral glyph (4 tones). */
 const SEVENTH_TYPES: ReadonlySet<ChordType> = new Set([
-  "maj6", "maj7", "min7", "dom7", "halfdim7",
+  "maj6", "min6", "maj7", "min7", "dom7", "halfdim7",
 ]);
 
 // ─── Inline SVG helpers ───────────────────────────────────────────────────────

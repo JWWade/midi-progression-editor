@@ -14,6 +14,7 @@ import styles from "./ChordQualityIcon.module.css";
  * | dim       | 0, 3, 6       | Isosceles triangle    |
  * | dom7      | 0, 4, 7, 10   | Isosceles trapezoid   |
  * | maj6      | 0, 4, 7, 9    | Scalene quadrilateral |
+ * | min6      | 0, 3, 7, 9    | Scalene quadrilateral |
  * | maj7      | 0, 4, 7, 11   | Kite                  |
  * | min7      | 0, 3, 7, 10   | Kite                  |
  * | halfdim7  | 0, 3, 6, 10   | Rectangle             |
@@ -27,6 +28,7 @@ const QUALITY_PITCH_CLASSES: Record<ChordType, readonly number[]> = {
   dim:      [0, 3, 6],
   dom7:     [0, 4, 7, 10],
   maj6:     [0, 4, 7, 9],
+  min6:     [0, 3, 7, 9],
   maj7:     [0, 4, 7, 11],
   min7:     [0, 3, 7, 10],
   halfdim7: [0, 3, 6, 10],
@@ -46,6 +48,7 @@ const QUALITY_GLYPHS: Partial<Record<ChordType, string>> = {
   dim:      "°",
   dom7:     "7",
   maj6:     "6",
+  min6:     "m6",
   maj7:     "+7",
   min7:     "\u22127", // −7  (\u2212 = Unicode minus sign U+2212, followed by literal "7")
   halfdim7: "\u00f8",  // ø   (U+00F8)

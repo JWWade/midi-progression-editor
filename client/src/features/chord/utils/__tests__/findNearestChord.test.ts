@@ -107,6 +107,7 @@ describe("findNearestChord", () => {
       aug: [0, 4, 8],
       sus2: [0, 2, 7],
       maj6: [0, 4, 7, 9],
+      min6: [0, 3, 7, 9],
       maj7: [0, 4, 7, 11],
       min7: [0, 3, 7, 10],
       dom7: [0, 4, 7, 10],
@@ -120,9 +121,12 @@ describe("findNearestChord", () => {
     // min7 and maj6 share the same pitch-class set (e.g., C min7 = Eb maj6),
     // so either quality is a valid answer for these note sets.
     // quartal and sus2 also share the same pitch-class set (e.g., C quartal = Bb sus2).
+    // min6 and halfdim7 share the same pitch-class set (e.g., Am6 = F#ø7).
     const enharmonicPairs: Partial<Record<ChordType, ChordType>> = {
       min7: "maj6",
       maj6: "min7",
+      min6: "halfdim7",
+      halfdim7: "min6",
       quartal: "sus2",
       sus2: "quartal",
     };
