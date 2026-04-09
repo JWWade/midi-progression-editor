@@ -5,6 +5,7 @@ import {
   AUG_INTERVALS,
   MAJOR_INTERVALS,
   MINOR_INTERVALS,
+  SUS2_INTERVALS,
   CHORD_INTERVALS,
   getChordTriad,
   getChordNoteIndices,
@@ -13,12 +14,12 @@ import {
   dedupePitchClasses,
   getPrimitiveNoteIndices,
 } from "../transpose";
+import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { ChordType } from "@/features/chord/types";
 
 const ALL_9_CHORD_TYPES: ChordType[] = [
   "major", "minor", "dim", "aug", "maj6", "maj7", "min7", "dom7", "halfdim7",
 ];
-
 describe("DIM_INTERVALS and AUG_INTERVALS constants", () => {
   it("DIM_INTERVALS is [0, 3, 6]", () => {
     expect(Array.from(DIM_INTERVALS)).toEqual([0, 3, 6]);
@@ -83,8 +84,20 @@ describe("transposeChord", () => {
     expect(notes[3].role).toBe("sixth");
   });
 
+  it("assigns roles root/second/fifth for sus2 when chordType is provided", () => {
+    const notes = transposeChord(SUS2_INTERVALS, 2, PITCH_CLASSES, "sus2");
+    expect(notes[0].role).toBe("root");
+    expect(notes[1].role).toBe("second");
+    expect(notes[2].role).toBe("fifth");
+  });
+
+  it("sus2 from root D(2) produces note indices [2, 4, 9]", () => {
+    const notes = transposeChord(SUS2_INTERVALS, 2, PITCH_CLASSES, "sus2");
+    expect(notes.map((n) => n.index)).toEqual([2, 4, 9]);
+  });
+
   it("returns 3 notes for all triad types", () => {
-    const triadTypes: ChordType[] = ["major", "minor", "dim", "aug"];
+    const triadTypes: ChordType[] = ["major", "minor", "dim", "aug", "sus2"];
     for (const type of triadTypes) {
       const notes = transposeChord(CHORD_INTERVALS[type], 0);
       expect(notes).toHaveLength(3);

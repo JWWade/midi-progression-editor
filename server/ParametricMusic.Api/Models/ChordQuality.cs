@@ -12,6 +12,8 @@ public enum ChordQuality
     Diminished,
     [Display(Name = "Augmented", Description = "Augmented triad (root, major 3rd, augmented 5th)")]
     Augmented,
+    [Display(Name = "Sus 2", Description = "Suspended second chord (root, major 2nd, perfect 5th — no third)")]
+    Sus2,
     [Display(Name = "Major 6", Description = "Major sixth chord (root, major 3rd, perfect 5th, major 6th)")]
     Major6,
     [Display(Name = "Dominant 7th", Description = "Dominant seventh chord (root, major 3rd, perfect 5th, minor 7th)")]

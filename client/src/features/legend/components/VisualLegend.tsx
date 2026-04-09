@@ -14,6 +14,7 @@ const CHORD_QUALITY_ENTRIES: { type: ChordType; label: string }[] = [
   { type: "minor",    label: "Minor" },
   { type: "dim",      label: "Dim" },
   { type: "aug",      label: "Aug" },
+  { type: "sus2",     label: "Sus 2" },
   { type: "maj7",     label: "Maj 7" },
   { type: "maj6",     label: "Major 6" },
   { type: "min7",     label: "Min 7" },

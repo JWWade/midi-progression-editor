@@ -8,7 +8,7 @@ import {
 import type { Chord } from "@/features/current-chord/types";
 import type { ChordType } from "@/features/chord/types";
 
-const TRIAD_TYPES: ChordType[] = ["major", "minor", "dim", "aug"];
+const TRIAD_TYPES: ChordType[] = ["major", "minor", "dim", "aug", "sus2"];
 const SEVENTH_TYPES: ChordType[] = ["maj6", "maj7", "min7", "dom7", "halfdim7"];
 const ALL_9_CHORD_TYPES: ChordType[] = [...TRIAD_TYPES, ...SEVENTH_TYPES];
 
@@ -30,6 +30,11 @@ describe("getChordComplexity", () => {
 
   it("returns 'triad' for aug", () => {
     const chord: Chord = { root: 0, quality: "aug" };
+    expect(getChordComplexity(chord)).toBe("triad");
+  });
+
+  it("returns 'triad' for sus2", () => {
+    const chord: Chord = { root: 0, quality: "sus2" };
     expect(getChordComplexity(chord)).toBe("triad");
   });
 
@@ -78,14 +83,14 @@ describe("getChordComplexity", () => {
     expect(getChordComplexity(chord)).toBe("seventh");
   });
 
-  it("returns 'triad' for all 4 triad types", () => {
+  it("returns 'triad' for all 5 triad types", () => {
     for (const quality of TRIAD_TYPES) {
       const chord: Chord = { root: 0, quality };
       expect(getChordComplexity(chord)).toBe("triad");
     }
   });
 
-  it("returns 'seventh' for all 4 seventh types without extensions", () => {
+  it("returns 'seventh' for all 5 seventh types without extensions", () => {
     for (const quality of SEVENTH_TYPES) {
       const chord: Chord = { root: 0, quality };
       expect(getChordComplexity(chord)).toBe("seventh");

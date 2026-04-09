@@ -1,4 +1,4 @@
-export type ChordRole = "root" | "third" | "fifth" | "sixth" | "seventh";
+export type ChordRole = "root" | "second" | "third" | "fifth" | "sixth" | "seventh";
 
 export interface ChordNoteInfo {
   index: number;
@@ -6,7 +6,7 @@ export interface ChordNoteInfo {
   role: ChordRole;
 }
 
-export type ChordType = "major" | "minor" | "dim" | "aug" | "maj6" | "maj7" | "min7" | "dom7" | "halfdim7" | "quartal";
+export type ChordType = "major" | "minor" | "dim" | "aug" | "sus2" | "maj6" | "maj7" | "min7" | "dom7" | "halfdim7" | "quartal";
 
 /**
  * The set of valid chord extension labels.

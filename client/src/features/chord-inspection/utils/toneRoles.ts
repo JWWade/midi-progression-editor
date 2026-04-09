@@ -21,6 +21,11 @@ const TONE_ROLES: Record<ChordType, Record<number, string>> = {
     4: "Major Third",
     8: "Augmented Fifth",
   },
+  sus2: {
+    0: "Root",
+    2: "Major Second",
+    7: "Perfect Fifth",
+  },
   maj7: {
     0: "Root",
     4: "Major Third",

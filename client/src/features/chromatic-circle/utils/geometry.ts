@@ -27,6 +27,7 @@ export const CHORD_SHAPES: Readonly<Record<ChordType, ChordShape>> = {
   minor:    "triangle",
   dim:      "triangle",
   aug:      "triangle",
+  sus2:     "triangle",
   quartal:  "triangle",
   maj6:     "quadrilateral",
   dom7:     "quadrilateral",
