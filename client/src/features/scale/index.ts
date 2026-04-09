@@ -1,9 +1,10 @@
 export { KeyContextPanel } from './components/KeyContextPanel';
 export type { SetKeyContextAction } from './components/KeyContextPanel';
+export { ModePersonalityPanel } from './components/ModePersonalityPanel';
 
 // Types
-export type { ScaleType } from './types';
-export { SCALE_INTERVALS, SCALE_LABELS } from './types';
+export type { ScaleType, ScaleDescriptor, ScaleTension, ScaleBrightness } from './types';
+export { SCALE_INTERVALS, SCALE_LABELS, SCALE_DESCRIPTORS, TENSION_ORDER, BRIGHTNESS_ORDER } from './types';
 
 // Utils
 export { getScaleNotes, getDiatonicIndices } from './utils';

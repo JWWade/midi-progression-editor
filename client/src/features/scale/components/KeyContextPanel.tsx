@@ -2,6 +2,7 @@ import { memo, useCallback } from "react";
 import type { ScaleType } from "@/features/scale/types";
 import { SCALE_LABELS } from "@/features/scale/types";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
+import { ModePersonalityPanel } from "./ModePersonalityPanel";
 import styles from "./KeyContextPanel.module.css";
 
 /** All 12 chromatic pitch classes as sharp names (index = pitch class). */
@@ -105,6 +106,8 @@ export const KeyContextPanel = memo(function KeyContextPanel({
       >
         Set to chord
       </button>
+
+      <ModePersonalityPanel scaleType={keyScale} />
     </section>
   );
 });
