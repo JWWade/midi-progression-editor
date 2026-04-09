@@ -3,7 +3,7 @@ import { findNearestChord } from "../findNearestChord";
 import type { ChordType } from "@/features/chord/types";
 
 const ALL_CHORD_TYPES: ChordType[] = [
-  "major", "minor", "dim", "aug", "sus2", "maj6", "maj7", "min7", "dom7", "halfdim7", "quartal",
+  "major", "minor", "dim", "aug", "sus2", "dom7sus4", "maj6", "min6", "maj7", "min7", "dom7", "halfdim7", "quartal",
 ];
 
 // ── findNearestChord ─────────────────────────────────────────────────────────
@@ -106,6 +106,7 @@ describe("findNearestChord", () => {
       dim: [0, 3, 6],
       aug: [0, 4, 8],
       sus2: [0, 2, 7],
+      dom7sus4: [0, 5, 7, 10],
       maj6: [0, 4, 7, 9],
       min6: [0, 3, 7, 9],
       maj7: [0, 4, 7, 11],
