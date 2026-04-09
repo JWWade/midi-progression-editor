@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, memo } from "react";
+import { useState, useCallback, useEffect, memo, useMemo } from "react";
 import type { Chord } from "../types";
 import {
   formatChordName,
@@ -8,6 +8,7 @@ import {
   CHORD_QUALITY_LABELS,
 } from "../utils/chordName";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { getIntervalName } from "@/features/chord-intervals/utils/intervalNames";
 import { getChordPitchClasses } from "@/features/chord/utils";
 import { getCircleColorForTheme } from "@/features/chromatic-circle/utils/circleColors";
 import { ChordColors } from "@/features/color-language/constants/chordColors";
@@ -71,6 +72,18 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
 
   const noteNames = noteIndices.map(i => pitchClasses[i]).join('-');
   const resolvedIdentity = chord ? resolveChordIdentity(chord) : null;
+
+  const intervalRows = useMemo(() => {
+    if (!chord) return [];
+    const indices = getChordPitchClasses(chord);
+    const offsets = isCustomChord(chord)
+      ? indices.map(i => ((i - (indices[0] ?? 0)) + 12) % 12)
+      : CHORD_INTERVALS[chord.quality];
+    return offsets.slice(0, indices.length).map((semitones, idx) => ({
+      noteName: pitchClasses[indices[idx] ?? 0] ?? "",
+      label: semitones === 0 ? "Root" : getIntervalName(semitones),
+    }));
+  }, [chord, pitchClasses]);
 
   // Roman numeral analysis relative to the declared key
   const romanAnalysis =
@@ -243,6 +256,16 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
               {copied ? '✓' : '⎘'}
             </button>
           </div>
+          {intervalRows.length > 0 && (
+            <div className={styles.intervalsRow} aria-label="Chord intervals">
+              {intervalRows.map(({ noteName, label }, idx) => (
+                <span key={`${idx}-${noteName}`} className={styles.intervalItem}>
+                  <span className={styles.intervalNote}>{noteName}</span>
+                  <span className={styles.intervalLabel}>{label}</span>
+                </span>
+              ))}
+            </div>
+          )}
           <div
             role="status"
             aria-live="polite"
