@@ -24,6 +24,7 @@ import { KeyContextPanel } from '../features/scale';
 import { AudioDebugPanel } from '../features/audio/components/AudioDebugPanel';
 import { useTutorial } from '../features/tutorial';
 import { getRandomBpmInRange } from '../features/midi-export/utils/bpmTempoLabel';
+import { PolarMelodyPanel } from '../features/polar-melody';
 import styles from './App.module.css';
 
 export default function App() {
@@ -46,6 +47,10 @@ export default function App() {
   const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+  const [showPolarMelody, setShowPolarMelody] = useState(false);
+
+  // Pitch class actively sounding during polar melody preview playback.
+  const [polarMelodyPitchClass, setPolarMelodyPitchClass] = useState<number | null>(null);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -195,6 +200,8 @@ export default function App() {
         onIntervalsChange={setShowIntervals}
         showLegend={showLegend}
         onLegendChange={setShowLegend}
+        showPolarMelody={showPolarMelody}
+        onPolarMelodyChange={setShowPolarMelody}
         onLoadJson={handleLoadJsonClick}
         layoutMode={layoutMode}
         onLayoutModeChange={setLayoutMode}
@@ -233,7 +240,7 @@ export default function App() {
             initialChordName={startupSelection.chordName}
             externalChord={playingChord}
             isPlaybackActive={isPlaying}
-            playingPitchClass={playingPitchClass}
+            playingPitchClass={isPlaying ? playingPitchClass : polarMelodyPitchClass}
             onCurrentChordChange={handleCurrentChordChange}
             selectedScale={keyScale}
             keyRoot={keyRoot}
@@ -242,6 +249,15 @@ export default function App() {
             loadChord={sendBackChord}
           />
           {showLegend && <VisualLegend />}
+          {showPolarMelody && (
+            <PolarMelodyPanel
+              keyRoot={keyRoot}
+              keyScale={keyScale}
+              bpm={bpm}
+              audioParams={audioParams}
+              onCurrentPitchClassChange={setPolarMelodyPitchClass}
+            />
+          )}
         </section>
 
         {/* Current Chord Panel - Center (hidden in focus mode) */}
