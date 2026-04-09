@@ -4,6 +4,7 @@ import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import { useMidiExport } from "../hooks/useMidiExport";
 import { getBpmTempoLabel } from "../utils/bpmTempoLabel";
 import { NoteValueSelector } from "./NoteValueSelector";
+import { VoiceLeadingPanel } from "@/features/voice-leading/components/VoiceLeadingPanel";
 import { exportSnapshot } from "@/features/progression-sidebar/utils/snapshotIO";
 import styles from "./MidiExportControls.module.css";
 
@@ -20,7 +21,17 @@ interface MidiExportControlsProps {
 }
 
 export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPattern, bpm, setBpm, beatsPerChord, setBeatsPerChord }: MidiExportControlsProps) {
-  const { exportMidi } = useMidiExport(chords, arpeggioPattern, scaleContext, bpm, beatsPerChord);
+  const {
+    exportMidi,
+    startOctave,
+    setStartOctave,
+    voiceLeadingStyle,
+    setVoiceLeadingStyle,
+    strictness,
+    setStrictness,
+    motionBias,
+    setMotionBias,
+  } = useMidiExport(chords, arpeggioPattern, scaleContext, bpm, beatsPerChord);
 
   const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
 
@@ -69,6 +80,17 @@ export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPat
         <span className={styles.label}>Beats / chord</span>
         <NoteValueSelector value={beatsPerChord} onChange={setBeatsPerChord} />
       </div>
+      <VoiceLeadingPanel
+        chords={chords}
+        style={voiceLeadingStyle}
+        onStyleChange={setVoiceLeadingStyle}
+        strictness={strictness}
+        onStrictnessChange={setStrictness}
+        motionBias={motionBias}
+        onMotionBiasChange={setMotionBias}
+        startOctave={startOctave}
+        onStartOctaveChange={setStartOctave}
+      />
       <button
         className={styles.exportButton}
         onClick={exportMidi}

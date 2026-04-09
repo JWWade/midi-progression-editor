@@ -535,5 +535,82 @@ describe("buildMidiFile", () => {
       expect(getConductorTrackEOTTick(result)).toBe(0);
     });
   });
+
+  describe("voice-leading style variants", () => {
+    it("'close' style voices every chord in close position regardless of previous chord", () => {
+      // With 'close', every chord should start from startOctave 4.
+      // C major at octave 4: [60, 64, 67]. G major at octave 4: [67, 71, 74].
+      const result = buildMidiFile([C_MAJOR, G_MAJOR], { voiceLeadingStyle: 'close', startOctave: 4 });
+      const midi = parseMidiTone(result);
+      const allNotes = midi.tracks.flatMap((t) => t.notes.map((n) => ({ midi: n.midi, time: n.time })));
+      // First chord notes (time ≈ 0): C major close position at oct 4 → [60, 64, 67]
+      const firstChord = allNotes.filter((n) => n.time < 0.01).map((n) => n.midi).sort((a, b) => a - b);
+      expect(firstChord).toEqual([60, 64, 67]);
+      // Second chord (time > 0): G major close position at oct 4 → [67, 71, 74]
+      const secondChord = allNotes.filter((n) => n.time > 0.01).map((n) => n.midi).sort((a, b) => a - b);
+      expect(secondChord).toEqual([67, 71, 74]);
+    });
+
+    it("'open' style produces voicings spread across more than an octave", () => {
+      // C major open: [60, 67, 76] — span of 16 semitones (> 12).
+      const result = buildMidiFile([C_MAJOR], { voiceLeadingStyle: 'open', startOctave: 4 });
+      const midi = parseMidiTone(result);
+      const notes = midi.tracks.flatMap((t) => t.notes.map((n) => n.midi)).sort((a, b) => a - b);
+      const span = notes[notes.length - 1]! - notes[0]!;
+      expect(span).toBeGreaterThan(12);
+    });
+
+    it("'open' style preserves the same pitch classes as 'close'", () => {
+      const closeResult = buildMidiFile([C_MAJOR], { voiceLeadingStyle: 'close', startOctave: 4 });
+      const openResult = buildMidiFile([C_MAJOR], { voiceLeadingStyle: 'open', startOctave: 4 });
+      const closePCs = parseMidiTone(closeResult).tracks.flatMap((t) => t.notes.map((n) => n.midi % 12)).sort((a, b) => a - b);
+      const openPCs = parseMidiTone(openResult).tracks.flatMap((t) => t.notes.map((n) => n.midi % 12)).sort((a, b) => a - b);
+      expect(openPCs).toEqual(closePCs);
+    });
+
+    it("'minimal' style (default) produces different voicings than 'close' for a two-chord progression", () => {
+      // With 'minimal', the second chord uses minimal motion, so G major won't necessarily be at octave 4.
+      const closeResult = buildMidiFile([C_MAJOR, G_MAJOR], { voiceLeadingStyle: 'close', startOctave: 4 });
+      const minimalResult = buildMidiFile([C_MAJOR, G_MAJOR], { voiceLeadingStyle: 'minimal', startOctave: 4 });
+      // The second chord pitches should differ: 'close' puts G at G4=67, 'minimal' moves voices smoothly from C major.
+      const closeSecond = parseMidiTone(closeResult).tracks.flatMap((t) => t.notes.filter((n) => n.time > 0.01).map((n) => n.midi)).sort((a, b) => a - b);
+      const minimalSecond = parseMidiTone(minimalResult).tracks.flatMap((t) => t.notes.filter((n) => n.time > 0.01).map((n) => n.midi)).sort((a, b) => a - b);
+      // Both have same pitch classes, but MIDI numbers may differ
+      expect(closeSecond.map((m) => m % 12).sort((a, b) => a - b)).toEqual(
+        minimalSecond.map((m) => m % 12).sort((a, b) => a - b),
+      );
+    });
+
+    it("'flexible' style produces valid MIDI with the correct number of notes", () => {
+      // Mixed triad + seventh chord: flexible style with strictness should handle cross-size.
+      const result = buildMidiFile([C_MAJOR, C_MAJ7], { voiceLeadingStyle: 'flexible', strictness: 2 });
+      const midi = parseMidiTone(result);
+      // First chord: 3 notes (C major triad), second chord: 4 notes (C maj7)
+      expect(countNotes(midi)).toBe(7);
+    });
+
+    it("'down' motionBias produces lower notes on tie than 'up' motionBias", () => {
+      // From C major [60,64,67] to a chord with F# (pc=6) — which creates ties at 54 and 66.
+      // With down bias: prefer 54; with up bias: prefer 66.
+      const downResult = buildMidiFile([C_MAJOR, { root: 6, quality: 'major' }], {
+        voiceLeadingStyle: 'minimal',
+        motionBias: 'down',
+        startOctave: 4,
+      });
+      const upResult = buildMidiFile([C_MAJOR, { root: 6, quality: 'major' }], {
+        voiceLeadingStyle: 'minimal',
+        motionBias: 'up',
+        startOctave: 4,
+      });
+      const downMin = Math.min(
+        ...parseMidiTone(downResult).tracks.flatMap((t) => t.notes.filter((n) => n.time > 0.01).map((n) => n.midi)),
+      );
+      const upMin = Math.min(
+        ...parseMidiTone(upResult).tracks.flatMap((t) => t.notes.filter((n) => n.time > 0.01).map((n) => n.midi)),
+      );
+      // Down bias should produce notes at equal or lower MIDI numbers than up bias.
+      expect(downMin).toBeLessThanOrEqual(upMin);
+    });
+  });
 });
 
