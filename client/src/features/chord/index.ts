@@ -43,4 +43,6 @@ export {
   uniqueSortedPitchClasses,
   findBestChordIdentity,
   findBestQualityForRoot,
+  findChordCandidates,
 } from "./utils";
+export type { ChordCandidate } from "./utils";
