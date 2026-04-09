@@ -110,6 +110,26 @@
   min-width: 0;
   box-sizing: border-box;
   background-color: var(--color-bg-page);
+  transition: grid-template-columns 0.25s ease;
+}
+
+/* ── Layout mode variants ───────────────────────────────────────────────── */
+.layout_focus {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.layout_inspect {
+  grid-template-columns: minmax(360px, 2fr) minmax(260px, 1fr);
+}
+
+.layout_compose {
+  grid-template-columns: minmax(420px, 3fr) minmax(260px, 1fr) minmax(280px, 420px);
+}
+
+.layout_inspect .circleArea,
+.layout_compose .circleArea {
+  max-width: 480px;
 }
 
 /* ── Primary flow areas with ARIA landmarks ────────────────────────────────── */

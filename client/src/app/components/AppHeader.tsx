@@ -1,6 +1,7 @@
 import { useTheme } from '../providers/useTheme';
 import { useEnharmonic } from '../providers/useEnharmonic';
 import { PillToggle } from '@/shared/components/PillToggle/PillToggle';
+import type { LayoutMode } from '../types/layoutMode';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
@@ -11,7 +12,15 @@ interface AppHeaderProps {
   showLegend: boolean;
   onLegendChange: (show: boolean) => void;
   onLoadJson: () => void;
+  layoutMode: LayoutMode;
+  onLayoutModeChange: (mode: LayoutMode) => void;
 }
+
+const LAYOUT_MODES: { mode: LayoutMode; label: string }[] = [
+  { mode: 'focus', label: 'Explore' },
+  { mode: 'inspect', label: 'Inspect' },
+  { mode: 'compose', label: 'Compose' },
+];
 
 export function AppHeader({
   showCentroid,
@@ -21,6 +30,8 @@ export function AppHeader({
   showLegend,
   onLegendChange,
   onLoadJson,
+  layoutMode,
+  onLayoutModeChange,
 }: AppHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { useFlats, toggleEnharmonic } = useEnharmonic();
@@ -54,6 +65,21 @@ export function AppHeader({
           onChange={onLegendChange}
           label="Legend"
         />
+      </div>
+
+      {/* Layout mode segmented controls */}
+      <div className={styles.layoutModeControls} role="group" aria-label="Workspace mode">
+        {LAYOUT_MODES.map(({ mode, label }) => (
+          <button
+            key={mode}
+            type="button"
+            className={`${styles.layoutModeButton} ${layoutMode === mode ? styles.layoutModeButtonActive : ''}`}
+            aria-pressed={layoutMode === mode}
+            onClick={() => onLayoutModeChange(mode)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className={styles.rightControls}>
