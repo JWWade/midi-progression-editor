@@ -7,6 +7,7 @@ import {
   MINOR_INTERVALS,
   MIN6_INTERVALS,
   SUS2_INTERVALS,
+  DOM7SUS4_INTERVALS,
   CHORD_INTERVALS,
   getChordTriad,
   getChordNoteIndices,
@@ -98,6 +99,19 @@ describe("transposeChord", () => {
     expect(notes[0].role).toBe("root");
     expect(notes[1].role).toBe("second");
     expect(notes[2].role).toBe("fifth");
+  });
+
+  it("assigns roles root/fourth/fifth/seventh for dom7sus4 when chordType is provided", () => {
+    const notes = transposeChord(DOM7SUS4_INTERVALS, 7, PITCH_CLASSES, "dom7sus4");
+    expect(notes[0].role).toBe("root");
+    expect(notes[1].role).toBe("fourth");
+    expect(notes[2].role).toBe("fifth");
+    expect(notes[3].role).toBe("seventh");
+  });
+
+  it("dom7sus4 from root G(7) produces note indices [7, 0, 2, 5]", () => {
+    const notes = transposeChord(DOM7SUS4_INTERVALS, 7, PITCH_CLASSES, "dom7sus4");
+    expect(notes.map((n) => n.index)).toEqual([7, 0, 2, 5]);
   });
 
   it("sus2 from root D(2) produces note indices [2, 4, 9]", () => {
