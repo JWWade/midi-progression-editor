@@ -22,9 +22,8 @@ export function useMidiExport(
   motionBias: MotionBias;
   setMotionBias: (v: MotionBias) => void;
 } {
-  const [startOctave, setStartOctave] = useState(4);
+  const [startOctave, setStartOctave] = useState(3); // SATB default
   const [voiceLeadingStyle, setVoiceLeadingStyle] = useState<VoiceLeadingStyle>('minimal');
-  const [strictness, setStrictness] = useState(2);
   const [motionBias, setMotionBias] = useState<MotionBias>('neutral');
 
   const exportMidi = useCallback(() => {
@@ -33,7 +32,6 @@ export function useMidiExport(
       beatsPerChord,
       startOctave,
       voiceLeadingStyle,
-      strictness,
       motionBias,
       arpeggioPattern,
       scaleContext,
@@ -45,7 +43,7 @@ export function useMidiExport(
     a.download = `progression-${Date.now()}.mid`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
-  }, [chords, bpm, beatsPerChord, startOctave, voiceLeadingStyle, strictness, motionBias, arpeggioPattern, scaleContext]);
+  }, [chords, bpm, beatsPerChord, startOctave, voiceLeadingStyle, motionBias, arpeggioPattern, scaleContext]);
 
   return {
     exportMidi,
@@ -53,8 +51,6 @@ export function useMidiExport(
     setStartOctave,
     voiceLeadingStyle,
     setVoiceLeadingStyle,
-    strictness,
-    setStrictness,
     motionBias,
     setMotionBias,
   };

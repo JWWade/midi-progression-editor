@@ -1,19 +1,67 @@
-/* ── Voice-Leading Panel ─────────────────────────────────────────────────── */
+﻿/* â”€â”€ Voice-Leading Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .panel {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.sectionHeader {
+.toggleHeader {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0 0 4px 0;
+  margin-bottom: 2px;
+  cursor: pointer;
+  gap: 6px;
+}
+
+.toggleHeader:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.toggleTitle {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-secondary);
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--color-border-subtle);
-  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+.summary {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  opacity: 0.65;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .row {
@@ -36,7 +84,7 @@
   opacity: 0.45;
 }
 
-/* ── Style dropdown ────────────────────────────────────────────────────────── */
+/* â”€â”€ Style dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .select {
   flex: 1;
   min-width: 0;
@@ -70,7 +118,7 @@
   outline-offset: 1px;
 }
 
-/* ── Strictness slider ─────────────────────────────────────────────────────── */
+/* â”€â”€ Strictness slider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sliderRow {
   display: flex;
   flex-direction: column;
@@ -161,7 +209,7 @@
   font-weight: 700;
 }
 
-/* ── Tie-break bias toggle ─────────────────────────────────────────────────── */
+/* â”€â”€ Tie-break bias toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .biasGroup {
   display: flex;
   gap: 2px;
@@ -201,7 +249,12 @@
   outline-offset: 1px;
 }
 
-/* ── Presets ───────────────────────────────────────────────────────────────── */
+.biasButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* â”€â”€ Presets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .presetsRow {
   display: flex;
   flex-direction: column;
@@ -238,12 +291,23 @@
   outline-offset: 1px;
 }
 
-/* ── Retro theme overrides ─────────────────────────────────────────────────── */
-[data-theme="retro"] .sectionHeader {
+/* -- Retro theme overrides ------------------------------------------------- */
+[data-theme="retro"] .toggleHeader {
+  border-bottom-color: #ff00ff;
+}
+
+[data-theme="retro"] .toggleTitle {
   color: #ffff00;
   text-shadow: 0 0 6px #ffff00;
-  border-bottom-color: #ff00ff;
   letter-spacing: 0.1em;
+}
+
+[data-theme="retro"] .summary {
+  color: #ffff00;
+}
+
+[data-theme="retro"] .chevron {
+  color: #ffff00;
 }
 
 [data-theme="retro"] .label {

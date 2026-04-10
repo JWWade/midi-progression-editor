@@ -1,5 +1,5 @@
+﻿import { useState } from "react";
 import type { VoiceLeadingStyle, MotionBias } from "@/features/voice-leading";
-import type { Chord } from "@/features/current-chord/types";
 import styles from "./VoiceLeadingPanel.module.css";
 
 interface Preset {
@@ -17,12 +17,6 @@ const STYLE_OPTIONS: { value: VoiceLeadingStyle; label: string }[] = [
   { value: 'flexible', label: 'Flexible Voices' },
 ];
 
-const STRICTNESS_STOPS = [
-  { value: 0, label: 'Low' },
-  { value: 2, label: 'Med' },
-  { value: 4, label: 'High' },
-];
-
 const MOTION_BIAS_OPTIONS: { value: MotionBias; label: string; title: string }[] = [
   { value: 'up', label: '↑', title: 'Upward: prefer higher note on tie' },
   { value: 'neutral', label: '—', title: 'Neutral: no directional preference' },
@@ -36,186 +30,139 @@ const PRESETS: Preset[] = [
 ];
 
 interface VoiceLeadingPanelProps {
-  chords: Chord[];
   style: VoiceLeadingStyle;
   onStyleChange: (v: VoiceLeadingStyle) => void;
-  strictness: number;
-  onStrictnessChange: (v: number) => void;
   motionBias: MotionBias;
   onMotionBiasChange: (v: MotionBias) => void;
   startOctave: number;
   onStartOctaveChange: (v: number) => void;
 }
 
-/** Check whether all chords in the progression share the same voice count. */
-function allSameVoiceCount(chords: Chord[]): boolean {
-  if (chords.length < 2) return true;
-  const sizes = chords.map((c) =>
-    c.customNotes && c.customNotes.length > 0 ? c.customNotes.length : defaultVoiceCount(c),
-  );
-  return sizes.every((s) => s === sizes[0]);
-}
-
-function defaultVoiceCount(chord: Chord): number {
-  const q = chord.quality;
-  if (q === 'major' || q === 'minor' || q === 'dim' || q === 'aug') return 3;
-  return 4; // seventh chords
-}
-
 /**
  * Voice-leading control panel embedded in the MIDI export controls section.
- * Exposes style, strictness, motion bias and start octave to the user.
+ * Collapsed by default; click the header to expand.
  */
 export function VoiceLeadingPanel({
-  chords,
   style,
   onStyleChange,
-  strictness,
-  onStrictnessChange,
   motionBias,
   onMotionBiasChange,
   startOctave,
   onStartOctaveChange,
 }: VoiceLeadingPanelProps) {
-  const strictnessDisabled = allSameVoiceCount(chords);
-  const strictnessTooltip = strictnessDisabled
-    ? 'All chords have the same voice count — strictness only affects mixed-size progressions'
+  const [expanded, setExpanded] = useState(false);
+
+  // Tie-break (motionBias) is only wired up in 'minimal' and 'flexible' styles
+  const biasDisabled = style === 'close' || style === 'open';
+  const biasTooltip = biasDisabled
+    ? 'Tie-break only affects "Smooth Stepwise" and "Flexible Voices" styles'
     : undefined;
+
+  const currentStyleLabel = STYLE_OPTIONS.find((o) => o.value === style)?.label ?? style;
 
   function applyPreset(preset: Preset) {
     onStyleChange(preset.style);
     onStartOctaveChange(preset.startOctave);
   }
 
-  const strictnessFillPct = `${(strictness / 4) * 100}%`;
-
   return (
     <div className={styles.panel}>
-      <div className={styles.sectionHeader}>Voice-Leading</div>
+      <button
+        type="button"
+        className={styles.toggleHeader}
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        aria-controls="vl-body"
+      >
+        <span className={styles.toggleTitle}>Voice-Leading</span>
+        {!expanded && (
+          <span className={styles.summary}>{currentStyleLabel} · Oct {startOctave}</span>
+        )}
+        <span className={`${styles.chevron} ${expanded ? styles.chevronOpen : ''}`}>▾</span>
+      </button>
 
-      {/* Style selector */}
-      <div className={styles.row}>
-        <label className={styles.label} htmlFor="vl-style">
-          Style
-        </label>
-        <select
-          id="vl-style"
-          className={styles.select}
-          value={style}
-          onChange={(e) => onStyleChange(e.target.value as VoiceLeadingStyle)}
-          aria-label="Voice-leading style"
-        >
-          {STYLE_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Strictness slider */}
-      <div className={styles.sliderRow} title={strictnessTooltip}>
-        <div className={styles.sliderHeader}>
-          <label
-            className={`${styles.label} ${strictnessDisabled ? styles.disabled : ''}`}
-            htmlFor="vl-strictness"
-          >
-            Strictness
-          </label>
-          <span className={`${styles.sliderValue} ${strictnessDisabled ? styles.disabled : ''}`}>
-            {STRICTNESS_STOPS.find((s) => s.value === strictness)?.label ?? strictness}
-          </span>
-        </div>
-        <input
-          id="vl-strictness"
-          className={styles.slider}
-          type="range"
-          min={0}
-          max={4}
-          step={2}
-          value={strictness}
-          disabled={strictnessDisabled}
-          style={{
-            background: strictnessDisabled
-              ? undefined
-              : `linear-gradient(to right, var(--color-accent, #6366f1) ${strictnessFillPct}, var(--color-border-subtle, #2a2a4a) ${strictnessFillPct})`,
-          }}
-          onChange={(e) => onStrictnessChange(e.target.valueAsNumber)}
-          aria-valuemin={0}
-          aria-valuemax={4}
-          aria-valuenow={strictness}
-          aria-valuetext={STRICTNESS_STOPS.find((s) => s.value === strictness)?.label}
-          aria-disabled={strictnessDisabled}
-        />
-        <div className={styles.sliderTicks} aria-hidden="true">
-          {STRICTNESS_STOPS.map((s) => (
-            <span
-              key={s.value}
-              className={`${styles.tick} ${strictness === s.value ? styles.tickActive : ''}`}
+      {expanded && (
+        <div id="vl-body" className={styles.body}>
+          {/* Style selector */}
+          <div className={styles.row}>
+            <label className={styles.label} htmlFor="vl-style">
+              Style
+            </label>
+            <select
+              id="vl-style"
+              className={styles.select}
+              value={style}
+              onChange={(e) => onStyleChange(e.target.value as VoiceLeadingStyle)}
+              aria-label="Voice-leading style"
             >
-              {s.label}
-            </span>
-          ))}
-        </div>
-      </div>
+              {STYLE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {/* Tie-break preference */}
-      <div className={styles.row}>
-        <span className={styles.label}>Tie-Break</span>
-        <div className={styles.biasGroup} role="group" aria-label="Tie-break preference">
-          {MOTION_BIAS_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`${styles.biasButton} ${motionBias === opt.value ? styles.biasSelected : ''}`}
-              onClick={() => onMotionBiasChange(opt.value)}
-              aria-pressed={motionBias === opt.value}
-              title={opt.title}
-              aria-label={opt.title}
+          {/* Tie-break preference */}
+          <div className={styles.row}>
+            <span className={`${styles.label} ${biasDisabled ? styles.disabled : ''}`}>Tie-Break</span>
+            <div className={styles.biasGroup} role="group" aria-label="Tie-break preference" title={biasTooltip}>
+              {MOTION_BIAS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`${styles.biasButton} ${motionBias === opt.value && !biasDisabled ? styles.biasSelected : ''}`}
+                  onClick={() => !biasDisabled && onMotionBiasChange(opt.value)}
+                  disabled={biasDisabled}
+                  aria-pressed={motionBias === opt.value && !biasDisabled}
+                  title={biasDisabled ? biasTooltip : opt.title}
+                  aria-label={biasDisabled ? biasTooltip : opt.title}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Octave control */}
+          <div className={styles.row}>
+            <label className={styles.label} htmlFor="vl-octave">
+              Start Octave
+            </label>
+            <select
+              id="vl-octave"
+              className={styles.selectSmall}
+              value={startOctave}
+              onChange={(e) => onStartOctaveChange(Number(e.target.value))}
+              aria-label="Starting octave"
             >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
+              {[2, 3, 4, 5, 6].map((oct) => (
+                <option key={oct} value={oct}>
+                  {oct}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {/* Octave control */}
-      <div className={styles.row}>
-        <label className={styles.label} htmlFor="vl-octave">
-          Start Octave
-        </label>
-        <select
-          id="vl-octave"
-          className={styles.selectSmall}
-          value={startOctave}
-          onChange={(e) => onStartOctaveChange(Number(e.target.value))}
-          aria-label="Starting octave"
-        >
-          {[2, 3, 4, 5, 6].map((oct) => (
-            <option key={oct} value={oct}>
-              {oct}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Style presets */}
-      <div className={styles.presetsRow}>
-        <span className={styles.label}>Presets</span>
-        <div className={styles.presets}>
-          {PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              className={styles.presetButton}
-              onClick={() => applyPreset(preset)}
-              title={`${preset.label}: octave ${preset.startOctave}, ${preset.styleLabel}`}
-            >
-              {preset.label}
-            </button>
-          ))}
+          {/* Style presets */}
+          <div className={styles.presetsRow}>
+            <span className={styles.label}>Presets</span>
+            <div className={styles.presets}>
+              {PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  className={styles.presetButton}
+                  onClick={() => applyPreset(preset)}
+                  title={`${preset.label}: octave ${preset.startOctave}, ${preset.styleLabel}`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -114,27 +114,87 @@
   outline-offset: 1px;
 }
 
-.exportButton {
+.splitButton {
+  position: relative;
+  display: flex;
   width: 100%;
+  border-radius: 8px;
+  overflow: visible;
+}
+
+.exportButtonMain {
+  flex: 1;
   padding: 8px 16px;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
   border: 1px solid var(--color-border-subtle);
-  border-radius: 8px;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
   background-color: var(--color-accent, #4f46e5);
   color: #fff;
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
 
-.exportButton:hover:not(:disabled) {
+.exportButtonMain:hover:not(:disabled) {
   opacity: 0.88;
 }
 
-.exportButton:disabled {
+.exportButtonMain:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.exportButtonChevron {
+  padding: 8px 10px;
+  font-size: 11px;
+  border: 1px solid var(--color-border-subtle);
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0 8px 8px 0;
+  background-color: var(--color-accent, #4f46e5);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  line-height: 1;
+}
+
+.exportButtonChevron:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.exportButtonChevron:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dropdownMenu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 0;
+  min-width: 140px;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+}
+
+.dropdownItem {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.dropdownItem:hover {
+  background-color: var(--color-bg-subtle);
 }
 
 /* ── Retro theme overrides ────────────────────────────────────────────────── */
@@ -161,7 +221,8 @@
   text-shadow: 0 0 6px #ff69b4;
 }
 
-[data-theme="retro"] .exportButton {
+[data-theme="retro"] .exportButtonMain,
+[data-theme="retro"] .exportButtonChevron {
   background: linear-gradient(135deg, #8800aa 0%, #ff00ff 50%, #8800aa 100%) !important;
   color: #ffffff !important;
   border: 2px solid !important;
@@ -175,19 +236,22 @@
   animation: retroGlow 2.5s ease-in-out infinite !important;
 }
 
-[data-theme="retro"] .exportButton:hover:not(:disabled) {
+[data-theme="retro"] .exportButtonMain:hover:not(:disabled),
+[data-theme="retro"] .exportButtonChevron:hover:not(:disabled) {
   background: linear-gradient(135deg, #aa00cc 0%, #ff44ff 50%, #aa00cc 100%) !important;
   opacity: 1 !important;
   box-shadow: 2px 2px 0 #440044, 0 0 20px rgba(255, 0, 255, 0.8) !important;
   animation: none !important;
 }
 
-[data-theme="retro"] .exportButton:active:not(:disabled) {
+[data-theme="retro"] .exportButtonMain:active:not(:disabled),
+[data-theme="retro"] .exportButtonChevron:active:not(:disabled) {
   border-color: #660066 #ff88ff #ff88ff #660066 !important;
   box-shadow: -1px -1px 0 #440044, 0 0 10px rgba(255, 0, 255, 0.5) !important;
 }
 
-[data-theme="retro"] .exportButton:disabled {
+[data-theme="retro"] .exportButtonMain:disabled,
+[data-theme="retro"] .exportButtonChevron:disabled {
   background: linear-gradient(135deg, #440066 0%, #880088 50%, #440066 100%) !important;
   color: #aa88aa !important;
   opacity: 1 !important;
