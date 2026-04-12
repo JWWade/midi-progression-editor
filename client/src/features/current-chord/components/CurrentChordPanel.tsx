@@ -76,11 +76,15 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
   const intervalRows = useMemo(() => {
     if (!chord) return [];
     const indices = getChordPitchClasses(chord);
+    // For custom chords, sort root-first by ascending interval from chord.root
+    const displayIndices = isCustomChord(chord)
+      ? [...indices].sort((a, b) => ((a - chord.root + 12) % 12) - ((b - chord.root + 12) % 12))
+      : indices;
     const offsets = isCustomChord(chord)
-      ? indices.map(i => ((i - (indices[0] ?? 0)) + 12) % 12)
+      ? displayIndices.map(i => ((i - chord.root) + 12) % 12)
       : CHORD_INTERVALS[chord.quality];
-    return offsets.slice(0, indices.length).map((semitones, idx) => ({
-      noteName: pitchClasses[indices[idx] ?? 0] ?? "",
+    return offsets.slice(0, displayIndices.length).map((semitones, idx) => ({
+      noteName: pitchClasses[displayIndices[idx] ?? 0] ?? "",
       label: semitones === 0 ? "Root" : getIntervalName(semitones),
     }));
   }, [chord, pitchClasses]);
@@ -242,8 +246,8 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
               className={styles.noteNames}
               aria-label={`Chord notes: ${noteNames}`}
             >
-              {noteIndices.map((i) => (
-                <span key={i}>{pitchClasses[i]}</span>
+              {intervalRows.map(({ noteName }) => (
+                <span key={noteName}>{noteName}</span>
               ))}
             </span>
             <button

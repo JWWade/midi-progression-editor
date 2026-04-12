@@ -5,6 +5,7 @@ import { CHORD_NAME_TO_DATA, CHORD_TYPE_ORDER, getChordName } from "../data/chor
 import type { ChordType } from "../types";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import { ChordQualityIcon } from "./ChordQualityIcon";
+import { rerootChord } from "../utils/rerootChord";
 
 const QUALITY_LABELS: Record<ChordType, string> = {
   major: "maj",
@@ -72,7 +73,14 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
   );
 
   if (customChord?.customNotes) {
-    const noteNames = customChord.customNotes.map((index) => pitchClasses[index]).join(" ");
+    const { root: identifiedRoot, quality: identifiedQuality, matchScore } = rerootChord(
+      customChord.customNotes,
+      customChord.root,
+    );
+    const displayLabel =
+      matchScore === 1
+        ? getChordName(identifiedRoot, identifiedQuality, pitchClasses)
+        : customChord.customNotes.map((index) => pitchClasses[index]).join(" ");
     return (
       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
         <span
@@ -86,7 +94,7 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
             border: "1px solid var(--color-border)",
           }}
         >
-          {noteNames}
+          {displayLabel}
         </span>
         <button
           type="button"
@@ -141,7 +149,7 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
         }}
       >
         <span>{displayValue || "-"}</span>
-        <span style={{ fontSize: 9, opacity: 0.75, marginTop: 1 }}>v</span>
+        <span style={{ fontSize: 11, opacity: 0.75, marginTop: 1 }}>▾</span>
       </button>
 
       {isOpen && (
@@ -149,8 +157,8 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
           role="grid"
           aria-label="Chord picker"
           style={{
-            position: "absolute",
-            bottom: "calc(100% + 6px)",
+            position: "fixed",
+            bottom: 16,
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1000,
@@ -158,12 +166,15 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
             border: "1px solid var(--color-border)",
             borderRadius: 10,
             boxShadow: "0 8px 28px rgba(0,0,0,0.16)",
-            padding: "8px 10px",
+            padding: "12px 14px",
             userSelect: "none",
+            maxWidth: "calc(100vw - 32px)",
+            maxHeight: "calc(100vh - 32px)",
+            overflow: "auto",
           }}
         >
-          <div role="row" style={{ display: "flex", marginBottom: 3 }}>
-            <div style={{ width: 30, flexShrink: 0 }} />
+          <div role="row" style={{ display: "flex", marginBottom: 6 }}>
+            <div style={{ width: 42, flexShrink: 0 }} />
             {CHORD_TYPE_ORDER.map((type) => (
               <div
                 key={type}
@@ -171,16 +182,16 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
                 title={QUALITY_LABELS[type]}
                 aria-label={QUALITY_LABELS[type]}
                 style={{
-                  width: 46,
+                  width: 64,
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  paddingBottom: 3,
+                  paddingBottom: 4,
                   borderBottom: `2px solid ${ChordQualityColors[type].base}`,
                 }}
               >
-                <ChordQualityIcon quality={type} size={24} />
+                <ChordQualityIcon quality={type} size={30} />
               </div>
             ))}
           </div>
@@ -209,13 +220,13 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
                 <div
                   role="rowheader"
                   style={{
-                    width: 30,
+                    width: 42,
                     flexShrink: 0,
-                    fontSize: 11,
+                    fontSize: 13,
                     fontWeight: 700,
                     color: "var(--color-text-secondary)",
                     textAlign: "right",
-                    paddingRight: 5,
+                    paddingRight: 6,
                     position: "relative",
                   }}
                 >
@@ -251,10 +262,10 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
                       aria-selected={isSelected}
                       onClick={() => handleSelect(chordName)}
                       style={{
-                        width: 46,
-                        height: 26,
+                        width: 64,
+                        height: 32,
                         flexShrink: 0,
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: isSelected ? 700 : 400,
                         cursor: "pointer",
                         border: isSelected ? `1.5px solid ${color.base}` : "1px solid transparent",

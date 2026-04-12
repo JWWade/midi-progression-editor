@@ -6,12 +6,13 @@ import {
   rotateNamedChordRoot,
   dedupePitchClasses,
   getPrimitiveNoteIndices,
-  mirrorChordAboutRoot,
   CHORD_INTERVALS,
 } from "@/features/chord/utils/transpose";
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
+import { reflectPitchClasses, type ReflectionAxis } from "@/features/chord/utils/reflectChord";
+import { getChordPitchClasses } from "@/features/chord/utils/getChordPitchClasses";
 import { rerootChord } from "@/features/chord/utils/rerootChord";
-import { CHORD_NAME_TO_DATA, getChordName } from "@/features/chord/data/chordNames";
+import { CHORD_NAME_TO_DATA, CHORD_NAMES, getChordName } from "@/features/chord/data/chordNames";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { CustomChordState } from "../types";
 
@@ -32,7 +33,7 @@ export interface CustomChordStateResult {
   customFromChord: CustomChordState | null;
   setCustomFromChord: (chord: CustomChordState | null) => void;
   handleRotateChord: (direction: "clockwise" | "counterclockwise") => void;
-  handleMirrorChord: () => void;
+  handleMirrorWithAxis: (axis: ReflectionAxis) => void;
   handleRandomChord: () => void;
   handleMutateChord: () => void;
   handleSelectPrimitiveShape: (shape: PrimitiveShape) => void;
@@ -82,54 +83,35 @@ export function useCustomChordState({
     },
     [customFromChord, selectedChordName, setSelectedChordName, onCurrentChordChange, onAnnounce],
   );
-  const handleMirrorChord = useCallback(() => {
-    const applyMirrored = (notes: number[]) => {
-      const { root: r, quality: q, matchScore } = findNearestChord(notes);
+  const handleMirrorWithAxis = useCallback(
+    (axis: ReflectionAxis) => {
+      const sourceChord: Chord = customFromChord ?? {
+        root: CHORD_NAME_TO_DATA[selectedChordName].root,
+        quality: CHORD_NAME_TO_DATA[selectedChordName].type,
+      };
+      const reflectedPcs = reflectPitchClasses(getChordPitchClasses(sourceChord), { axis, mode: "chromatic" });
+      const { root: r, quality: q, matchScore } = findNearestChord(reflectedPcs);
       if (matchScore === 1) {
         setCustomFromChord(null);
         setSelectedChordName(getChordName(r, q));
         onCurrentChordChange?.({ root: r, quality: q });
       } else {
-        const newChord: CustomChordState = { root: r, quality: q, customNotes: notes };
+        const newChord: CustomChordState = { root: r, quality: q, customNotes: reflectedPcs };
         setCustomFromChord(newChord);
         onCurrentChordChange?.(newChord);
       }
-    };
-    if (customFromChord) {
-      const mirrored = dedupePitchClasses(
-        mirrorChordAboutRoot(customFromChord.customNotes, customFromChord.root),
-      );
-      if (mirrored.length === 0) return;
-      if (customFromChord.primitiveShape) {
-        const newChord: CustomChordState = {
-          root: customFromChord.root, quality: customFromChord.quality,
-          customNotes: mirrored, primitiveShape: customFromChord.primitiveShape,
-        };
-        setCustomFromChord(newChord);
-        onCurrentChordChange?.(newChord);
-      } else {
-        applyMirrored(mirrored);
-      }
-    } else {
-      const { root, type } = CHORD_NAME_TO_DATA[selectedChordName];
-      const currentNotes = CHORD_INTERVALS[type].map((i) => (root + i) % 12);
-      applyMirrored(dedupePitchClasses(mirrorChordAboutRoot(currentNotes, root)));
-    }
-    onAnnounce?.("Mirrored chord about root");
-  }, [customFromChord, selectedChordName, setSelectedChordName, onCurrentChordChange, onAnnounce]);
+      onAnnounce?.(`Reflected across ${axis.label}`);
+    },
+    [customFromChord, selectedChordName, setSelectedChordName, setCustomFromChord, onCurrentChordChange, onAnnounce],
+  );
   const handleRandomChord = useCallback(() => {
-    const indices = Array.from({ length: 12 }, (_, i) => i);
-    for (let i = 0; i < 3; i++) {
-      const j = i + Math.floor(Math.random() * (12 - i));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    const notes = indices.slice(0, 3);
-    const { root: r, quality: q } = findNearestChord(notes);
-    const newChord: CustomChordState = { root: r, quality: q, customNotes: notes };
-    setCustomFromChord(newChord);
-    onCurrentChordChange?.(newChord);
+    const name = CHORD_NAMES[Math.floor(Math.random() * CHORD_NAMES.length)];
+    const { root: r, type: q } = CHORD_NAME_TO_DATA[name];
+    setCustomFromChord(null);
+    setSelectedChordName(name);
+    onCurrentChordChange?.({ root: r, quality: q });
     onAnnounce?.("Generated random chord");
-  }, [onCurrentChordChange, onAnnounce]);
+  }, [setSelectedChordName, onCurrentChordChange, onAnnounce]);
   const handleMutateChord = useCallback(() => {
     const currentNotes = customFromChord
       ? customFromChord.customNotes
@@ -225,7 +207,7 @@ export function useCustomChordState({
     customFromChord,
     setCustomFromChord,
     handleRotateChord,
-    handleMirrorChord,
+    handleMirrorWithAxis,
     handleRandomChord,
     handleMutateChord,
     handleSelectPrimitiveShape,
