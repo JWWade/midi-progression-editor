@@ -108,16 +108,23 @@ export function useCustomChordState({
   const defaultMirrorAxis = allReflectionAxes()[0];
   const handleMirrorChord = useCallback(() => {
     handleMirrorWithAxis(defaultMirrorAxis);
-  }, [handleMirrorWithAxis, defaultMirrorAxis]);
+    onAnnounce?.("Mirrored chord about root");
+  }, [handleMirrorWithAxis, defaultMirrorAxis, onAnnounce]);
 
   const handleRandomChord = useCallback(() => {
-    const name = CHORD_NAMES[Math.floor(Math.random() * CHORD_NAMES.length)];
-    const { root: r, type: q } = CHORD_NAME_TO_DATA[name];
-    setCustomFromChord(null);
-    setSelectedChordName(name);
-    onCurrentChordChange?.({ root: r, quality: q });
+    // Generate 3 unique random pitch classes (0-11)
+    const pcs = [];
+    while (pcs.length < 3) {
+      const n = Math.floor(Math.random() * 12);
+      if (!pcs.includes(n)) pcs.push(n);
+    }
+    pcs.sort((a, b) => a - b);
+    const { root: r, quality: q } = findNearestChord(pcs);
+    const newChord: CustomChordState = { root: r, quality: q, customNotes: pcs };
+    setCustomFromChord(newChord);
+    onCurrentChordChange?.(newChord);
     onAnnounce?.("Generated random chord");
-  }, [setSelectedChordName, onCurrentChordChange, onAnnounce]);
+  }, [onCurrentChordChange, onAnnounce]);
   const handleMutateChord = useCallback(() => {
     const currentNotes = customFromChord
       ? customFromChord.customNotes

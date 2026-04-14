@@ -28,7 +28,9 @@ const BASE_BUTTON_STYLE: React.CSSProperties = {
   lineHeight: 1,
   cursor: "pointer",
   background: "var(--color-bg-surface)",
-  border: "1.5px solid var(--color-border)",
+  borderWidth: "1.5px",
+  borderStyle: "solid",
+  borderColor: "var(--color-border)",
   borderRadius: 6,
   fontWeight: 600,
 };
@@ -38,7 +40,9 @@ function getShapeButtonStyle(isActive: boolean): React.CSSProperties {
     ...BASE_BUTTON_STYLE,
     fontWeight: 700,
     color: isActive ? "var(--color-text-primary)" : "var(--color-text-secondary)",
-    border: isActive ? "2px solid var(--color-text-primary)" : "1.5px solid var(--color-border)",
+    borderWidth: isActive ? "2px" : "1.5px",
+    borderStyle: "solid",
+    borderColor: isActive ? "var(--color-text-primary)" : "var(--color-border)",
   };
 }
 
@@ -225,8 +229,11 @@ export const CircleControls = memo(function CircleControls({
               aria-label="Reflect chord across an axis"
               aria-haspopup="listbox"
               aria-expanded={axisPickerOpen}
-              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)", fontSize: 14,
-                ...(axisPickerOpen ? { borderColor: "var(--color-text-primary)" } : {}),
+              style={{
+                ...BASE_BUTTON_STYLE,
+                color: "var(--color-text-primary)",
+                fontSize: 14,
+                borderColor: axisPickerOpen ? "var(--color-text-primary)" : BASE_BUTTON_STYLE.borderColor,
               }}
             >
               ⇌
@@ -243,7 +250,9 @@ export const CircleControls = memo(function CircleControls({
                   transform: "translateX(-50%)",
                   zIndex: 1001,
                   background: "var(--color-bg-surface)",
-                  border: "1px solid var(--color-border)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
+                  borderColor: "var(--color-border)",
                   borderRadius: 10,
                   boxShadow: "0 8px 28px rgba(0,0,0,0.22)",
                   padding: "12px 16px",
@@ -258,7 +267,9 @@ export const CircleControls = memo(function CircleControls({
                       <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase",
                         letterSpacing: "0.06em", color: "var(--color-text-secondary)",
                         marginBottom: 6, paddingBottom: 4,
-                        borderBottom: "1px solid var(--color-border)" }}
+                        borderBottomWidth: "1px",
+                        borderBottomStyle: "solid",
+                        borderBottomColor: "var(--color-border)" }}
                       >
                         {label}
                       </div>
@@ -275,7 +286,9 @@ export const CircleControls = memo(function CircleControls({
                               fontSize: 12,
                               textAlign: "left",
                               cursor: "pointer",
-                              border: "1px solid transparent",
+                              borderWidth: "1px",
+                              borderStyle: "solid",
+                              borderColor: "transparent",
                               borderRadius: 4,
                               background: "transparent",
                               color: "var(--color-text-primary)",
