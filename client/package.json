@@ -12,7 +12,7 @@
     "lint": "eslint . --max-warnings=0",
     "preview": "vite preview",
     "generate:api": "echo 'Generating types and client from OpenAPI spec (http://localhost:5110/swagger/v1/swagger.json)...' && openapi-typescript http://localhost:5110/swagger/v1/swagger.json --output src/api/generated/index.ts && echo 'API client generated successfully'",
-    "postinstall": "npx lightningcss --version || true"
+    "postinstall": "node -e \"try{require('child_process').execSync('npx lightningcss --version',{stdio:'ignore'})}catch(e){}\""
   },
   "dependencies": {
     "@tonejs/midi": "^2.0.28",
