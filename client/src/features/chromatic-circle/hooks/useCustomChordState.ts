@@ -34,6 +34,7 @@ export interface CustomChordStateResult {
   setCustomFromChord: (chord: CustomChordState | null) => void;
   handleRotateChord: (direction: "clockwise" | "counterclockwise") => void;
   handleMirrorWithAxis: (axis: ReflectionAxis) => void;
+  handleMirrorChord: () => void;
   handleRandomChord: () => void;
   handleMutateChord: () => void;
   handleSelectPrimitiveShape: (shape: PrimitiveShape) => void;
@@ -113,7 +114,7 @@ export function useCustomChordState({
 
   const handleRandomChord = useCallback(() => {
     // Generate 3 unique random pitch classes (0-11)
-    const pcs = [];
+    const pcs: number[] = [];
     while (pcs.length < 3) {
       const n = Math.floor(Math.random() * 12);
       if (!pcs.includes(n)) pcs.push(n);
