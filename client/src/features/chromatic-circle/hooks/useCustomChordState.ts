@@ -9,7 +9,7 @@ import {
   CHORD_INTERVALS,
 } from "@/features/chord/utils/transpose";
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
-import { reflectPitchClasses, type ReflectionAxis } from "@/features/chord/utils/reflectChord";
+import { reflectPitchClasses, type ReflectionAxis, allReflectionAxes } from "@/features/chord/utils/reflectChord";
 import { getChordPitchClasses } from "@/features/chord/utils/getChordPitchClasses";
 import { rerootChord } from "@/features/chord/utils/rerootChord";
 import { CHORD_NAME_TO_DATA, CHORD_NAMES, getChordName } from "@/features/chord/data/chordNames";
@@ -105,6 +105,11 @@ export function useCustomChordState({
     [customFromChord, selectedChordName, setSelectedChordName, setCustomFromChord, onCurrentChordChange, onAnnounce],
   );
   const handleRandomChord = useCallback(() => {
+      // Provide a default axis for handleMirrorChord (C / F# axis, value 0)
+      const defaultMirrorAxis = allReflectionAxes()[0];
+      const handleMirrorChord = useCallback(() => {
+        handleMirrorWithAxis(defaultMirrorAxis);
+      }, [handleMirrorWithAxis, defaultMirrorAxis]);
     const name = CHORD_NAMES[Math.floor(Math.random() * CHORD_NAMES.length)];
     const { root: r, type: q } = CHORD_NAME_TO_DATA[name];
     setCustomFromChord(null);
@@ -208,6 +213,7 @@ export function useCustomChordState({
     setCustomFromChord,
     handleRotateChord,
     handleMirrorWithAxis,
+    handleMirrorChord,
     handleRandomChord,
     handleMutateChord,
     handleSelectPrimitiveShape,
