@@ -158,12 +158,18 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed walkthrough and [docs/feat
 2. **Write or update tests** for your changes (see the existing test files in `__tests__/` subdirectories for examples).
 3. **Run lint and tests** locally before pushing (`npm run lint && npm test` for the frontend; `dotnet test` for the backend).
 4. **Regenerate the API client** if you changed any backend endpoint (`npm run generate:api` with the backend running).
-5. **Open a PR** against `develop`. The CI pipeline will lint, test, and build both sides automatically.
+5. **Update documentation** if your changes affect user-visible behaviour, introduce a new feature, or change an API surface:
+   - Update relevant files in `docs/` (reference guides, architecture diagrams)
+   - Update `ARCHITECTURE.md` if the system topology changes
+   - Update `README.md` if the feature list or quick-start instructions change
+   - If no documentation update is needed, tick the **"No documentation changes required"** checkbox in the PR template and explain why
+6. **Open a PR** against `develop`. The CI pipeline will lint, test, build, and check documentation drift automatically.
 
 ### Required Checks Policy
 
 - CI and Security workflows are expected to run for pull requests targeting `develop` and `main`.
-- Configure repository branch protection so required checks block merges when CI or security scans fail.
+- The **Documentation Check** workflow runs on every PR and fails if source code changes without a corresponding documentation update (unless the PR template's "No documentation changes required" box is checked).
+- Configure repository branch protection so required checks block merges when CI, security scans, or the documentation check fails.
 
 ---
 
