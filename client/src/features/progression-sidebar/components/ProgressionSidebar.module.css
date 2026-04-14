@@ -46,53 +46,30 @@
 /* ── Play All button ────────────────────────────────────────────────────── */
 .controls {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
 }
 
-.durationLabel {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  cursor: default;
-}
-
-.durationSelect {
-  padding: 3px 6px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  background-color: var(--color-bg-sidebar);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 4px;
-  cursor: pointer;
-  appearance: none;
-  /* Minimal chevron via inline SVG background */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 6px center;
-  padding-right: 20px;
-}
-
-.durationSelect:focus-visible {
-  outline: 2px solid var(--color-accent, #4f46e5);
-  outline-offset: 1px;
+/* Secondary modifier row: Speed + Loop + Arp toggles */
+.playbackModifiers {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .playAllButton {
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--color-text-secondary);
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   white-space: nowrap;
 }
 
@@ -205,18 +182,18 @@
   gap: 12px;
 }
 
-.emptyIcon {
-  font-size: 32px;
-  opacity: 0.35;
+.emptyArrow {
+  font-size: 28px;
+  opacity: 0.45;
   line-height: 1;
+  display: block;
 }
 
 .emptyMessage {
   font-size: 13px;
-  line-height: 1.6;
-  color: var(--color-text-secondary);
-  font-style: italic;
-  max-width: 200px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  max-width: 180px;
 }
 
 /* ── Pair metric badge list item ────────────────────────────────────────── */
@@ -275,7 +252,7 @@
   text-shadow: 0 0 8px #ffff00;
 }
 
-[data-theme="retro"] .emptyIcon {
+[data-theme="retro"] .emptyArrow {
   opacity: 0.9;
   filter: drop-shadow(0 0 10px #ff00ff);
   animation: retroBounce 1.4s ease-in-out infinite;
@@ -291,15 +268,10 @@
   border-top-color: #ff00ff;
 }
 
-[data-theme="retro"] .durationLabel {
-  color: #ffff00;
-  text-shadow: 0 0 4px #ffff00;
-}
-
 @media (prefers-reduced-motion: reduce) {
   [data-theme="retro"] .heading,
   [data-theme="retro"] .count,
-  [data-theme="retro"] .emptyIcon {
+  [data-theme="retro"] .emptyArrow {
     animation: none;
   }
 }

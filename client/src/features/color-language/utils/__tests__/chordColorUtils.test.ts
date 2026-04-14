@@ -8,9 +8,9 @@ import {
 import type { Chord } from "@/features/current-chord/types";
 import type { ChordType } from "@/features/chord/types";
 
-const TRIAD_TYPES: ChordType[] = ["major", "minor", "dim", "aug"];
-const SEVENTH_TYPES: ChordType[] = ["maj7", "min7", "dom7", "halfdim7"];
-const ALL_8_CHORD_TYPES: ChordType[] = [...TRIAD_TYPES, ...SEVENTH_TYPES];
+const TRIAD_TYPES: ChordType[] = ["major", "minor", "dim", "aug", "sus2"];
+const SEVENTH_TYPES: ChordType[] = ["maj6", "min6", "maj7", "min7", "minmaj7", "dom7", "dom7sus4", "halfdim7"];
+const ALL_CHORD_TYPES: ChordType[] = [...TRIAD_TYPES, ...SEVENTH_TYPES];
 
 describe("getChordComplexity", () => {
   it("returns 'triad' for major", () => {
@@ -33,8 +33,23 @@ describe("getChordComplexity", () => {
     expect(getChordComplexity(chord)).toBe("triad");
   });
 
+  it("returns 'triad' for sus2", () => {
+    const chord: Chord = { root: 0, quality: "sus2" };
+    expect(getChordComplexity(chord)).toBe("triad");
+  });
+
   it("returns 'seventh' for maj7", () => {
     const chord: Chord = { root: 0, quality: "maj7" };
+    expect(getChordComplexity(chord)).toBe("seventh");
+  });
+
+  it("returns 'seventh' for maj6", () => {
+    const chord: Chord = { root: 0, quality: "maj6" };
+    expect(getChordComplexity(chord)).toBe("seventh");
+  });
+
+  it("returns 'seventh' for min6", () => {
+    const chord: Chord = { root: 0, quality: "min6" };
     expect(getChordComplexity(chord)).toBe("seventh");
   });
 
@@ -50,6 +65,16 @@ describe("getChordComplexity", () => {
 
   it("returns 'seventh' for halfdim7", () => {
     const chord: Chord = { root: 0, quality: "halfdim7" };
+    expect(getChordComplexity(chord)).toBe("seventh");
+  });
+
+  it("returns 'seventh' for minmaj7", () => {
+    const chord: Chord = { root: 0, quality: "minmaj7" };
+    expect(getChordComplexity(chord)).toBe("seventh");
+  });
+
+  it("returns 'seventh' for dom7sus4", () => {
+    const chord: Chord = { root: 0, quality: "dom7sus4" };
     expect(getChordComplexity(chord)).toBe("seventh");
   });
 
@@ -73,14 +98,14 @@ describe("getChordComplexity", () => {
     expect(getChordComplexity(chord)).toBe("seventh");
   });
 
-  it("returns 'triad' for all 4 triad types", () => {
+  it("returns 'triad' for all 5 triad types", () => {
     for (const quality of TRIAD_TYPES) {
       const chord: Chord = { root: 0, quality };
       expect(getChordComplexity(chord)).toBe("triad");
     }
   });
 
-  it("returns 'seventh' for all 4 seventh types without extensions", () => {
+  it("returns 'seventh' for all 5 seventh types without extensions", () => {
     for (const quality of SEVENTH_TYPES) {
       const chord: Chord = { root: 0, quality };
       expect(getChordComplexity(chord)).toBe("seventh");
@@ -90,7 +115,7 @@ describe("getChordComplexity", () => {
 
 describe("getChordColor", () => {
   it("returns a non-empty string for every chord type at 'triad' complexity", () => {
-    for (const quality of ALL_8_CHORD_TYPES) {
+    for (const quality of ALL_CHORD_TYPES) {
       const color = getChordColor(quality, "triad");
       expect(typeof color).toBe("string");
       expect(color.length).toBeGreaterThan(0);
@@ -98,21 +123,21 @@ describe("getChordColor", () => {
   });
 
   it("returns a valid hsl() CSS color string for all types at triad complexity", () => {
-    for (const quality of ALL_8_CHORD_TYPES) {
+    for (const quality of ALL_CHORD_TYPES) {
       const color = getChordColor(quality, "triad");
       expect(color).toMatch(/^hsl\(/i);
     }
   });
 
   it("returns a valid hsl() color for seventh complexity", () => {
-    for (const quality of ALL_8_CHORD_TYPES) {
+    for (const quality of ALL_CHORD_TYPES) {
       const color = getChordColor(quality, "seventh");
       expect(color).toMatch(/^hsl\(/i);
     }
   });
 
   it("returns a valid hsl() color for extended complexity", () => {
-    for (const quality of ALL_8_CHORD_TYPES) {
+    for (const quality of ALL_CHORD_TYPES) {
       const color = getChordColor(quality, "extended");
       expect(color).toMatch(/^hsl\(/i);
     }
@@ -146,7 +171,7 @@ describe("getChordColor", () => {
 
 describe("getChordFillColor", () => {
   it("returns an hsla() string (with alpha) for every chord type", () => {
-    for (const quality of ALL_8_CHORD_TYPES) {
+    for (const quality of ALL_CHORD_TYPES) {
       const fillColor = getChordFillColor(quality, "triad");
       expect(fillColor).toMatch(/^hsla\(/i);
     }
@@ -193,7 +218,7 @@ describe("getAccessibleTextColor", () => {
   });
 
   it("returns dark text for each quality's light color", () => {
-    for (const quality of ALL_8_CHORD_TYPES) {
+    for (const quality of ALL_CHORD_TYPES) {
       const solidColor = getChordColor(quality, "triad");
       // base colors (50% lightness) could go either way; light colors always return dark
       const lightColor = solidColor.replace(/\d+%\)$/, "95%)");

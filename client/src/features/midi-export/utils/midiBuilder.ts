@@ -2,7 +2,13 @@ import { Midi } from "@tonejs/midi";
 import type { Chord } from "@/features/current-chord/types";
 import { formatChordSymbol } from "@/features/current-chord";
 import { getChordPitchClasses } from "@/features/chord/utils";
-import { closeVoiceChord, minimalMotionVoicing } from "@/features/voice-leading";
+import {
+  closeVoiceChord,
+  minimalMotionVoicing,
+  openVoiceChord,
+  chordMatchingFlexible,
+} from "@/features/voice-leading";
+import type { VoiceLeadingStyle, MotionBias } from "@/features/voice-leading";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import {
@@ -19,6 +25,28 @@ export interface MidiExportOptions {
   beatsPerChord: number;
   /** Starting octave for the first chord (2–6). Default: 4. */
   startOctave: number;
+  /**
+   * Voice-leading algorithm used to voice chords during export.
+   * - `'close'`    — close position for every chord (Tightly Stacked).
+   * - `'minimal'`  — close position for chord 1, minimal-motion for subsequent (default).
+   * - `'open'`     — open (spread) voicing for every chord (Wide & Spacious).
+   * - `'flexible'` — optimal cross-chord assignment via chordMatchingFlexible.
+   */
+  voiceLeadingStyle: VoiceLeadingStyle;
+  /**
+   * Penalty for unmatched voices in cross-size transitions (0–4). Default: 2.
+   * Maps to the `penalty` parameter in `chordMatchingFlexible`.
+   * Only audibly meaningful for the `'flexible'` style when the progression
+   * contains chords of mixed voice count.
+   */
+  strictness: number;
+  /**
+   * Directional tie-break preference for `minimalMotionVoicing`.
+   * - `'neutral'` (default): no preference — keep the rounded base candidate.
+   * - `'down'`: prefer the lower MIDI note on a tie.
+   * - `'up'`: prefer the higher MIDI note on a tie.
+   */
+  motionBias: MotionBias;
   /**
    * When `true` (default), a MIDI Text meta event (0x01) and a Marker meta
    * event (0x06) are written at the start tick of every chord so that
@@ -187,6 +215,77 @@ function injectKeySignature(
   return result;
 }
 /**
+ * Encode a non-negative integer as MIDI Variable-Length Quantity (VLQ) bytes.
+ */
+function encodeVLQ(value: number): number[] {
+  if (value === 0) return [0];
+  const bytes: number[] = [];
+  let v = value;
+  bytes.unshift(v & 0x7F);
+  v >>>= 7;
+  while (v > 0) {
+    bytes.unshift((v & 0x7F) | 0x80);
+    v >>>= 7;
+  }
+  return bytes;
+}
+
+/**
+ * Fix the conductor track (track 0) end-of-track delta time so that the
+ * conductor track extends to the true end of the piece.
+ *
+ * @tonejs/midi places the conductor track's EOT immediately after the last
+ * meta event — which is the chord-symbol marker at the *start* of the final
+ * chord.  Note tracks extend one full chord duration beyond that point.
+ * Notation software that determines piece length from the conductor track will
+ * see a discrepancy and render an extra empty measure at the end.
+ *
+ * This function patches the delta-time byte that precedes the EOT meta event
+ * (`0xFF 0x2F 0x00`) so it spans the remaining ticks to the piece's true end.
+ *
+ * MIDI format-1 byte layout (same as `injectKeySignature`):
+ *   0–13  : MThd chunk
+ *   14–17 : "MTrk" marker of conductor track
+ *   18–21 : conductor-track byte size, big-endian uint32
+ *   22+   : conductor-track events
+ */
+function extendConductorTrackEOT(
+  midiBytes: Uint8Array,
+  eotDeltaTicks: number,
+): Uint8Array {
+  if (eotDeltaTicks === 0) return midiBytes;
+
+  const SIZE_OFFSET  = 18;
+  const EVENTS_START = 22;
+
+  const ctkSize  = readBigEndianUint32(midiBytes, SIZE_OFFSET);
+  const eotStart = EVENTS_START + ctkSize - 4; // EOT: [0x00, 0xFF, 0x2F, 0x00]
+
+  // Safety check — bail if the bytes don't match the expected EOT pattern.
+  if (
+    midiBytes[eotStart]     !== 0x00 ||
+    midiBytes[eotStart + 1] !== 0xFF ||
+    midiBytes[eotStart + 2] !== 0x2F ||
+    midiBytes[eotStart + 3] !== 0x00
+  ) {
+    return midiBytes;
+  }
+
+  const vlq        = encodeVLQ(eotDeltaTicks);
+  const extraBytes = vlq.length - 1; // old delta was always 1 byte (0x00)
+
+  const result = new Uint8Array(midiBytes.length + extraBytes);
+  result.set(midiBytes.slice(0, eotStart), 0);
+  result.set(vlq, eotStart);
+  result.set([0xFF, 0x2F, 0x00], eotStart + vlq.length);
+  result.set(midiBytes.slice(eotStart + 4), eotStart + vlq.length + 3);
+
+  writeBigEndianUint32(result, SIZE_OFFSET, ctkSize + extraBytes);
+
+  return result;
+}
+
+/**
  * Fraction of the subdivision duration used as note-on time for arpeggiated
  * notes.  The remaining 10 % provides a subtle gap (articulation) between
  * consecutive arpeggiated notes so that DAWs render them as distinct events.
@@ -197,6 +296,9 @@ const DEFAULT_OPTIONS: MidiExportOptions = {
   bpm: DEFAULT_BPM,
   beatsPerChord: DEFAULT_BEATS_PER_CHORD,
   startOctave: DEFAULT_OCTAVE,
+  voiceLeadingStyle: 'minimal',
+  strictness: 2,
+  motionBias: 'neutral',
   includeChordSymbols: true,
   chordLabels: [],
 };
@@ -223,6 +325,72 @@ function toMidiMetaUtf8Text(text: string): string {
 }
 
 /**
+ * Voice a chord using chordMatchingFlexible for optimal cross-chord assignment.
+ * Each matched voice is placed at the octave closest to the corresponding
+ * previous MIDI note; unmatched voices anchor to the last previous note.
+ */
+function flexibleVoicing(
+  prevMidi: number[],
+  nextPitchClasses: number[],
+  strictness: number,
+  motionBias: MotionBias,
+): number[] {
+  if (prevMidi.length === 0) return [];
+
+  const prevPCs = prevMidi.map((m) => ((m % 12) + 12) % 12);
+  const { mapping } = chordMatchingFlexible(prevPCs, nextPitchClasses, { penalty: strictness });
+
+  // Place each matched next pitch class near its matched prev voice.
+  // Use a sparse array and fill unmatched slots from the last prev voice.
+  const result: (number | undefined)[] = new Array(nextPitchClasses.length);
+
+  for (const { fromIdx, toIdx } of mapping) {
+    const prevNote = prevMidi[Math.min(fromIdx, prevMidi.length - 1)]!;
+    const pc = nextPitchClasses[toIdx]!;
+    const k = Math.round((prevNote - pc) / 12);
+    const base = 12 * k + pc;
+    const candidates = [base - 12, base, base + 12];
+    let best = base;
+    for (const candidate of candidates) {
+      const candDist = Math.abs(candidate - prevNote);
+      const bestDist = Math.abs(best - prevNote);
+      if (candDist < bestDist) {
+        best = candidate;
+      } else if (candDist === bestDist) {
+        if (motionBias === 'down' && candidate < best) best = candidate;
+        else if (motionBias === 'up' && candidate > best) best = candidate;
+      }
+    }
+    result[toIdx] = best;
+  }
+
+  // Fill unmatched slots (new voices from size expansion) near the last prev note.
+  const lastPrev = prevMidi[prevMidi.length - 1]!;
+  for (let i = 0; i < nextPitchClasses.length; i++) {
+    if (result[i] === undefined) {
+      const pc = nextPitchClasses[i]!;
+      const k = Math.round((lastPrev - pc) / 12);
+      const base = 12 * k + pc;
+      const candidates = [base - 12, base, base + 12];
+      let best = base;
+      for (const candidate of candidates) {
+        const candDist = Math.abs(candidate - lastPrev);
+        const bestDist = Math.abs(best - lastPrev);
+        if (candDist < bestDist) {
+          best = candidate;
+        } else if (candDist === bestDist) {
+          if (motionBias === 'down' && candidate < best) best = candidate;
+          else if (motionBias === 'up' && candidate > best) best = candidate;
+        }
+      }
+      result[i] = best;
+    }
+  }
+
+  return result as number[];
+}
+
+/**
  * Converts a chord progression into raw MIDI bytes.
  *
  * @param chords  - Array of chords to export.
@@ -237,6 +405,9 @@ export function buildMidiFile(
     bpm,
     beatsPerChord,
     startOctave,
+    voiceLeadingStyle,
+    strictness,
+    motionBias,
     includeChordSymbols,
     chordLabels,
     arpeggioPattern,
@@ -287,10 +458,25 @@ export function buildMidiFile(
   let prevMidi: number[] = [];
   for (let i = 0; i < chords.length; i++) {
     const pitchClasses = getChordPitchClasses(chords[i]!);
-    const midiNotes =
-      i === 0
-        ? closeVoiceChord(pitchClasses, startOctave)
-        : minimalMotionVoicing(prevMidi, pitchClasses);
+    let midiNotes: number[];
+
+    if (voiceLeadingStyle === 'close') {
+      midiNotes = closeVoiceChord(pitchClasses, startOctave);
+    } else if (voiceLeadingStyle === 'open') {
+      midiNotes = openVoiceChord(pitchClasses, startOctave);
+    } else if (voiceLeadingStyle === 'flexible') {
+      midiNotes =
+        i === 0
+          ? closeVoiceChord(pitchClasses, startOctave)
+          : flexibleVoicing(prevMidi, pitchClasses, strictness, motionBias);
+    } else {
+      // 'minimal' (default): close position for chord 1, minimal motion for subsequent
+      midiNotes =
+        i === 0
+          ? closeVoiceChord(pitchClasses, startOctave)
+          : minimalMotionVoicing(prevMidi, pitchClasses, motionBias);
+    }
+
     allVoicings.push(midiNotes);
     prevMidi = midiNotes;
   }
@@ -361,12 +547,26 @@ export function buildMidiFile(
     }
   });
 
-  const midiBytes = midi.toArray();
+  const rawMidi = midi.toArray();
+
+  // ── Fix conductor track EOT so it lands at the piece's true final tick ──────
+  // @tonejs/midi places the conductor EOT at the last chord-symbol tick (the
+  // *start* of the final chord).  Note tracks run one chord duration longer.
+  // This one-measure gap causes notation software to render a spurious extra
+  // measure at the end of the score.
+  const ppq = midi.header.ppq;
+  const finalTicks = chords.length * beatsPerChord * ppq;
+  const lastConductorEventTick =
+    includeChordSymbols && chords.length > 0
+      ? (chords.length - 1) * beatsPerChord * ppq
+      : 0;
+  const eotDelta = finalTicks - lastConductorEventTick;
+  const withFixedEOT = extendConductorTrackEOT(rawMidi, eotDelta);
 
   // ── Inject key signature bytes directly (bypasses @tonejs/midi encoder bug) ──
   if (keySigByte) {
-    return injectKeySignature(midiBytes, keySigByte.keyByte, keySigByte.scaleByte);
+    return injectKeySignature(withFixedEOT, keySigByte.keyByte, keySigByte.scaleByte);
   }
 
-  return midiBytes;
+  return withFixedEOT;
 }

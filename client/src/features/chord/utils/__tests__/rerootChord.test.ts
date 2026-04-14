@@ -46,7 +46,7 @@ describe("rerootChord", () => {
 
   it("returns a valid ChordType for any input", () => {
     const allTypes: ChordType[] = [
-      "major", "minor", "dim", "aug", "maj7", "min7", "dom7", "halfdim7", "quartal",
+      "major", "minor", "dim", "aug", "sus2", "maj6", "min6", "maj7", "min7", "dom7", "halfdim7", "quartal",
     ];
     const cases: [number[], number][] = [
       [[0, 4, 7], 4],

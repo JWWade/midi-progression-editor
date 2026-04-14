@@ -3,8 +3,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 24px 20px;
+  gap: 4px;
+  padding: 18px 20px;
   border-radius: 12px;
   /* Dynamic tint is injected via the --chord-panel-bg custom property */
   background-color: var(--chord-panel-bg, #f8f9fa);
@@ -15,6 +15,7 @@
   box-sizing: border-box;
   text-align: center;
   transition: background-color 0.35s ease;
+  container-type: inline-size;
 }
 
 /* ── Section label ("Current Chord") ────────────────────────────────────── */
@@ -30,11 +31,12 @@
 /* ── Primary chord name ─────────────────────────────────────────────────── */
 .chordName {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 28px;
+  font-size: clamp(14px, 8cqi, 28px);
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1.2;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 /* ── No-chord placeholder ───────────────────────────────────────────────── */
@@ -66,6 +68,52 @@
   letter-spacing: 0.02em;
 }
 
+/* ── Roman numeral row ──────────────────────────────────────────────────── */
+.romanNumeralRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.romanNumeral {
+  font-size: 18px;
+  font-weight: 700;
+  font-style: normal;
+  font-family: "Times New Roman", Times, serif;
+  color: var(--chord-quality-dark, #4f46e5);
+  letter-spacing: 0.02em;
+  min-width: 2ch;
+}
+
+.tonicSnapButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tonicSnapButton:hover:not(:disabled) {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
+}
+
+.tonicSnapButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ── Thumbnail wrapper ──────────────────────────────────────────────────── */
 .thumbnail {
   margin-bottom: 4px;
@@ -81,7 +129,7 @@
 
 /* ── Add-to-progression button ──────────────────────────────────────────── */
 .addButton {
-  margin-top: 16px;
+  margin-top: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -126,12 +174,14 @@
   animation: arrowSlide 0.35s ease;
 }
 
-/* ── Action row (play button) ───────────────────────────────────────────── */
+/* ── Action row (play + set-as-tonic) ──────────────────────────────────── */
 .actionRow {
   display: flex;
   gap: 8px;
   justify-content: center;
+  align-items: center;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 
 /* ── Notes display row ──────────────────────────────────────────────────── */
@@ -154,10 +204,49 @@
   letter-spacing: 0.03em;
 }
 
+.noteNames span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  background-color: color-mix(in srgb, var(--chord-quality-base, #4f46e5) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chord-quality-base, #4f46e5) 35%, transparent);
+  border-radius: 4px;
+}
+
 .noteSeparator {
   color: var(--color-text-muted);
   font-weight: 400;
   margin: 0 3px;
+}
+
+/* ── Interval row ───────────────────────────────────────────────────────── */
+.intervalsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 4px;
+  justify-content: center;
+}
+
+.intervalItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.intervalNote {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.intervalLabel {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  line-height: 1.2;
 }
 
 .copyIconButton {

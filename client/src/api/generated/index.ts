@@ -208,6 +208,17 @@ export interface paths {
                         "text/json": components["schemas"]["ProblemDetails"];
                     };
                 };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -277,24 +288,40 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Data transfer object representing a fully resolved chord returned by the harmony engine. */
         ChordDto: {
+            /** @description Root note name (e.g. "C", "F#"). */
             root?: string | null;
-            /** @enum {string} */
-            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
+            /**
+             * @description Chord quality (e.g. ParametricMusic.Api.Models.ChordQuality.Major, ParametricMusic.Api.Models.ChordQuality.Minor7).
+             * @enum {string}
+             */
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Sus2" | "Major6" | "Minor6" | "Dominant7" | "Dom7Sus4" | "Major7" | "Minor7" | "MinMaj7" | "HalfDiminished7" | "Quartal";
+            /** @description Human-readable chord name combining root and quality (e.g. "C Major", "F# Minor 7th"). */
             displayName?: string | null;
+            /**
+             * @description Pitch-class integers (0–11) for each note in the chord, ordered from root upward.
+             *     C = 0, C♯/D♭ = 1, … B = 11.
+             */
             pitchClasses?: number[] | null;
+            /** @description Note name strings corresponding to each element of ParametricMusic.Api.Models.ChordDto.PitchClasses (e.g. ["C", "E", "G"]). */
             noteNames?: string[] | null;
         };
         ChordFromRootRequestDto: {
             /** @enum {string} */
-            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Sus2" | "Major6" | "Minor6" | "Dominant7" | "Dom7Sus4" | "Major7" | "Minor7" | "MinMaj7" | "HalfDiminished7" | "Quartal";
             /** @enum {string|null} */
             primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
         };
+        /**
+         * @description A chord reference used as input to the progression analyzer.
+         *     Identifies a chord either by its named root + quality or by an explicit
+         *     set of pitch classes (for custom / non-tertian chords).
+         */
         ChordRef: {
             root: string;
             /** @enum {string} */
-            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Dominant7" | "Major7" | "Minor7" | "HalfDiminished7" | "Quartal";
+            quality?: "Major" | "Minor" | "Diminished" | "Augmented" | "Sus2" | "Major6" | "Minor6" | "Dominant7" | "Dom7Sus4" | "Major7" | "Minor7" | "MinMaj7" | "HalfDiminished7" | "Quartal";
             /** @enum {string|null} */
             primitiveShape?: "equilateral-triangle" | "suspended-triangle" | "square" | "rectangle" | null;
             /**
@@ -302,7 +329,7 @@ export interface components {
              *     that do not map to a named tertian quality.  When present and
              *     non-empty, the analyzer uses these pitch classes directly instead of
              *     deriving them from ParametricMusic.Api.Models.ChordRef.Root and ParametricMusic.Api.Models.ChordRef.Quality.
-             *     Out-of-range values are silently discarded.
+             *     Values must be in the inclusive range 0–11 and duplicates are not allowed.
              */
             customNotes?: number[] | null;
         };
@@ -329,9 +356,18 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
+        /**
+         * @description Represents a single note within a scale or chord, carrying both its
+         *     pitch-class index and its display name.
+         */
         NoteInfo: {
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Pitch-class index in the range 0–11 (C = 0, C♯/D♭ = 1, … B = 11).
+             *     Values are always within the standard MIDI octave-independent range.
+             */
             index?: number;
+            /** @description Human-readable note name, using sharp or flat notation as appropriate (e.g. "C", "F#", "Bb"). */
             name?: string | null;
         };
         ProblemDetails: {
@@ -345,19 +381,45 @@ export interface components {
             [key: string]: unknown;
         };
         ProgressionAnalyzeRequestDto: {
+            /** @description Ordered list of chords in the progression. Must contain 1–8 chords. */
             chords?: components["schemas"]["ChordRef"][] | null;
             scaleContext?: components["schemas"]["ScaleContextDto"];
         };
+        /**
+         * @description Data transfer object for the response from `POST /progression/analyze`.
+         *     Contains per-step voice-leading analysis and aggregate metrics.
+         */
         ProgressionAnalyzeResponseDto: {
+            /**
+             * @description Ordered list of voice-leading steps, one per consecutive chord pair.
+             *     A progression of N chords produces N-1 steps.
+             */
             steps?: components["schemas"]["ProgressionStep"][] | null;
-            /** Format: double */
+            /**
+             * Format: double
+             * @description Aggregate continuity score in the range [0, 1].
+             *     Computed as `1.0 – (averageMotion / 12.0)`.
+             *     A score near 1.0 indicates smooth, minimal voice leading throughout the progression;
+             *     a score near 0.0 indicates large average motion between consecutive chords.
+             */
             continuityScore?: number;
+            /**
+             * @description Per-chord harmonic tension values in the range [0, 1], one entry per chord.
+             *     Higher values indicate greater harmonic tension (more dissonance or distance
+             *     from a hypothetical tonic). The array length equals the number of input chords.
+             */
             tensionTrend?: number[] | null;
         };
+        /** @description Represents a single voice-leading step between two consecutive chords in a progression. */
         ProgressionStep: {
             from?: components["schemas"]["ChordRef"];
             to?: components["schemas"]["ChordRef"];
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Voice-leading motion score for this step: the sum of the minimal pitch-class
+             *     distances from each note in ParametricMusic.Api.Models.ProgressionStep.From to its nearest neighbour in
+             *     ParametricMusic.Api.Models.ProgressionStep.To. Lower values indicate smoother voice leading.
+             */
             motion?: number;
         };
         /**

@@ -4,10 +4,40 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-  gap: 2rem;
+  gap: 1rem;
   background-color: var(--color-bg-header);
   border-bottom: 1px solid var(--color-border);
   flex-wrap: wrap;
+}
+
+/* ── Left / right balanced columns for natural brand centering ───────────── */
+.leftSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.rightSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* ── Brand / wordmark ────────────────────────────────────────────────────── */
+.brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.brandName {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  white-space: nowrap;
 }
 
 /* ── Toggle buttons group ───────────────────────────────────────────────── */
@@ -45,6 +75,8 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  border-left: 1px solid var(--color-border);
+  padding-left: 1rem;
 }
 
 /* ── Theme toggle button ─────────────────────────────────────────────────── */
@@ -72,6 +104,50 @@
 .themeToggle:focus-visible {
   outline: 3px solid var(--color-accent, #4f46e5);
   outline-offset: 2px;
+}
+
+/* ── Layout Mode Controls (Explore / Inspect / Compose segmented toggle) ──── */
+.layoutModeControls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-border);
+  background-color: var(--color-bg-surface);
+}
+
+.layoutModeButton {
+  flex: 1;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+}
+
+.layoutModeButton:hover {
+  background-color: var(--color-tile-bg-hover);
+}
+
+.layoutModeButton:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 1px;
+}
+
+.layoutModeButtonActive {
+  background-color: var(--color-accent, #4f46e5);
+  color: white;
+  font-weight: 600;
+}
+
+.layoutModeButtonActive:hover {
+  background-color: var(--color-accent-hover, #4338ca);
 }
 
 /* ── Cursor Mode Toggle ───────────────────────────────────────────────────── */
@@ -128,6 +204,21 @@
     gap: 1rem;
   }
 
+  .leftSection {
+    justify-content: center;
+  }
+
+  .brand {
+    justify-content: center;
+    order: -1;
+  }
+
+  .rightSection {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
   .toggles {
     justify-content: center;
     gap: 1rem;
@@ -136,6 +227,10 @@
   .rightControls {
     justify-content: center;
     flex-wrap: wrap;
+  }
+
+  .layoutModeControls {
+    justify-content: center;
   }
 }
 
@@ -174,6 +269,21 @@
 [data-theme="retro"] .checkbox {
   accent-color: #00ffff;
   border: 2px solid #808080;
+}
+
+/* ── Retro: brand wordmark with neon glow ────────────────────────────────── */
+/* Comic Sans is intentional here — matches the retro theme's global font-family */
+[data-theme="retro"] .brandName {
+  color: #00ffff;
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  text-shadow: 0 0 8px #00ffff, 0 0 16px rgba(0, 255, 255, 0.5);
+  animation: retroNeonPulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="retro"] .brandName {
+    animation: none;
+  }
 }
 
 /* ── Retro: scrolling marquee banner ─────────────────────────────────────── */

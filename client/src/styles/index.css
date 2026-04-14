@@ -14,10 +14,10 @@
 [data-theme="light"] {
   color-scheme: light;
   color: #213547;
-  background-color: #ffffff;
+  background-color: #fafbfc;
 
   --color-bg-page: #fafbfc;
-  --color-bg-surface: #ffffff;
+  --color-bg-surface: #f9fafb;
   --color-bg-header: #f9fafb;
   --color-bg-sidebar: #f3f4f6;
   --color-bg-canvas: #ffffff;
@@ -46,8 +46,8 @@
 /* ── Dark theme ──────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
   color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: rgba(224, 224, 224, 0.87);
+  background-color: #1e1e1e;
 
   --color-bg-page: #18181b;
   --color-bg-surface: #1e1e2e;
@@ -72,8 +72,8 @@
   --color-delete-btn-hover-bg: rgba(248, 113, 113, 0.15);
   --color-delete-btn-hover: #fca5a5;
   --color-scrollbar: rgba(255, 255, 255, 0.15);
-  --color-accent: #818cf8;
-  --color-accent-hover: #a5b4fc;
+  --color-accent: #7c85e8;
+  --color-accent-hover: #9aa8f0;
 }
 
 #root {
@@ -126,7 +126,7 @@ button:focus-visible {
 [data-theme="retro"] {
   color-scheme: dark;
   font-family: "Comic Sans MS", "Comic Sans", cursive;
-  color: #00ffff;
+  color: #00e5e5;
   background-color: #000066;
 
   --color-bg-page: #000033;
@@ -135,25 +135,25 @@ button:focus-visible {
   --color-bg-sidebar: #0d0044;
   --color-bg-canvas: #000033;
   --color-bg-subtle: rgba(0, 255, 255, 0.06);
-  --color-border: #ff00ff;
-  --color-border-subtle: rgba(255, 0, 255, 0.5);
-  --color-text-primary: #00ffff;
-  --color-text-secondary: #ffff00;
-  --color-text-muted: #ff69b4;
+  --color-border: #d400d4;
+  --color-border-subtle: rgba(212, 0, 212, 0.5);
+  --color-text-primary: #00e5e5;
+  --color-text-secondary: #e5e000;
+  --color-text-muted: #e060a0;
   --color-disabled-bg: #222266;
   --color-disabled-text: #6666aa;
   --color-tile-bg: rgba(0, 255, 255, 0.06);
   --color-tile-bg-hover: rgba(255, 0, 255, 0.18);
-  --color-tile-name: #00ffff;
+  --color-tile-name: #00e5e5;
   --color-control-btn: #ffff00;
   --color-control-btn-hover-bg: rgba(255, 255, 0, 0.18);
   --color-control-btn-hover: #ffffff;
   --color-delete-btn: #ff5555;
   --color-delete-btn-hover-bg: rgba(255, 85, 85, 0.25);
   --color-delete-btn-hover: #ff9999;
-  --color-scrollbar: rgba(255, 0, 255, 0.6);
-  --color-accent: #ff00ff;
-  --color-accent-hover: #ff66ff;
+  --color-scrollbar: rgba(212, 0, 212, 0.5);
+  --color-accent: #d400d4;
+  --color-accent-hover: #e066e0;
 }
 
 /* ── Retro: keyframe animations ──────────────────────────────────────────── */
@@ -167,14 +167,14 @@ button:focus-visible {
 }
 
 @keyframes retroRainbow {
-  0%   { color: #ff00ff; }
+  0%   { color: #d400d4; }
   14%  { color: #ff4488; }
   28%  { color: #ff8800; }
-  42%  { color: #ffff00; }
+  42%  { color: #e5e000; }
   57%  { color: #00ff88; }
-  71%  { color: #00ffff; }
+  71%  { color: #00e5e5; }
   85%  { color: #8844ff; }
-  100% { color: #ff00ff; }
+  100% { color: #d400d4; }
 }
 
 @keyframes retroBlink {
@@ -202,8 +202,8 @@ button:focus-visible {
 }
 
 @keyframes retroGlow {
-  0%, 100% { box-shadow: 0 0 6px #ff00ff, 0 0 10px #ff00ff, 2px 2px 0 #440044; }
-  50% { box-shadow: 0 0 12px #ff00ff, 0 0 24px #ff00ff, 0 0 36px rgba(255, 0, 255, 0.5), 2px 2px 0 #440044; }
+  0%, 100% { box-shadow: 0 0 6px #d400d4, 0 0 10px #d400d4, 2px 2px 0 #440044; }
+  50% { box-shadow: 0 0 12px #d400d4, 0 0 24px #d400d4, 0 0 36px rgba(212, 0, 212, 0.5), 2px 2px 0 #440044; }
 }
 
 /* ── Retro: starfield page background ───────────────────────────────────── */
@@ -243,6 +243,16 @@ button:focus-visible {
 
 [data-theme="retro"] button:hover:not(:disabled) {
   background-color: #d4d4d4 !important;
+}
+
+/* ── Retro: circle controls — dark background so colored SVG shapes are readable ── */
+[data-theme="retro"] [data-circle-controls] button {
+  background-color: #000033 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="retro"] [data-circle-controls] button:hover:not(:disabled) {
+  background-color: #000066 !important;
 }
 
 [data-theme="retro"] button:active:not(:disabled) {
@@ -308,9 +318,9 @@ option {
 [data-theme="retro"] button:focus-visible,
 [data-theme="retro"] input:focus-visible,
 [data-theme="retro"] select:focus-visible {
-  outline: 3px solid #ff00ff !important;
+  outline: 3px solid #d400d4 !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 2px #000033, 0 0 12px #ff00ff !important;
+  box-shadow: 0 0 0 2px #000033, 0 0 12px #d400d4 !important;
 }
 
 /* ── Retro: range/slider neon track ─────────────────────────────────────── */
@@ -319,7 +329,7 @@ option {
   border-radius: 0 !important;
   border: 2px inset !important;
   border-color: #808080 #dfdfdf #dfdfdf #808080 !important;
-  background: linear-gradient(to right, #ff00ff, #8800ff, #0000ff) !important;
+  background: linear-gradient(to right, #d400d4, #8800ff, #0000ff) !important;
   cursor: pointer !important;
 }
 

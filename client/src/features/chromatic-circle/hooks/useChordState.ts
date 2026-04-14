@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { ScaleType } from "@/features/scale/types";
 import type { Chord } from "@/features/current-chord";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { findNearestChord } from "@/features/chord/utils/findNearestChord";
@@ -12,16 +11,12 @@ import { useCustomChordState } from "./useCustomChordState";
 
 interface UseChordStateOptions {
   onCurrentChordChange?: (chord: Chord) => void;
-  onKeyScaleChange?: (root: number, scale: ScaleType) => void;
-  selectedScale: ScaleType;
   initialChordName?: string;
   pitchClasses: readonly string[];
 }
 
 export function useChordState({
   onCurrentChordChange,
-  onKeyScaleChange,
-  selectedScale,
   initialChordName = "C",
   pitchClasses,
 }: UseChordStateOptions) {
@@ -34,7 +29,7 @@ export function useChordState({
     customFromChord,
     setCustomFromChord,
     handleRotateChord,
-    handleMirrorChord,
+    handleMirrorWithAxis,
     handleRandomChord,
     handleMutateChord,
     handleSelectPrimitiveShape,
@@ -122,10 +117,6 @@ export function useChordState({
   }, [effectiveRoot, effectiveQuality, onCurrentChordChange, customFromChord]);
 
   useEffect(() => {
-    onKeyScaleChange?.(effectiveRoot, selectedScale);
-  }, [effectiveRoot, selectedScale, onKeyScaleChange]);
-
-  useEffect(() => {
     if (!moveAnnouncement) return;
     const timeoutId = window.setTimeout(() => setMoveAnnouncement(""), 1500);
     return () => window.clearTimeout(timeoutId);
@@ -147,7 +138,7 @@ export function useChordState({
     handleNoteDragMove,
     handleNoteDragEnd,
     handleRotateChord,
-    handleMirrorChord,
+    handleMirrorWithAxis,
     handleSelectPrimitiveShape,
     handleRandomChord,
     handleMutateChord,

@@ -31,10 +31,10 @@ export interface ArpeggioPattern {
 }
 
 export const DEFAULT_ARPEGGIO_PATTERN: ArpeggioPattern = {
-  direction: "up",
-  subdivision: "eighth",
-  swingPercent: 0,
-  repeats: 1,
+  direction: "up-down",
+  subdivision: "quarter",
+  swingPercent: 10,
+  repeats: 2,
 };
 
 export const ARPEGGIO_DIRECTION_LABELS: Record<ArpeggioDirection, string> = {

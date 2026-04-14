@@ -189,48 +189,42 @@ public class ProgressionAnalyzerTests
     }
 
     [Fact]
-    public void Analyze_CustomNotes_FiltersOutOfRangePitchClasses()
+    public void Analyze_CustomNotes_WithOutOfRangeValue_ThrowsArgumentException()
     {
-        // Out-of-range values (12, -1) are discarded; valid subset [0, 4, 7] matches C major
         var chords = new List<ChordRef>
         {
             new() { Root = "C", Quality = ChordQuality.Major, CustomNotes = [0, 4, 7, 12, -1] },
             new() { Root = "G", Quality = ChordQuality.Major },
         };
 
-        var result = _service.Analyze(chords);
-
-        Assert.Equal(3, result.Steps[0].Motion);
+        var ex = Assert.Throws<ArgumentException>(() => _service.Analyze(chords));
+        Assert.Contains("customNotes", ex.Message);
     }
 
     [Fact]
-    public void Analyze_CustomNotes_DeduplicatesPitchClasses()
+    public void Analyze_CustomNotes_WithDuplicateValue_ThrowsArgumentException()
     {
-        // Duplicates (0, 0, 4, 7) → [0, 4, 7] → same motion as C major → G major
         var chords = new List<ChordRef>
         {
             new() { Root = "C", Quality = ChordQuality.Major, CustomNotes = [0, 0, 4, 7] },
             new() { Root = "G", Quality = ChordQuality.Major },
         };
 
-        var result = _service.Analyze(chords);
-
-        Assert.Equal(3, result.Steps[0].Motion);
+        var ex = Assert.Throws<ArgumentException>(() => _service.Analyze(chords));
+        Assert.Contains("duplicate", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public void Analyze_CustomNotesAllOutOfRange_FallsBackToRootAndQuality()
+    public void Analyze_CustomNotesAllOutOfRange_ThrowsArgumentException()
     {
-        // All custom notes are out of range → fall back to root + quality
         var chords = new List<ChordRef>
         {
             new() { Root = "C", Quality = ChordQuality.Major, CustomNotes = [15, -3, 99] },
             new() { Root = "G", Quality = ChordQuality.Major },
         };
 
-        var result = _service.Analyze(chords);
-
-        Assert.Equal(3, result.Steps[0].Motion);
+        var ex = Assert.Throws<ArgumentException>(() => _service.Analyze(chords));
+        Assert.Contains("between 0 and 11", ex.Message);
     }
 
     // ── ScaleContext on request ───────────────────────────────────────────────

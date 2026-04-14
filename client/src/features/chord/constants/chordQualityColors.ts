@@ -41,9 +41,14 @@ export interface ChordQualityColor {
  * | minor       | Blue / indigo | Cool, introspective  |
  * | dim         | Burgundy      | Dark, tense          |
  * | aug         | Teal          | Ethereal, lifted     |
+ * | sus2        | Sky blue      | Open, airy, suspended|
  * | maj7        | Gold-yellow   | Luminous, open       |
+ * | maj6        | Yellow-green  | Bright, major-flavored   |
+ * | min6        | Teal-indigo   | Minor-flavored, distinct |
  * | min7        | Deep blue     | Rich, complex        |
+ * | minmaj7     | Indigo-violet | Minor-dark, haunting |
  * | dom7        | Red-orange    | Warm, tense          |
+ * | dom7sus4    | Amber-orange  | Dominant, unresolved |
  * | halfdim7    | Muted purple  | Mysterious, shadowed |
  * | quartal     | Cyan-green    | Open, suspended      |
  */
@@ -80,6 +85,14 @@ export const ChordQualityColors: Record<ChordType, ChordQualityColor> = {
     deeper:  "hsl(168, 78%, 33%)",
     richest: "hsl(168, 88%, 26%)",
   },
+  sus2: {
+    base:    "hsl(200, 65%, 52%)",
+    fill:    "hsla(200, 65%, 52%, 0.12)",
+    light:   "hsl(200, 65%, 95%)",
+    dark:    "hsl(200, 65%, 28%)",
+    deeper:  "hsl(200, 78%, 44%)",
+    richest: "hsl(200, 88%, 37%)",
+  },
   maj7: {
     base:    "hsl(50, 70%, 52%)",
     fill:    "hsla(50, 70%, 52%, 0.12)",
@@ -87,6 +100,22 @@ export const ChordQualityColors: Record<ChordType, ChordQualityColor> = {
     dark:    "hsl(50, 70%, 28%)",
     deeper:  "hsl(50, 85%, 45%)",
     richest: "hsl(50, 95%, 38%)",
+  },
+  maj6: {
+    base:    "hsl(62, 75%, 48%)",
+    fill:    "hsla(62, 75%, 48%, 0.12)",
+    light:   "hsl(62, 75%, 95%)",
+    dark:    "hsl(62, 75%, 26%)",
+    deeper:  "hsl(62, 88%, 41%)",
+    richest: "hsl(62, 95%, 34%)",
+  },
+  min6: {
+    base:    "hsl(215, 62%, 48%)",
+    fill:    "hsla(215, 62%, 48%, 0.12)",
+    light:   "hsl(215, 62%, 95%)",
+    dark:    "hsl(215, 62%, 27%)",
+    deeper:  "hsl(215, 76%, 41%)",
+    richest: "hsl(215, 88%, 34%)",
   },
   min7: {
     base:    "hsl(240, 60%, 52%)",
@@ -96,6 +125,14 @@ export const ChordQualityColors: Record<ChordType, ChordQualityColor> = {
     deeper:  "hsl(240, 75%, 45%)",
     richest: "hsl(240, 88%, 38%)",
   },
+  minmaj7: {
+    base:    "hsl(258, 55%, 48%)",
+    fill:    "hsla(258, 55%, 48%, 0.12)",
+    light:   "hsl(258, 55%, 95%)",
+    dark:    "hsl(258, 55%, 27%)",
+    deeper:  "hsl(258, 68%, 41%)",
+    richest: "hsl(258, 80%, 34%)",
+  },
   dom7: {
     base:    "hsl(15, 85%, 52%)",
     fill:    "hsla(15, 85%, 52%, 0.12)",
@@ -103,6 +140,14 @@ export const ChordQualityColors: Record<ChordType, ChordQualityColor> = {
     dark:    "hsl(15, 85%, 30%)",
     deeper:  "hsl(15, 95%, 45%)",
     richest: "hsl(15, 95%, 38%)",
+  },
+  dom7sus4: {
+    base:    "hsl(28, 78%, 50%)",
+    fill:    "hsla(28, 78%, 50%, 0.12)",
+    light:   "hsl(28, 78%, 95%)",
+    dark:    "hsl(28, 78%, 28%)",
+    deeper:  "hsl(28, 90%, 43%)",
+    richest: "hsl(28, 95%, 36%)",
   },
   halfdim7: {
     base:    "hsl(280, 50%, 48%)",

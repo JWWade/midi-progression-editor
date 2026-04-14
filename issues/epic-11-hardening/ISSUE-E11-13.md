@@ -44,3 +44,11 @@ Bridge preview swallows playback exceptions with no user or log signal
 ## Severity
 
 Medium
+
+## Implementation Status
+
+- [x] Bridge preview playback catch-path now logs errors via feature-scoped logger.
+- [x] Hook now exposes `previewError` with non-blocking, auto-clearing user-facing message.
+- [x] App now renders a dismissible toast when preview playback fails.
+- [x] Unit test verifies playback failure logs diagnostics and sets preview failure state.
+- [ ] Telemetry transport wiring to external analytics backend (future integration).

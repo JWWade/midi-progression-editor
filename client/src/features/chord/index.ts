@@ -16,8 +16,13 @@ export {
   MINOR_INTERVALS,
   DIM_INTERVALS,
   AUG_INTERVALS,
+  SUS2_INTERVALS,
+  DOM7SUS4_INTERVALS,
+  MAJ6_INTERVALS,
+  MIN6_INTERVALS,
   MAJ7_INTERVALS,
   MIN7_INTERVALS,
+  MINMAJ7_INTERVALS,
   DOM7_INTERVALS,
   HALFDIM7_INTERVALS,
   QUARTAL_INTERVALS,
@@ -38,4 +43,6 @@ export {
   uniqueSortedPitchClasses,
   findBestChordIdentity,
   findBestQualityForRoot,
+  findChordCandidates,
 } from "./utils";
+export type { ChordCandidate } from "./utils";

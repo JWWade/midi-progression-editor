@@ -51,11 +51,54 @@
 /* ── Three-row app grid ──────────────────────────────────────────────────── */
 .layout {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   grid-template-columns: 1fr;
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* ── Key context bar (below header, above primary flow) ────────────────────── */
+.keyContextBar {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 24px;
+  background-color: var(--color-bg-page);
+  border-bottom: 1px solid var(--color-border, rgba(0,0,0,0.08));
+}
+
+.settingsToggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  line-height: 1;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.settingsToggle:hover {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+.settingsToggle[aria-expanded="true"] {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-subtle);
+}
+
+.settingsCards {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 /* ── Primary flow container: three-column grid (Circle | Panel | Sidebar) ──── */
@@ -67,6 +110,26 @@
   min-width: 0;
   box-sizing: border-box;
   background-color: var(--color-bg-page);
+  transition: grid-template-columns 0.25s ease;
+}
+
+/* ── Layout mode variants ───────────────────────────────────────────────── */
+.layout_focus {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.layout_inspect {
+  grid-template-columns: minmax(360px, 2fr) minmax(260px, 1fr);
+}
+
+.layout_compose {
+  grid-template-columns: minmax(420px, 3fr) minmax(260px, 1fr) minmax(280px, 420px);
+}
+
+.layout_inspect .circleArea,
+.layout_compose .circleArea {
+  max-width: 480px;
 }
 
 /* ── Primary flow areas with ARIA landmarks ────────────────────────────────── */

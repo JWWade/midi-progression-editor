@@ -21,11 +21,28 @@ const TONE_ROLES: Record<ChordType, Record<number, string>> = {
     4: "Major Third",
     8: "Augmented Fifth",
   },
+  sus2: {
+    0: "Root",
+    2: "Major Second",
+    7: "Perfect Fifth",
+  },
   maj7: {
     0: "Root",
     4: "Major Third",
     7: "Perfect Fifth",
     11: "Major Seventh",
+  },
+  maj6: {
+    0: "Root",
+    4: "Major Third",
+    7: "Perfect Fifth",
+    9: "Major Sixth",
+  },
+  min6: {
+    0: "Root",
+    3: "Minor Third",
+    7: "Perfect Fifth",
+    9: "Major Sixth",
   },
   min7: {
     0: "Root",
@@ -33,9 +50,21 @@ const TONE_ROLES: Record<ChordType, Record<number, string>> = {
     7: "Perfect Fifth",
     10: "Minor Seventh",
   },
+  minmaj7: {
+    0: "Root",
+    3: "Minor Third",
+    7: "Perfect Fifth",
+    11: "Major Seventh",
+  },
   dom7: {
     0: "Root",
     4: "Major Third",
+    7: "Perfect Fifth",
+    10: "Minor Seventh",
+  },
+  dom7sus4: {
+    0: "Root",
+    5: "Perfect Fourth",
     7: "Perfect Fifth",
     10: "Minor Seventh",
   },

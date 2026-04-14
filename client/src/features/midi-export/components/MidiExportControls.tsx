@@ -1,9 +1,11 @@
+import { useRef, useState } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import type { ScaleContext } from "@/shared/types/ScaleContext";
 import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import { useMidiExport } from "../hooks/useMidiExport";
 import { getBpmTempoLabel } from "../utils/bpmTempoLabel";
 import { NoteValueSelector } from "./NoteValueSelector";
+import { VoiceLeadingPanel } from "@/features/voice-leading/components/VoiceLeadingPanel";
 import { exportSnapshot } from "@/features/progression-sidebar/utils/snapshotIO";
 import styles from "./MidiExportControls.module.css";
 
@@ -13,11 +15,25 @@ interface MidiExportControlsProps {
   scaleContext: ScaleContext | null;
   /** When provided, MIDI export uses arpeggiated note sequences. */
   arpeggioPattern?: ArpeggioPattern;
+  bpm: number;
+  setBpm: (v: number) => void;
+  beatsPerChord: number;
+  setBeatsPerChord: (v: number) => void;
 }
 
-export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPattern }: MidiExportControlsProps) {
-  const { bpm, setBpm, beatsPerChord, setBeatsPerChord, exportMidi } =
-    useMidiExport(chords, arpeggioPattern, scaleContext);
+export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPattern, bpm, setBpm, beatsPerChord, setBeatsPerChord }: MidiExportControlsProps) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const {
+    exportMidi,
+    startOctave,
+    setStartOctave,
+    voiceLeadingStyle,
+    setVoiceLeadingStyle,
+    motionBias,
+    setMotionBias,
+  } = useMidiExport(chords, arpeggioPattern, scaleContext, bpm, beatsPerChord);
 
   const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
 
@@ -30,6 +46,11 @@ export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPat
     a.download = "progression.json";
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function handleJsonOption() {
+    setDropdownOpen(false);
+    handleExportJson();
   }
 
   return (
@@ -66,26 +87,60 @@ export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPat
         <span className={styles.label}>Beats / chord</span>
         <NoteValueSelector value={beatsPerChord} onChange={setBeatsPerChord} />
       </div>
-      <button
-        className={styles.exportButton}
-        onClick={exportMidi}
-        disabled={disabled}
-        aria-disabled={disabled}
-        aria-label={disabled ? "Export as MIDI file (add chords first)" : "Export progression as MIDI file"}
-        title={disabled ? "Add chords to export" : "Export as MIDI file"}
+      <VoiceLeadingPanel
+        style={voiceLeadingStyle}
+        onStyleChange={setVoiceLeadingStyle}
+        motionBias={motionBias}
+        onMotionBiasChange={setMotionBias}
+        startOctave={startOctave}
+        onStartOctaveChange={setStartOctave}
+      />
+      <div
+        className={styles.splitButton}
+        ref={dropdownRef}
+        onBlur={(e) => {
+          if (!dropdownRef.current?.contains(e.relatedTarget as Node)) {
+            setDropdownOpen(false);
+          }
+        }}
       >
-        Export .mid
-      </button>
-      <button
-        className={styles.exportButton}
-        onClick={handleExportJson}
-        disabled={disabled}
-        aria-disabled={disabled}
-        aria-label={disabled ? "Export as JSON (add chords first)" : "Export progression as JSON"}
-        title={disabled ? "Add chords to export" : "Export as JSON"}
-      >
-        Export JSON
-      </button>
+        <button
+          className={styles.exportButtonMain}
+          onClick={exportMidi}
+          disabled={disabled}
+          aria-disabled={disabled}
+          aria-label={disabled ? "Export as MIDI file (add chords first)" : "Export progression as MIDI file"}
+          title={disabled ? "Add chords to export" : "Export as MIDI file"}
+        >
+          Export .mid
+        </button>
+        <button
+          className={styles.exportButtonChevron}
+          onClick={() => setDropdownOpen((v) => !v)}
+          disabled={disabled}
+          aria-disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={dropdownOpen}
+          aria-label="More export options"
+          title="More export options"
+        >
+          ▾
+        </button>
+        {dropdownOpen && (
+          <ul className={styles.dropdownMenu} role="listbox" aria-label="Export format">
+            <li
+              className={styles.dropdownItem}
+              role="option"
+              aria-selected={false}
+              tabIndex={0}
+              onClick={handleJsonOption}
+              onKeyDown={(e) => e.key === 'Enter' && handleJsonOption()}
+            >
+              Export JSON
+            </li>
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

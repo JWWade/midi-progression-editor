@@ -1,0 +1,67 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background-color: var(--color-bg-surface);
+  border-radius: 8px;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.selectors {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.select {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.select:focus {
+  outline: 2px solid var(--color-focus, #4F46E5);
+  outline-offset: 2px;
+}
+
+.tonicSnapButton {
+  align-self: flex-start;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--color-text-secondary, #6b7280);
+  background: transparent;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.18));
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tonicSnapButton:hover:not(:disabled) {
+  background-color: var(--color-bg-hover, rgba(79, 70, 229, 0.08));
+  color: var(--color-text-primary, #111827);
+}
+
+.tonicSnapButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

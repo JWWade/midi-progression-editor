@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ParametricMusic.Api.Models;
 using ParametricMusic.Api.Services;
 
@@ -13,8 +14,11 @@ public class ProgressionController(IProgressionService progressionService) : Con
     /// Analyze a chord progression, returning voice-leading motion, continuity score, and tension trend.
     /// </summary>
     [HttpPost("analyze")]
+    [EnableRateLimiting("ProgressionAnalyzePolicy")]
+    [RequestSizeLimit(32 * 1024)]
     [ProducesResponseType(typeof(ProgressionAnalyzeResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public IActionResult Analyze([FromBody] ProgressionAnalyzeRequestDto request)
     {
         if (request.Chords.Count == 0)

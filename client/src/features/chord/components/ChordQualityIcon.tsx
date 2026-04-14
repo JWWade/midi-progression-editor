@@ -13,23 +13,33 @@ import styles from "./ChordQualityIcon.module.css";
  * | aug       | 0, 4, 8       | Equilateral triangle  |
  * | dim       | 0, 3, 6       | Isosceles triangle    |
  * | dom7      | 0, 4, 7, 10   | Isosceles trapezoid   |
+ * | dom7sus4  | 0, 5, 7, 10   | Scalene quadrilateral |
+ * | maj6      | 0, 4, 7, 9    | Scalene quadrilateral |
+ * | min6      | 0, 3, 7, 9    | Scalene quadrilateral |
  * | maj7      | 0, 4, 7, 11   | Kite                  |
  * | min7      | 0, 3, 7, 10   | Kite                  |
+ * | minmaj7   | 0, 3, 7, 11   | Kite                  |
  * | halfdim7  | 0, 3, 6, 10   | Rectangle             |
  * | major     | 0, 4, 7       | Scalene triangle      |
  * | minor     | 0, 3, 7       | Scalene triangle      |
  * | quartal   | 0, 5, 10      | Scalene triangle      |
+ * | sus2      | 0, 2, 7       | Scalene triangle      |
  */
 const QUALITY_PITCH_CLASSES: Record<ChordType, readonly number[]> = {
   aug:      [0, 4, 8],
   dim:      [0, 3, 6],
   dom7:     [0, 4, 7, 10],
+  dom7sus4: [0, 5, 7, 10],
+  maj6:     [0, 4, 7, 9],
+  min6:     [0, 3, 7, 9],
   maj7:     [0, 4, 7, 11],
   min7:     [0, 3, 7, 10],
+  minmaj7:  [0, 3, 7, 11],
   halfdim7: [0, 3, 6, 10],
   major:    [0, 4, 7],
   minor:    [0, 3, 7],
   quartal:  [0, 5, 10],
+  sus2:     [0, 2, 7],
 };
 
 /**
@@ -41,8 +51,12 @@ const QUALITY_GLYPHS: Partial<Record<ChordType, string>> = {
   aug:      "+",
   dim:      "°",
   dom7:     "7",
+  dom7sus4: "7s4",
+  maj6:     "6",
+  min6:     "m6",
   maj7:     "+7",
   min7:     "\u22127", // −7  (\u2212 = Unicode minus sign U+2212, followed by literal "7")
+  minmaj7:  "\u2212\u0394", // −Δ  (minor triad + major seventh)
   halfdim7: "\u00f8",  // ø   (U+00F8)
   quartal:  "4",
 };

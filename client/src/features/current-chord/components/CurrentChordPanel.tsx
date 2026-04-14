@@ -1,13 +1,14 @@
-import { useState, useCallback, useEffect, memo } from "react";
+import { useState, useCallback, useEffect, memo, useMemo } from "react";
 import type { Chord } from "../types";
 import {
-  CHORD_QUALITY_LABELS,
   formatChordName,
   formatChordSymbol,
   formatPrimitiveChordName,
   resolveChordIdentity,
+  CHORD_QUALITY_LABELS,
 } from "../utils/chordName";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { getIntervalName } from "@/features/chord-intervals/utils/intervalNames";
 import { getChordPitchClasses } from "@/features/chord/utils";
 import { getCircleColorForTheme } from "@/features/chromatic-circle/utils/circleColors";
 import { ChordColors } from "@/features/color-language/constants/chordColors";
@@ -19,7 +20,9 @@ import { useTheme } from "@/app/providers/useTheme";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import { useAudioPlayback } from "@/features/audio";
 import type { AudioParams } from "@/features/audio/constants/audioConfig";
-import { AudioDebugPanel } from "@/features/audio/components/AudioDebugPanel";
+import { getRomanNumeral } from "../utils/romanNumeral";
+import type { ScaleType } from "@/features/scale/types";
+import type { SetKeyContextAction } from "@/features/scale";
 
 /** Duration the "Copied!" feedback badge remains visible (milliseconds). */
 const COPY_FEEDBACK_DURATION_MS = 1500;
@@ -37,8 +40,12 @@ interface CurrentChordPanelProps {
   maxProgressionLength?: number;
   /** Audio playback parameters. */
   audioParams?: AudioParams;
-  /** Callback fired when audio parameters change. */
-  onAudioParamsChange?: (params: AudioParams) => void;
+  /** Active key root (pitch class 0–11) for Roman numeral display. */
+  keyRoot?: number;
+  /** Active key scale for Roman numeral display. */
+  keyScale?: ScaleType;
+  /** Callback to update the key context (primary tonic-snap affordance). */
+  onSetKeyContext?: (action: SetKeyContextAction) => void;
 }
 
 export const CurrentChordPanel = memo(function CurrentChordPanel({
@@ -49,7 +56,9 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
   progressionLength = 0,
   maxProgressionLength = 8,
   audioParams,
-  onAudioParamsChange,
+  keyRoot,
+  keyScale,
+  onSetKeyContext,
 }: CurrentChordPanelProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
@@ -63,6 +72,43 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
 
   const noteNames = noteIndices.map(i => pitchClasses[i]).join('-');
   const resolvedIdentity = chord ? resolveChordIdentity(chord) : null;
+
+  const intervalRows = useMemo(() => {
+    if (!chord) return [];
+    const indices = getChordPitchClasses(chord);
+    // For custom chords, sort root-first by ascending interval from chord.root
+    const displayIndices = isCustomChord(chord)
+      ? [...indices].sort((a, b) => ((a - chord.root + 12) % 12) - ((b - chord.root + 12) % 12))
+      : indices;
+    const offsets = isCustomChord(chord)
+      ? displayIndices.map(i => ((i - chord.root) + 12) % 12)
+      : CHORD_INTERVALS[chord.quality];
+    return offsets.slice(0, displayIndices.length).map((semitones, idx) => ({
+      noteName: pitchClasses[displayIndices[idx] ?? 0] ?? "",
+      label: semitones === 0 ? "Root" : getIntervalName(semitones),
+    }));
+  }, [chord, pitchClasses]);
+
+  // Roman numeral analysis relative to the declared key
+  const romanAnalysis =
+    chord !== null && keyRoot !== undefined && keyScale !== undefined
+      ? getRomanNumeral(
+          resolvedIdentity?.root ?? chord.root,
+          keyRoot,
+          keyScale,
+          resolvedIdentity?.quality ?? chord.quality,
+        )
+      : null;
+
+  // Primary tonic-snap: set the key root to this chord's root, preserving mode
+  const handleSetAsTonic = useCallback(() => {
+    if (!chord || !onSetKeyContext || keyScale === undefined) return;
+    onSetKeyContext({
+      root: resolvedIdentity?.root ?? chord.root,
+      scale: keyScale,
+      source: "tonicSnap",
+    });
+  }, [chord, resolvedIdentity, keyScale, onSetKeyContext]);
 
   const handleClick = useCallback(() => {
     if (isDisabled) return;
@@ -153,14 +199,13 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
       style={panelStyle}
       aria-label="Current chord panel"
     >
-      <span className={styles.sectionLabel}>Current Chord</span>
       <div className={styles.thumbnail}>
         <ChordThumbnail
           noteIndices={noteIndices}
           rootIndex={resolvedIdentity?.root ?? chord?.root}
           quality={chord?.quality ?? "major"}
           complexity={complexity}
-          size={80}
+          size={72}
           diatonicIndices={diatonicIndices}
         />
       </div>
@@ -178,37 +223,31 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
               : formatChordName(chord, pitchClasses)
             }
           </span>
-          <div className={styles.rootQualityRow}>
-            <span className={styles.root}>{pitchClasses[resolvedIdentity?.root ?? chord.root]}</span>
-            <span className={styles.quality}>
-              {isCustomChord(chord)
-                ? (chord.primitiveShape === "equilateral-triangle"
-                  ? CHORD_QUALITY_LABELS[chord.quality]
-                  : chord.primitiveShape === "suspended-triangle"
-                    ? "sus4"
-                  : chord.primitiveShape
-                    ? CHORD_QUALITY_LABELS[chord.quality]
-                    : CHORD_QUALITY_LABELS[resolvedIdentity?.quality ?? chord.quality])
-                : CHORD_QUALITY_LABELS[resolvedIdentity?.quality ?? chord.quality]}
-            </span>
-          </div>
-          <div className={styles.actionRow}>
-            <button
-              className={`${styles.playButton}${isPlaying ? ` ${styles.playButtonActive}` : ''}`}
-              onClick={handlePlay}
-              aria-label={isPlaying ? "Stop chord playback" : "Play chord"}
-              title={isPlaying ? "Stop" : "Play chord"}
-            >
-              {isPlaying ? '■ Stop' : '▶ Play'}
-            </button>
-          </div>
+          {isCustomChord(chord) && !chord.primitiveShape && resolvedIdentity && (
+            <div className={styles.rootQualityRow}>
+              <span className={styles.root}>{pitchClasses[resolvedIdentity.root]}</span>
+              <span className={styles.quality}>{CHORD_QUALITY_LABELS[resolvedIdentity.quality]}</span>
+            </div>
+          )}
+          {/* Roman numeral — scale degree label */}
+          {romanAnalysis && (
+            <div className={styles.romanNumeralRow}>
+              <span
+                className={styles.romanNumeral}
+                title={`Scale degree relative to active key`}
+                aria-label={`Scale degree: ${romanAnalysis.label}`}
+              >
+                {romanAnalysis.label}.
+              </span>
+            </div>
+          )}
           <div className={styles.notesRow}>
             <span
               className={styles.noteNames}
               aria-label={`Chord notes: ${noteNames}`}
             >
-              {noteIndices.map((i) => (
-                <span key={i}>{pitchClasses[i]}</span>
+              {intervalRows.map(({ noteName }) => (
+                <span key={noteName}>{noteName}</span>
               ))}
             </span>
             <button
@@ -221,6 +260,16 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
               {copied ? '✓' : '⎘'}
             </button>
           </div>
+          {intervalRows.length > 0 && (
+            <div className={styles.intervalsRow} aria-label="Chord intervals">
+              {intervalRows.map(({ noteName, label }, idx) => (
+                <span key={`${idx}-${noteName}`} className={styles.intervalItem}>
+                  <span className={styles.intervalNote}>{noteName}</span>
+                  <span className={styles.intervalLabel}>{label}</span>
+                </span>
+              ))}
+            </div>
+          )}
           <div
             role="status"
             aria-live="polite"
@@ -228,6 +277,28 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
             className="sr-only"
           >
             {copied ? 'Notes copied to clipboard' : ''}
+          </div>
+          <div className={styles.actionRow}>
+            <button
+              className={`${styles.playButton}${isPlaying ? ` ${styles.playButtonActive}` : ''}`}
+              onClick={handlePlay}
+              aria-label={isPlaying ? "Stop chord playback" : "Play chord"}
+              title={isPlaying ? "Stop" : "Play chord"}
+            >
+              {isPlaying ? '■ Stop' : '▶ Play'}
+            </button>
+            {onSetKeyContext && (
+              <button
+                type="button"
+                className={styles.tonicSnapButton}
+                onClick={handleSetAsTonic}
+                disabled={chord === null}
+                aria-label="Set key root to this chord's root"
+                title="Set as tonic"
+              >
+                Set as tonic
+              </button>
+            )}
           </div>
         </>
       )}
@@ -251,9 +322,6 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
             Progression is full ({progressionLength}/{maxProgressionLength})
           </span>
         </div>
-      )}
-      {audioParams && onAudioParamsChange && (
-        <AudioDebugPanel params={audioParams} onChange={onAudioParamsChange} />
       )}
     </div>
   );

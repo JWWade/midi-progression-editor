@@ -11,20 +11,25 @@ describe("CHORD_SHAPES", () => {
     expect(CHORD_SHAPES.minor).toBe("triangle");
     expect(CHORD_SHAPES.dim).toBe("triangle");
     expect(CHORD_SHAPES.aug).toBe("triangle");
+    expect(CHORD_SHAPES.sus2).toBe("triangle");
     expect(CHORD_SHAPES.quartal).toBe("triangle");
   });
 
   it("maps all seventh chords to 'quadrilateral'", () => {
     expect(CHORD_SHAPES.dom7).toBe("quadrilateral");
+    expect(CHORD_SHAPES.dom7sus4).toBe("quadrilateral");
     expect(CHORD_SHAPES.maj7).toBe("quadrilateral");
+    expect(CHORD_SHAPES.maj6).toBe("quadrilateral");
+    expect(CHORD_SHAPES.min6).toBe("quadrilateral");
     expect(CHORD_SHAPES.min7).toBe("quadrilateral");
+    expect(CHORD_SHAPES.minmaj7).toBe("quadrilateral");
     expect(CHORD_SHAPES.halfdim7).toBe("quadrilateral");
   });
 
   it("covers every ChordType with a defined shape", () => {
     const allTypes = [
-      "major", "minor", "dim", "aug", "quartal",
-      "dom7", "maj7", "min7", "halfdim7",
+      "major", "minor", "dim", "aug", "sus2", "quartal",
+      "dom7", "dom7sus4", "maj7", "maj6", "min6", "min7", "minmaj7", "halfdim7",
     ] as const;
     for (const t of allTypes) {
       expect(CHORD_SHAPES[t]).toBeDefined();

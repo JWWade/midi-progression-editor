@@ -10,6 +10,7 @@ export {
   buildChordGraph,
   generateChords,
   containsTritoneMotion,
+  buildHybridChordGraph,
 } from "./utils/buildChordGraph";
 export type { BuildChordGraphOptions } from "./utils/buildChordGraph";
 export {

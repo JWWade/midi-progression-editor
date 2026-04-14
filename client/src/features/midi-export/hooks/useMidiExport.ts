@@ -1,27 +1,43 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import type { ScaleContext } from "@/shared/types/ScaleContext";
+import type { VoiceLeadingStyle, MotionBias } from "@/features/voice-leading";
 import { buildMidiFile } from "../utils/midiBuilder";
-import { getRandomBpmInRange } from "../utils/bpmTempoLabel";
 
 export function useMidiExport(
   chords: Chord[],
-  arpeggioPattern?: ArpeggioPattern,
-  scaleContext?: ScaleContext | null,
+  arpeggioPattern: ArpeggioPattern | undefined,
+  scaleContext: ScaleContext | null | undefined,
+  bpm: number,
+  beatsPerChord: number,
 ): {
-  bpm: number;
-  setBpm: (v: number) => void;
-  beatsPerChord: number;
-  setBeatsPerChord: (v: number) => void;
   exportMidi: () => void;
+  startOctave: number;
+  setStartOctave: (v: number) => void;
+  voiceLeadingStyle: VoiceLeadingStyle;
+  setVoiceLeadingStyle: (v: VoiceLeadingStyle) => void;
+  strictness: number;
+  setStrictness: (v: number) => void;
+  motionBias: MotionBias;
+  setMotionBias: (v: MotionBias) => void;
 } {
-  const [bpm, setBpm] = useState(() => getRandomBpmInRange("Adagio", "Presto")); // Random BPM between Adagio and Presto (60–199)
-  const [beatsPerChord, setBeatsPerChord] = useState(4);
-  const startOctave = 4;
+  const [startOctave, setStartOctave] = useState(3); // SATB default
+  const [voiceLeadingStyle, setVoiceLeadingStyle] = useState<VoiceLeadingStyle>('minimal');
+  const [strictness, setStrictness] = useState(2);
+  const [motionBias, setMotionBias] = useState<MotionBias>('neutral');
 
   const exportMidi = useCallback(() => {
-    const bytes = buildMidiFile(chords, { bpm, beatsPerChord, startOctave, arpeggioPattern, scaleContext });
+    const bytes = buildMidiFile(chords, {
+      bpm,
+      beatsPerChord,
+      startOctave,
+      voiceLeadingStyle,
+      strictness,
+      motionBias,
+      arpeggioPattern,
+      scaleContext,
+    });
     const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "audio/midi" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -29,7 +45,17 @@ export function useMidiExport(
     a.download = `progression-${Date.now()}.mid`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
-  }, [chords, bpm, beatsPerChord, startOctave, arpeggioPattern, scaleContext]);
+  }, [chords, bpm, beatsPerChord, startOctave, voiceLeadingStyle, strictness, motionBias, arpeggioPattern, scaleContext]);
 
-  return { bpm, setBpm, beatsPerChord, setBeatsPerChord, exportMidi };
+  return {
+    exportMidi,
+    startOctave,
+    setStartOctave,
+    voiceLeadingStyle,
+    setVoiceLeadingStyle,
+    strictness,
+    setStrictness,
+    motionBias,
+    setMotionBias,
+  };
 }

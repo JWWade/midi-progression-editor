@@ -44,3 +44,11 @@ Client API calls have no timeout or cancellation path
 ## Severity
 
 Medium
+
+## Implementation Status
+
+- [x] Added shared request helper with `AbortController` + timeout support.
+- [x] `getHealth` and `getScaleFromRoot` now pass abort signals into `openapi-fetch` calls.
+- [x] Added normalized `ApiRequestError` shape for timeout/abort/network failures.
+- [x] Added call-site cancellation in chromatic circle data hook to prevent stale state updates.
+- [x] Added unit tests covering deterministic timeout and abort behavior.

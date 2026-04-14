@@ -43,3 +43,10 @@ The global exception handler returns a generic `500` problem response but does n
 ## Severity
 
 High
+
+## Implementation Status
+
+- [x] Global exception handler now logs unhandled exceptions with method, path, and trace identifier.
+- [x] `500` problem response now includes `traceId` for client-to-server correlation.
+- [x] Integration test verifies unhandled exception path returns `500` with `traceId` and `application/problem+json`.
+- [ ] Optional log sink assertion (manual verification in runtime logging backend).

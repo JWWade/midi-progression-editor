@@ -1,0 +1,326 @@
+﻿/* â”€â”€ Voice-Leading Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toggleHeader {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0 0 4px 0;
+  margin-bottom: 2px;
+  cursor: pointer;
+  gap: 6px;
+}
+
+.toggleHeader:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.toggleTitle {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.summary {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  opacity: 0.65;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.label.disabled {
+  opacity: 0.45;
+}
+
+/* â”€â”€ Style dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.select {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 11px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.select:focus {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 1px;
+}
+
+/* Narrow select for octave */
+.selectSmall {
+  width: 52px;
+  padding: 4px 8px;
+  font-size: 11px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.selectSmall:focus {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 1px;
+}
+
+/* â”€â”€ Strictness slider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.sliderRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sliderHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.sliderValue {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-accent, #4f46e5);
+}
+
+.sliderValue.disabled {
+  opacity: 0.45;
+}
+
+.slider {
+  width: 100%;
+  height: 4px;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+  background: var(--color-border-subtle, #2a2a4a);
+}
+
+.slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent, #4f46e5);
+  border: 2px solid var(--color-bg-canvas, #ffffff);
+  cursor: pointer;
+  box-shadow: 0 0 0 1px var(--color-accent, #4f46e5);
+}
+
+.slider:disabled::-webkit-slider-thumb {
+  background: var(--color-text-secondary);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent, #4f46e5);
+  border: 2px solid var(--color-bg-canvas, #ffffff);
+  cursor: pointer;
+  box-shadow: 0 0 0 1px var(--color-accent, #4f46e5);
+}
+
+.slider:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.sliderTicks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1px;
+}
+
+.tick {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.tick.tickActive {
+  color: var(--color-accent, #4f46e5);
+  opacity: 1;
+  font-weight: 700;
+}
+
+/* â”€â”€ Tie-break bias toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.biasGroup {
+  display: flex;
+  gap: 2px;
+}
+
+.biasButton {
+  width: 28px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 5px;
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.1s ease, color 0.1s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.biasButton:hover:not(.biasSelected) {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+.biasButton.biasSelected {
+  background-color: var(--color-accent, #4f46e5);
+  border-color: var(--color-accent, #4f46e5);
+  color: #fff;
+}
+
+.biasButton:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 1px;
+}
+
+.biasButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* â”€â”€ Presets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.presetsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.presets {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.presetButton {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: left;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.presetButton:hover {
+  background-color: var(--color-bg-subtle);
+  border-color: var(--color-accent, #4f46e5);
+}
+
+.presetButton:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 1px;
+}
+
+/* -- Retro theme overrides ------------------------------------------------- */
+[data-theme="retro"] .toggleHeader {
+  border-bottom-color: #ff00ff;
+}
+
+[data-theme="retro"] .toggleTitle {
+  color: #ffff00;
+  text-shadow: 0 0 6px #ffff00;
+  letter-spacing: 0.1em;
+}
+
+[data-theme="retro"] .summary {
+  color: #ffff00;
+}
+
+[data-theme="retro"] .chevron {
+  color: #ffff00;
+}
+
+[data-theme="retro"] .label {
+  color: #ffff00;
+  text-shadow: 0 0 4px rgba(255, 255, 0, 0.5);
+}
+
+[data-theme="retro"] .biasButton.biasSelected {
+  background: linear-gradient(135deg, #8800aa 0%, #ff00ff 100%);
+  border-color: #ff88ff;
+}
+
+[data-theme="retro"] .presetButton:hover {
+  border-color: #ff00ff;
+  background-color: rgba(255, 0, 255, 0.1);
+}

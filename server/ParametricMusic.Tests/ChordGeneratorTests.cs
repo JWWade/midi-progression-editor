@@ -61,11 +61,57 @@ public class ChordGeneratorTests
     }
 
     [Fact]
+    public void BuildChord_CMinMaj7_ReturnsExpectedPitchClasses()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.MinMaj7);
+        Assert.Equal([0, 3, 7, 11], result.PitchClasses);
+        Assert.Equal(["C", "D#", "G", "B"], result.NoteNames);
+    }
+
+    [Fact]
+    public void BuildChord_CMinMaj7_HasCorrectDisplayName()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.MinMaj7);
+        Assert.Equal("C Minor-Major 7", result.DisplayName);
+    }
+
+    [Fact]
     public void BuildChord_CHalfDiminished7_ReturnsExpectedPitchClasses()
     {
         var result = _service.BuildChord(Note.C, ChordQuality.HalfDiminished7);
         Assert.Equal([0, 3, 6, 10], result.PitchClasses);
         Assert.Equal(["C", "D#", "F#", "A#"], result.NoteNames);
+    }
+
+    [Fact]
+    public void BuildChord_CMajor6_ReturnsExpectedPitchClasses()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.Major6);
+        Assert.Equal([0, 4, 7, 9], result.PitchClasses);
+        Assert.Equal(["C", "E", "G", "A"], result.NoteNames);
+    }
+
+    [Fact]
+    public void BuildChord_CDom7Sus4_ReturnsExpectedPitchClasses()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.Dom7Sus4);
+        Assert.Equal([0, 5, 7, 10], result.PitchClasses);
+        Assert.Equal(["C", "F", "G", "A#"], result.NoteNames);
+    }
+
+    [Fact]
+    public void BuildChord_GDom7Sus4_ReturnsExpectedPitchClasses()
+    {
+        var result = _service.BuildChord(Note.G, ChordQuality.Dom7Sus4);
+        Assert.Equal([7, 0, 2, 5], result.PitchClasses);
+        Assert.Equal(["G", "C", "D", "F"], result.NoteNames);
+    }
+
+    [Fact]
+    public void BuildChord_CDom7Sus4_HasCorrectDisplayName()
+    {
+        var result = _service.BuildChord(Note.C, ChordQuality.Dom7Sus4);
+        Assert.Equal("C Dom 7 Sus4", result.DisplayName);
     }
 
     // ── Root B (index 11) – wrap-around ──────────────────────────────────────

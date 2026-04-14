@@ -1,18 +1,20 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState, useRef, useEffect } from "react";
 import type { PrimitiveShape } from "@/features/current-chord";
 import { ChordGrid } from "@/features/chord/components/ChordGrid";
 import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
+import { allReflectionAxes, type ReflectionAxis } from "@/features/chord/utils/reflectChord";
 import type { CustomChordState } from "../types";
 
 interface CircleControlsProps {
   onRotate: (direction: "clockwise" | "counterclockwise") => void;
-  onMirror: () => void;
+  onMirrorWithAxis: (axis: ReflectionAxis) => void;
   onMutate: () => void;
   onSelectShape: (shape: PrimitiveShape) => void;
   onRandomChord: () => void;
   selectedChordName: string;
   onChordChange: (name: string) => void;
   customFromChord: CustomChordState | null;
+  diatonicRoots?: Set<number>;
 }
 
 const BASE_BUTTON_STYLE: React.CSSProperties = {
@@ -26,7 +28,9 @@ const BASE_BUTTON_STYLE: React.CSSProperties = {
   lineHeight: 1,
   cursor: "pointer",
   background: "var(--color-bg-surface)",
-  border: "1.5px solid var(--color-border)",
+  borderWidth: "1.5px",
+  borderStyle: "solid",
+  borderColor: "var(--color-border)",
   borderRadius: 6,
   fontWeight: 600,
 };
@@ -36,7 +40,9 @@ function getShapeButtonStyle(isActive: boolean): React.CSSProperties {
     ...BASE_BUTTON_STYLE,
     fontWeight: 700,
     color: isActive ? "var(--color-text-primary)" : "var(--color-text-secondary)",
-    border: isActive ? "2px solid var(--color-text-primary)" : "1.5px solid var(--color-border)",
+    borderWidth: isActive ? "2px" : "1.5px",
+    borderStyle: "solid",
+    borderColor: isActive ? "var(--color-text-primary)" : "var(--color-border)",
   };
 }
 
@@ -105,15 +111,54 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
  */
 export const CircleControls = memo(function CircleControls({
   onRotate,
-  onMirror,
+  onMirrorWithAxis,
   onMutate,
   onSelectShape,
   onRandomChord,
   selectedChordName,
   onChordChange,
   customFromChord,
+  diatonicRoots,
 }: CircleControlsProps) {
   const activeShape = customFromChord?.primitiveShape;
+  const [axisPickerOpen, setAxisPickerOpen] = useState(false);
+  const mirrorButtonRef = useRef<HTMLButtonElement>(null);
+  const axisPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!axisPickerOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (
+        !mirrorButtonRef.current?.contains(e.target as Node) &&
+        !axisPickerRef.current?.contains(e.target as Node)
+      ) {
+        setAxisPickerOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [axisPickerOpen]);
+
+  useEffect(() => {
+    if (!axisPickerOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAxisPickerOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [axisPickerOpen]);
+
+  const handleAxisSelect = useCallback(
+    (axis: ReflectionAxis) => {
+      setAxisPickerOpen(false);
+      onMirrorWithAxis(axis);
+    },
+    [onMirrorWithAxis],
+  );
+
+  const AXES = allReflectionAxes();
+  const throughNoteAxes = AXES.filter((a) => a.type === "through-note");
+  const betweenAxes = AXES.filter((a) => a.type === "between-notes");
 
   const handleRotateCounterclockwise = useCallback(
     () => onRotate("counterclockwise"),
@@ -151,13 +196,13 @@ export const CircleControls = memo(function CircleControls({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", marginTop: 12, alignItems: "center", gap: 10 }}>
+    <div data-circle-controls style={{ display: "flex", flexDirection: "column", marginTop: 12, alignItems: "center", gap: 10 }}>
       <div style={{ display: "inline-flex", alignItems: "stretch", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
 
         {/* ── Transform ─────────────────────────────────────────────── */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
           <span style={SECTION_LABEL_STYLE}>Transform</span>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, auto)", gap: 10 }}>
             <button
               type="button"
               onClick={handleRotateCounterclockwise}
@@ -169,13 +214,98 @@ export const CircleControls = memo(function CircleControls({
             </button>
             <button
               type="button"
-              onClick={onMirror}
-              title="Mirror chord about root"
-              aria-label="Mirror chord about root"
-              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)", fontSize: 14 }}
+              onClick={handleRotateClockwise}
+              title="Rotate clockwise by one semitone (Ctrl+Right)"
+              aria-label="Rotate chord clockwise"
+              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
+            >
+              <span style={{ ...ROTATE_ICON_STYLE, transform: "rotate(90deg)" }}>↻</span>
+            </button>
+            <button
+              ref={mirrorButtonRef}
+              type="button"
+              onClick={() => setAxisPickerOpen((o) => !o)}
+              title="Reflect chord across an axis"
+              aria-label="Reflect chord across an axis"
+              aria-haspopup="listbox"
+              aria-expanded={axisPickerOpen}
+              style={{
+                ...BASE_BUTTON_STYLE,
+                color: "var(--color-text-primary)",
+                fontSize: 14,
+                borderColor: axisPickerOpen ? "var(--color-text-primary)" : BASE_BUTTON_STYLE.borderColor,
+              }}
             >
               ⇌
             </button>
+            {axisPickerOpen && (
+              <div
+                ref={axisPickerRef}
+                role="listbox"
+                aria-label="Reflection axis"
+                style={{
+                  position: "fixed",
+                  bottom: 16,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 1001,
+                  background: "var(--color-bg-surface)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
+                  borderColor: "var(--color-border)",
+                  borderRadius: 10,
+                  boxShadow: "0 8px 28px rgba(0,0,0,0.22)",
+                  padding: "12px 16px",
+                  display: "flex",
+                  gap: 20,
+                  userSelect: "none",
+                }}
+              >
+                {[{ label: "Through note", axes: throughNoteAxes }, { label: "Between notes", axes: betweenAxes }].map(
+                  ({ label, axes }) => (
+                    <div key={label}>
+                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+                        letterSpacing: "0.06em", color: "var(--color-text-secondary)",
+                        marginBottom: 6, paddingBottom: 4,
+                        borderBottomWidth: "1px",
+                        borderBottomStyle: "solid",
+                        borderBottomColor: "var(--color-border)" }}
+                      >
+                        {label}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        {axes.map((axis) => (
+                          <button
+                            key={axis.value}
+                            type="button"
+                            role="option"
+                            aria-selected={false}
+                            onClick={() => handleAxisSelect(axis)}
+                            style={{
+                              padding: "3px 8px",
+                              fontSize: 12,
+                              textAlign: "left",
+                              cursor: "pointer",
+                              borderWidth: "1px",
+                              borderStyle: "solid",
+                              borderColor: "transparent",
+                              borderRadius: 4,
+                              background: "transparent",
+                              color: "var(--color-text-primary)",
+                              whiteSpace: "nowrap",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-bg-elevated)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            {axis.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
+            )}
             <button
               type="button"
               onClick={onMutate}
@@ -185,15 +315,6 @@ export const CircleControls = memo(function CircleControls({
             >
               ⊛
             </button>
-            <button
-              type="button"
-              onClick={handleRotateClockwise}
-              title="Rotate clockwise by one semitone (Ctrl+Right)"
-              aria-label="Rotate chord clockwise"
-              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
-            >
-              <span style={{ ...ROTATE_ICON_STYLE, transform: "rotate(90deg)" }}>↻</span>
-            </button>
           </div>
         </div>
 
@@ -202,7 +323,7 @@ export const CircleControls = memo(function CircleControls({
         {/* ── Templates ─────────────────────────────────────────────── */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
           <span style={SECTION_LABEL_STYLE}>Templates</span>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, auto)", gap: 10 }}>
             <button
               type="button"
               onClick={() => onSelectShape("equilateral-triangle")}
@@ -296,6 +417,7 @@ export const CircleControls = memo(function CircleControls({
         onChange={onChordChange}
         customChord={customFromChord}
         aria-label="Chord"
+        diatonicRoots={diatonicRoots}
       />
     </div>
   );

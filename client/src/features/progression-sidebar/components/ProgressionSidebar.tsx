@@ -34,8 +34,10 @@ interface ProgressionSidebarProps {
   onStop: () => void;
   loop: boolean;
   onToggleLoop: () => void;
-  chordDurationMs: number;
-  onChordDurationChange: (ms: number) => void;
+  bpm: number;
+  onBpmChange: (v: number) => void;
+  beatsPerChord: number;
+  onBeatsPerChordChange: (v: number) => void;
   scale?: ScaleContext | null;
   onApplyBridge?: (insertAfterIndex: number, bridge: Chord[]) => void;
   onPreviewBridge?: (source: Chord, bridge: Chord[], target: Chord, insertAfterIndex: number) => void;
@@ -54,12 +56,6 @@ interface ProgressionSidebarProps {
   onToggleArpeggio?: () => void;
   onSetArpeggioPattern?: (pattern: ArpeggioPattern) => void;
 }
-
-const DURATION_OPTIONS: { label: string; ms: number }[] = [
-  { label: "Slow", ms: 2000 },
-  { label: "Medium", ms: 1200 },
-  { label: "Fast", ms: 600 },
-];
 
 // ── Inner component: renders the gap between two chord tiles ─────────────
 
@@ -154,8 +150,10 @@ export function ProgressionSidebar({
   onStop,
   loop,
   onToggleLoop,
-  chordDurationMs,
-  onChordDurationChange,
+  bpm,
+  onBpmChange,
+  beatsPerChord,
+  onBeatsPerChordChange,
   scale = null,
   onApplyBridge,
   onPreviewBridge,
@@ -310,20 +308,6 @@ export function ProgressionSidebar({
           </span>
         </div>
         <div className={styles.controls}>
-          <label className={styles.durationLabel} htmlFor="chord-duration-select">
-            Speed
-          </label>
-          <select
-            id="chord-duration-select"
-            className={styles.durationSelect}
-            value={chordDurationMs}
-            aria-label="Chord duration"
-            onChange={(e) => onChordDurationChange(Number(e.target.value))}
-          >
-            {DURATION_OPTIONS.map(({ label, ms }) => (
-              <option key={ms} value={ms}>{label}</option>
-            ))}
-          </select>
           <button
             className={styles.playAllButton}
             onClick={isPlaying ? onStop : onPlay}
@@ -332,39 +316,41 @@ export function ProgressionSidebar({
           >
             {isPlaying ? "■ Stop" : "▶ Play All"}
           </button>
-          <button
-            className={`${styles.loopButton}${loop ? ` ${styles.loopButtonActive}` : ""}`}
-            onClick={onToggleLoop}
-            disabled={chordCount === 0}
-            aria-label={loop ? "Disable loop" : "Enable loop"}
-            aria-pressed={loop}
-          >
-            ↻ Loop
-          </button>
-          {onToggleArpeggio && (
+          <div className={styles.playbackModifiers}>
             <button
-              className={`${styles.loopButton}${arpeggioEnabled ? ` ${styles.loopButtonActive}` : ""}`}
-              onClick={onToggleArpeggio}
+              className={`${styles.loopButton}${loop ? ` ${styles.loopButtonActive}` : ""}`}
+              onClick={onToggleLoop}
               disabled={chordCount === 0}
-              aria-label={arpeggioEnabled ? "Disable arpeggiated playback" : "Enable arpeggiated playback"}
-              aria-pressed={arpeggioEnabled}
-              title={arpeggioEnabled ? "Arpeggio on" : "Arpeggio off"}
+              aria-label={loop ? "Disable loop" : "Enable loop"}
+              aria-pressed={loop}
             >
-              ≈ Arp
+              ↻ Loop
             </button>
-          )}
-          {onToggleArpeggio && arpeggioEnabled && onSetArpeggioPattern && arpeggioPattern && (
-            <button
-              className={`${styles.loopButton}${showPatternEditor ? ` ${styles.loopButtonActive}` : ""}`}
-              onClick={() => setShowPatternEditor((prev) => !prev)}
-              aria-label={showPatternEditor ? "Close arpeggio pattern editor" : "Open arpeggio pattern editor"}
-              aria-expanded={showPatternEditor}
-              aria-controls="arpeggio-pattern-editor"
-              title="Arpeggio pattern settings"
-            >
-              ⚙
-            </button>
-          )}
+            {onToggleArpeggio && (
+              <button
+                className={`${styles.loopButton}${arpeggioEnabled ? ` ${styles.loopButtonActive}` : ""}`}
+                onClick={onToggleArpeggio}
+                disabled={chordCount === 0}
+                aria-label={arpeggioEnabled ? "Disable arpeggiated playback" : "Enable arpeggiated playback"}
+                aria-pressed={arpeggioEnabled}
+                title={arpeggioEnabled ? "Arpeggio on" : "Arpeggio off"}
+              >
+                ≈ Arp
+              </button>
+            )}
+            {onToggleArpeggio && arpeggioEnabled && onSetArpeggioPattern && arpeggioPattern && (
+              <button
+                className={`${styles.loopButton}${showPatternEditor ? ` ${styles.loopButtonActive}` : ""}`}
+                onClick={() => setShowPatternEditor((prev) => !prev)}
+                aria-label={showPatternEditor ? "Close arpeggio pattern editor" : "Open arpeggio pattern editor"}
+                aria-expanded={showPatternEditor}
+                aria-controls="arpeggio-pattern-editor"
+                title="Arpeggio pattern settings"
+              >
+                ⚙
+              </button>
+            )}
+          </div>
         </div>
         {/* ARIA live region: announces playback mode changes */}
         <div
@@ -390,9 +376,9 @@ export function ProgressionSidebar({
       <ol className={styles.chordList} aria-label="Chord list">
         {nodes.length === 0 && (
           <div className={styles.emptyState} aria-live="polite">
-            <span className={styles.emptyIcon} aria-hidden="true">♩</span>
+            <span className={styles.emptyArrow} aria-hidden="true">←</span>
             <p className={styles.emptyMessage}>
-              Your progression is empty. Build a chord on the circle and add it here.
+              Select a chord, then add it here.
             </p>
           </div>
         )}
@@ -403,7 +389,16 @@ export function ProgressionSidebar({
           Maximum {maxLength} chords reached
         </div>
       )}
-      <MidiExportControls chords={chords} disabled={chordCount === 0} scaleContext={scale ?? null} arpeggioPattern={arpeggioEnabled ? arpeggioPattern : undefined} />
+      <MidiExportControls
+        chords={chords}
+        disabled={chordCount === 0}
+        scaleContext={scale ?? null}
+        arpeggioPattern={arpeggioEnabled ? arpeggioPattern : undefined}
+        bpm={bpm}
+        setBpm={onBpmChange}
+        beatsPerChord={beatsPerChord}
+        setBeatsPerChord={onBeatsPerChordChange}
+      />
     </aside>
   );
 }

@@ -1,83 +1,63 @@
-.container {
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 12px;
-  margin-top: 12px;
-  background-color: var(--color-bg-surface);
-  color: var(--color-text-primary);
-  font-size: 13px;
-}
-
-.header {
+.panel {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-border);
+  gap: 8px;
+  padding: 10px 12px;
+  background-color: var(--color-bg-surface);
+  border-radius: 8px;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
 }
 
-.header h3 {
-  margin: 0;
-  font-size: 14px;
+.label {
+  font-size: 11px;
   font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.header button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  font-size: 12px;
-  color: var(--color-control-btn);
-}
-
-.header button:hover {
-  color: var(--color-control-btn-hover);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
 }
 
 .controls {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
 }
 
 .control {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  width: 100%;
 }
 
-.control label {
+.controlLabel {
+  font-size: 11px;
   font-weight: 500;
   color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
-.control label input[type="checkbox"] {
-  margin: 0;
+.slider {
+  width: 100%;
   cursor: pointer;
 }
 
-.control input[type="range"],
-.control select {
-  padding: 6px 4px;
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  font-size: 12px;
-  cursor: pointer;
-  background-color: var(--color-bg-surface);
+.select {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-family: inherit;
   color: var(--color-text-primary);
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  appearance: auto;
 }
 
-.control input[type="range"] {
-  padding: 4px;
-}
-
-.toggleButton {
-  margin-top: 12px;
+.select:focus {
+  outline: 2px solid var(--color-focus, #4F46E5);
+  outline-offset: 2px;
 }
 
 .toggleButton button {

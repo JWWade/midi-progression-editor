@@ -10,12 +10,25 @@ import { useBridgePreview } from "../hooks/useBridgePreview";
 import { EnharmonicProvider } from "@/app/providers/EnharmonicProvider";
 import type { Chord } from "@/features/current-chord/types";
 
+const loggerMocks = vi.hoisted(() => ({
+  error: vi.fn(),
+}));
+
 // ── Mock audio utilities — no real AudioContext in tests ────────────────────
 
 vi.mock("@/features/audio/utils/audioUtils", () => ({
   playChord: vi.fn(() => new Promise<void>(() => { /* never resolves — keeps previews "playing" */ })),
   stopChord: vi.fn(),
   initAudioContext: vi.fn(),
+}));
+
+vi.mock("@/shared/utils/logger", () => ({
+  createLogger: () => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: loggerMocks.error,
+  }),
 }));
 
 // ── Chord fixtures ──────────────────────────────────────────────────────────
@@ -181,5 +194,29 @@ describe("useBridgePreview — re-entrant startPreview", () => {
     });
 
     expect(result.current.isPreviewPlaying).toBe(true);
+  });
+});
+
+describe("useBridgePreview — playback failure diagnostics", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("logs playback failures and exposes previewError state", async () => {
+    const { playChord } = await import("@/features/audio/utils/audioUtils");
+    (playChord as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error("Audio output unavailable"),
+    );
+
+    const { result } = renderHook(() => useBridgePreview(), { wrapper });
+
+    await act(async () => {
+      result.current.startPreview(Cmaj7, bridge1, Am7, 0);
+      await Promise.resolve();
+    });
+
+    expect(loggerMocks.error).toHaveBeenCalled();
+    expect(result.current.previewError).toContain("Audio preview failed");
+    expect(result.current.isPreviewPlaying).toBe(false);
   });
 });
