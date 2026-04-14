@@ -22,6 +22,15 @@ jobs:
           script: |
             const PROTECTED_BRANCHES = ['main', 'develop'];
 
+            // Commit messages produced by abandoned/errored Copilot agent runs
+            // that never resulted in a PR. Branches whose every unique commit
+            // (relative to develop) matches one of these messages are safe to
+            // delete even though they haven't been merged.
+            const ABANDONED_AGENT_MESSAGES = [
+              'Initial plan',
+              'Changes before error encountered',
+            ];
+
             const branches = await github.paginate(github.rest.repos.listBranches, {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -49,23 +58,65 @@ jobs:
                 continue;
               }
 
-              // Delete branches whose commits are already in main
               try {
-                const comparison = await github.rest.repos.compareCommitsWithBasehead({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  basehead: `main...${branch.name}`,
-                });
+                // Check whether all branch commits are already in develop or main.
+                // We prefer develop as the primary integration branch; main is a
+                // secondary check for hotfix branches landed directly on main.
+                const [developCmp, mainCmp] = await Promise.all([
+                  github.rest.repos.compareCommitsWithBasehead({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    basehead: `develop...${branch.name}`,
+                  }),
+                  github.rest.repos.compareCommitsWithBasehead({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    basehead: `main...${branch.name}`,
+                  }),
+                ]);
 
-                if (comparison.data.ahead_by === 0) {
+                const aheadOfDevelop = developCmp.data.ahead_by;
+                const aheadOfMain = mainCmp.data.ahead_by;
+
+                if (aheadOfDevelop === 0 || aheadOfMain === 0) {
+                  // Fully merged — safe to delete
                   await github.rest.git.deleteRef({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     ref: `heads/${branch.name}`,
                   });
-                  deleted.push(branch.name);
+                  deleted.push(`${branch.name} (merged)`);
+                  continue;
+                }
+
+                // Check whether the branch is an abandoned Copilot agent run:
+                // every commit unique to the branch has only a well-known
+                // placeholder message (e.g. "Initial plan") AND was made by a
+                // bot account (author name contains "[bot]").
+                const uniqueCommits = developCmp.data.commits;
+                // uniqueCommits.length > 0 guards against the unlikely edge case
+                // where aheadOfDevelop > 0 but the commits list is empty (e.g. a
+                // diverged branch where the API returns no commits).
+                const isAbandoned =
+                  uniqueCommits.length > 0 &&
+                  uniqueCommits.every(c => {
+                    const firstLine = c.commit.message.split('\n')[0].trim();
+                    const authorName = c.commit.author?.name ?? '';
+                    return (
+                      ABANDONED_AGENT_MESSAGES.includes(firstLine) &&
+                      authorName.includes('[bot]')
+                    );
+                  });
+
+                if (isAbandoned) {
+                  await github.rest.git.deleteRef({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ref: `heads/${branch.name}`,
+                  });
+                  deleted.push(`${branch.name} (abandoned agent run)`);
                 } else {
-                  skipped.push(`${branch.name} (${comparison.data.ahead_by} unmerged commit(s))`);
+                  skipped.push(`${branch.name} (${aheadOfDevelop} unmerged commit(s) ahead of develop)`);
                 }
               } catch (error) {
                 skipped.push(`${branch.name} (error: ${error.message})`);
