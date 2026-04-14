@@ -104,12 +104,13 @@ export function useCustomChordState({
     },
     [customFromChord, selectedChordName, setSelectedChordName, setCustomFromChord, onCurrentChordChange, onAnnounce],
   );
+  // Provide a default axis for handleMirrorChord (C / F# axis, value 0)
+  const defaultMirrorAxis = allReflectionAxes()[0];
+  const handleMirrorChord = useCallback(() => {
+    handleMirrorWithAxis(defaultMirrorAxis);
+  }, [handleMirrorWithAxis, defaultMirrorAxis]);
+
   const handleRandomChord = useCallback(() => {
-      // Provide a default axis for handleMirrorChord (C / F# axis, value 0)
-      const defaultMirrorAxis = allReflectionAxes()[0];
-      const handleMirrorChord = useCallback(() => {
-        handleMirrorWithAxis(defaultMirrorAxis);
-      }, [handleMirrorWithAxis, defaultMirrorAxis]);
     const name = CHORD_NAMES[Math.floor(Math.random() * CHORD_NAMES.length)];
     const { root: r, type: q } = CHORD_NAME_TO_DATA[name];
     setCustomFromChord(null);
