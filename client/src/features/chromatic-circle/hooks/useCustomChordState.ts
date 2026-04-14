@@ -12,7 +12,7 @@ import { findNearestChord } from "@/features/chord/utils/findNearestChord";
 import { reflectPitchClasses, type ReflectionAxis, allReflectionAxes } from "@/features/chord/utils/reflectChord";
 import { getChordPitchClasses } from "@/features/chord/utils/getChordPitchClasses";
 import { rerootChord } from "@/features/chord/utils/rerootChord";
-import { CHORD_NAME_TO_DATA, CHORD_NAMES, getChordName } from "@/features/chord/data/chordNames";
+import { CHORD_NAME_TO_DATA, getChordName } from "@/features/chord/data/chordNames";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { CustomChordState } from "../types";
 
