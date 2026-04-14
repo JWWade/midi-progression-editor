@@ -1,10 +1,10 @@
-# Parametric MIDI Sequencer — Web Prototype
+# Apeirograph — Parametric MIDI Sequencer
 
 [![CI](https://github.com/JWWade/midi-progression-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/JWWade/midi-progression-editor/actions/workflows/ci.yml)
 
 ## About
 
-**MIDI Progression Editor** is a parametric MIDI sequencer for exploring and editing chord progressions. It combines an interactive React/TypeScript web interface with an ASP.NET Core Web API backend, enabling musicians to:
+**Apeirograph** is a parametric MIDI sequencer for exploring and editing chord progressions. It combines an interactive React/TypeScript web interface with an ASP.NET Core Web API backend, enabling musicians to:
 
 - Visualize chord shapes on an interactive chromatic circle
 - Build chord progressions with a dedicated sidebar (up to 8 chords, session-only)
@@ -86,7 +86,7 @@ npm run dev
 
 ## UI Preview
 
-![MIDI Progression Editor interface preview](docs/images/chromatic-circle-interface.png)
+![Apeirograph interface preview](docs/images/chromatic-circle-interface.png)
 
 The preview highlights the chromatic circle workspace, progression sidebar, and inspector panel.
 
