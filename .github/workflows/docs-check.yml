@@ -1,0 +1,80 @@
+name: Documentation Check
+
+on:
+  pull_request:
+    branches: [develop, main]
+    types: [opened, synchronize, reopened, edited]
+  schedule:
+    # Run broken-link check every Monday at 09:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  docs-drift:
+    name: Detect documentation drift
+    runs-on: ubuntu-latest
+    # Only runs for pull-request events, not the scheduled trigger
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check for documentation updates
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch origin "$BASE_REF" --depth=1
+          CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD")
+
+          SOURCE_CHANGED=$(echo "$CHANGED" | grep -cE '^(client/src/|server/ParametricMusic)' || true)
+          DOCS_CHANGED=$(echo "$CHANGED"   | grep -cE '^(docs/|README\.md|ARCHITECTURE\.md|CONTRIBUTING\.md)' || true)
+
+          # Check whether the contributor explicitly ticked "No documentation changes required"
+          # Use case-insensitive match to handle [x] and [X]
+          NO_DOCS_REQUIRED=$(printf '%s' "$PR_BODY" | grep -ciE '\[x\]\s*No documentation changes required' || true)
+
+          echo "Source files changed : $SOURCE_CHANGED"
+          echo "Documentation files changed : $DOCS_CHANGED"
+          echo "'No docs required' box checked: $NO_DOCS_REQUIRED"
+
+          if [ "$SOURCE_CHANGED" -gt 0 ] && [ "$DOCS_CHANGED" -eq 0 ] && [ "$NO_DOCS_REQUIRED" -eq 0 ]; then
+            echo "::error title=Documentation drift detected::Source code changed without any documentation update."
+            echo "::error::Update relevant docs (docs/, README.md, ARCHITECTURE.md) — or tick 'No documentation changes required' in the PR description."
+            exit 1
+          fi
+
+          echo "Documentation check passed ✓"
+
+  broken-links:
+    name: Check for broken links in documentation
+    runs-on: ubuntu-latest
+    # Runs on schedule or when manually triggered; skip for individual PRs
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check links with lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Scan all Markdown files in the repository
+          args: >-
+            --verbose
+            --no-progress
+            --exclude-mail
+            --exclude "^https://localhost"
+            --exclude "^http://localhost"
+            '**/*.md'
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

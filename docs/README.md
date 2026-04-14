@@ -10,6 +10,19 @@ For the project overview and quick-start guide, see the
 
 ---
 
+## Architecture Diagrams
+
+Architecture-as-code diagrams written in Mermaid (render natively on GitHub). Update these diagrams whenever you change system topology, add a feature module, or modify the CI pipeline.
+
+| Diagram | Description |
+|---|---|
+| [architecture/system-overview.md](architecture/system-overview.md) | Full system topology: browser, frontend, backend, services, MIDI output |
+| [architecture/frontend-features.md](architecture/frontend-features.md) | Frontend feature module dependency graph |
+| [architecture/data-flow.md](architecture/data-flow.md) | End-to-end data flow from user interaction to MIDI file output |
+| [architecture/ci-pipeline.md](architecture/ci-pipeline.md) | CI/CD pipeline stages, triggers, and required checks |
+
+---
+
 ## Reference Documents
 
 | Document | Purpose |

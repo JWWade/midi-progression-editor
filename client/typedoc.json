@@ -1,0 +1,23 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Parametric MIDI Sequencer",
+  "entryPointStrategy": "expand",
+  "entryPoints": ["src/features", "src/shared", "src/app"],
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "src/api/generated/**"
+  ],
+  "out": "docs/api",
+  "cleanOutputDir": true,
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "readme": "none",
+  "navigationLinks": {
+    "GitHub": "https://github.com/JWWade/midi-progression-editor",
+    "Architecture": "../ARCHITECTURE.md"
+  },
+  "plugin": [],
+  "skipErrorChecking": true
+}
