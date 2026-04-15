@@ -18,3 +18,4 @@
 - [ ] Frontend tests pass (`cd client && npm test`)
 - [ ] Backend tests pass (`cd server/ParametricMusic.Tests && dotnet test`)
 - [ ] API client regenerated if backend endpoints changed (`cd client && npm run generate:api`)
+- [ ] Responsive UI changes use container queries first for component-level adaptation; media queries are limited to page-shell or environment-driven behavior

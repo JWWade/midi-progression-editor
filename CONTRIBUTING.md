@@ -179,6 +179,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed walkthrough and [docs/feat
 - **React**: functional components with hooks only (no class components).
 - **C#**: nullable reference types are enabled; use implicit usings.
 - **Imports**: use the `@/` path alias for cross-feature imports (e.g. `@/features/chord`).
+- **Responsive CSS**: for component-local responsiveness, prefer container queries first. Reserve media queries for page-shell layout and environment preferences such as reduced motion, hover, pointer, or viewport-wide structural changes.
 
 ---
 
