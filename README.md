@@ -10,20 +10,10 @@
 - Build chord progressions with a dedicated sidebar (up to 8 chords, session-only)
 - Explore triads and seventh chords across all root notes and qualities
 - Animate smooth transitions between chord shapes
-- Display scale degrees and diatonic transparency on the circle
-- Choose from 8 scale modes: Major, Natural Minor, Harmonic Minor, Melodic Minor, Dorian, Phrygian, Lydian, and Mixolydian
+- Display scale degrees with 8 available modes
 - Identify voice-leading paths between consecutive chords
-- Color-coded chord quality system (major, minor, diminished, augmented, dominant 7th, etc.)
-- Inspect individual tones: view note name, chord role, interval from root, and frequency
-- Switch between **Info mode** (click a note to inspect it) and **Select mode** (click notes to build a custom selection)
-- Toggle dark/light theme with persistent preference (stored in localStorage)
-- Play back chords with in-browser audio (chord or arpeggio mode)
-- Export chord progressions as standard MIDI files (`.mid`) with configurable BPM and beats-per-chord
-- Generate scales from any root note via the backend API
-- Apply **negative harmony** transforms to chords and progressions
-- Get **ii–V bridge suggestions** (tritone substitutions, backchains) between chords
-- Explore the **harmonic graph**: shortest voice-leading path (Dijkstra) across all chord qualities
-- Follow an interactive **tutorial** that guides first-time users through core features
+- Inspect individual tones: note name, chord role, interval from root, and frequency
+- Play back chords with in-browser audio and export progressions as standard MIDI files (`.mid`)
 
 ## Architecture Overview
 
@@ -57,7 +47,7 @@ chmod +x run-dev.sh
 run-dev.bat
 ```
 
-Both launchers start the backend on http://localhost:5110 and the frontend on http://localhost:5173. Press <kbd>Ctrl+C</kbd> (Linux/macOS) or close the terminal windows (Windows) to stop.
+Both launchers start the backend on http://localhost:5110 and the frontend on http://localhost:5173.
 
 ### Option 3: Manual Setup
 
@@ -92,44 +82,29 @@ The preview highlights the chromatic circle workspace, progression sidebar, and 
 
 ## Environment Variables
 
-### Frontend
-
-Create client/.env.local to override defaults:
+Create `client/.env.local` to override defaults:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:5110
 ```
 
-**Default**: http://localhost:5110 (if not set)
-
 See [client/.env.example](client/.env.example) for all available variables.
 
 ## API Client Type Generation
 
-When you modify backend API endpoints, regenerate the TypeScript types **and client functions**:
+After modifying backend endpoints, regenerate the TypeScript client (requires the backend running on port 5110):
 
 ```bash
 cd client
 npm run generate:api
 ```
 
-This fetches the OpenAPI spec from your running backend and regenerates `src/api/generated/index.ts` with complete type-safe client functions.
+This fetches the OpenAPI spec and regenerates `src/api/generated/index.ts`. **Never edit this file manually.**
 
-**Requirements**:
-- Backend must be running on port 5110
-- Connected to localhost network
-
-**When to regenerate**:
-- After changing controller endpoints
-- After modifying DTOs or response types
-- After adding/removing API parameters
-- After adding new controllers
-
-**Usage**:
+Usage:
 ```typescript
 import { client } from '@/api/client';
 
-// Fully typed, all operations auto-generated from spec
 const result = await client.post('/Scale/from-root', {
   query: { note: 'C' },
   body: { scaleType: 'major' }
@@ -138,147 +113,37 @@ const result = await client.post('/Scale/from-root', {
 
 ## Testing
 
-### Backend Tests
+### Backend
 
 ```bash
 cd server/ParametricMusic.Tests
 dotnet test
 ```
 
-Runs xUnit test suite covering business logic and HTTP controller contracts.
-
-### Frontend Tests
+### Frontend
 
 ```bash
 cd client
 npm test
 ```
 
-Runs Vitest in single-pass mode. Currently covers MIDI file construction utilities.
-
 ## Lint & Code Quality
-
-### Frontend
 
 ```bash
 cd client
 npm run lint
 ```
 
-ESLint enforces zero-warnings (strict mode). All TypeScript files must pass.
-
-### Backend
-
-C# code follows:
-- Nullable reference types enabled
-- Implicit usings (no using statements at top)
-- RESTful conventions
+ESLint enforces zero warnings. All TypeScript files must pass.
 
 ## Project Structure
 
-### High-Level
-
-```
-midi-progression-editor/
- client/              # React + TypeScript + Vite (frontend)
-    src/
-       api/         # API client & generated types
-       app/         # Application root
-          components/     # AppHeader (toggles, scale selector, theme)
-          providers/      # ThemeContext, ThemeProvider, useTheme, EnharmonicContext, EnharmonicProvider, useEnharmonic
-          routes/         # Client-side routing (placeholder)
-          store/          # Global state management (placeholder)
-       features/    # Feature modules
-          audio/              # In-browser chord audio playback (chord and arpeggio mode)
-          chord/              # Core chord data, types & utilities
-          chord-animation/    # Animated chord shape transitions
-          chord-geometry/     # Polygon vertex calculations
-          chord-inspection/   # Tone detail inspection panel (ToneInfoPanel)
-          chord-intervals/    # Interval pattern visualisation
-          chord-morphing/     # Smooth polygon morphing hooks
-          chromatic-circle/   # Main 12-note circle visualisation
-          color-language/     # Quality-based color system
-          current-chord/      # Current-chord info panel
-          harmonic-graph/     # Harmonic relationship graph; shortest voice-leading path (Dijkstra)
-          ii-v-suggestions/   # Harmonic bridge suggestions (ii–V, tritone substitutions, backchains)
-          legend/             # Visual legend (chord quality colours, note opacity levels)
-          midi-export/        # MIDI file export (BPM, beats/chord)
-          negative-harmony/   # Negative harmony pitch-class reflection transform
-          progression-sidebar/ # Chord progression sidebar (max 8 chords)
-          scale/              # Scale generation & display (8 modes)
-          tutorial/           # Interactive first-use tutorial (tooltips & modals)
-          voice-leading/      # Voice-leading path utilities
-       shared/      # Shared components, hooks, types & utilities
-          types/CursorMode.ts # 'info' | 'select' cursor modes
-       App.tsx
-    .env.example     # Environment variable template
-    package.json
-
- server/              # ASP.NET Core .NET 10 (backend)
-     ParametricMusic.Api/
-         Controllers/     # HealthController, ChordController, ScaleController, ProgressionController
-         Models/          # DTOs and enums
-         Services/        # ChordGenerator, ScaleGenerator, ProgressionAnalyzer, QuartalChordGenerator
-         Program.cs
-         ParametricMusic.Api.csproj
-```
-
-For detailed architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
-
-## Build
-
-### Frontend
-
-```bash
-cd client
-npm run build
-# Output: client/dist/ (ready for deployment)
-```
-
-### Backend
-
-```bash
-cd server/ParametricMusic.Api
-dotnet build
-# Output: bin/Debug/net10.0/
-```
-
-For production:
-```bash
-dotnet publish -c Release -o ./publish
-```
-
-## Troubleshooting
-
-### Port Already In Use
-
-```bash
-# Windows
-netstat -ano | findstr :5110
-taskkill /PID <PID> /F
-
-# Mac/Linux
-lsof -i :5110
-kill -9 <PID>
-```
-
-### Swagger Returns 404
-
-- Check backend is running on port 5110: http://localhost:5110/swagger
-- Verify Program.cs has AddSwaggerGen() and Swagger middleware configured
-
-### Generated Types Out of Sync
-
-```bash
-# Regenerate from running backend
-cd client
-npm run generate:api
-```
+The frontend follows a feature-based architecture with 21 modules under `client/src/features/`. The backend exposes REST endpoints via controllers in `server/ParametricMusic.Api/Controllers/`. See [ARCHITECTURE.md](ARCHITECTURE.md) for a full breakdown.
 
 ## Technologies
 
-- **Frontend**: React 19, TypeScript 5.9, Vite 7, ESLint 9
-- **Backend**: ASP.NET Core .NET 10, Swashbuckle 10.1.4, xUnit 2.9
+- **Frontend**: React 19, TypeScript ~6.0, Vite 8, ESLint 10
+- **Backend**: ASP.NET Core .NET 10, Swashbuckle 10.1.7, xUnit 2.9
 - **API**: OpenAPI/Swagger specification with code generation
 - **Build**: npm + dotnet CLI
 
