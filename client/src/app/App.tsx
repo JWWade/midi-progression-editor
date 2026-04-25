@@ -92,14 +92,13 @@ export default function App() {
   } = useBridgePreview(chordDurationMs, audioParams);
 
   // ARIA live region: announce chord name on each playback step; clear when stopped.
-  const [liveRegionText, setLiveRegionText] = useState('');
-  useEffect(() => {
-    if (!isPlaying || playingChord === null) {
-      setLiveRegionText('');
-      return;
-    }
-    setLiveRegionText(formatChordName(playingChord, pitchClasses));
-  }, [isPlaying, playingChord, pitchClasses]);
+  // Derived directly to avoid synchronous setState in an effect.
+  const playbackLiveText = isPlaying && playingChord !== null
+    ? formatChordName(playingChord, pitchClasses)
+    : '';
+
+  // Separate ARIA live region for event-driven announcements (e.g. chord sent to circle).
+  const [sendBackMessage, setSendBackMessage] = useState('');
 
   useEffect(() => {
     if (isPlaying) {
@@ -116,6 +115,10 @@ export default function App() {
   const handleCurrentChordChange = useCallback((chord: Chord) => {
     setCurrentChord(chord);
     fireEvent('chordSelected');
+    // Auto-advance: focus → inspect when the user selects a chord.
+    // This callback is only invoked on user interaction (never on mount),
+    // so no guard ref is needed.
+    setLayoutMode((prev) => prev === 'focus' ? 'inspect' : prev);
   }, [fireEvent]);
 
   /**
@@ -136,7 +139,7 @@ export default function App() {
   const handleSendChordToCircle = useCallback((chord: Chord) => {
     // Spread into a new object so ChromaticCircle's loadChord effect always fires.
     setSendBackChord({ ...chord });
-    setLiveRegionText(`${formatChordName(chord, pitchClasses)} loaded into chromatic circle`);
+    setSendBackMessage(`${formatChordName(chord, pitchClasses)} loaded into chromatic circle`);
     fireEvent('chordClicked');
   }, [pitchClasses, fireEvent]);
 
@@ -164,19 +167,6 @@ export default function App() {
     updateAppContext({ progressionLength: chords.length, isPlaying });
   }, [chords.length, isPlaying, updateAppContext]);
 
-  // Auto-advance: focus → inspect when a chord is selected (skip initial mount).
-  const isMountedRef = useRef(false);
-  useEffect(() => {
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
-      return;
-    }
-    if (currentChord && layoutMode === 'focus') {
-      setLayoutMode('inspect');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentChord]);
-
   return (
     <AppErrorBoundary>
     <div className={styles.layout}>
@@ -191,7 +181,14 @@ export default function App() {
         aria-live="polite"
         aria-atomic="true"
       >
-        {liveRegionText}
+        {playbackLiveText}
+      </div>
+      <div
+        className={styles.visuallyHidden}
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {sendBackMessage}
       </div>
       <AppHeader
         showCentroid={showCentroid}
