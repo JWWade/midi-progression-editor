@@ -55,8 +55,8 @@ jobs:
   broken-links:
     name: Check for broken links in documentation
     runs-on: ubuntu-latest
-    # Runs on schedule or when manually triggered; skip for individual PRs
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    # Runs on pull requests, schedule, or when manually triggered
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
 
