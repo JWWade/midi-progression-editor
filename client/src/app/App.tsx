@@ -93,10 +93,12 @@ export default function App() {
 
   // ARIA live region: announce chord name on each playback step; clear when stopped.
   // Derived directly to avoid synchronous setState in an effect.
-  const [sendBackMessage, setSendBackMessage] = useState('');
-  const liveRegionText = isPlaying && playingChord !== null
+  const playbackLiveText = isPlaying && playingChord !== null
     ? formatChordName(playingChord, pitchClasses)
-    : sendBackMessage;
+    : '';
+
+  // Separate ARIA live region for event-driven announcements (e.g. chord sent to circle).
+  const [sendBackMessage, setSendBackMessage] = useState('');
 
   useEffect(() => {
     if (isPlaying) {
@@ -113,7 +115,9 @@ export default function App() {
   const handleCurrentChordChange = useCallback((chord: Chord) => {
     setCurrentChord(chord);
     fireEvent('chordSelected');
-    // Auto-advance: focus → inspect when a chord is selected.
+    // Auto-advance: focus → inspect when the user selects a chord.
+    // This callback is only invoked on user interaction (never on mount),
+    // so no guard ref is needed.
     setLayoutMode((prev) => prev === 'focus' ? 'inspect' : prev);
   }, [fireEvent]);
 
@@ -177,7 +181,14 @@ export default function App() {
         aria-live="polite"
         aria-atomic="true"
       >
-        {liveRegionText}
+        {playbackLiveText}
+      </div>
+      <div
+        className={styles.visuallyHidden}
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {sendBackMessage}
       </div>
       <AppHeader
         showCentroid={showCentroid}
