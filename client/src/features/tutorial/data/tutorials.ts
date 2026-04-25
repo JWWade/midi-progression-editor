@@ -24,7 +24,14 @@ const TUTORIAL_DEFINITIONS: TutorialDefinition[] = [
         title: 'Add your first chord',
         description:
           'Select a note on the chromatic circle, then click "Add to Progression" to build your chord progression.',
-        trigger: { type: 'onState', condition: 'emptyProgression' },
+        trigger: {
+          type: 'composite',
+          mode: 'all',
+          conditions: [
+            { type: 'onState', condition: 'emptyProgression' },
+            { type: 'onIdle', idleSeconds: 3 },
+          ],
+        },
         priority: 10,
         uiType: 'modal',
       },
@@ -45,7 +52,14 @@ const TUTORIAL_DEFINITIONS: TutorialDefinition[] = [
         title: 'Progression is full',
         description:
           'You have reached the maximum number of chords. Export your MIDI or delete a chord to add more.',
-        trigger: { type: 'onState', condition: 'fullProgression' },
+        trigger: {
+          type: 'composite',
+          mode: 'all',
+          conditions: [
+            { type: 'onState', condition: 'fullProgression' },
+            { type: 'onIdle', idleSeconds: 3 },
+          ],
+        },
         priority: 6,
         uiType: 'tooltip',
         targetSelector: '#chord-progression',

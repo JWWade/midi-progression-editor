@@ -81,10 +81,11 @@ describe('first-time user flow', () => {
   it('shows add-first-chord modal when progression is empty', () => {
     const ctx = makeCtx({
       appContext: { progressionLength: 0, isPlaying: false },
+      isIdle: true,
+      idleSeconds: 3,
     });
     const step = resolveActiveStep(ALL_TUTORIAL_STEPS, ctx);
-    // add-first-chord (priority 10) should win over explore-circle (priority 5)
-    // which also requires 5s idle.
+    // add-first-chord (priority 10) wins over explore-circle (priority 5).
     expect(step).not.toBeNull();
     expect(step?.id).toBe('add-first-chord');
     expect(step?.uiType).toBe('modal');
@@ -102,9 +103,9 @@ describe('first-time user flow', () => {
       appContext: { progressionLength: 0, isPlaying: false },
     });
     const step = resolveActiveStep(ALL_TUTORIAL_STEPS, ctx);
-    // preview-chord-audio (priority 7) and add-first-chord (priority 10) are both eligible.
-    // add-first-chord is higher priority (10 vs 7), so it wins.
-    expect(step?.id).toBe('add-first-chord');
+    // add-first-chord requires idle gate (not met here), so preview-chord-audio
+    // (priority 7, onAction: chordSelected) is the highest-priority eligible step.
+    expect(step?.id).toBe('preview-chord-audio');
   });
 
   it('shows play-progression after chordAdded event', () => {
@@ -120,7 +121,11 @@ describe('first-time user flow', () => {
   });
 
   it('step progress starts at 1 of total-steps for first active step', () => {
-    const ctx = makeCtx({ appContext: { progressionLength: 0, isPlaying: false } });
+    const ctx = makeCtx({
+      appContext: { progressionLength: 0, isPlaying: false },
+      isIdle: true,
+      idleSeconds: 3,
+    });
     const active = resolveActiveStep(ALL_TUTORIAL_STEPS, ctx);
     const { stepIndex, totalSteps } = computeProgress(ALL_TUTORIAL_STEPS, ctx, active);
     expect(active).not.toBeNull();
@@ -295,7 +300,11 @@ describe('experience mode: minimal', () => {
 
   it('minimal mode shows add-first-chord on empty progression', () => {
     const minimalSteps = filterByMode(ALL_TUTORIAL_STEPS, 'minimal');
-    const ctx = makeCtx({ appContext: { progressionLength: 0, isPlaying: false } });
+    const ctx = makeCtx({
+      appContext: { progressionLength: 0, isPlaying: false },
+      isIdle: true,
+      idleSeconds: 3,
+    });
     const step = resolveActiveStep(minimalSteps, ctx);
     expect(step?.id).toBe('add-first-chord');
   });
@@ -324,7 +333,11 @@ describe('snooze / pause behavior', () => {
   });
 
   it('tutorials resume after snooze by returning eligible steps normally', () => {
-    const ctx = makeCtx({ appContext: { progressionLength: 0, isPlaying: false } });
+    const ctx = makeCtx({
+      appContext: { progressionLength: 0, isPlaying: false },
+      isIdle: true,
+      idleSeconds: 3,
+    });
     const step = resolveActiveStep(ALL_TUTORIAL_STEPS, ctx);
     expect(step).not.toBeNull();
   });
