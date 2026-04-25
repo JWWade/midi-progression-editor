@@ -92,14 +92,11 @@ export default function App() {
   } = useBridgePreview(chordDurationMs, audioParams);
 
   // ARIA live region: announce chord name on each playback step; clear when stopped.
-  const [liveRegionText, setLiveRegionText] = useState('');
-  useEffect(() => {
-    if (!isPlaying || playingChord === null) {
-      setLiveRegionText('');
-      return;
-    }
-    setLiveRegionText(formatChordName(playingChord, pitchClasses));
-  }, [isPlaying, playingChord, pitchClasses]);
+  // Derived directly to avoid synchronous setState in an effect.
+  const [sendBackMessage, setSendBackMessage] = useState('');
+  const liveRegionText = isPlaying && playingChord !== null
+    ? formatChordName(playingChord, pitchClasses)
+    : sendBackMessage;
 
   useEffect(() => {
     if (isPlaying) {
@@ -116,6 +113,8 @@ export default function App() {
   const handleCurrentChordChange = useCallback((chord: Chord) => {
     setCurrentChord(chord);
     fireEvent('chordSelected');
+    // Auto-advance: focus → inspect when a chord is selected.
+    setLayoutMode((prev) => prev === 'focus' ? 'inspect' : prev);
   }, [fireEvent]);
 
   /**
@@ -136,7 +135,7 @@ export default function App() {
   const handleSendChordToCircle = useCallback((chord: Chord) => {
     // Spread into a new object so ChromaticCircle's loadChord effect always fires.
     setSendBackChord({ ...chord });
-    setLiveRegionText(`${formatChordName(chord, pitchClasses)} loaded into chromatic circle`);
+    setSendBackMessage(`${formatChordName(chord, pitchClasses)} loaded into chromatic circle`);
     fireEvent('chordClicked');
   }, [pitchClasses, fireEvent]);
 
@@ -163,19 +162,6 @@ export default function App() {
   useEffect(() => {
     updateAppContext({ progressionLength: chords.length, isPlaying });
   }, [chords.length, isPlaying, updateAppContext]);
-
-  // Auto-advance: focus → inspect when a chord is selected (skip initial mount).
-  const isMountedRef = useRef(false);
-  useEffect(() => {
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
-      return;
-    }
-    if (currentChord && layoutMode === 'focus') {
-      setLayoutMode('inspect');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentChord]);
 
   return (
     <AppErrorBoundary>
