@@ -49,17 +49,49 @@ describe("useCustomChordState", () => {
     expect(result.current.customFromChord).toBeNull();
   });
 
-  it("handleSelectPrimitiveShape sets a custom chord for the 'equilateral-triangle' shape", () => {
+  it("handleSelectPrimitiveShape sets a custom chord for shapes with no exact match", () => {
     const onCurrentChordChange = vi.fn();
     const { result } = renderHook(() =>
       useCustomChordState(makeOptions({ onCurrentChordChange })),
     );
     act(() => {
-      result.current.handleSelectPrimitiveShape("equilateral-triangle");
+      result.current.handleSelectPrimitiveShape("square");
     });
     expect(result.current.customFromChord).not.toBeNull();
-    expect(result.current.customFromChord?.primitiveShape).toBe("equilateral-triangle");
+    expect(result.current.customFromChord?.primitiveShape).toBe("square");
     expect(onCurrentChordChange).toHaveBeenCalledOnce();
+  });
+
+  it("handleSelectPrimitiveShape snaps to named chord when notes match exactly", () => {
+    const setSelectedChordName = vi.fn();
+    const onCurrentChordChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCustomChordState(
+        makeOptions({ selectedChordName: "C", setSelectedChordName, onCurrentChordChange }),
+      ),
+    );
+    act(() => {
+      result.current.handleSelectPrimitiveShape("symmetrical-trapezoid");
+    });
+    expect(result.current.customFromChord).toBeNull();
+    expect(setSelectedChordName).toHaveBeenCalledWith("Cmaj7");
+    expect(onCurrentChordChange).toHaveBeenCalledWith({ root: 0, quality: "maj7" });
+  });
+
+  it("handleSelectPrimitiveShape with equilateral-triangle snaps to aug when root is C", () => {
+    const setSelectedChordName = vi.fn();
+    const onCurrentChordChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCustomChordState(
+        makeOptions({ selectedChordName: "C", setSelectedChordName, onCurrentChordChange }),
+      ),
+    );
+    act(() => {
+      result.current.handleSelectPrimitiveShape("equilateral-triangle");
+    });
+    expect(result.current.customFromChord).toBeNull();
+    expect(setSelectedChordName).toHaveBeenCalledWith("Caug");
+    expect(onCurrentChordChange).toHaveBeenCalledWith({ root: 0, quality: "aug" });
   });
 
   it("handleRandomChord sets a non-null customFromChord with 3 notes", () => {
