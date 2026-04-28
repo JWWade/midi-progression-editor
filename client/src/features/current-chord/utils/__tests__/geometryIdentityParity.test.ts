@@ -8,7 +8,8 @@ describe("geometry/identity parity", () => {
   const cases: Chord[] = [
     { root: 0, quality: "major" },
     { root: 2, quality: "dom7" },
-    { root: 7, quality: "quartal", customNotes: [7, 0, 4] },
+    // G-C-F = G quartal (exact intervals: 0, 5, 10)
+    { root: 7, quality: "quartal", customNotes: [7, 0, 5] },
     { root: 0, quality: "major", customNotes: [12, -8, 4, 19, 7, 0] },
   ];
 

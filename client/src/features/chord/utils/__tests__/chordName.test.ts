@@ -128,13 +128,16 @@ describe("resolveChordIdentity", () => {
 
   it("anchors custom chord inference to the selected root", () => {
     const eMinorLike: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
-    const gQuartalLike: Chord = { root: 7, quality: "major", customNotes: [7, 0, 4] };
-
     expect(resolveChordIdentity(eMinorLike)).toEqual({ root: 4, quality: "minor" });
-    expect(resolveChordIdentity(gQuartalLike)).toEqual({ root: 7, quality: "quartal" });
   });
 
-  it("does not label non-exact 4-note custom sets as quartal", () => {
+  it("resolves exact quartal chord as quartal", () => {
+    // G-C-F = G quartal (exact intervals: 0, 5, 10)
+    const gQuartal: Chord = { root: 7, quality: "major", customNotes: [7, 0, 5] };
+    expect(resolveChordIdentity(gQuartal)).toEqual({ root: 7, quality: "quartal" });
+  });
+
+  it("does not label non-exact custom sets as quartal", () => {
     const ambiguousFourNoteSet: Chord = {
       root: 0,
       quality: "quartal",
@@ -162,10 +165,11 @@ describe("formatChordSymbol", () => {
 
   it("formats rerooted custom chords as compact inferred symbols", () => {
     const eMinorLike: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
-    const gQuartalLike: Chord = { root: 7, quality: "major", customNotes: [7, 0, 4] };
+    // G-C-F = G quartal (exact match)
+    const gQuartal: Chord = { root: 7, quality: "major", customNotes: [7, 0, 5] };
 
     expect(formatChordSymbol(eMinorLike)).toBe("Em");
-    expect(formatChordSymbol(gQuartalLike)).toBe("Gq");
+    expect(formatChordSymbol(gQuartal)).toBe("Gq");
   });
 });
 

@@ -120,7 +120,8 @@ function containsByteSequence(haystack: Uint8Array, needle: number[]): boolean {
 
 describe("buildMidiFile", () => {
   const EGC_CUSTOM: Chord = { root: 4, quality: "major", customNotes: [4, 7, 0] };
-  const GCE_CUSTOM: Chord = { root: 7, quality: "major", customNotes: [7, 0, 4] };
+  // G-C-F = G quartal (exact intervals: 0, 5, 10)
+  const GCE_CUSTOM: Chord = { root: 7, quality: "major", customNotes: [7, 0, 5] };
 
   it("returns a non-empty Uint8Array beginning with MIDI header magic bytes", () => {
     const result = buildMidiFile([C_MAJOR, G_MAJOR]);

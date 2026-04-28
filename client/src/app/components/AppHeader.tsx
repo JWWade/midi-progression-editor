@@ -11,8 +11,6 @@ interface AppHeaderProps {
   onIntervalsChange: (show: boolean) => void;
   showLegend: boolean;
   onLegendChange: (show: boolean) => void;
-  showPolarMelody: boolean;
-  onPolarMelodyChange: (show: boolean) => void;
   onLoadJson: () => void;
   layoutMode: LayoutMode;
   onLayoutModeChange: (mode: LayoutMode) => void;
@@ -31,8 +29,6 @@ export function AppHeader({
   onIntervalsChange,
   showLegend,
   onLegendChange,
-  showPolarMelody,
-  onPolarMelodyChange,
   onLoadJson,
   layoutMode,
   onLayoutModeChange,
@@ -70,12 +66,6 @@ export function AppHeader({
             checked={showLegend}
             onChange={onLegendChange}
             label="Legend"
-          />
-          <PillToggle
-            id="show-polar-melody"
-            checked={showPolarMelody}
-            onChange={onPolarMelodyChange}
-            label="Polar"
           />
         </div>
       </div>
