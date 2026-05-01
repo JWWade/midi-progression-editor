@@ -56,6 +56,11 @@ const SEMITONE_TO_EXTENSION: Readonly<Partial<Record<number, ChordExtension>>> =
   6:  "#11",
 };
 
+export function getExtensionForSemitone(semitones: number): ChordExtension | undefined {
+  const normalized = ((semitones % 12) + 12) % 12;
+  return SEMITONE_TO_EXTENSION[normalized];
+}
+
 /**
  * Computes extension labels for notes in `customNotes` that lie outside the
  * canonical tones of `root + quality`.  Only intervals with a defined
@@ -176,6 +181,13 @@ export function formatChordSymbol(
   const { root, quality, extensions } = resolveChordIdentity(chord);
   const base = getChordName(root, quality, pitchClasses);
   if (extensions && extensions.length > 0) {
+    if (
+      extensions.length === 1
+      && ["9", "11", "13"].includes(extensions[0])
+      && !SEVENTH_CHORD_TYPES.has(quality)
+    ) {
+      return `${base}${extensions[0]}`;
+    }
     return `${base}(${extensions.join(",")})`;
   }
   return base;

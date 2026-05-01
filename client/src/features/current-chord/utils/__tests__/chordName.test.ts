@@ -93,7 +93,7 @@ describe("formatChordSymbol with extensions", () => {
       quality: "major",
       customNotes: [2, 4, 6],
     });
-    expect(symbol).toBe("D(9)");
+    expect(symbol).toBe("D9");
   });
 
   it("formats D-F#-G as D(11) instead of Gmaj7", () => {
@@ -102,7 +102,16 @@ describe("formatChordSymbol with extensions", () => {
       quality: "maj7",
       customNotes: [2, 6, 7],
     });
-    expect(symbol).toBe("D(11)");
+    expect(symbol).toBe("D11");
+  });
+
+  it("formats G-A-B as G9 rather than G(9)", () => {
+    const symbol = formatChordSymbol({
+      root: 7,
+      quality: "major",
+      customNotes: [7, 9, 11],
+    });
+    expect(symbol).toBe("G9");
   });
 
   it("returns plain symbol for exact custom chord with no extensions", () => {
@@ -123,7 +132,7 @@ describe("formatChordName with extensions", () => {
       quality: "major",
       customNotes: [6, 7, 8],
     });
-    expect(name).toBe("F# Suspended 2 (add b9)");
+    expect(name).toBe("F# sus2 (add b9)");
   });
 
   it("formats D-E-F# as D Major with an added 9th", () => {

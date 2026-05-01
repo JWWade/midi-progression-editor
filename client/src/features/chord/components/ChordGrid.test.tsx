@@ -45,4 +45,27 @@ describe("ChordGrid", () => {
     expect(screen.getByRole("grid", { name: "Chord picker" })).not.toBeNull();
     expect(screen.getAllByRole("columnheader").length).toBeGreaterThan(0);
   });
+
+  it("opens picker and highlights a known omitted-tone chord (C7 without fifth)", async () => {
+    renderGrid({
+      value: "C",
+      customChord: {
+        root: 0,
+        quality: "major",
+        customNotes: [0, 4, 10],
+      },
+      "aria-label": "Chord",
+    });
+
+    // The recognized named chord should be shown as a button (not raw-note text).
+    expect(screen.queryByText("C E A#")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Chord" }));
+
+    const picker = screen.getByRole("grid", { name: "Chord picker" });
+    expect(picker).not.toBeNull();
+
+    const c7Cell = screen.getByRole("gridcell", { name: "C7" });
+    expect(c7Cell.getAttribute("aria-selected")).toBe("true");
+  });
 });

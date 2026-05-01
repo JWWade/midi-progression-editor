@@ -6,6 +6,7 @@ import type { ChordType } from "../types";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import { ChordQualityIcon } from "./ChordQualityIcon";
 import { rerootChord } from "../utils/rerootChord";
+import { getChordNoteIndices } from "../utils/transpose";
 
 const QUALITY_LABELS: Record<ChordType, string> = {
   major: "maj",
@@ -77,11 +78,14 @@ export function ChordGrid({ value, onChange, customChord, "aria-label": ariaLabe
       customChord.customNotes,
       customChord.root,
     );
+    const inferredChordToneSet = new Set(getChordNoteIndices(identifiedRoot, identifiedQuality));
+    const normalizedCustom = customChord.customNotes.map((index) => ((index % 12) + 12) % 12);
+    const isSubsetOfInferredNamedChord = normalizedCustom.every((index) => inferredChordToneSet.has(index));
 
-    // Exact match: the custom notes resolve to a named chord — show the
-    // chord name as the normal clickable dropdown trigger so the user can
-    // still explore the picker, then reset to clear the custom state.
-    if (matchScore === 1) {
+    // Exact or omitted-tone match: the custom notes resolve cleanly to a named
+    // chord with no out-of-chord notes — show the normal clickable dropdown
+    // trigger so the user can still explore the picker.
+    if (matchScore === 1 || isSubsetOfInferredNamedChord) {
       const exactName = getChordName(identifiedRoot, identifiedQuality, pitchClasses);
       const exactData = CHORD_NAME_TO_DATA[exactName];
       const exactColor = exactData ? ChordQualityColors[exactData.type] : null;

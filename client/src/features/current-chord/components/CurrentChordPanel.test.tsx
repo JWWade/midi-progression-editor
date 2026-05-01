@@ -77,6 +77,21 @@ describe("CurrentChordPanel", () => {
     expect(intervalRow.textContent).toContain("m7");
   });
 
+  it("renders recognized 9th extensions after core chord tones in the interval row", () => {
+    const chord: Chord = { root: 7, quality: "major", customNotes: [7, 9, 11] };
+
+    renderPanel(chord);
+
+    expect(screen.getByText("G9")).not.toBeNull();
+    const intervalRow = screen.getByLabelText("Chord intervals");
+    const text = intervalRow.textContent ?? "";
+    expect(text).toContain("Root");
+    expect(text).toContain("M3");
+    expect(text).toContain("9");
+    expect(text.indexOf("M3")).toBeLessThan(text.indexOf("9"));
+    expect(text).not.toContain("M2");
+  });
+
   it("does not show interval row when no chord is selected", () => {
     render(
       <ThemeProvider>
