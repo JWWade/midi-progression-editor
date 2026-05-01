@@ -71,7 +71,7 @@ interface ChromaticCircleProps {
    *   vertically — matches the traditional compact layout used in Inspect and
    *   Compose modes.
    * - `'side'`: controls appear to the right of the circle in a flex row,
-   *   making full use of the wider viewport available in Explore mode.  On
+   *   making full use of wider viewports when a side-by-side layout is desired. On
    *   narrow screens (≤ 900 px) the layout automatically reverts to stacked.
    */
   controlsLayout?: 'below' | 'side';
@@ -656,7 +656,7 @@ export function ChromaticCircle({
       )}
       </div>{/* end circleColumn / inner wrapper */}
 
-      {/* Controls beside the circle (side layout — Explore mode) */}
+      {/* Controls beside the circle (side layout) */}
       {isHorizontal && (
         <div className={styles.controlsColumn}>
           <CircleControls

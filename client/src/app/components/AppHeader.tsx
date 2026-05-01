@@ -17,7 +17,6 @@ interface AppHeaderProps {
 }
 
 const LAYOUT_MODES: { mode: LayoutMode; label: string }[] = [
-  { mode: 'focus', label: 'Explore' },
   { mode: 'inspect', label: 'Inspect' },
   { mode: 'compose', label: 'Compose' },
 ];

@@ -106,7 +106,7 @@
   outline-offset: 2px;
 }
 
-/* ── Layout Mode Controls (Explore / Inspect / Compose segmented toggle) ──── */
+/* ── Layout Mode Controls (Inspect / Compose segmented toggle) ───────────── */
 .layoutModeControls {
   display: flex;
   align-items: center;

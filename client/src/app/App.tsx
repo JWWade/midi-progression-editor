@@ -27,7 +27,7 @@ import { getRandomBpmInRange } from '../features/midi-export/utils/bpmTempoLabel
 import styles from './App.module.css';
 
 export default function App() {
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>('focus');
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('inspect');
   const [startupSelection] = useState(() => selectRandomDiatonicStartupChord());
   const [currentChord, setCurrentChord] = useState<Chord | null>(startupSelection.chord);
   const [keyRoot, setKeyRoot] = useState<number>(0);
@@ -110,10 +110,6 @@ export default function App() {
   const handleCurrentChordChange = useCallback((chord: Chord) => {
     setCurrentChord(chord);
     fireEvent('chordSelected');
-    // Auto-advance: focus → inspect when the user selects a chord.
-    // This callback is only invoked on user interaction (never on mount),
-    // so no guard ref is needed.
-    setLayoutMode((prev) => prev === 'focus' ? 'inspect' : prev);
   }, [fireEvent]);
 
   /**
@@ -237,33 +233,31 @@ export default function App() {
             showCentroid={showCentroid}
             showIntervals={showIntervals}
             loadChord={sendBackChord}
-            controlsLayout={layoutMode === 'focus' ? 'side' : 'below'}
+            controlsLayout="below"
           />
           {showLegend && <VisualLegend />}
         </section>
 
-        {/* Current Chord Panel - Center (hidden in focus mode) */}
-        {layoutMode !== 'focus' && (
-          <section
-            id="current-chord"
-            className={styles.panelArea}
-            role="region"
-            aria-label="Current Chord - Add to progression"
-          >
-            <CurrentChordPanel
-              chord={currentChord}
-              onAddChord={handleAddChord}
-              diatonicIndices={diatonicIndices}
-              isProgressionFull={isProgressionFull}
-              progressionLength={chords.length}
-              maxProgressionLength={MAX_PROGRESSION_LENGTH}
-              audioParams={audioParams}
-              keyRoot={keyRoot}
-              keyScale={keyScale}
-              onSetKeyContext={setKeyContext}
-            />
-          </section>
-        )}
+        {/* Current Chord Panel - Center */}
+        <section
+          id="current-chord"
+          className={styles.panelArea}
+          role="region"
+          aria-label="Current Chord - Add to progression"
+        >
+          <CurrentChordPanel
+            chord={currentChord}
+            onAddChord={handleAddChord}
+            diatonicIndices={diatonicIndices}
+            isProgressionFull={isProgressionFull}
+            progressionLength={chords.length}
+            maxProgressionLength={MAX_PROGRESSION_LENGTH}
+            audioParams={audioParams}
+            keyRoot={keyRoot}
+            keyScale={keyScale}
+            onSetKeyContext={setKeyContext}
+          />
+        </section>
 
         {/* Progression Sidebar - Right (compose mode only) */}
         {layoutMode === 'compose' && (

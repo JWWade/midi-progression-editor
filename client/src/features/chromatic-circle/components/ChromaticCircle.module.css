@@ -34,7 +34,7 @@
   }
 }
 
-/* ── Horizontal (side-by-side) layout — used in Explore mode ────────────── */
+/* ── Horizontal (side-by-side) layout for optional side controls ─────────── */
 
 /* Outer flex row: circle on the left, controls panel on the right */
 .horizontalLayout {

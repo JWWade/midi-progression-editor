@@ -1,1 +1,1 @@
-export type LayoutMode = 'focus' | 'inspect' | 'compose';
+export type LayoutMode = 'inspect' | 'compose';
