@@ -71,8 +71,7 @@ jobs:
           args: >-
             --verbose
             --no-progress
-            --exclude-mail
-            --exclude "^https://localhost"
+             --exclude "^https://localhost"
             --exclude "^http://localhost"
             '**/*.md'
           fail: true

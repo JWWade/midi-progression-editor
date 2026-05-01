@@ -114,65 +114,15 @@
   line-height: 1.3;
 }
 
-/* ── Cardinality Stack ────────────────────────────────────────────────────── */
-.cardinalityRow {
-  display: flex;
-  gap: 16px;
-}
-
-.cardinalityItem {
-  display: flex;
+/* ── Polygon section ─────────────────────────────────────────────────────── */
+.polygonGrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 6px;
+  gap: 6px 10px;
 }
 
-.cardinalityLabel {
-  font-size: 11.5px;
-  color: var(--color-text-primary);
-}
-
-/* ── Visual Keys (centroid + interval icons) ──────────────────────────────── */
-.iconRow {
-  display: flex;
-  gap: 20px;
-}
-
-.iconItem {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.iconLabel {
-  font-size: 11.5px;
-  color: var(--color-text-primary);
-}
-
-/* ── Color Intensity list ─────────────────────────────────────────────────── */
-.intensityList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.intensityItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.intensitySwatch {
-  display: inline-block;
-  width: 28px;
-  height: 10px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.intensityLabel {
+.polygonLabel {
   font-size: 11.5px;
   color: var(--color-text-primary);
 }

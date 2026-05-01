@@ -64,10 +64,21 @@ function BandGlyph({ type }: { type: ChordType }) {
   );
 }
 
-/** A neutral-gray regular polygon with `sides` sides — for the cardinality stack. */
-function CardinalityShape({ sides, size = 22 }: { sides: number; size?: number }) {
+/**
+ * A standalone polygon glyph showing shape (triangle = triad, quad = seventh)
+ * and outline style (solid = triad, dashed = seventh chord).
+ */
+function PolygonGlyph({
+  sides,
+  dashed,
+  size = 26,
+}: {
+  sides: 3 | 4;
+  dashed: boolean;
+  size?: number;
+}) {
   const center = size / 2;
-  const r = (size - 4) / 2;
+  const r = (size - 5) / 2;
   const pts = Array.from({ length: sides }, (_, i) => {
     const angle = -Math.PI / 2 + (i / sides) * 2 * Math.PI;
     return `${(center + r * Math.cos(angle)).toFixed(2)},${(center + r * Math.sin(angle)).toFixed(2)}`;
@@ -78,70 +89,10 @@ function CardinalityShape({ sides, size = 22 }: { sides: number; size?: number }
         points={pts}
         fill="none"
         stroke="var(--color-text-secondary)"
-        strokeWidth="1.5"
+        strokeWidth="1.8"
         strokeLinejoin="round"
+        strokeDasharray={dashed ? "4,3" : undefined}
       />
-    </svg>
-  );
-}
-
-/** A triangle with a centroid dot — visual key for the centroid toggle. */
-function CentroidIcon({ size = 22 }: { size?: number }) {
-  const c = size / 2;
-  const r = (size - 4) / 2;
-  // Major-like pitch classes: 0, 4, 7
-  const verts = [0, 4, 7].map((pc) => {
-    const a = (pc / 12) * 2 * Math.PI - Math.PI / 2;
-    return { x: c + r * Math.cos(a), y: c + r * Math.sin(a) };
-  });
-  const cx = verts.reduce((s, v) => s + v.x, 0) / verts.length;
-  const cy = verts.reduce((s, v) => s + v.y, 0) / verts.length;
-  const poly = verts.map((v) => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(" ");
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-      <polygon
-        points={poly}
-        fill="none"
-        stroke="var(--color-text-secondary)"
-        strokeWidth="1.5"
-      />
-      <circle cx={cx.toFixed(2)} cy={cy.toFixed(2)} r="2.5" fill="var(--color-text-primary)" />
-    </svg>
-  );
-}
-
-/** A triangle with dashed spokes from each vertex to the centroid — visual key for the intervals toggle. */
-function IntervalIcon({ size = 22 }: { size?: number }) {
-  const c = size / 2;
-  const r = (size - 4) / 2;
-  const verts = [0, 4, 7].map((pc) => {
-    const a = (pc / 12) * 2 * Math.PI - Math.PI / 2;
-    return { x: c + r * Math.cos(a), y: c + r * Math.sin(a) };
-  });
-  const cx = verts.reduce((s, v) => s + v.x, 0) / verts.length;
-  const cy = verts.reduce((s, v) => s + v.y, 0) / verts.length;
-  const poly = verts.map((v) => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(" ");
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-      <polygon
-        points={poly}
-        fill="none"
-        stroke="var(--color-text-secondary)"
-        strokeWidth="1.5"
-      />
-      {verts.map((v, i) => (
-        <line
-          key={i}
-          x1={v.x.toFixed(2)}
-          y1={v.y.toFixed(2)}
-          x2={cx.toFixed(2)}
-          y2={cy.toFixed(2)}
-          stroke="var(--color-text-secondary)"
-          strokeWidth="1"
-          strokeDasharray="2,1.5"
-          opacity="0.7"
-        />
-      ))}
     </svg>
   );
 }
@@ -183,13 +134,10 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
  * A compact panel explaining the visual language of the chromatic-circle editor.
  *
  * Layout:
- *   1. Quality Spectrum  — vertical ribbon of colored bands with micro-polygon
- *      glyphs, displayed side-by-side with:
+ *   1. Quality Spectrum  — vertical ribbon of colored bands with micro-polygon glyphs
  *   2. Opacity Gradient  — translucency strip encoding diatonic / chromatic context
- *   3. Cardinality Stack — neutral-gray shapes keyed to tone count
- *   4. Visual Keys       — centroid-dot and interval-spoke icons
- *   5. Color Intensity   — base / deeper / richest shades for harmonic complexity
- *   6. Node Fill         — chord-tone vs. non-chord-tone node appearance
+ *   3. Polygon           — shape (triangle/quad) and outline (solid/dashed)
+ *   4. Node Fill         — chord-tone vs. non-chord-tone node appearance
  */
 export function VisualLegend() {
   // Build CSS gradient string for the opacity bar using the minor-blue quality color.
@@ -272,73 +220,18 @@ export function VisualLegend() {
       </div>{/* end topRow */}
 
       {/* ── 3. Cardinality Stack — shape encodes tone count ───────────────── */}
+      {/* ── 3. Polygon — shape encodes tone count, outline encodes family ─── */}
       <section className={styles.section}>
-        <SectionHeading>Shape — Number of Tones</SectionHeading>
-        <div className={styles.cardinalityRow}>
-          <div className={styles.cardinalityItem}>
-            <CardinalityShape sides={3} />
-            <span className={styles.cardinalityLabel}>3 tones — triad</span>
-          </div>
-          <div className={styles.cardinalityItem}>
-            <CardinalityShape sides={4} />
-            <span className={styles.cardinalityLabel}>4 tones — seventh</span>
-          </div>
+        <SectionHeading>Polygon</SectionHeading>
+        <div className={styles.polygonGrid}>
+          <PolygonGlyph sides={3} dashed={false} />
+          <span className={styles.polygonLabel}>Triangle · solid — triad</span>
+          <PolygonGlyph sides={4} dashed={true} />
+          <span className={styles.polygonLabel}>Quad · dashed — seventh</span>
         </div>
       </section>
 
-      {/* ── 4. Visual Keys — centroid and interval toggle icons ──────────── */}
-      <section className={styles.section}>
-        <SectionHeading>Visual Keys</SectionHeading>
-        <div className={styles.iconRow}>
-          <div className={styles.iconItem}>
-            <CentroidIcon />
-            <span className={styles.iconLabel}>Centroid</span>
-          </div>
-          <div className={styles.iconItem}>
-            <IntervalIcon />
-            <span className={styles.iconLabel}>Intervals</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5. Color Intensity — Harmonic Complexity ─────────────────────── */}
-      <section className={styles.section}>
-        <SectionHeading>Color Intensity — Complexity</SectionHeading>
-        <ul className={styles.intensityList} role="list">
-          <li className={styles.intensityItem}>
-            <span
-              className={styles.intensitySwatch}
-              style={{ background: ChordQualityColors.minor.base }}
-              aria-hidden="true"
-            />
-            <span className={styles.intensityLabel}>
-              <strong>Base</strong> — Triad
-            </span>
-          </li>
-          <li className={styles.intensityItem}>
-            <span
-              className={styles.intensitySwatch}
-              style={{ background: ChordQualityColors.minor.deeper }}
-              aria-hidden="true"
-            />
-            <span className={styles.intensityLabel}>
-              <strong>Deeper</strong> — Seventh
-            </span>
-          </li>
-          <li className={styles.intensityItem}>
-            <span
-              className={styles.intensitySwatch}
-              style={{ background: ChordQualityColors.minor.richest }}
-              aria-hidden="true"
-            />
-            <span className={styles.intensityLabel}>
-              <strong>Richest</strong> — Extended (9/11/13)
-            </span>
-          </li>
-        </ul>
-      </section>
-
-      {/* ── 6. Note Node Fill — Chord Tone vs. Non-Chord Tone ─────────────── */}
+      {/* ── 4. Note Node Fill — Chord Tone vs. Non-Chord Tone ─────────────── */}
       <section className={styles.section}>
         <SectionHeading>Node Fill — Chord Tone</SectionHeading>
         <ul className={styles.nodeList} role="list">
