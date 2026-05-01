@@ -68,4 +68,25 @@ describe("ChordGrid", () => {
     const c7Cell = screen.getByRole("gridcell", { name: "C7" });
     expect(c7Cell.getAttribute("aria-selected")).toBe("true");
   });
+
+  it("keeps the picker available when custom notes are not a named chord", async () => {
+    renderGrid({
+      value: "C",
+      customChord: {
+        root: 5,
+        quality: "major",
+        customNotes: [5, 8, 9],
+      },
+      "aria-label": "Chord",
+    });
+
+    expect(screen.getByRole("button", { name: "Chord" })).not.toBeNull();
+    expect(screen.getByText("F G# A")).not.toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Chord" }));
+
+    const picker = screen.getByRole("grid", { name: "Chord picker" });
+    expect(picker).not.toBeNull();
+    expect(screen.getByRole("gridcell", { name: "C" })).not.toBeNull();
+  });
 });
