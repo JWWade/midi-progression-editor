@@ -63,6 +63,18 @@ interface ChromaticCircleProps {
    * so spread a new object (`{ ...chord }`) to re-send the same chord.
    */
   loadChord?: Chord | null;
+  /**
+   * Controls how the CircleControls panel (Transform, Templates, chord
+   * selector) is positioned relative to the SVG circle.
+   *
+   * - `'below'` (default): controls appear below the circle, stacked
+   *   vertically — matches the traditional compact layout used in Inspect and
+   *   Compose modes.
+   * - `'side'`: controls appear to the right of the circle in a flex row,
+   *   making full use of the wider viewport available in Explore mode.  On
+   *   narrow screens (≤ 900 px) the layout automatically reverts to stacked.
+   */
+  controlsLayout?: 'below' | 'side';
 }
 
 /**
@@ -88,6 +100,7 @@ export function ChromaticCircle({
   isPlaybackActive = false,
   playingPitchClass = null,
   loadChord,
+  controlsLayout = 'below',
 }: ChromaticCircleProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
@@ -396,13 +409,22 @@ export function ChromaticCircle({
       ? null
       : ((playingPitchClass % 12) + 12) % 12;
 
+  const isHorizontal = controlsLayout === 'side';
+
   return (
-    <div style={{ position: "relative", maxWidth: "100%", width: "100%" }}>
+    <div
+      className={isHorizontal ? styles.horizontalLayout : undefined}
+      style={isHorizontal ? undefined : { position: "relative", maxWidth: "100%", width: "100%" }}
+    >
+      {/* Circle SVG + live regions + tone panel (left column in side mode) */}
+      <div
+        className={isHorizontal ? styles.circleColumn : undefined}
+        style={{ position: "relative" }}
+      >
       <div
         style={{
           width: "100%",
-          maxWidth: 550,
-          margin: "0 auto",
+          ...(!isHorizontal && { maxWidth: 550, margin: "0 auto" }),
           padding: `0 ${CIRCLE_PADDING}px`,
           boxSizing: "border-box",
         }}
@@ -416,7 +438,7 @@ export function ChromaticCircle({
           style={{
             display: "block",
             width: "100%",
-            maxHeight: 550,
+            maxHeight: isHorizontal ? 660 : 550,
             cursor: "default",
             userSelect: "none",
             WebkitUserSelect: "none",
@@ -618,17 +640,38 @@ export function ChromaticCircle({
 
       <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
 
-      <CircleControls
-        onRotate={handleRotateChord}
-        onMirrorWithAxis={handleMirrorWithAxis}
-        onMutate={handleMutateChord}
-        onSelectShape={handleSelectPrimitiveShape}
-        onRandomChord={handleRandomChord}
-        selectedChordName={selectedChordName}
-        onChordChange={handleChordChange}
-        customFromChord={customFromChord}
-        diatonicRoots={keyDiatonicRoots}
-      />
+      {/* Controls below the circle (default layout) */}
+      {!isHorizontal && (
+        <CircleControls
+          onRotate={handleRotateChord}
+          onMirrorWithAxis={handleMirrorWithAxis}
+          onMutate={handleMutateChord}
+          onSelectShape={handleSelectPrimitiveShape}
+          onRandomChord={handleRandomChord}
+          selectedChordName={selectedChordName}
+          onChordChange={handleChordChange}
+          customFromChord={customFromChord}
+          diatonicRoots={keyDiatonicRoots}
+        />
+      )}
+      </div>{/* end circleColumn / inner wrapper */}
+
+      {/* Controls beside the circle (side layout — Explore mode) */}
+      {isHorizontal && (
+        <div className={styles.controlsColumn}>
+          <CircleControls
+            onRotate={handleRotateChord}
+            onMirrorWithAxis={handleMirrorWithAxis}
+            onMutate={handleMutateChord}
+            onSelectShape={handleSelectPrimitiveShape}
+            onRandomChord={handleRandomChord}
+            selectedChordName={selectedChordName}
+            onChordChange={handleChordChange}
+            customFromChord={customFromChord}
+            diatonicRoots={keyDiatonicRoots}
+          />
+        </div>
+      )}
     </div>
   );
 }

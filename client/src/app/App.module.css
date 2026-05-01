@@ -116,7 +116,6 @@
 /* ── Layout mode variants ───────────────────────────────────────────────── */
 .layout_focus {
   grid-template-columns: 1fr;
-  justify-items: center;
 }
 
 .layout_inspect {
