@@ -33,3 +33,50 @@
     filter: brightness(1.2);
   }
 }
+
+/* ── Horizontal (side-by-side) layout — used in Explore mode ────────────── */
+
+/* Outer flex row: circle on the left, controls panel on the right */
+.horizontalLayout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+  position: relative;
+}
+
+/* Left column: grows to fill available space, capped so the circle stays
+   comfortably circular rather than spanning the full viewport. */
+.circleColumn {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 700px;
+  position: relative;
+}
+
+/* Right column: controls panel sits beside the circle, width determined by
+   its own content. */
+.controlsColumn {
+  flex: 0 0 auto;
+  /* Align the top of the controls with the SVG, not the container edge. */
+  padding-top: 8px;
+}
+
+/* On narrow screens, revert to the standard stacked (below) layout so the
+   circle and controls each get adequate horizontal room. */
+@media (max-width: 900px) {
+  .horizontalLayout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .circleColumn {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .controlsColumn {
+    padding-top: 0;
+  }
+}

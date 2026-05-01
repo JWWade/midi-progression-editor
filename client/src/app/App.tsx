@@ -237,6 +237,7 @@ export default function App() {
             showCentroid={showCentroid}
             showIntervals={showIntervals}
             loadChord={sendBackChord}
+            controlsLayout={layoutMode === 'focus' ? 'side' : 'below'}
           />
           {showLegend && <VisualLegend />}
         </section>
