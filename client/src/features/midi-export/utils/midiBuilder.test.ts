@@ -614,7 +614,7 @@ describe("buildMidiFile", () => {
     });
 
     it("preserves 9th extension register in a C9-like custom chord", () => {
-      const c9Like = { root: 0, quality: 'major', customNotes: [0, 4, 7, 2] } as const;
+      const c9Like: Chord = { root: 0, quality: 'major', customNotes: [0, 4, 7, 2] };
       const result = buildMidiFile([c9Like], {
         voiceLeadingStyle: 'close',
         startOctave: 4,
@@ -647,7 +647,7 @@ describe("buildMidiFile", () => {
     });
 
     it("allows folded extension pitch when extension register policy is relaxed", () => {
-      const c9Like = { root: 0, quality: 'major', customNotes: [0, 4, 7, 2] } as const;
+      const c9Like: Chord = { root: 0, quality: 'major', customNotes: [0, 4, 7, 2] };
       const result = buildMidiFile([C_MAJOR, c9Like], {
         voiceLeadingStyle: 'minimal',
         extensionRegisterPolicy: 'relaxed',
