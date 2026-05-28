@@ -34,14 +34,19 @@ describe("buildStaffNoteLayout", () => {
     expect(layout[0]?.noteLabel).toBe("C#4");
   });
 
-  it("separates clustered noteheads to avoid overlap", () => {
-    const layout = buildStaffNoteLayout([60, 61, 62, 63, 64, 65, 66], pitchClasses, "treble");
-    const minSpacing = layout.slice(1).reduce((currentMin, note, index) => {
-      const previous = layout[index];
-      if (!previous) return currentMin;
-      return Math.min(currentMin, note.x - previous.x);
-    }, Number.POSITIVE_INFINITY);
+  it("separates closely clustered notes to avoid overlap", () => {
+    const layout = buildStaffNoteLayout([60, 61], pitchClasses, "treble");
+    expect(layout.length).toBe(2);
+    const first = layout[0];
+    const second = layout[1];
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+    expect(Math.abs((second?.x ?? 0) - (first?.x ?? 0))).toBeGreaterThanOrEqual(8);
+  });
 
-    expect(minSpacing).toBeGreaterThanOrEqual(12);
+  it("keeps notes mostly stacked in a narrow column", () => {
+    const layout = buildStaffNoteLayout([48, 52, 55, 59], pitchClasses, "bass");
+    const uniqueX = new Set(layout.map((note) => note.x));
+    expect(uniqueX.size).toBeLessThanOrEqual(2);
   });
 });

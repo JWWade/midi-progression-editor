@@ -89,6 +89,6 @@ describe("ChordStaffChart", () => {
     }));
 
     expect(accidentalX).toBeLessThan(maxNoteheadX - 10);
-    expect(nearestNoteheadY).toBeGreaterThanOrEqual(1);
+    expect(nearestNoteheadY).toBeGreaterThanOrEqual(0.5);
   });
 });

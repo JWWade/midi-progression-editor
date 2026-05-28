@@ -29,11 +29,11 @@ const STAFF_BOTTOM_LINE_REFERENCE: Readonly<Record<StaffClef, { letter: string; 
 };
 
 const CHART_WIDTH = 176;
-const CHART_LEFT_PADDING = 38;
 const CHART_RIGHT_PADDING = 14;
 const STAFF_BOTTOM_LINE_Y = 54;
 const STAFF_STEP_PX = 5;
 const MIN_NOTEHEAD_SEPARATION_PX = 12;
+const STACK_COLUMN_X = 116;
 
 function toPitchClass(midi: number): number {
   return ((midi % 12) + 12) % 12;
@@ -110,19 +110,15 @@ export function buildStaffNoteLayout(
 
   const sortedVoicing = [...voicedMidiNotes].sort((a, b) => a - b);
   const width = CHART_WIDTH;
-  const leftPadding = CHART_LEFT_PADDING;
   const rightPadding = CHART_RIGHT_PADDING;
   const bottomLineY = STAFF_BOTTOM_LINE_Y;
   const stepPx = STAFF_STEP_PX;
-  const xStride = sortedVoicing.length === 1
-    ? 0
-    : (width - leftPadding - rightPadding) / (sortedVoicing.length - 1);
 
   const bottomReference = STAFF_BOTTOM_LINE_REFERENCE[clef];
   const bottomReferenceDiatonic = toDiatonicNumber(bottomReference.letter, bottomReference.octave);
   const yForStep = (stepFromBottomLine: number) => bottomLineY - (stepFromBottomLine * stepPx);
 
-  const layout = sortedVoicing.map((midi, index) => {
+    const layout = sortedVoicing.map((midi) => {
     const pitchClass = toPitchClass(midi);
     const noteName = toNoteName(pitchClass, pitchClasses, accidentalPreference);
     const { letter, accidental } = parseLetterAndAccidental(noteName);
@@ -134,7 +130,7 @@ export function buildStaffNoteLayout(
     return {
       midi,
       noteLabel: `${noteName}${octave}`,
-      x: leftPadding + (xStride * index),
+      x: STACK_COLUMN_X,
       y,
       accidental,
       ledgerLineYs: getLedgerLineYs(stepFromBottomLine, yForStep),
@@ -161,6 +157,18 @@ export function buildStaffNoteLayout(
         width - rightPadding,
         previous.x + MIN_NOTEHEAD_SEPARATION_PX,
       );
+    }
+
+    // Keep the stack visually centered by nudging unconstrained notes back
+    // toward the target column when they did not need collision offsets.
+    if (current.x > STACK_COLUMN_X && i < layout.length - 1) {
+      const next = layout[i + 1];
+      const nearNext = next
+        ? Math.abs(current.y - next.y) <= STAFF_STEP_PX && Math.abs(current.x - next.x) < MIN_NOTEHEAD_SEPARATION_PX
+        : false;
+      if (!nearNext) {
+        current.x = Math.max(STACK_COLUMN_X, current.x - 4);
+      }
     }
   }
 
