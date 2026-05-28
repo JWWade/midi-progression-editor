@@ -290,6 +290,29 @@
   border-color: #10b981;
 }
 
+/* Retro mode: ensure chord-note chips stay readable against dark panel tint. */
+[data-theme="retro"] .noteNames {
+  color: #d7f8ff;
+  text-shadow: none;
+}
+
+[data-theme="retro"] .noteNames span {
+  background-color: #00134d;
+  border-color: #6fe4ff;
+  color: #ffffff;
+}
+
+[data-theme="retro"] .copyIconButton {
+  color: #ffffff;
+  border-color: #6fe4ff;
+  background-color: #00134d;
+}
+
+[data-theme="retro"] .copyIconButton:hover:not(:disabled) {
+  background-color: #6fe4ff;
+  color: #00143f;
+}
+
 /* ── Play button ────────────────────────────────────────────────────────── */
 .playButton {
   display: inline-flex;

@@ -13,6 +13,16 @@
   pointer-events: none;
 }
 
+/* Boost note-label legibility over bright gradient chord-tone fills in retro mode. */
+[data-theme="retro"] .chromaticSvg g[role="button"] text {
+  fill: #ffffff !important;
+  font-weight: 800;
+  paint-order: stroke;
+  stroke: #000a2b;
+  stroke-width: 2.2px;
+  stroke-linejoin: round;
+}
+
 /* Focus ring for interactive note nodes inside the SVG */
 .chromaticSvg g[role="button"]:focus-visible {
   outline: 3px solid var(--color-text-primary, #1f2937);
