@@ -307,6 +307,7 @@ export default function App() {
               playingPitchClass={playingPitchClass}
               onToggleArpeggio={toggleArpeggio}
               onSetArpeggioPattern={setArpeggioPattern}
+              voiceLeadingConfig={voiceLeadingConfig}
               onVoiceLeadingConfigChange={setVoiceLeadingConfig}
             />
           </section>

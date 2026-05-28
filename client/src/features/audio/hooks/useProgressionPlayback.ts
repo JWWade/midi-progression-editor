@@ -10,13 +10,8 @@ import { DEFAULT_ARPEGGIO_PATTERN } from "../types/arpeggioPattern";
 import { planLiveArpeggioPlayback } from "../utils/arpeggioUtils";
 import type { ArpeggioHandle } from "../utils/audioUtils";
 import {
-  closeVoiceChord,
-  openVoiceChord,
-  minimalMotionVoicing,
-  buildVoicingTargets,
-  enforceVoicingTargets,
+  computeNextChordVoicing,
 } from "@/features/voice-leading";
-import { chordMatchingFlexible } from "@/features/voice-leading";
 import type { VoiceLeadingConfig } from "@/features/voice-leading";
 
 const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
@@ -28,63 +23,6 @@ const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
 };
 
 type PlaybackNote = ChordNoteInfo & { octave: number };
-
-function flexibleVoicing(
-  prevMidi: number[],
-  nextPitchClasses: number[],
-  strictness: number,
-  motionBias: VoiceLeadingConfig["motionBias"],
-): number[] {
-  if (prevMidi.length === 0) return [];
-
-  const prevPCs = prevMidi.map((m) => ((m % 12) + 12) % 12);
-  const { mapping } = chordMatchingFlexible(prevPCs, nextPitchClasses, { penalty: strictness });
-  const result: (number | undefined)[] = new Array(nextPitchClasses.length);
-
-  for (const { fromIdx, toIdx } of mapping) {
-    const prevNote = prevMidi[Math.min(fromIdx, prevMidi.length - 1)]!;
-    const pc = nextPitchClasses[toIdx]!;
-    const k = Math.round((prevNote - pc) / 12);
-    const base = 12 * k + pc;
-    const candidates = [base - 12, base, base + 12];
-    let best = base;
-    for (const candidate of candidates) {
-      const candDist = Math.abs(candidate - prevNote);
-      const bestDist = Math.abs(best - prevNote);
-      if (candDist < bestDist) {
-        best = candidate;
-      } else if (candDist === bestDist) {
-        if (motionBias === "down" && candidate < best) best = candidate;
-        else if (motionBias === "up" && candidate > best) best = candidate;
-      }
-    }
-    result[toIdx] = best;
-  }
-
-  const lastPrev = prevMidi[prevMidi.length - 1]!;
-  for (let i = 0; i < nextPitchClasses.length; i++) {
-    if (result[i] !== undefined) continue;
-
-    const pc = nextPitchClasses[i]!;
-    const k = Math.round((lastPrev - pc) / 12);
-    const base = 12 * k + pc;
-    const candidates = [base - 12, base, base + 12];
-    let best = base;
-    for (const candidate of candidates) {
-      const candDist = Math.abs(candidate - lastPrev);
-      const bestDist = Math.abs(best - lastPrev);
-      if (candDist < bestDist) {
-        best = candidate;
-      } else if (candDist === bestDist) {
-        if (motionBias === "down" && candidate < best) best = candidate;
-        else if (motionBias === "up" && candidate > best) best = candidate;
-      }
-    }
-    result[i] = best;
-  }
-
-  return result as number[];
-}
 
 export interface UseProgressionPlaybackResult {
   isPlaying: boolean;
@@ -191,28 +129,8 @@ export function useProgressionPlayback(
           if (cancelledRef.current) break;
 
           const chord = chords[i];
-          const targets = buildVoicingTargets(chord);
-          const pitchClassSet = targets.pitchClasses;
           const cfg = voiceLeadingConfigRef.current;
-          const currentVoicing = (() => {
-            if (cfg.style === "close") {
-              return closeVoiceChord(pitchClassSet, cfg.startOctave);
-            }
-            if (cfg.style === "open") {
-              return openVoiceChord(pitchClassSet, cfg.startOctave);
-            }
-            if (cfg.style === "flexible") {
-              return previousVoicing.length === 0
-                ? closeVoiceChord(pitchClassSet, cfg.startOctave)
-                : flexibleVoicing(previousVoicing, pitchClassSet, cfg.strictness, cfg.motionBias);
-            }
-            return previousVoicing.length === 0
-              ? closeVoiceChord(pitchClassSet, cfg.startOctave)
-              : minimalMotionVoicing(previousVoicing, pitchClassSet, cfg.motionBias);
-          })();
-          const constrainedVoicing = enforceVoicingTargets(currentVoicing, targets, {
-            extensionRegisterPolicy: cfg.extensionRegisterPolicy,
-          });
+          const constrainedVoicing = computeNextChordVoicing(chord, previousVoicing, cfg);
 
           const notes: PlaybackNote[] = constrainedVoicing.map((midiNote) => {
             const pitchClass = ((midiNote % 12) + 12) % 12;

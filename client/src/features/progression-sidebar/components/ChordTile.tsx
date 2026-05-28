@@ -10,6 +10,7 @@ import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import { playChord, playArpeggio, stopChord } from "@/features/audio";
 import type { ArpeggioHandle } from "@/features/audio";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { ChordStaffChart } from "./ChordStaffChart";
 import styles from "./ChordTile.module.css";
 
 interface ChordTileProps {
@@ -20,6 +21,8 @@ interface ChordTileProps {
   isNew?: boolean;
   isPlaying?: boolean;
   activeArpeggioPitchClass?: number | null;
+  showStaffChart?: boolean;
+  voicedMidiNotes?: number[] | null;
   isGhost?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -40,7 +43,7 @@ type TilePlayMode = "chord" | "arpeggio" | null;
 // in behaviour per tile even when their reference changes.
 export const ChordTile = memo(
   forwardRef<HTMLLIElement, ChordTileProps>(
-    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, activeArpeggioPitchClass = null, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
+    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, activeArpeggioPitchClass = null, showStaffChart = false, voicedMidiNotes = null, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
@@ -55,6 +58,7 @@ export const ChordTile = memo(
   const activePitchClass = activeArpeggioPitchClass === null
     ? null
     : ((activeArpeggioPitchClass % 12) + 12) % 12;
+  const staffDescriptionId = `chord-staff-description-${index}`;
 
   // ── Inline audio playback state ────────────────────────────────────────
   const [tilePlayMode, setTilePlayMode] = useState<TilePlayMode>(null);
@@ -132,22 +136,32 @@ export const ChordTile = memo(
         />
       </div>
       <div className={styles.chordInfo}>
-        <span className={styles.chordName}>{chordName}</span>
-        <span className={styles.chordNotes}>
-          {noteIndices.map((noteIndex, noteSlotIndex) => {
-            const noteName = pitchClasses[noteIndex];
-            const isActive = activePitchClass === noteIndex;
-            return (
-              <span
-                key={`${noteIndex}-${noteSlotIndex}`}
-                className={`${styles.noteToken}${isActive ? ` ${styles.noteActive}` : ""}`}
-              >
-                {noteName}
-                {noteSlotIndex < noteIndices.length - 1 ? " " : ""}
-              </span>
-            );
-          })}
-        </span>
+        <div className={styles.chordInfoHeader}>
+          <span className={styles.chordName}>{chordName}</span>
+          <span className={styles.chordNotes}>
+            {noteIndices.map((noteIndex, noteSlotIndex) => {
+              const noteName = pitchClasses[noteIndex];
+              const isActive = activePitchClass === noteIndex;
+              return (
+                <span
+                  key={`${noteIndex}-${noteSlotIndex}`}
+                  className={`${styles.noteToken}${isActive ? ` ${styles.noteActive}` : ""}`}
+                >
+                  {noteName}
+                  {noteSlotIndex < noteIndices.length - 1 ? " " : ""}
+                </span>
+              );
+            })}
+          </span>
+        </div>
+        {showStaffChart && !isGhost && (
+          <ChordStaffChart
+            chordName={chordName}
+            voicedMidiNotes={voicedMidiNotes}
+            pitchClasses={pitchClasses}
+            descriptionId={staffDescriptionId}
+          />
+        )}
       </div>
       {!isGhost && (
         <div className={styles.tileActions}>
@@ -221,6 +235,8 @@ export const ChordTile = memo(
     prev.isNew === next.isNew &&
     prev.isPlaying === next.isPlaying &&
     prev.activeArpeggioPitchClass === next.activeArpeggioPitchClass &&
+    prev.showStaffChart === next.showStaffChart &&
+    prev.voicedMidiNotes === next.voicedMidiNotes &&
     prev.isGhost === next.isGhost,
 );
 

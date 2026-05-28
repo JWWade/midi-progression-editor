@@ -1,5 +1,6 @@
 export { closeVoiceChord, minimalMotionVoicing, openVoiceChord } from "./utils/voicing";
 export { buildVoicingTargets, enforceVoicingTargets, hasExtensionRegisterTargets } from "./utils/voicingTargets";
+export { computeNextChordVoicing, buildProgressionVoicings } from "./utils/progressionVoicing";
 export {
   pitchClassDistance,
   chordDistance,

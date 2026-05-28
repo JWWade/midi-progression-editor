@@ -108,6 +108,11 @@ describe("ChordTile — playback buttons", () => {
 describe("ChordTile — existing controls still present", () => {
   afterEach(cleanup);
 
+  it("renders a staff chart when enabled with voiced notes", () => {
+    renderTile(Cmaj, { showStaffChart: true, voicedMidiNotes: [48, 52, 55] });
+    expect(screen.getByRole("img", { name: /staff chart/i })).not.toBeNull();
+  });
+
   it("renders Move up / Move down / Delete buttons", () => {
     renderTile(Cmaj, { isFirst: false, isLast: false });
     expect(screen.getByRole("button", { name: /move chord up/i })).not.toBeNull();
