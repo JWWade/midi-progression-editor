@@ -44,10 +44,10 @@ function getAccidentalPosition(
   const previous = layout[index - 1];
   const next = layout[index + 1];
   const nearPrevious = previous
-    ? Math.abs(note.x - previous.x) <= 16 && Math.abs(note.y - previous.y) <= 6
+    ? Math.abs(note.x - previous.x) <= 16 && Math.abs(note.y - previous.y) <= 7
     : false;
   const nearNext = next
-    ? Math.abs(note.x - next.x) <= 16 && Math.abs(note.y - next.y) <= 6
+    ? Math.abs(note.x - next.x) <= 16 && Math.abs(note.y - next.y) <= 7
     : false;
 
   const horizontalOffset = nearPrevious || nearNext ? 16 : 12;
@@ -88,23 +88,23 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
   const clefShortLabel = model.clef === "treble" ? "T" : "B";
   const descriptionText = `${chordName}, ${clefLabel}, ${describeVoicing(model.layout)}`;
   const ariaLabel = `${chordName} staff chart: ${describeVoicing(model.layout)}`;
-  const staffLines = [14, 24, 34, 44, 54];
+  const staffLines = [16, 28, 40, 52, 64];
 
   return (
     <div className={`${styles.chartWrap} ${density === "comfortable" ? styles.chartComfortable : styles.chartCompact}`}>
       <svg
         className={styles.chart}
-        viewBox="0 0 176 66"
+        viewBox="0 0 156 76"
         role="img"
         aria-label={ariaLabel}
         aria-describedby={descriptionId}
       >
         {staffLines.map((y) => (
-          <line key={`line-${y}`} x1={26} y1={y} x2={170} y2={y} className={styles.staffLine} />
+          <line key={`line-${y}`} x1={24} y1={y} x2={150} y2={y} className={styles.staffLine} />
         ))}
         <g className={styles.clefBadge}>
-          <rect x={3} y={24} width={18} height={14} rx={3} className={styles.clefBadgeBg} />
-          <text x={12} y={34} textAnchor="middle" className={styles.clefLabel}>{clefShortLabel}</text>
+          <rect x={3} y={33} width={17} height={14} rx={3} className={styles.clefBadgeBg} />
+          <text x={11.5} y={43} textAnchor="middle" className={styles.clefLabel}>{clefShortLabel}</text>
         </g>
         {model.layout.map((note, index) => {
           const accidentalPos = note.accidental
