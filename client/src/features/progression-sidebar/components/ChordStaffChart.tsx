@@ -6,6 +6,7 @@ interface ChordStaffChartProps {
   chordName: string;
   voicedMidiNotes: number[] | null;
   pitchClasses: readonly string[];
+  density?: "compact" | "comfortable";
   descriptionId?: string;
 }
 
@@ -34,7 +35,7 @@ function inferAccidentalPreference(chordName: string, pitchClasses: readonly str
   return "auto";
 }
 
-export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, descriptionId }: ChordStaffChartProps) {
+export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, density = "compact", descriptionId }: ChordStaffChartProps) {
   const model = useMemo(() => {
     if (!voicedMidiNotes || voicedMidiNotes.length === 0) return null;
     const clef = pickStaffClef(voicedMidiNotes);
@@ -59,7 +60,7 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, desc
   const staffLines = [14, 24, 34, 44, 54];
 
   return (
-    <div className={styles.chartWrap}>
+    <div className={`${styles.chartWrap} ${density === "comfortable" ? styles.chartComfortable : styles.chartCompact}`}>
       <svg
         className={styles.chart}
         viewBox="0 0 176 66"

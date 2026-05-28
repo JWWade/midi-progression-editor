@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ChordStaffChart } from "../components/ChordStaffChart";
+import styles from "../components/ChordStaffChart.module.css";
 
 const PITCH_CLASSES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
@@ -52,5 +53,19 @@ describe("ChordStaffChart", () => {
     expect(description).not.toBeNull();
     expect(description?.textContent).toContain("Bb3 Db4 F4");
     expect(description?.textContent).not.toContain("C#4");
+  });
+
+  it("applies the comfortable density style when requested", () => {
+    const { container } = render(
+      <ChordStaffChart
+        chordName="Dm"
+        voicedMidiNotes={[50, 53, 57]}
+        pitchClasses={PITCH_CLASSES}
+        density="comfortable"
+      />,
+    );
+
+    const wrap = container.querySelector(`.${styles.chartWrap}`);
+    expect(wrap?.className).toContain(styles.chartComfortable);
   });
 });

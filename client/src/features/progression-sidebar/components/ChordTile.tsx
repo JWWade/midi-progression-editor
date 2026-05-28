@@ -22,6 +22,7 @@ interface ChordTileProps {
   isPlaying?: boolean;
   activeArpeggioPitchClass?: number | null;
   showStaffChart?: boolean;
+  staffChartDensity?: "compact" | "comfortable";
   voicedMidiNotes?: number[] | null;
   isGhost?: boolean;
   onMoveUp?: () => void;
@@ -43,7 +44,7 @@ type TilePlayMode = "chord" | "arpeggio" | null;
 // in behaviour per tile even when their reference changes.
 export const ChordTile = memo(
   forwardRef<HTMLLIElement, ChordTileProps>(
-    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, activeArpeggioPitchClass = null, showStaffChart = false, voicedMidiNotes = null, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
+    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, activeArpeggioPitchClass = null, showStaffChart = false, staffChartDensity = "compact", voicedMidiNotes = null, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
@@ -158,6 +159,7 @@ export const ChordTile = memo(
           <ChordStaffChart
             chordName={chordName}
             voicedMidiNotes={voicedMidiNotes}
+            density={staffChartDensity}
             pitchClasses={pitchClasses}
             descriptionId={staffDescriptionId}
           />
@@ -236,6 +238,7 @@ export const ChordTile = memo(
     prev.isPlaying === next.isPlaying &&
     prev.activeArpeggioPitchClass === next.activeArpeggioPitchClass &&
     prev.showStaffChart === next.showStaffChart &&
+    prev.staffChartDensity === next.staffChartDensity &&
     prev.voicedMidiNotes === next.voicedMidiNotes &&
     prev.isGhost === next.isGhost,
 );

@@ -7,10 +7,22 @@
   background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
 }
 
+.chartCompact {
+  max-height: 72px;
+}
+
+.chartComfortable {
+  padding: 4px 6px;
+}
+
 .chart {
   display: block;
   width: 100%;
   height: 62px;
+}
+
+.chartComfortable .chart {
+  height: 70px;
 }
 
 .srOnly {
