@@ -69,12 +69,13 @@
   fill: color-mix(in srgb, var(--color-text-secondary) 86%, var(--color-text-primary) 14%);
   font-family: "Noto Music", "Bravura", "Segoe UI Symbol", "MusicalSymbols", serif;
   font-weight: 400;
+  opacity: 0.9;
   dominant-baseline: middle;
   text-rendering: geometricPrecision;
 }
 
 .clefSymbolTreble {
-  font-size: 34px;
+  font-size: 32px;
 }
 
 .clefSymbolBass {

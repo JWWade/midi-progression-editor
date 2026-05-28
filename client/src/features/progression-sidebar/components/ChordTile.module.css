@@ -39,7 +39,7 @@
 .chordInfoHeader {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 10px;
   overflow: hidden;
 }
 
