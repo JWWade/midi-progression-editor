@@ -18,22 +18,22 @@ export function useBridgeApply(
   const snapshotRef = useRef<Chord[] | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const clearUndo = useCallback(() => {
-    snapshotRef.current = null;
-    setUndoPending(false);
+  const clearUndoTimer = useCallback(() => {
     if (timerRef.current !== null) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
   }, []);
 
+  const clearUndo = useCallback(() => {
+    snapshotRef.current = null;
+    setUndoPending(false);
+    clearUndoTimer();
+  }, [clearUndoTimer]);
+
   const applyBridge = useCallback(
     (insertAfterIndex: number, bridge: Chord[]) => {
-      // Discard any previous pending undo before starting fresh
-      if (timerRef.current !== null) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
+      clearUndoTimer();
 
       // Snapshot the current chords before the apply
       snapshotRef.current = structuredClone(chords);
@@ -47,12 +47,12 @@ export function useBridgeApply(
 
       // Auto-dismiss after 6 seconds
       timerRef.current = setTimeout(() => {
-        timerRef.current = null;
+        clearUndoTimer();
         snapshotRef.current = null;
         setUndoPending(false);
       }, UNDO_TIMEOUT_MS);
     },
-    [chords, setChords],
+    [chords, clearUndoTimer, setChords],
   );
 
   const undoBridge = useCallback(() => {

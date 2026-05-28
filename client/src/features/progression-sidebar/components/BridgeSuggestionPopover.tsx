@@ -188,6 +188,7 @@ export function BridgeSuggestionPopover({
           const wouldExceedCap =
             progressionLength + suggestion.bridge.length > maxProgressionLength;
           const rowAriaLabel = `${chordNames} — ${label} — score ${suggestion.score.toFixed(2)}`;
+          const isThisPreviewPlaying = previewingBridge === suggestion.bridge;
 
           return (
             <li
@@ -205,21 +206,14 @@ export function BridgeSuggestionPopover({
                 />
               </div>
               <span className={styles.score}>{suggestion.score.toFixed(2)}</span>
-              {(() => {
-                // Reference equality is intentional: startPreview stores the exact
-                // suggestion.bridge reference, so this correctly identifies the active row.
-                const isThisPreviewPlaying = previewingBridge === suggestion.bridge;
-                return (
-                  <button
-                    className={styles.actionButton}
-                    type="button"
-                    aria-label={isThisPreviewPlaying ? "Stop preview" : `Preview bridge: ${chordNames}`}
-                    onClick={() => isThisPreviewPlaying ? onStopPreview() : onPreview(suggestion.bridge)}
-                  >
-                    {isThisPreviewPlaying ? "■" : "▶"}
-                  </button>
-                );
-              })()}
+              <button
+                className={styles.actionButton}
+                type="button"
+                aria-label={isThisPreviewPlaying ? "Stop preview" : `Preview bridge: ${chordNames}`}
+                onClick={() => isThisPreviewPlaying ? onStopPreview() : onPreview(suggestion.bridge)}
+              >
+                {isThisPreviewPlaying ? "■" : "▶"}
+              </button>
               <button
                 className={`${styles.actionButton} ${styles.applyButton}`}
                 type="button"
