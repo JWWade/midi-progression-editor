@@ -41,25 +41,28 @@
 }
 
 .staffLine {
-  stroke: color-mix(in srgb, var(--color-text-muted) 85%, var(--color-text-secondary) 15%);
-  stroke-width: 0.9;
+  stroke: color-mix(in srgb, var(--color-text-muted) 70%, var(--color-text-secondary) 30%);
+  stroke-width: 1.05;
 }
 
 .ledgerLine {
-  stroke: var(--color-text-secondary);
-  stroke-width: 1;
+  stroke: color-mix(in srgb, var(--color-text-secondary) 75%, var(--color-text-primary) 25%);
+  stroke-width: 1.2;
 }
 
 .notehead {
   fill: var(--color-text-primary);
   stroke: color-mix(in srgb, var(--color-bg-sidebar) 60%, transparent);
-  stroke-width: 0.7;
+  stroke-width: 0.85;
 }
 
 .accidental {
   fill: var(--color-text-primary);
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 800;
+  paint-order: stroke;
+  stroke: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
+  stroke-width: 0.55;
 }
 
 .clefLabel {
