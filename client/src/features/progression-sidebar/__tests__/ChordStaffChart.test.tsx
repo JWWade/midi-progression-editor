@@ -80,9 +80,15 @@ describe("ChordStaffChart", () => {
 
     const accidental = screen.getByText("#");
     const accidentalX = Number(accidental.getAttribute("x"));
+    const accidentalY = Number(accidental.getAttribute("y"));
     const noteheads = Array.from(container.querySelectorAll("ellipse"));
     const maxNoteheadX = Math.max(...noteheads.map((node) => Number(node.getAttribute("cx"))));
+    const nearestNoteheadY = Math.min(...noteheads.map((node) => {
+      const cy = Number(node.getAttribute("cy"));
+      return Math.abs(cy - accidentalY);
+    }));
 
     expect(accidentalX).toBeLessThan(maxNoteheadX - 10);
+    expect(nearestNoteheadY).toBeGreaterThanOrEqual(1);
   });
 });

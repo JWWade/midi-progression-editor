@@ -39,6 +39,7 @@ function getAccidentalPosition(
   note: ReturnType<typeof buildStaffNoteLayout>[number],
   index: number,
   layout: ReturnType<typeof buildStaffNoteLayout>,
+  density: "compact" | "comfortable",
 ): { x: number; y: number } {
   const previous = layout[index - 1];
   const next = layout[index + 1];
@@ -52,10 +53,17 @@ function getAccidentalPosition(
   const horizontalOffset = nearPrevious || nearNext ? 16 : 12;
   const verticalOffset = nearPrevious && nearNext ? -2 : (nearPrevious || nearNext ? 1 : 3);
 
+  const compactHorizontalTweak = density === "compact" ? 1 : 0;
+  const compactVerticalTweak = density === "compact" ? -1 : 0;
+
   return {
-    x: note.x - horizontalOffset,
-    y: note.y + verticalOffset,
+    x: note.x - horizontalOffset - compactHorizontalTweak,
+    y: note.y + verticalOffset + compactVerticalTweak,
   };
+}
+
+function getNoteheadRenderY(noteY: number, density: "compact" | "comfortable"): number {
+  return density === "compact" ? noteY + 0.5 : noteY;
 }
 
 export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, density = "compact", descriptionId }: ChordStaffChartProps) {
@@ -100,8 +108,9 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
         </g>
         {model.layout.map((note, index) => {
           const accidentalPos = note.accidental
-            ? getAccidentalPosition(note, index, model.layout)
+            ? getAccidentalPosition(note, index, model.layout, density)
             : null;
+          const noteheadY = getNoteheadRenderY(note.y, density);
           return (
             <g key={`${note.midi}-${note.x}`}>
               {note.ledgerLineYs.map((ledgerY) => (
@@ -117,7 +126,7 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
               {note.accidental && accidentalPos && (
                 <text x={accidentalPos.x} y={accidentalPos.y} className={styles.accidental}>{note.accidental}</text>
               )}
-              <ellipse cx={note.x} cy={note.y} rx={5.6} ry={4.2} className={styles.notehead} />
+              <ellipse cx={note.x} cy={noteheadY} rx={5.6} ry={4.2} className={styles.notehead} />
             </g>
           );
         })}
