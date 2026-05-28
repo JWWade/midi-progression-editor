@@ -408,7 +408,7 @@ export function ProgressionSidebar({
             </button>
             {showStaffCharts && (
               <button
-                className={styles.loopButton}
+                className={`${styles.loopButton} ${styles.densityButton}`}
                 onClick={() => setStaffChartDensity((prev) => (prev === "compact" ? "comfortable" : "compact"))}
                 disabled={chordCount === 0}
                 aria-label={`Set chart density to ${staffChartDensity === "compact" ? "comfortable" : "compact"}`}
