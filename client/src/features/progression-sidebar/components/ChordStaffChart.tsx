@@ -88,13 +88,13 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
   const clefShortLabel = model.clef === "treble" ? "T" : "B";
   const descriptionText = `${chordName}, ${clefLabel}, ${describeVoicing(model.layout)}`;
   const ariaLabel = `${chordName} staff chart: ${describeVoicing(model.layout)}`;
-  const staffLines = [16, 28, 40, 52, 64];
+  const staffLines = [14, 26, 38, 50, 62];
 
   return (
     <div className={`${styles.chartWrap} ${density === "comfortable" ? styles.chartComfortable : styles.chartCompact}`}>
       <svg
         className={styles.chart}
-        viewBox="0 0 156 76"
+        viewBox="0 0 156 84"
         role="img"
         aria-label={ariaLabel}
         aria-describedby={descriptionId}
@@ -103,8 +103,8 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
           <line key={`line-${y}`} x1={24} y1={y} x2={150} y2={y} className={styles.staffLine} />
         ))}
         <g className={styles.clefBadge}>
-          <rect x={3} y={33} width={17} height={14} rx={3} className={styles.clefBadgeBg} />
-          <text x={11.5} y={43} textAnchor="middle" className={styles.clefLabel}>{clefShortLabel}</text>
+          <rect x={3} y={31} width={17} height={14} rx={3} className={styles.clefBadgeBg} />
+          <text x={11.5} y={41} textAnchor="middle" className={styles.clefLabel}>{clefShortLabel}</text>
         </g>
         {model.layout.map((note, index) => {
           const accidentalPos = note.accidental

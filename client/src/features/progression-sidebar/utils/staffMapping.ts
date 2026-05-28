@@ -30,7 +30,7 @@ const STAFF_BOTTOM_LINE_REFERENCE: Readonly<Record<StaffClef, { letter: string; 
 
 const CHART_WIDTH = 156;
 const CHART_RIGHT_PADDING = 12;
-const STAFF_BOTTOM_LINE_Y = 64;
+const STAFF_BOTTOM_LINE_Y = 62;
 const STAFF_STEP_PX = 6;
 const MIN_NOTEHEAD_SEPARATION_PX = 12;
 const STACK_COLUMN_X = 102;
