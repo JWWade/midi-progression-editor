@@ -50,8 +50,8 @@ function getAccidentalPosition(
     ? Math.abs(note.x - next.x) <= 16 && Math.abs(note.y - next.y) <= 7
     : false;
 
-  const horizontalOffset = nearPrevious || nearNext ? 16 : 12;
-  const verticalOffset = nearPrevious && nearNext ? -2 : (nearPrevious || nearNext ? 1 : 3);
+  const horizontalOffset = nearPrevious || nearNext ? 17 : 13;
+  const verticalOffset = nearPrevious && nearNext ? -3 : (nearPrevious ? 0 : (nearNext ? 2 : 2));
 
   const compactHorizontalTweak = density === "compact" ? 1 : 0;
   const compactVerticalTweak = density === "compact" ? -1 : 0;
