@@ -85,7 +85,8 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
   }
 
   const clefLabel = model.clef === "treble" ? "G clef" : "F clef";
-  const clefShortLabel = model.clef === "treble" ? "T" : "B";
+  const clefSymbol = model.clef === "treble" ? "\uD834\uDD1E" : "\uD834\uDD22";
+  const clefSymbolClassName = model.clef === "treble" ? styles.clefSymbolTreble : styles.clefSymbolBass;
   const descriptionText = `${chordName}, ${clefLabel}, ${describeVoicing(model.layout)}`;
   const ariaLabel = `${chordName} staff chart: ${describeVoicing(model.layout)}`;
   const staffLines = [14, 26, 38, 50, 62];
@@ -102,10 +103,15 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
         {staffLines.map((y) => (
           <line key={`line-${y}`} x1={24} y1={y} x2={150} y2={y} className={styles.staffLine} />
         ))}
-        <g className={styles.clefBadge}>
-          <rect x={3} y={31} width={17} height={14} rx={3} className={styles.clefBadgeBg} />
-          <text x={11.5} y={41} textAnchor="middle" className={styles.clefLabel}>{clefShortLabel}</text>
-        </g>
+        <text
+          x={11.5}
+          y={model.clef === "treble" ? 43 : 40}
+          textAnchor="middle"
+          className={`${styles.clefSymbol} ${clefSymbolClassName}`}
+          aria-hidden="true"
+        >
+          {clefSymbol}
+        </text>
         {model.layout.map((note, index) => {
           const accidentalPos = note.accidental
             ? getAccidentalPosition(note, index, model.layout, density)
