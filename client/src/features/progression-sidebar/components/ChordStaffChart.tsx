@@ -54,7 +54,7 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
   }
 
   const clefLabel = model.clef === "treble" ? "G clef" : "F clef";
-  const clefShortLabel = model.clef === "treble" ? "Treble" : "Bass";
+  const clefShortLabel = model.clef === "treble" ? "T" : "B";
   const descriptionText = `${chordName}, ${clefLabel}, ${describeVoicing(model.layout)}`;
   const ariaLabel = `${chordName} staff chart: ${describeVoicing(model.layout)}`;
   const staffLines = [14, 24, 34, 44, 54];
@@ -71,7 +71,10 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
         {staffLines.map((y) => (
           <line key={`line-${y}`} x1={26} y1={y} x2={170} y2={y} className={styles.staffLine} />
         ))}
-        <text x={4} y={31} className={styles.clefLabel}>{clefShortLabel}</text>
+        <g className={styles.clefBadge}>
+          <rect x={3} y={24} width={18} height={14} rx={3} className={styles.clefBadgeBg} />
+          <text x={12} y={34} textAnchor="middle" className={styles.clefLabel}>{clefShortLabel}</text>
+        </g>
         {model.layout.map((note) => (
           <g key={`${note.midi}-${note.x}`}>
             {note.ledgerLineYs.map((ledgerY) => (

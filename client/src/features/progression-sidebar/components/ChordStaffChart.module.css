@@ -60,11 +60,17 @@
 }
 
 .clefLabel {
-  fill: var(--color-text-secondary);
-  font-size: 8px;
+  fill: color-mix(in srgb, var(--color-text-secondary) 78%, var(--color-bg-sidebar) 22%);
+  font-size: 7px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
+}
+
+.clefBadgeBg {
+  fill: color-mix(in srgb, var(--color-bg-sidebar) 55%, var(--color-bg-surface) 45%);
+  stroke: color-mix(in srgb, var(--color-border-subtle) 70%, transparent);
+  stroke-width: 0.6;
 }
 
 .errorBadge {
@@ -103,6 +109,11 @@
 
 [data-theme="retro"] .clefLabel {
   fill: #00ffff;
+}
+
+[data-theme="retro"] .clefBadgeBg {
+  fill: rgba(0, 0, 0, 0.45);
+  stroke: rgba(0, 255, 255, 0.35);
 }
 
 [data-theme="retro"] .errorBadge {
