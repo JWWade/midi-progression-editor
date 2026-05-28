@@ -46,11 +46,11 @@ export function useBridgePreview(
     }
   }, []);
 
-  const clearPreviewState = useCallback(() => {
+  function clearPreviewState() {
     setIsPreviewPlaying(false);
     setPreviewBridge(null);
     setPreviewInsertAfterIndex(null);
-  }, []);
+  }
 
   const clearPreviewError = useCallback(() => {
     clearErrorTimer();
@@ -75,7 +75,7 @@ export function useBridgePreview(
     clearErrorTimer();
     stopChord();
     clearPreviewState();
-  }, [clearErrorTimer, clearPreviewState]);
+  }, [clearErrorTimer]);
 
   const startPreview = useCallback(
     (source: Chord, bridge: Chord[], target: Chord, insertAfterIndex: number) => {

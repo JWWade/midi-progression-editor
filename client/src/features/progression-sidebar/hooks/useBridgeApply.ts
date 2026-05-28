@@ -18,18 +18,18 @@ export function useBridgeApply(
   const snapshotRef = useRef<Chord[] | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const clearUndoTimer = useCallback(() => {
+  function clearUndoTimer() {
     if (timerRef.current !== null) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-  }, []);
+  }
 
   const clearUndo = useCallback(() => {
     snapshotRef.current = null;
     setUndoPending(false);
     clearUndoTimer();
-  }, [clearUndoTimer]);
+  }, []);
 
   const applyBridge = useCallback(
     (insertAfterIndex: number, bridge: Chord[]) => {
@@ -52,7 +52,7 @@ export function useBridgeApply(
         setUndoPending(false);
       }, UNDO_TIMEOUT_MS);
     },
-    [chords, clearUndoTimer, setChords],
+    [chords, setChords],
   );
 
   const undoBridge = useCallback(() => {
