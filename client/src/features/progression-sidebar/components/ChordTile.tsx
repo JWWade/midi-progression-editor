@@ -118,11 +118,6 @@ function PlaybackControls({ tilePlayMode, onPlayChord, onPlayArpeggio }: Playbac
   );
 }
 
-// Memoize using data-only comparison so that inline callback wrappers created
-// in the parent's render/map loop do not trigger unnecessary re-renders.
-// Only chord identity and boolean display flags drive visual output; the
-// callback props (onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay) are stable
-// in behaviour per tile even when their reference changes.
 export const ChordTile = memo(
   forwardRef<HTMLLIElement, ChordTileProps>(
     function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, activeArpeggioPitchClass = null, showStaffChart = false, staffChartDensity = "compact", voicedMidiNotes = null, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
@@ -279,17 +274,5 @@ export const ChordTile = memo(
     </li>
   );
 }),
-  (prev, next) =>
-    prev.chord === next.chord &&
-    prev.index === next.index &&
-    prev.isFirst === next.isFirst &&
-    prev.isLast === next.isLast &&
-    prev.isNew === next.isNew &&
-    prev.isPlaying === next.isPlaying &&
-    prev.activeArpeggioPitchClass === next.activeArpeggioPitchClass &&
-    prev.showStaffChart === next.showStaffChart &&
-    prev.staffChartDensity === next.staffChartDensity &&
-    prev.voicedMidiNotes === next.voicedMidiNotes &&
-    prev.isGhost === next.isGhost,
 );
 
