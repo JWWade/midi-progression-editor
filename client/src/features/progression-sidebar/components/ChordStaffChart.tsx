@@ -35,6 +35,29 @@ function inferAccidentalPreference(chordName: string, pitchClasses: readonly str
   return "auto";
 }
 
+function getAccidentalPosition(
+  note: ReturnType<typeof buildStaffNoteLayout>[number],
+  index: number,
+  layout: ReturnType<typeof buildStaffNoteLayout>,
+): { x: number; y: number } {
+  const previous = layout[index - 1];
+  const next = layout[index + 1];
+  const nearPrevious = previous
+    ? Math.abs(note.x - previous.x) <= 16 && Math.abs(note.y - previous.y) <= 6
+    : false;
+  const nearNext = next
+    ? Math.abs(note.x - next.x) <= 16 && Math.abs(note.y - next.y) <= 6
+    : false;
+
+  const horizontalOffset = nearPrevious || nearNext ? 16 : 12;
+  const verticalOffset = nearPrevious && nearNext ? -2 : (nearPrevious || nearNext ? 1 : 3);
+
+  return {
+    x: note.x - horizontalOffset,
+    y: note.y + verticalOffset,
+  };
+}
+
 export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, density = "compact", descriptionId }: ChordStaffChartProps) {
   const model = useMemo(() => {
     if (!voicedMidiNotes || voicedMidiNotes.length === 0) return null;
@@ -75,24 +98,29 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
           <rect x={3} y={24} width={18} height={14} rx={3} className={styles.clefBadgeBg} />
           <text x={12} y={34} textAnchor="middle" className={styles.clefLabel}>{clefShortLabel}</text>
         </g>
-        {model.layout.map((note) => (
-          <g key={`${note.midi}-${note.x}`}>
-            {note.ledgerLineYs.map((ledgerY) => (
-              <line
-                key={`${note.midi}-${ledgerY}`}
-                x1={note.x - 8}
-                y1={ledgerY}
-                x2={note.x + 8}
-                y2={ledgerY}
-                className={styles.ledgerLine}
-              />
-            ))}
-            {note.accidental && (
-              <text x={note.x - 12} y={note.y + 3} className={styles.accidental}>{note.accidental}</text>
-            )}
-            <ellipse cx={note.x} cy={note.y} rx={5.6} ry={4.2} className={styles.notehead} />
-          </g>
-        ))}
+        {model.layout.map((note, index) => {
+          const accidentalPos = note.accidental
+            ? getAccidentalPosition(note, index, model.layout)
+            : null;
+          return (
+            <g key={`${note.midi}-${note.x}`}>
+              {note.ledgerLineYs.map((ledgerY) => (
+                <line
+                  key={`${note.midi}-${ledgerY}`}
+                  x1={note.x - 8}
+                  y1={ledgerY}
+                  x2={note.x + 8}
+                  y2={ledgerY}
+                  className={styles.ledgerLine}
+                />
+              ))}
+              {note.accidental && accidentalPos && (
+                <text x={accidentalPos.x} y={accidentalPos.y} className={styles.accidental}>{note.accidental}</text>
+              )}
+              <ellipse cx={note.x} cy={note.y} rx={5.6} ry={4.2} className={styles.notehead} />
+            </g>
+          );
+        })}
       </svg>
       {descriptionId && (
         <p id={descriptionId} className={styles.srOnly}>{descriptionText}</p>

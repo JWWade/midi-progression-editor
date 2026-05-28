@@ -68,4 +68,21 @@ describe("ChordStaffChart", () => {
     const wrap = container.querySelector(`.${styles.chartWrap}`);
     expect(wrap?.className).toContain(styles.chartComfortable);
   });
+
+  it("positions accidental glyphs to the left of noteheads", () => {
+    const { container } = render(
+      <ChordStaffChart
+        chordName="Am6"
+        voicedMidiNotes={[57, 60, 64, 66]}
+        pitchClasses={PITCH_CLASSES}
+      />,
+    );
+
+    const accidental = screen.getByText("#");
+    const accidentalX = Number(accidental.getAttribute("x"));
+    const noteheads = Array.from(container.querySelectorAll("ellipse"));
+    const maxNoteheadX = Math.max(...noteheads.map((node) => Number(node.getAttribute("cx"))));
+
+    expect(accidentalX).toBeLessThan(maxNoteheadX - 10);
+  });
 });
