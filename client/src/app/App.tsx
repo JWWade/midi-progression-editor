@@ -24,7 +24,15 @@ import { KeyContextPanel } from '../features/scale';
 import { AudioDebugPanel } from '../features/audio/components/AudioDebugPanel';
 import { useTutorial } from '../features/tutorial';
 import { getRandomBpmInRange } from '../features/midi-export/utils/bpmTempoLabel';
+import type { VoiceLeadingConfig } from '../features/voice-leading';
 import styles from './App.module.css';
+
+const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
+  style: 'minimal',
+  strictness: 2,
+  motionBias: 'neutral',
+  startOctave: 3,
+};
 
 export default function App() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('inspect');
@@ -35,6 +43,7 @@ export default function App() {
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
   const [bpm, setBpm] = useState(() => getRandomBpmInRange("Adagio", "Presto"));
   const [beatsPerChord, setBeatsPerChord] = useState(4);
+  const [voiceLeadingConfig, setVoiceLeadingConfig] = useState<VoiceLeadingConfig>(DEFAULT_VOICE_LEADING_CONFIG);
   const chordDurationMs = useMemo(() => Math.round((60 / bpm) * beatsPerChord * 1000), [bpm, beatsPerChord]);
 
   // Chord sent back from the progression sidebar to the chromatic circle.
@@ -73,7 +82,7 @@ export default function App() {
     arpeggioPattern,
     toggleArpeggio,
     setArpeggioPattern,
-  } = useProgressionPlayback(chords, audioParams, chordDurationMs);
+  } = useProgressionPlayback(chords, audioParams, chordDurationMs, voiceLeadingConfig);
   const playingChord: Chord | null = playingIndex !== null ? (chords[playingIndex] ?? null) : null;
 
   const {
@@ -297,6 +306,7 @@ export default function App() {
               playingPitchClass={playingPitchClass}
               onToggleArpeggio={toggleArpeggio}
               onSetArpeggioPattern={setArpeggioPattern}
+              onVoiceLeadingConfigChange={setVoiceLeadingConfig}
             />
           </section>
         )}

@@ -14,6 +14,7 @@ import { MidiExportControls } from "@/features/midi-export/components/MidiExport
 import { getChordName } from "@/features/chord/data/chordNames";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import type { ArpeggioPattern } from "@/features/audio";
+import type { VoiceLeadingConfig } from "@/features/voice-leading";
 import styles from "./ProgressionSidebar.module.css";
 
 /** Must match the `tileHighlight` animation duration in ChordTile.module.css */
@@ -55,6 +56,7 @@ interface ProgressionSidebarProps {
   playingPitchClass?: number | null;
   onToggleArpeggio?: () => void;
   onSetArpeggioPattern?: (pattern: ArpeggioPattern) => void;
+  onVoiceLeadingConfigChange?: (config: VoiceLeadingConfig) => void;
 }
 
 // ── Inner component: renders the gap between two chord tiles ─────────────
@@ -166,6 +168,7 @@ export function ProgressionSidebar({
   playingPitchClass = null,
   onToggleArpeggio,
   onSetArpeggioPattern,
+  onVoiceLeadingConfigChange,
 }: ProgressionSidebarProps) {
   const { pitchClasses } = useEnharmonic();
   const isFull = chords.length >= maxLength;
@@ -398,6 +401,7 @@ export function ProgressionSidebar({
         setBpm={onBpmChange}
         beatsPerChord={beatsPerChord}
         setBeatsPerChord={onBeatsPerChordChange}
+        onVoiceLeadingConfigChange={onVoiceLeadingConfigChange}
       />
     </aside>
   );

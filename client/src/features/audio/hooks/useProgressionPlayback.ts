@@ -11,6 +11,22 @@ import type { ArpeggioPattern } from "../types/arpeggioPattern";
 import { DEFAULT_ARPEGGIO_PATTERN } from "../types/arpeggioPattern";
 import { planLiveArpeggioPlayback } from "../utils/arpeggioUtils";
 import type { ArpeggioHandle } from "../utils/audioUtils";
+import {
+  closeVoiceChord,
+  openVoiceChord,
+  minimalMotionVoicing,
+  chordMatchingFlexible,
+} from "@/features/voice-leading";
+import type { VoiceLeadingConfig } from "@/features/voice-leading";
+
+const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
+  style: "minimal",
+  strictness: 2,
+  motionBias: "neutral",
+  startOctave: 3,
+};
+
+type PlaybackNote = ChordNoteInfo & { octave: number };
 
 export interface UseProgressionPlaybackResult {
   isPlaying: boolean;
@@ -32,6 +48,7 @@ export function useProgressionPlayback(
   chords: Chord[],
   audioParams: AudioParams = DEFAULT_AUDIO_PARAMS,
   chordDurationMs: number = 1200,
+  voiceLeadingConfig: VoiceLeadingConfig = DEFAULT_VOICE_LEADING_CONFIG,
 ): UseProgressionPlaybackResult {
   const { pitchClasses } = useEnharmonic();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -69,6 +86,11 @@ export function useProgressionPlayback(
   const arpeggioPatternRef = useRef(arpeggioPattern);
   useEffect(() => { arpeggioPatternRef.current = arpeggioPattern; }, [arpeggioPattern]);
 
+  const voiceLeadingConfigRef = useRef(voiceLeadingConfig);
+  useEffect(() => {
+    voiceLeadingConfigRef.current = voiceLeadingConfig;
+  }, [voiceLeadingConfig]);
+
   const clearArpeggioUiTimers = useCallback(() => {
     for (const timerId of arpeggioUiTimerIdsRef.current) {
       window.clearTimeout(timerId);
@@ -103,13 +125,47 @@ export function useProgressionPlayback(
 
     const run = async () => {
       do {
+        // Reset at loop boundary so each cycle starts from the same anchor
+        // voicing for chord 1, preventing cumulative octave drift.
+        let previousVoicing: number[] = [];
+
         for (let i = 0; i < chords.length; i++) {
           if (cancelledRef.current) break;
 
           const chord = chords[i];
-          const notes: ChordNoteInfo[] = isCustomChord(chord)
+          const pitchClassNotes: ChordNoteInfo[] = isCustomChord(chord)
             ? chord.customNotes.map((idx) => ({ index: idx, name: pitchClasses[idx], role: "root" as const }))
             : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses);
+
+          const pitchClassSet = pitchClassNotes.map((note) => note.index);
+          const cfg = voiceLeadingConfigRef.current;
+          const currentVoicing = (() => {
+            if (cfg.style === "close") {
+              return closeVoiceChord(pitchClassSet, cfg.startOctave);
+            }
+            if (cfg.style === "open") {
+              return openVoiceChord(pitchClassSet, cfg.startOctave);
+            }
+            if (cfg.style === "flexible") {
+              return previousVoicing.length === 0
+                ? closeVoiceChord(pitchClassSet, cfg.startOctave)
+                : chordMatchingFlexible(previousVoicing, pitchClassSet, cfg.strictness, cfg.motionBias);
+            }
+            return previousVoicing.length === 0
+              ? closeVoiceChord(pitchClassSet, cfg.startOctave)
+              : minimalMotionVoicing(previousVoicing, pitchClassSet, cfg.motionBias);
+          })();
+
+          const notes: PlaybackNote[] = currentVoicing.map((midiNote) => {
+            const pitchClass = ((midiNote % 12) + 12) % 12;
+            return {
+              index: pitchClass,
+              octave: Math.floor(midiNote / 12) - 1,
+              name: pitchClasses[pitchClass],
+              role: "root" as const,
+            };
+          });
+          previousVoicing = currentVoicing;
 
           setPlayingIndex(i);
           setPlayingPitchClass(null);

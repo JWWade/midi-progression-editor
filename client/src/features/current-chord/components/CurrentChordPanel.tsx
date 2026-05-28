@@ -261,33 +261,25 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
               </span>
             </div>
           )}
-          <div className={styles.notesRow}>
-            <span
-              className={styles.noteNames}
-              aria-label={`Chord notes: ${noteNames}`}
-            >
-              {intervalRows.map(({ noteName }) => (
-                <span key={noteName}>{noteName}</span>
-              ))}
-            </span>
-            <button
-              className={`${styles.copyIconButton}${copied ? ` ${styles.copyIconButtonCopied}` : ''}`}
-              onClick={handleCopy}
-              disabled={!chord}
-              aria-label="Copy note names to clipboard"
-              title={`Copy notes: ${noteNames}`}
-            >
-              {copied ? '✓' : '⎘'}
-            </button>
-          </div>
           {intervalRows.length > 0 && (
             <div className={styles.intervalsRow} aria-label="Chord intervals">
-              {intervalRows.map(({ noteName, label }, idx) => (
-                <span key={`${idx}-${noteName}`} className={styles.intervalItem}>
-                  <span className={styles.intervalNote}>{noteName}</span>
-                  <span className={styles.intervalLabel}>{label}</span>
-                </span>
-              ))}
+              <div className={styles.intervalsList} aria-label={`Chord notes: ${noteNames}`}>
+                {intervalRows.map(({ noteName, label }, idx) => (
+                  <span key={`${idx}-${noteName}`} className={styles.intervalItem}>
+                    <span className={styles.intervalNote}>{noteName}</span>
+                    <span className={styles.intervalLabel}>{label}</span>
+                  </span>
+                ))}
+              </div>
+              <button
+                className={`${styles.copyIconButton}${copied ? ` ${styles.copyIconButtonCopied}` : ''}`}
+                onClick={handleCopy}
+                disabled={!chord}
+                aria-label="Copy note names to clipboard"
+                title={`Copy notes: ${noteNames}`}
+              >
+                {copied ? '✓' : '⎘'}
+              </button>
             </div>
           )}
           <div

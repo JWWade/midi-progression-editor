@@ -255,7 +255,7 @@ function scheduleNotePlayback(
  * @param options      Standard `PlayOptions`; `duration` is per-note (default 280 ms).
  */
 export function playArpeggio(
-  notes: ReadonlyArray<{ index: number }>,
+  notes: ReadonlyArray<{ index: number; octave?: number }>,
   options: PlayArpeggioOptions = {},
 ): ArpeggioHandle {
   const { duration = 280, octave = 4, audioParams = DEFAULT_AUDIO_PARAMS } = options;
@@ -290,7 +290,7 @@ export function playArpeggio(
         session,
         masterGainNode,
         note.index,
-        octave,
+        note.octave ?? octave,
         now + (startOffsetsMs[index] ?? 0) / 1000,
         (noteDurationsMs[index] ?? duration) / 1000,
         audioParams,
@@ -317,7 +317,7 @@ export function playArpeggio(
 }
 
 export async function playChord(
-  notes: ReadonlyArray<{ index: number }>,
+  notes: ReadonlyArray<{ index: number; octave?: number }>,
   options: PlayOptions = {},
 ): Promise<void> {
   const { duration = 1200, octave = 4, audioParams = DEFAULT_AUDIO_PARAMS } = options;
@@ -342,7 +342,7 @@ export async function playChord(
       session,
       masterGainNode,
       note.index,
-      octave,
+      note.octave ?? octave,
       now,
       durationSec,
       audioParams,
