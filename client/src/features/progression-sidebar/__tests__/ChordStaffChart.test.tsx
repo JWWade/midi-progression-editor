@@ -37,4 +37,20 @@ describe("ChordStaffChart", () => {
     expect(description).not.toBeNull();
     expect(description?.textContent).toContain("Dm, F clef, D3 F3 A3");
   });
+
+  it("prefers flat accidental spelling when chord name uses flats", () => {
+    render(
+      <ChordStaffChart
+        chordName="Bbm"
+        voicedMidiNotes={[58, 61, 65]}
+        pitchClasses={PITCH_CLASSES}
+        descriptionId="bbm-chart-description"
+      />,
+    );
+
+    const description = document.getElementById("bbm-chart-description");
+    expect(description).not.toBeNull();
+    expect(description?.textContent).toContain("Bb3 Db4 F4");
+    expect(description?.textContent).not.toContain("C#4");
+  });
 });

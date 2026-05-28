@@ -1,4 +1,5 @@
 export type StaffClef = "treble" | "bass";
+export type AccidentalPreference = "auto" | "sharp" | "flat";
 
 export interface StaffNoteLayout {
   midi: number;
@@ -10,6 +11,8 @@ export interface StaffNoteLayout {
 }
 
 const FALLBACK_NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const SHARP_NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const FLAT_NOTE_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 const LETTER_TO_DIATONIC_INDEX: Readonly<Record<string, number>> = {
   C: 0,
   D: 1,
@@ -36,7 +39,17 @@ function toPitchClass(midi: number): number {
   return ((midi % 12) + 12) % 12;
 }
 
-function toNoteName(pitchClass: number, pitchClasses: readonly string[]): string {
+function toNoteName(
+  pitchClass: number,
+  pitchClasses: readonly string[],
+  accidentalPreference: AccidentalPreference,
+): string {
+  if (accidentalPreference === "sharp") {
+    return SHARP_NOTE_NAMES[pitchClass] ?? FALLBACK_NOTE_NAMES[pitchClass] ?? "C";
+  }
+  if (accidentalPreference === "flat") {
+    return FLAT_NOTE_NAMES[pitchClass] ?? FALLBACK_NOTE_NAMES[pitchClass] ?? "C";
+  }
   return pitchClasses[pitchClass] ?? FALLBACK_NOTE_NAMES[pitchClass] ?? "C";
 }
 
@@ -89,6 +102,7 @@ export function buildStaffNoteLayout(
   voicedMidiNotes: number[],
   pitchClasses: readonly string[],
   clef: StaffClef,
+  accidentalPreference: AccidentalPreference = "auto",
 ): StaffNoteLayout[] {
   if (voicedMidiNotes.length === 0) {
     return [];
@@ -110,7 +124,7 @@ export function buildStaffNoteLayout(
 
   const layout = sortedVoicing.map((midi, index) => {
     const pitchClass = toPitchClass(midi);
-    const noteName = toNoteName(pitchClass, pitchClasses);
+    const noteName = toNoteName(pitchClass, pitchClasses, accidentalPreference);
     const { letter, accidental } = parseLetterAndAccidental(noteName);
     const octave = Math.floor(midi / 12) - 1;
     const diatonicNumber = toDiatonicNumber(letter, octave);

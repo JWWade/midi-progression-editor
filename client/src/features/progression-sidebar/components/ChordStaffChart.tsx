@@ -13,14 +13,36 @@ function describeVoicing(layout: ReturnType<typeof buildStaffNoteLayout>): strin
   return layout.map((note) => note.noteLabel).join(" ");
 }
 
+function inferAccidentalPreference(chordName: string, pitchClasses: readonly string[]): "auto" | "sharp" | "flat" {
+  if (/[b♭]/.test(chordName)) {
+    return "flat";
+  }
+  if (/[#♯]/.test(chordName)) {
+    return "sharp";
+  }
+
+  const likelyFlatSet = pitchClasses[1]?.includes("b") || pitchClasses[3]?.includes("b");
+  if (likelyFlatSet) {
+    return "flat";
+  }
+
+  const likelySharpSet = pitchClasses[1]?.includes("#") || pitchClasses[3]?.includes("#");
+  if (likelySharpSet) {
+    return "sharp";
+  }
+
+  return "auto";
+}
+
 export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, descriptionId }: ChordStaffChartProps) {
   const model = useMemo(() => {
     if (!voicedMidiNotes || voicedMidiNotes.length === 0) return null;
     const clef = pickStaffClef(voicedMidiNotes);
-    const layout = buildStaffNoteLayout(voicedMidiNotes, pitchClasses, clef);
+    const accidentalPreference = inferAccidentalPreference(chordName, pitchClasses);
+    const layout = buildStaffNoteLayout(voicedMidiNotes, pitchClasses, clef, accidentalPreference);
     if (layout.length === 0) return null;
     return { clef, layout };
-  }, [voicedMidiNotes, pitchClasses]);
+  }, [voicedMidiNotes, pitchClasses, chordName]);
 
   if (!model) {
     return (

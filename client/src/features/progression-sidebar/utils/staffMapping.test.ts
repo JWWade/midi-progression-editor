@@ -24,6 +24,16 @@ describe("buildStaffNoteLayout", () => {
     expect(layout[0]?.ledgerLineYs.length).toBeGreaterThan(0);
   });
 
+  it("spells accidentals as flats when flat preference is requested", () => {
+    const layout = buildStaffNoteLayout([61], pitchClasses, "treble", "flat");
+    expect(layout[0]?.noteLabel).toBe("Db4");
+  });
+
+  it("spells accidentals as sharps when sharp preference is requested", () => {
+    const layout = buildStaffNoteLayout([61], pitchClasses, "treble", "sharp");
+    expect(layout[0]?.noteLabel).toBe("C#4");
+  });
+
   it("separates clustered noteheads to avoid overlap", () => {
     const layout = buildStaffNoteLayout([60, 61, 62, 63, 64, 65, 66], pitchClasses, "treble");
     const minSpacing = layout.slice(1).reduce((currentMin, note, index) => {
