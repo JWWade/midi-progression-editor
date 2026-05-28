@@ -124,35 +124,11 @@
   background-color: color-mix(in srgb, var(--color-accent, #4f46e5) 10%, transparent);
 }
 
-.densityButton {
-  padding: 3px 8px;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: color-mix(in srgb, var(--color-text-secondary) 86%, var(--color-text-muted) 14%);
-  border-color: color-mix(in srgb, var(--color-border-subtle) 78%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 18%, transparent);
-}
-
-.densityButton:hover:not(:disabled) {
-  background-color: color-mix(in srgb, var(--color-tile-bg-hover) 60%, transparent);
-  color: var(--color-text-secondary);
-}
-
-.densityButton:focus-visible {
-  outline-width: 1px;
-}
 
 /* ── Retro: show loop active as sunken / depressed Win95 button ───────── */
 [data-theme="retro"] .loopButtonActive {
   border-color: #808080 #dfdfdf #dfdfdf #808080 !important;
   box-shadow: -1px -1px 0 #ffffff inset, 1px 1px 0 #404040 inset !important;
-}
-
-[data-theme="retro"] .densityButton {
-  border-color: #8c8cb3;
-  color: #d7d7ff;
-  background: rgba(4, 4, 38, 0.55);
 }
 
 /* ── Reset note ──────────────────────────────────────────────────────────── */

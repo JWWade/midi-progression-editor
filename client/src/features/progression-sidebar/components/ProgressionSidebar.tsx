@@ -29,21 +29,6 @@ const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
   extensionRegisterPolicy: "strict",
 };
 
-const STAFF_CHART_DENSITY_STORAGE_KEY = "progression:staff-chart-density";
-type StaffChartDensity = "compact" | "comfortable";
-
-function getInitialStaffChartDensity(): StaffChartDensity {
-  try {
-    const saved = window.sessionStorage.getItem(STAFF_CHART_DENSITY_STORAGE_KEY);
-    if (saved === "compact" || saved === "comfortable") {
-      return saved;
-    }
-  } catch {
-    // sessionStorage may be unavailable in restricted browser contexts.
-  }
-  return "compact";
-}
-
 interface ProgressionSidebarProps {
   /** All progression nodes in display order. */
   nodes: ProgressionNode[];
@@ -203,7 +188,6 @@ export function ProgressionSidebar({
   // Local state: whether the arpeggio pattern editor panel is visible.
   const [showPatternEditor, setShowPatternEditor] = useState(false);
   const [showStaffCharts, setShowStaffCharts] = useState(false);
-  const [staffChartDensity, setStaffChartDensity] = useState<StaffChartDensity>(getInitialStaffChartDensity);
 
   // Track the node-index of the most recently added tile for scroll/focus/animation.
   const [newTileNodeIndex, setNewTileNodeIndex] = useState<number | null>(null);
@@ -218,14 +202,6 @@ export function ProgressionSidebar({
     () => buildProgressionVoicings(chords, voiceLeadingConfig),
     [chords, voiceLeadingConfig],
   );
-
-  useEffect(() => {
-    try {
-      window.sessionStorage.setItem(STAFF_CHART_DENSITY_STORAGE_KEY, staffChartDensity);
-    } catch {
-      // ignore storage write failures
-    }
-  }, [staffChartDensity]);
 
   // Derive newTileNodeIndex during render when the node list changes.
   // React-documented derived-state pattern; avoids setState-in-effect.
@@ -278,7 +254,6 @@ export function ProgressionSidebar({
           isPlaying={playingIndex === ci}
           activeArpeggioPitchClass={playingIndex === ci ? playingPitchClass : null}
           showStaffChart={showStaffCharts}
-          staffChartDensity={staffChartDensity}
           voicedMidiNotes={progressionVoicings[ci] ?? null}
           onMoveUp={() => onMoveUp(ci)}
           onMoveDown={() => onMoveDown(ci)}
@@ -406,17 +381,6 @@ export function ProgressionSidebar({
             >
               Staff Charts
             </button>
-            {showStaffCharts && (
-              <button
-                className={`${styles.loopButton} ${styles.densityButton}`}
-                onClick={() => setStaffChartDensity((prev) => (prev === "compact" ? "comfortable" : "compact"))}
-                disabled={chordCount === 0}
-                aria-label={`Set chart density to ${staffChartDensity === "compact" ? "comfortable" : "compact"}`}
-                title={`Chart density: ${staffChartDensity}`}
-              >
-                Density: {staffChartDensity === "compact" ? "Compact" : "Comfortable"}
-              </button>
-            )}
           </div>
         </div>
         {/* ARIA live region: announces playback mode changes */}
