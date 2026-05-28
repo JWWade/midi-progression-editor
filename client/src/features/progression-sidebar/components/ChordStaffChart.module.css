@@ -1,5 +1,5 @@
 .chartWrap {
-  width: 100%;
+  width: min(100%, 248px);
   margin-top: 4px;
   padding: 4px 6px;
   border: 1px solid var(--color-border-subtle);
@@ -8,10 +8,12 @@
 }
 
 .chartCompact {
+  width: min(100%, 236px);
   min-height: 78px;
 }
 
 .chartComfortable {
+  width: min(100%, 252px);
   min-height: 90px;
   padding: 6px 8px;
 }
