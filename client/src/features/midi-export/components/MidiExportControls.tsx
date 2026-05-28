@@ -3,6 +3,7 @@ import type { Chord } from "@/features/current-chord/types";
 import type { ScaleContext } from "@/shared/types/ScaleContext";
 import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import type { VoiceLeadingConfig } from "@/features/voice-leading";
+import { buildVoicingTargets, hasExtensionRegisterTargets } from "@/features/voice-leading";
 import { useMidiExport } from "../hooks/useMidiExport";
 import { getBpmTempoLabel } from "../utils/bpmTempoLabel";
 import { NoteValueSelector } from "./NoteValueSelector";
@@ -36,7 +37,11 @@ export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPat
     strictness,
     motionBias,
     setMotionBias,
+    extensionRegisterPolicy,
+    setExtensionRegisterPolicy,
   } = useMidiExport(chords, arpeggioPattern, scaleContext, bpm, beatsPerChord);
+
+  const extensionGuardActive = chords.some((chord) => hasExtensionRegisterTargets(buildVoicingTargets(chord)));
 
   useEffect(() => {
     if (!onVoiceLeadingConfigChange) return;
@@ -45,8 +50,9 @@ export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPat
       strictness,
       motionBias,
       startOctave,
+      extensionRegisterPolicy,
     });
-  }, [onVoiceLeadingConfigChange, voiceLeadingStyle, strictness, motionBias, startOctave]);
+  }, [onVoiceLeadingConfigChange, voiceLeadingStyle, strictness, motionBias, startOctave, extensionRegisterPolicy]);
 
   const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
 
@@ -105,6 +111,9 @@ export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPat
         onStyleChange={setVoiceLeadingStyle}
         motionBias={motionBias}
         onMotionBiasChange={setMotionBias}
+        extensionRegisterPolicy={extensionRegisterPolicy}
+        onExtensionRegisterPolicyChange={setExtensionRegisterPolicy}
+        extensionGuardActive={extensionGuardActive}
         startOctave={startOctave}
         onStartOctaveChange={setStartOctave}
       />

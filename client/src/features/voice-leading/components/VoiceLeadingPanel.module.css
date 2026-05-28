@@ -267,6 +267,13 @@
   gap: 4px;
 }
 
+.guardHint {
+  font-size: 10px;
+  color: var(--color-accent, #4f46e5);
+  opacity: 0.85;
+  text-align: right;
+}
+
 .presetButton {
   width: 100%;
   padding: 5px 8px;
@@ -331,4 +338,9 @@
 [data-theme="retro"] .presetButton:hover {
   border-color: #ff00ff;
   background-color: rgba(255, 0, 255, 0.1);
+}
+
+[data-theme="retro"] .guardHint {
+  color: #fff9a6;
+  text-shadow: 0 1px 0 #000000;
 }

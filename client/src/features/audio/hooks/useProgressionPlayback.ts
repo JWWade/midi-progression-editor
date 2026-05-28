@@ -1,7 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { playChord, stopChord, playArpeggio } from "../utils/audioUtils";
-import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
-import { isCustomChord } from "@/features/current-chord/utils/chordTypeGuards";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import type { AudioParams } from "../constants/audioConfig";
 import { DEFAULT_AUDIO_PARAMS } from "../constants/audioConfig";
@@ -16,6 +14,8 @@ import {
   openVoiceChord,
   minimalMotionVoicing,
   chordMatchingFlexible,
+  buildVoicingTargets,
+  enforceVoicingTargets,
 } from "@/features/voice-leading";
 import type { VoiceLeadingConfig } from "@/features/voice-leading";
 
@@ -24,6 +24,7 @@ const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
   strictness: 2,
   motionBias: "neutral",
   startOctave: 3,
+  extensionRegisterPolicy: "strict",
 };
 
 type PlaybackNote = ChordNoteInfo & { octave: number };
@@ -133,11 +134,8 @@ export function useProgressionPlayback(
           if (cancelledRef.current) break;
 
           const chord = chords[i];
-          const pitchClassNotes: ChordNoteInfo[] = isCustomChord(chord)
-            ? chord.customNotes.map((idx) => ({ index: idx, name: pitchClasses[idx], role: "root" as const }))
-            : transposeChord(CHORD_INTERVALS[chord.quality], chord.root, pitchClasses);
-
-          const pitchClassSet = pitchClassNotes.map((note) => note.index);
+          const targets = buildVoicingTargets(chord);
+          const pitchClassSet = targets.pitchClasses;
           const cfg = voiceLeadingConfigRef.current;
           const currentVoicing = (() => {
             if (cfg.style === "close") {
@@ -155,8 +153,11 @@ export function useProgressionPlayback(
               ? closeVoiceChord(pitchClassSet, cfg.startOctave)
               : minimalMotionVoicing(previousVoicing, pitchClassSet, cfg.motionBias);
           })();
+          const constrainedVoicing = enforceVoicingTargets(currentVoicing, targets, {
+            extensionRegisterPolicy: cfg.extensionRegisterPolicy,
+          });
 
-          const notes: PlaybackNote[] = currentVoicing.map((midiNote) => {
+          const notes: PlaybackNote[] = constrainedVoicing.map((midiNote) => {
             const pitchClass = ((midiNote % 12) + 12) % 12;
             return {
               index: pitchClass,
@@ -165,7 +166,7 @@ export function useProgressionPlayback(
               role: "root" as const,
             };
           });
-          previousVoicing = currentVoicing;
+          previousVoicing = constrainedVoicing;
 
           setPlayingIndex(i);
           setPlayingPitchClass(null);

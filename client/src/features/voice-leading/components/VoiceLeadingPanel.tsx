@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import type { VoiceLeadingStyle, MotionBias } from "@/features/voice-leading";
+import type { VoiceLeadingStyle, MotionBias, ExtensionRegisterPolicy } from "@/features/voice-leading";
 import styles from "./VoiceLeadingPanel.module.css";
 
 interface Preset {
@@ -23,6 +23,11 @@ const MOTION_BIAS_OPTIONS: { value: MotionBias; label: string; title: string }[]
   { value: 'down', label: '↓', title: 'Downward: prefer lower note on tie' },
 ];
 
+const EXTENSION_REGISTER_OPTIONS: { value: ExtensionRegisterPolicy; label: string }[] = [
+  { value: 'strict', label: 'Strict (keep 9/11/13 high)' },
+  { value: 'relaxed', label: 'Relaxed (allow fold)' },
+];
+
 const PRESETS: Preset[] = [
   { label: 'Classic SATB', startOctave: 3, style: 'minimal', styleLabel: 'Smooth Stepwise' },
   { label: 'Keyboard-Friendly', startOctave: 4, style: 'close', styleLabel: 'Tightly Stacked' },
@@ -34,6 +39,9 @@ interface VoiceLeadingPanelProps {
   onStyleChange: (v: VoiceLeadingStyle) => void;
   motionBias: MotionBias;
   onMotionBiasChange: (v: MotionBias) => void;
+  extensionRegisterPolicy: ExtensionRegisterPolicy;
+  onExtensionRegisterPolicyChange: (v: ExtensionRegisterPolicy) => void;
+  extensionGuardActive?: boolean;
   startOctave: number;
   onStartOctaveChange: (v: number) => void;
 }
@@ -47,6 +55,9 @@ export function VoiceLeadingPanel({
   onStyleChange,
   motionBias,
   onMotionBiasChange,
+  extensionRegisterPolicy,
+  onExtensionRegisterPolicyChange,
+  extensionGuardActive = false,
   startOctave,
   onStartOctaveChange,
 }: VoiceLeadingPanelProps) {
@@ -76,7 +87,10 @@ export function VoiceLeadingPanel({
       >
         <span className={styles.toggleTitle}>Voice-Leading</span>
         {!expanded && (
-          <span className={styles.summary}>{currentStyleLabel} · Oct {startOctave}</span>
+          <span className={styles.summary}>
+            {currentStyleLabel} · Oct {startOctave}
+            {extensionGuardActive && extensionRegisterPolicy === 'strict' ? ' · Ext Guard' : ''}
+          </span>
         )}
         <span className={`${styles.chevron} ${expanded ? styles.chevronOpen : ''}`}>▾</span>
       </button>
@@ -123,6 +137,32 @@ export function VoiceLeadingPanel({
               ))}
             </div>
           </div>
+
+          {/* Extension register policy */}
+          <div className={styles.row}>
+            <label className={styles.label} htmlFor="vl-extension-policy">
+              Extension Reg
+            </label>
+            <select
+              id="vl-extension-policy"
+              className={styles.select}
+              value={extensionRegisterPolicy}
+              onChange={(e) => onExtensionRegisterPolicyChange(e.target.value as ExtensionRegisterPolicy)}
+              aria-label="Extension register policy"
+            >
+              {EXTENSION_REGISTER_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {extensionGuardActive && extensionRegisterPolicy === 'strict' && (
+            <div className={styles.guardHint} role="status" aria-live="polite">
+              Ext Guard active for current progression
+            </div>
+          )}
 
           {/* Octave control */}
           <div className={styles.row}>

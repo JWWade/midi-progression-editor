@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import type { ScaleContext } from "@/shared/types/ScaleContext";
-import type { VoiceLeadingStyle, MotionBias } from "@/features/voice-leading";
+import type { VoiceLeadingStyle, MotionBias, ExtensionRegisterPolicy } from "@/features/voice-leading";
 import { buildMidiFile } from "../utils/midiBuilder";
 
 export function useMidiExport(
@@ -21,11 +21,14 @@ export function useMidiExport(
   setStrictness: (v: number) => void;
   motionBias: MotionBias;
   setMotionBias: (v: MotionBias) => void;
+  extensionRegisterPolicy: ExtensionRegisterPolicy;
+  setExtensionRegisterPolicy: (v: ExtensionRegisterPolicy) => void;
 } {
   const [startOctave, setStartOctave] = useState(3); // SATB default
   const [voiceLeadingStyle, setVoiceLeadingStyle] = useState<VoiceLeadingStyle>('minimal');
   const [strictness, setStrictness] = useState(2);
   const [motionBias, setMotionBias] = useState<MotionBias>('neutral');
+  const [extensionRegisterPolicy, setExtensionRegisterPolicy] = useState<ExtensionRegisterPolicy>('strict');
 
   const exportMidi = useCallback(() => {
     const bytes = buildMidiFile(chords, {
@@ -35,6 +38,7 @@ export function useMidiExport(
       voiceLeadingStyle,
       strictness,
       motionBias,
+      extensionRegisterPolicy,
       arpeggioPattern,
       scaleContext,
     });
@@ -45,7 +49,7 @@ export function useMidiExport(
     a.download = `progression-${Date.now()}.mid`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
-  }, [chords, bpm, beatsPerChord, startOctave, voiceLeadingStyle, strictness, motionBias, arpeggioPattern, scaleContext]);
+  }, [chords, bpm, beatsPerChord, startOctave, voiceLeadingStyle, strictness, motionBias, extensionRegisterPolicy, arpeggioPattern, scaleContext]);
 
   return {
     exportMidi,
@@ -57,5 +61,7 @@ export function useMidiExport(
     setStrictness,
     motionBias,
     setMotionBias,
+    extensionRegisterPolicy,
+    setExtensionRegisterPolicy,
   };
 }

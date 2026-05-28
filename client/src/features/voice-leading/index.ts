@@ -1,4 +1,5 @@
 export { closeVoiceChord, minimalMotionVoicing, openVoiceChord } from "./utils/voicing";
+export { buildVoicingTargets, enforceVoicingTargets } from "./utils/voicingTargets";
 export {
   pitchClassDistance,
   chordDistance,
@@ -13,7 +14,7 @@ export {
   canonicalizeChord,
 } from "./utils/canonicalizeChord";
 export type { CanonicalizationMode, CanonicalChord } from "./utils/canonicalizeChord";
-export type { VoiceLeadingStyle, MotionBias, VoiceLeadingConfig } from "./types";
+export type { VoiceLeadingStyle, MotionBias, ExtensionRegisterPolicy, VoiceLeadingConfig } from "./types";
 export type { HybridParams, HybridComponents } from "./utils/hybridDistance";
 export {
   hybridDistance,

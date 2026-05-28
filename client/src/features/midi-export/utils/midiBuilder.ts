@@ -1,14 +1,15 @@
 import { Midi } from "@tonejs/midi";
 import type { Chord } from "@/features/current-chord/types";
 import { formatChordSymbol } from "@/features/current-chord";
-import { getChordPitchClasses } from "@/features/chord/utils";
 import {
   closeVoiceChord,
   minimalMotionVoicing,
   openVoiceChord,
   chordMatchingFlexible,
+  buildVoicingTargets,
+  enforceVoicingTargets,
 } from "@/features/voice-leading";
-import type { VoiceLeadingStyle, MotionBias } from "@/features/voice-leading";
+import type { VoiceLeadingStyle, MotionBias, ExtensionRegisterPolicy } from "@/features/voice-leading";
 import { PITCH_CLASSES } from "@/features/chromatic-circle/utils";
 import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
 import {
@@ -47,6 +48,8 @@ export interface MidiExportOptions {
    * - `'up'`: prefer the higher MIDI note on a tie.
    */
   motionBias: MotionBias;
+  /** Extension register handling policy. */
+  extensionRegisterPolicy: ExtensionRegisterPolicy;
   /**
    * When `true` (default), a MIDI Text meta event (0x01) and a Marker meta
    * event (0x06) are written at the start tick of every chord so that
@@ -299,6 +302,7 @@ const DEFAULT_OPTIONS: MidiExportOptions = {
   voiceLeadingStyle: 'minimal',
   strictness: 2,
   motionBias: 'neutral',
+  extensionRegisterPolicy: 'strict',
   includeChordSymbols: true,
   chordLabels: [],
 };
@@ -408,6 +412,7 @@ export function buildMidiFile(
     voiceLeadingStyle,
     strictness,
     motionBias,
+    extensionRegisterPolicy,
     includeChordSymbols,
     chordLabels,
     arpeggioPattern,
@@ -457,7 +462,8 @@ export function buildMidiFile(
   const allVoicings: number[][] = [];
   let prevMidi: number[] = [];
   for (let i = 0; i < chords.length; i++) {
-    const pitchClasses = getChordPitchClasses(chords[i]!);
+    const targets = buildVoicingTargets(chords[i]!);
+    const pitchClasses = targets.pitchClasses;
     let midiNotes: number[];
 
     if (voiceLeadingStyle === 'close') {
@@ -476,6 +482,10 @@ export function buildMidiFile(
           ? closeVoiceChord(pitchClasses, startOctave)
           : minimalMotionVoicing(prevMidi, pitchClasses, motionBias);
     }
+
+    midiNotes = enforceVoicingTargets(midiNotes, targets, {
+      extensionRegisterPolicy,
+    });
 
     allVoicings.push(midiNotes);
     prevMidi = midiNotes;

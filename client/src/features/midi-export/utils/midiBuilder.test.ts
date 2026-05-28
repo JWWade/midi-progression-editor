@@ -612,6 +612,55 @@ describe("buildMidiFile", () => {
       // Down bias should produce notes at equal or lower MIDI numbers than up bias.
       expect(downMin).toBeLessThanOrEqual(upMin);
     });
+
+    it("preserves 9th extension register in a C9-like custom chord", () => {
+      const c9Like = { root: 0, quality: 'major', customNotes: [0, 4, 7, 2] } as const;
+      const result = buildMidiFile([c9Like], {
+        voiceLeadingStyle: 'close',
+        startOctave: 4,
+      });
+
+      const notes = parseMidiTone(result)
+        .tracks
+        .flatMap((t) => t.notes.map((n) => n.midi))
+        .sort((a, b) => a - b);
+
+      expect(notes).toContain(74); // D5 as 9th above C4
+      expect(notes).not.toContain(62); // D4 (2nd) should not be used
+    });
+
+    it("preserves explicit 9 extension register on named chords", () => {
+      const result = buildMidiFile([
+        { root: 0, quality: 'dom7', extensions: ['9'] },
+      ], {
+        voiceLeadingStyle: 'close',
+        startOctave: 4,
+      });
+
+      const notes = parseMidiTone(result)
+        .tracks
+        .flatMap((t) => t.notes.map((n) => n.midi))
+        .sort((a, b) => a - b);
+
+      expect(notes).toContain(74); // D5 (9th)
+      expect(notes).not.toContain(62); // D4 (2nd)
+    });
+
+    it("allows folded extension pitch when extension register policy is relaxed", () => {
+      const c9Like = { root: 0, quality: 'major', customNotes: [0, 4, 7, 2] } as const;
+      const result = buildMidiFile([C_MAJOR, c9Like], {
+        voiceLeadingStyle: 'minimal',
+        extensionRegisterPolicy: 'relaxed',
+        startOctave: 4,
+      });
+
+      const secondChordNotes = parseMidiTone(result)
+        .tracks
+        .flatMap((t) => t.notes.filter((n) => n.time > 0.01).map((n) => n.midi))
+        .sort((a, b) => a - b);
+
+      expect(secondChordNotes).toContain(62); // D4 allowed as folded 2nd in relaxed mode
+    });
   });
 });
 

@@ -32,6 +32,7 @@ const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
   strictness: 2,
   motionBias: 'neutral',
   startOctave: 3,
+  extensionRegisterPolicy: 'strict',
 };
 
 export default function App() {
