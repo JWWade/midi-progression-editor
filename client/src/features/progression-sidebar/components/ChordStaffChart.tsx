@@ -31,23 +31,24 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, desc
   }
 
   const clefLabel = model.clef === "treble" ? "G clef" : "F clef";
+  const clefShortLabel = model.clef === "treble" ? "Treble" : "Bass";
   const descriptionText = `${chordName}, ${clefLabel}, ${describeVoicing(model.layout)}`;
   const ariaLabel = `${chordName} staff chart: ${describeVoicing(model.layout)}`;
-  const staffLines = [12, 22, 32, 42, 52];
+  const staffLines = [14, 24, 34, 44, 54];
 
   return (
     <div className={styles.chartWrap}>
       <svg
         className={styles.chart}
-        viewBox="0 0 150 64"
+        viewBox="0 0 176 66"
         role="img"
         aria-label={ariaLabel}
         aria-describedby={descriptionId}
       >
         {staffLines.map((y) => (
-          <line key={`line-${y}`} x1={18} y1={y} x2={146} y2={y} className={styles.staffLine} />
+          <line key={`line-${y}`} x1={26} y1={y} x2={170} y2={y} className={styles.staffLine} />
         ))}
-        <text x={2} y={26} className={styles.clefLabel}>{clefLabel}</text>
+        <text x={4} y={31} className={styles.clefLabel}>{clefShortLabel}</text>
         {model.layout.map((note) => (
           <g key={`${note.midi}-${note.x}`}>
             {note.ledgerLineYs.map((ledgerY) => (

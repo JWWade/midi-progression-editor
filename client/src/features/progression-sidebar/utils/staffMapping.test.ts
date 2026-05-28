@@ -23,4 +23,15 @@ describe("buildStaffNoteLayout", () => {
     const layout = buildStaffNoteLayout([88], pitchClasses, "treble");
     expect(layout[0]?.ledgerLineYs.length).toBeGreaterThan(0);
   });
+
+  it("separates clustered noteheads to avoid overlap", () => {
+    const layout = buildStaffNoteLayout([60, 61, 62, 63, 64, 65, 66], pitchClasses, "treble");
+    const minSpacing = layout.slice(1).reduce((currentMin, note, index) => {
+      const previous = layout[index];
+      if (!previous) return currentMin;
+      return Math.min(currentMin, note.x - previous.x);
+    }, Number.POSITIVE_INFINITY);
+
+    expect(minSpacing).toBeGreaterThanOrEqual(12);
+  });
 });

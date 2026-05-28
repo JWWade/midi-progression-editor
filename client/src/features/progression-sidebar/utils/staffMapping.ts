@@ -25,6 +25,13 @@ const STAFF_BOTTOM_LINE_REFERENCE: Readonly<Record<StaffClef, { letter: string; 
   bass: { letter: "G", octave: 2 },
 };
 
+const CHART_WIDTH = 176;
+const CHART_LEFT_PADDING = 38;
+const CHART_RIGHT_PADDING = 14;
+const STAFF_BOTTOM_LINE_Y = 54;
+const STAFF_STEP_PX = 5;
+const MIN_NOTEHEAD_SEPARATION_PX = 12;
+
 function toPitchClass(midi: number): number {
   return ((midi % 12) + 12) % 12;
 }
@@ -88,11 +95,11 @@ export function buildStaffNoteLayout(
   }
 
   const sortedVoicing = [...voicedMidiNotes].sort((a, b) => a - b);
-  const width = 150;
-  const leftPadding = 34;
-  const rightPadding = 14;
-  const bottomLineY = 52;
-  const stepPx = 5;
+  const width = CHART_WIDTH;
+  const leftPadding = CHART_LEFT_PADDING;
+  const rightPadding = CHART_RIGHT_PADDING;
+  const bottomLineY = STAFF_BOTTOM_LINE_Y;
+  const stepPx = STAFF_STEP_PX;
   const xStride = sortedVoicing.length === 1
     ? 0
     : (width - leftPadding - rightPadding) / (sortedVoicing.length - 1);
@@ -101,7 +108,7 @@ export function buildStaffNoteLayout(
   const bottomReferenceDiatonic = toDiatonicNumber(bottomReference.letter, bottomReference.octave);
   const yForStep = (stepFromBottomLine: number) => bottomLineY - (stepFromBottomLine * stepPx);
 
-  return sortedVoicing.map((midi, index) => {
+  const layout = sortedVoicing.map((midi, index) => {
     const pitchClass = toPitchClass(midi);
     const noteName = toNoteName(pitchClass, pitchClasses);
     const { letter, accidental } = parseLetterAndAccidental(noteName);
@@ -119,4 +126,29 @@ export function buildStaffNoteLayout(
       ledgerLineYs: getLedgerLineYs(stepFromBottomLine, yForStep),
     };
   });
+
+  // Prevent notehead overlap for clustered notes by pushing colliding notes right.
+  // Collisions are considered only when notes occupy the same or adjacent staff step.
+  for (let i = 1; i < layout.length; i++) {
+    const current = layout[i];
+    if (!current) continue;
+
+    for (let j = i - 1; j >= 0; j--) {
+      const previous = layout[j];
+      if (!previous) continue;
+
+      const isSameOrAdjacentStep = Math.abs(current.y - previous.y) <= STAFF_STEP_PX;
+      const isTooCloseHorizontally = Math.abs(current.x - previous.x) < MIN_NOTEHEAD_SEPARATION_PX;
+      if (!isSameOrAdjacentStep || !isTooCloseHorizontally) {
+        continue;
+      }
+
+      current.x = Math.min(
+        width - rightPadding,
+        previous.x + MIN_NOTEHEAD_SEPARATION_PX,
+      );
+    }
+  }
+
+  return layout;
 }

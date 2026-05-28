@@ -1,6 +1,7 @@
 .chartWrap {
   width: 100%;
   margin-top: 4px;
+  padding: 2px 3px;
   border: 1px solid var(--color-border-subtle);
   border-radius: 6px;
   background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
@@ -9,7 +10,7 @@
 .chart {
   display: block;
   width: 100%;
-  height: 56px;
+  height: 62px;
 }
 
 .srOnly {
@@ -25,8 +26,8 @@
 }
 
 .staffLine {
-  stroke: var(--color-text-muted);
-  stroke-width: 0.8;
+  stroke: color-mix(in srgb, var(--color-text-muted) 85%, var(--color-text-secondary) 15%);
+  stroke-width: 0.9;
 }
 
 .ledgerLine {
@@ -36,6 +37,8 @@
 
 .notehead {
   fill: var(--color-text-primary);
+  stroke: color-mix(in srgb, var(--color-bg-sidebar) 60%, transparent);
+  stroke-width: 0.7;
 }
 
 .accidental {
@@ -45,9 +48,11 @@
 }
 
 .clefLabel {
-  fill: var(--color-text-muted);
-  font-size: 7.5px;
-  font-weight: 600;
+  fill: var(--color-text-secondary);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .errorBadge {
@@ -74,7 +79,7 @@
 }
 
 [data-theme="retro"] .staffLine {
-  stroke: #9c9cff;
+  stroke: #b4b4ff;
 }
 
 [data-theme="retro"] .ledgerLine,
