@@ -61,7 +61,7 @@ dotnet run
 
 - API listens on: http://localhost:5110
 - Swagger UI: http://localhost:5110/swagger
-- Health check: GET http://localhost:5110/health
+- Health check: GET http://localhost:5110/Health
 
 **Terminal 2 — Frontend**
 
@@ -139,6 +139,12 @@ ESLint enforces zero warnings. All TypeScript files must pass.
 ## Project Structure
 
 The frontend follows a feature-based architecture with 21 modules under `client/src/features/`. The backend exposes REST endpoints via controllers in `server/ParametricMusic.Api/Controllers/`. See [ARCHITECTURE.md](ARCHITECTURE.md) for a full breakdown.
+
+## Documentation
+
+- [docs/README.md](docs/README.md) — documentation index (architecture, audits, spikes, and references)
+- [ARCHITECTURE.md](ARCHITECTURE.md) — system architecture overview
+- [CONTRIBUTING.md](CONTRIBUTING.md) — contribution workflow and coding standards
 
 ## Technologies
 
