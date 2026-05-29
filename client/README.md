@@ -5,11 +5,11 @@ This is the React/TypeScript frontend for the **MIDI Progression Editor**, a par
 ## Tech Stack
 
 - **React 19** — UI framework
-- **TypeScript 5.9** — Type-safe JavaScript (strict mode)
-- **Vite 7** — Development server and build tooling
+- **TypeScript 6.0** — Type-safe JavaScript (strict mode)
+- **Vite 8** — Development server and build tooling
 - **openapi-typescript** — Auto-generated type-safe API client from the backend's OpenAPI spec
 - **Vitest** — Unit test runner
-- **ESLint 9** — Linting (zero-warnings policy)
+- **ESLint 10** — Linting (zero-warnings policy)
 
 ## Getting Started
 
@@ -130,8 +130,7 @@ const scale = await client.post('/Scale/from-root', {
 npm test
 ```
 
-Runs Vitest in single-pass mode. Current test coverage:
-- `midi-export/utils/midiBuilder.test.ts` — MIDI binary construction
+Runs Vitest in single-pass mode across the frontend test suite (`src/**/*.test.ts` and `src/**/*.test.tsx`).
 
 ## Linting
 
