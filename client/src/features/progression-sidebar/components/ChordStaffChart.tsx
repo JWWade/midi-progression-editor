@@ -73,8 +73,8 @@ function getVerticalFitOffset(
 ): number {
   if (layout.length === 0) return 0;
 
-  const SAFE_TOP = 4;
-  const SAFE_BOTTOM = 80;
+  const SAFE_TOP = 6;
+  const SAFE_BOTTOM = 78;
   const NOTEHEAD_RADIUS_Y = 4.2;
   const ACCIDENTAL_HALF_HEIGHT = 5;
 

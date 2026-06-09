@@ -113,7 +113,7 @@ describe("ChordStaffChart", () => {
 
     const allYValues = [...noteYValues, ...ledgerYValues, ...accidentalYValues];
     expect(allYValues.length).toBeGreaterThan(0);
-    expect(Math.min(...allYValues)).toBeGreaterThanOrEqual(4);
-    expect(Math.max(...allYValues)).toBeLessThanOrEqual(80);
+    expect(Math.min(...allYValues)).toBeGreaterThanOrEqual(6);
+    expect(Math.max(...allYValues)).toBeLessThanOrEqual(78);
   });
 });

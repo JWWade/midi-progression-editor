@@ -34,8 +34,8 @@ const STAFF_BOTTOM_LINE_Y = 62;
 const STAFF_STEP_PX = 6;
 const MIN_NOTEHEAD_SEPARATION_PX = 12;
 const STACK_COLUMN_X = 102;
-const STAFF_VIEWBOX_SAFE_TOP = 4;
-const STAFF_VIEWBOX_SAFE_BOTTOM = 80;
+const STAFF_VIEWBOX_SAFE_TOP = 6;
+const STAFF_VIEWBOX_SAFE_BOTTOM = 78;
 
 function toPitchClass(midi: number): number {
   return ((midi % 12) + 12) % 12;
