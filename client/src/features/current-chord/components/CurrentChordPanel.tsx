@@ -278,7 +278,21 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
                 aria-label="Copy note names to clipboard"
                 title={`Copy notes: ${noteNames}`}
               >
-                {copied ? '✓' : '⎘'}
+                {copied ? (
+                  <span className={styles.copyCheck} aria-hidden="true">✓</span>
+                ) : (
+                  <svg
+                    className={styles.copyIcon}
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect x="7" y="5" width="8" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="M5 12V4.8C5 3.81 5.81 3 6.8 3H12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                )}
               </button>
             </div>
           )}

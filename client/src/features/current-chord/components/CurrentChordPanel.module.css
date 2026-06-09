@@ -252,6 +252,16 @@
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+.copyIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.copyCheck {
+  font-size: 13px;
+  line-height: 1;
+}
+
 .copyIconButton:hover:not(:disabled) {
   background-color: var(--chord-quality-dark, #4f46e5);
   color: #ffffff;

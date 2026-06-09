@@ -299,7 +299,7 @@ const DEFAULT_OPTIONS: MidiExportOptions = {
   bpm: DEFAULT_BPM,
   beatsPerChord: DEFAULT_BEATS_PER_CHORD,
   startOctave: DEFAULT_OCTAVE,
-  voiceLeadingStyle: 'minimal',
+  voiceLeadingStyle: 'close',
   strictness: 2,
   motionBias: 'neutral',
   extensionRegisterPolicy: 'strict',

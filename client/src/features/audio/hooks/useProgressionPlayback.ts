@@ -15,10 +15,10 @@ import {
 import type { VoiceLeadingConfig } from "@/features/voice-leading";
 
 const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
-  style: "minimal",
+  style: "close",
   strictness: 2,
   motionBias: "neutral",
-  startOctave: 3,
+  startOctave: 4,
   extensionRegisterPolicy: "strict",
 };
 

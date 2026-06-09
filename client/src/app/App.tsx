@@ -28,10 +28,10 @@ import type { VoiceLeadingConfig } from '../features/voice-leading';
 import styles from './App.module.css';
 
 const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
-  style: 'minimal',
+  style: 'close',
   strictness: 2,
   motionBias: 'neutral',
-  startOctave: 3,
+  startOctave: 4,
   extensionRegisterPolicy: 'strict',
 };
 
@@ -217,7 +217,6 @@ export default function App() {
             <KeyContextPanel
               keyRoot={keyRoot}
               keyScale={keyScale}
-              currentChordRoot={currentChord?.root ?? null}
               onSetKeyContext={setKeyContext}
             />
             <AudioDebugPanel params={audioParams} onChange={setAudioParams} />

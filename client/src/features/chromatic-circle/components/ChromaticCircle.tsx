@@ -570,6 +570,7 @@ export function ChromaticCircle({
                   x={x}
                   y={y}
                   noteStyle={noteStyle}
+                  isKeyRoot={isTonic}
                   isArpeggioActive={isPlaybackActive && activeArpeggioPitchClass === i}
                   isDropTarget={isDragging && dragTargetIndex === i}
                   isSelected={isSelected}
@@ -581,20 +582,6 @@ export function ChromaticCircle({
                   onClick={stableNoteClick}
                   onKeyDown={stableNoteKeyDown}
                 />
-                {/* Tonic marker: structural anchor rendered above node, below drag ring */}
-                {isTonic && (
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={NODE_RADIUS + 5}
-                    fill="none"
-                    stroke="#f59e0b"
-                    strokeWidth={2.5}
-                    opacity={0.9}
-                    pointerEvents="none"
-                    aria-hidden="true"
-                  />
-                )}
               </g>
             );
           })}

@@ -32,15 +32,12 @@ export interface SetKeyContextAction {
 interface KeyContextPanelProps {
   keyRoot: number;
   keyScale: ScaleType;
-  /** Current chord root — used by the secondary tonic-snap affordance. */
-  currentChordRoot: number | null;
   onSetKeyContext: (action: SetKeyContextAction) => void;
 }
 
 export const KeyContextPanel = memo(function KeyContextPanel({
   keyRoot,
   keyScale,
-  currentChordRoot,
   onSetKeyContext,
 }: KeyContextPanelProps) {
   const { useFlats } = useEnharmonic();
@@ -60,15 +57,25 @@ export const KeyContextPanel = memo(function KeyContextPanel({
     [onSetKeyContext, keyRoot],
   );
 
-  const handleSetToChord = useCallback(() => {
-    if (currentChordRoot === null) return;
-    onSetKeyContext({ root: currentChordRoot, scale: keyScale, source: "tonicSnap" });
-  }, [onSetKeyContext, currentChordRoot, keyScale]);
+  const handleRandomRoot = useCallback(() => {
+    const randomRoot = Math.floor(Math.random() * 12);
+    onSetKeyContext({ root: randomRoot, scale: keyScale, source: "panel" });
+  }, [onSetKeyContext, keyScale]);
 
   return (
     <section className={styles.panel} aria-label="Key context">
       <span className={styles.label}>Context Settings</span>
       <div className={styles.selectors}>
+        <button
+          type="button"
+          className={styles.randomizeButton}
+          onClick={handleRandomRoot}
+          aria-label="Randomize key center"
+          title="Randomize key center"
+        >
+          ⚄
+        </button>
+
         <select
           id="key-root-select"
           className={styles.select}
@@ -95,17 +102,6 @@ export const KeyContextPanel = memo(function KeyContextPanel({
           ))}
         </select>
       </div>
-
-      <button
-        type="button"
-        className={styles.tonicSnapButton}
-        onClick={handleSetToChord}
-        disabled={currentChordRoot === null}
-        aria-label="Set key root to current chord root"
-        title="Set key root to current chord root"
-      >
-        Set to chord
-      </button>
 
       <ModePersonalityPanel scaleType={keyScale} />
     </section>
