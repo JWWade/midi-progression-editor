@@ -2,12 +2,32 @@ import { describe, expect, it } from "vitest";
 import { buildStaffNoteLayout, pickStaffClef } from "./staffMapping";
 
 describe("pickStaffClef", () => {
+  const PITCH_CLASSES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+  function calculateOverflowForClef(notes: number[], clef: "treble" | "bass"): number {
+    const layout = buildStaffNoteLayout(notes, PITCH_CLASSES, clef);
+    const yValues = layout.flatMap((note) => [note.y, ...note.ledgerLineYs]);
+    const minY = Math.min(...yValues);
+    const maxY = Math.max(...yValues);
+    return Math.max(0, 4 - minY) + Math.max(0, maxY - 80);
+  }
+
   it("chooses bass for low-register voicings", () => {
     expect(pickStaffClef([40, 43, 47, 50])).toBe("bass");
   });
 
   it("chooses treble for high-register voicings", () => {
     expect(pickStaffClef([60, 64, 67, 71])).toBe("treble");
+  });
+
+  it("selects the clef with lower overflow for wide mixed-register voicings", () => {
+    const notes = [39, 52, 64, 76];
+    const chosen = pickStaffClef(notes);
+    const other = chosen === "treble" ? "bass" : "treble";
+
+    const chosenOverflow = calculateOverflowForClef(notes, chosen);
+    const otherOverflow = calculateOverflowForClef(notes, other);
+    expect(chosenOverflow).toBeLessThanOrEqual(otherOverflow);
   });
 });
 

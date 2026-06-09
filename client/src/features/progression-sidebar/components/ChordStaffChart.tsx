@@ -67,6 +67,56 @@ function getNoteheadRenderY(noteY: number, density: "compact" | "comfortable"): 
   return density === "compact" ? noteY + 0.5 : noteY;
 }
 
+function getVerticalFitOffset(
+  layout: ReturnType<typeof buildStaffNoteLayout>,
+  density: "compact" | "comfortable",
+): number {
+  if (layout.length === 0) return 0;
+
+  const SAFE_TOP = 4;
+  const SAFE_BOTTOM = 80;
+  const NOTEHEAD_RADIUS_Y = 4.2;
+  const ACCIDENTAL_HALF_HEIGHT = 5;
+
+  const bounds = layout.reduce((acc, note, index) => {
+    const noteheadY = getNoteheadRenderY(note.y, density);
+    acc.min = Math.min(acc.min, noteheadY - NOTEHEAD_RADIUS_Y);
+    acc.max = Math.max(acc.max, noteheadY + NOTEHEAD_RADIUS_Y);
+
+    for (const ledgerY of note.ledgerLineYs) {
+      acc.min = Math.min(acc.min, ledgerY);
+      acc.max = Math.max(acc.max, ledgerY);
+    }
+
+    if (note.accidental) {
+      const accidentalPos = getAccidentalPosition(note, index, layout, density);
+      acc.min = Math.min(acc.min, accidentalPos.y - ACCIDENTAL_HALF_HEIGHT);
+      acc.max = Math.max(acc.max, accidentalPos.y + ACCIDENTAL_HALF_HEIGHT);
+    }
+
+    return acc;
+  }, { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY });
+
+  const currentRange = bounds.max - bounds.min;
+  const safeRange = SAFE_BOTTOM - SAFE_TOP;
+
+  if (currentRange >= safeRange) {
+    const currentCenter = (bounds.min + bounds.max) / 2;
+    const safeCenter = (SAFE_TOP + SAFE_BOTTOM) / 2;
+    return safeCenter - currentCenter;
+  }
+
+  let offset = 0;
+  if (bounds.min < SAFE_TOP) {
+    offset = SAFE_TOP - bounds.min;
+  }
+  if (bounds.max + offset > SAFE_BOTTOM) {
+    offset -= (bounds.max + offset) - SAFE_BOTTOM;
+  }
+
+  return offset;
+}
+
 export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, density = "compact", descriptionId }: ChordStaffChartProps) {
   const model = useMemo(() => {
     if (!voicedMidiNotes || voicedMidiNotes.length === 0) return null;
@@ -90,6 +140,14 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
   const clefSymbolClassName = model.clef === "treble" ? styles.clefSymbolTreble : styles.clefSymbolBass;
   const descriptionText = `${chordName}, ${clefLabel}, ${describeVoicing(model.layout)}`;
   const ariaLabel = `${chordName} staff chart: ${describeVoicing(model.layout)}`;
+  const verticalOffset = getVerticalFitOffset(model.layout, density);
+  const renderedLayout = verticalOffset === 0
+    ? model.layout
+    : model.layout.map((note) => ({
+      ...note,
+      y: note.y + verticalOffset,
+      ledgerLineYs: note.ledgerLineYs.map((ledgerY) => ledgerY + verticalOffset),
+    }));
   const staffLines = [14, 26, 38, 50, 62];
 
   return (
@@ -113,9 +171,9 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, dens
         >
           {clefSymbol}
         </text>
-        {model.layout.map((note, index) => {
+        {renderedLayout.map((note, index) => {
           const accidentalPos = note.accidental
-            ? getAccidentalPosition(note, index, model.layout, density)
+            ? getAccidentalPosition(note, index, renderedLayout, density)
             : null;
           const noteheadY = getNoteheadRenderY(note.y, density);
           return (

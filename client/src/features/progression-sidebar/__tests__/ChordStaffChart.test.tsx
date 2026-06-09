@@ -91,4 +91,29 @@ describe("ChordStaffChart", () => {
     expect(accidentalX).toBeLessThan(maxNoteheadX - 10);
     expect(nearestNoteheadY).toBeGreaterThanOrEqual(0.5);
   });
+
+  it("keeps high-register voicings within the chart viewport", () => {
+    const { container } = render(
+      <ChordStaffChart
+        chordName="Cmaj7"
+        voicedMidiNotes={[67, 71, 74, 77]}
+        pitchClasses={PITCH_CLASSES}
+      />,
+    );
+
+    const noteheads = Array.from(container.querySelectorAll("ellipse"));
+    const noteYValues = noteheads.map((node) => Number(node.getAttribute("cy")));
+    const ledgerLines = Array.from(container.querySelectorAll(`.${styles.ledgerLine}`));
+    const ledgerYValues = ledgerLines.flatMap((line) => [
+      Number(line.getAttribute("y1")),
+      Number(line.getAttribute("y2")),
+    ]);
+    const accidentalGlyphs = Array.from(container.querySelectorAll(`.${styles.accidental}`));
+    const accidentalYValues = accidentalGlyphs.map((glyph) => Number(glyph.getAttribute("y")));
+
+    const allYValues = [...noteYValues, ...ledgerYValues, ...accidentalYValues];
+    expect(allYValues.length).toBeGreaterThan(0);
+    expect(Math.min(...allYValues)).toBeGreaterThanOrEqual(4);
+    expect(Math.max(...allYValues)).toBeLessThanOrEqual(80);
+  });
 });

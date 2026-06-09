@@ -34,6 +34,8 @@ const STAFF_BOTTOM_LINE_Y = 62;
 const STAFF_STEP_PX = 6;
 const MIN_NOTEHEAD_SEPARATION_PX = 12;
 const STACK_COLUMN_X = 102;
+const STAFF_VIEWBOX_SAFE_TOP = 4;
+const STAFF_VIEWBOX_SAFE_BOTTOM = 80;
 
 function toPitchClass(midi: number): number {
   return ((midi % 12) + 12) % 12;
@@ -89,13 +91,37 @@ function getLedgerLineYs(stepFromBottomLine: number, yForStep: (step: number) =>
   return yValues;
 }
 
-/**
- * Chooses a single clef based on average note register for compact tile display.
- */
 export function pickStaffClef(voicedMidiNotes: number[]): StaffClef {
   if (voicedMidiNotes.length === 0) return "treble";
+
   const averageMidi = voicedMidiNotes.reduce((sum, midi) => sum + midi, 0) / voicedMidiNotes.length;
-  return averageMidi >= 60 ? "treble" : "bass";
+  const fallbackClef: StaffClef = averageMidi >= 60 ? "treble" : "bass";
+
+  const scoreClef = (clef: StaffClef): number => {
+    const layout = buildStaffNoteLayout(voicedMidiNotes, FALLBACK_NOTE_NAMES, clef);
+    if (layout.length === 0) {
+      return Number.POSITIVE_INFINITY;
+    }
+
+    const allYValues = layout.flatMap((note) => [note.y, ...note.ledgerLineYs]);
+    const minY = Math.min(...allYValues);
+    const maxY = Math.max(...allYValues);
+    const overflow = Math.max(0, STAFF_VIEWBOX_SAFE_TOP - minY) + Math.max(0, maxY - STAFF_VIEWBOX_SAFE_BOTTOM);
+    const ledgerLineCount = layout.reduce((sum, note) => sum + note.ledgerLineYs.length, 0);
+    const centerDistance = Math.abs(((minY + maxY) / 2) - ((STAFF_VIEWBOX_SAFE_TOP + STAFF_VIEWBOX_SAFE_BOTTOM) / 2));
+
+    return overflow * 100 + ledgerLineCount * 3 + centerDistance * 0.1;
+  };
+
+  const trebleScore = scoreClef("treble");
+  const bassScore = scoreClef("bass");
+  const scoreDelta = Math.abs(trebleScore - bassScore);
+
+  if (scoreDelta < 0.01) {
+    return fallbackClef;
+  }
+
+  return trebleScore < bassScore ? "treble" : "bass";
 }
 
 export function buildStaffNoteLayout(
