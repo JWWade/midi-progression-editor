@@ -1,5 +1,5 @@
 import { memo } from "react";
-import type { ScaleType, ScaleTension } from "@/features/scale/types";
+import type { ScaleBrightness, ScaleType, ScaleStability, ScaleTension } from "@/features/scale/types";
 import { SCALE_DESCRIPTORS } from "@/features/scale/types";
 import styles from "./ModePersonalityPanel.module.css";
 
@@ -13,6 +13,21 @@ const TENSION_COLORS: Record<ScaleTension, string> = {
   floating:   "hsl(200, 65%, 52%)",
   unresolved: "hsl(28, 78%, 50%)",
   high:       "hsl(340, 50%, 44%)",
+};
+
+const STABILITY_COLORS: Record<ScaleStability, string> = {
+  low: "hsl(355, 60%, 45%)",
+  moderate: "hsl(28, 78%, 50%)",
+  high: "hsl(163, 62%, 38%)",
+  veryHigh: "hsl(209, 72%, 43%)",
+};
+
+const BRIGHTNESS_COLORS: Record<ScaleBrightness, string> = {
+  dark: "hsl(222, 20%, 34%)",
+  neutral: "hsl(210, 10%, 46%)",
+  warm: "hsl(24, 80%, 52%)",
+  bright: "hsl(48, 90%, 48%)",
+  ethereal: "hsl(196, 76%, 44%)",
 };
 
 export const ModePersonalityPanel = memo(function ModePersonalityPanel({
@@ -33,6 +48,20 @@ export const ModePersonalityPanel = memo(function ModePersonalityPanel({
           aria-label={`Tension: ${descriptor.tension}`}
         >
           {descriptor.tension}
+        </span>
+        <span
+          className={styles.stabilityBadge}
+          style={{ backgroundColor: STABILITY_COLORS[descriptor.stability] }}
+          aria-label={`Stability: ${descriptor.stability}`}
+        >
+          {descriptor.stability}
+        </span>
+        <span
+          className={styles.brightnessBadge}
+          style={{ backgroundColor: BRIGHTNESS_COLORS[descriptor.brightness] }}
+          aria-label={`Brightness: ${descriptor.brightness}`}
+        >
+          {descriptor.brightness}
         </span>
       </div>
       <p className={styles.culturalContext}>{descriptor.culturalContext.join(", ")}</p>

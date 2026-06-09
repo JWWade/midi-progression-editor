@@ -32,6 +32,7 @@ export const SCALE_LABELS: Record<ScaleType, string> = {
 
 export type ScaleTension = "stable" | "moderate" | "floating" | "unresolved" | "high";
 export type ScaleBrightness = "dark" | "neutral" | "warm" | "bright" | "ethereal";
+export type ScaleStability = "low" | "moderate" | "high" | "veryHigh";
 
 export interface ScaleDescriptor {
   /** Two to four mood/emotion keywords */
@@ -42,6 +43,8 @@ export interface ScaleDescriptor {
   tension: ScaleTension;
   /** Perceived brightness on the dark–bright axis */
   brightness: ScaleBrightness;
+  /** Structural stability profile relative to tonic grounding */
+  stability: ScaleStability;
   /** Genre or cultural tradition associations */
   culturalContext: string[];
   /** One-sentence expressive summary shown in the UI */
@@ -64,69 +67,84 @@ export const BRIGHTNESS_ORDER: Record<ScaleBrightness, number> = {
   ethereal: 4,
 };
 
+export const STABILITY_ORDER: Record<ScaleStability, number> = {
+  low: 0,
+  moderate: 1,
+  high: 2,
+  veryHigh: 3,
+};
+
 export const SCALE_DESCRIPTORS: Record<ScaleType, ScaleDescriptor> = {
   major: {
-    mood: ["bright", "confident", "resolved"],
+    mood: ["open", "confident", "complete"],
     color: ["warm", "clear"],
     tension: "stable",
     brightness: "bright",
+    stability: "veryHigh",
     culturalContext: ["classical", "pop", "folk"],
-    summary: "Open and resolved; the default tonal center of Western music.",
+    summary: "Open and daylight-clear; strongly grounded and complete to many Western listeners.",
   },
   naturalMinor: {
-    mood: ["melancholic", "introspective", "soulful"],
-    color: ["warm", "subdued"],
+    mood: ["melancholic", "introspective", "vulnerable"],
+    color: ["dark", "subdued"],
     tension: "moderate",
-    brightness: "neutral",
+    brightness: "dark",
+    stability: "high",
     culturalContext: ["classical", "folk", "rock"],
-    summary: "Emotionally rich and familiar minor color; plaintive without excess tension.",
+    summary: "Familiar minor color with efficient emotional pull: inward, low-light, and stable.",
   },
   harmonicMinor: {
-    mood: ["dramatic", "intense", "exotic"],
+    mood: ["dramatic", "passionate", "urgent"],
     color: ["dark", "vivid"],
     tension: "high",
     brightness: "dark",
+    stability: "high",
     culturalContext: ["classical", "flamenco", "Middle Eastern"],
-    summary: "The raised 7th creates strong dominant pull and a distinctive augmented-second flavor.",
+    summary: "The raised 7th drives intense dominant pull and a dramatic augmented-second contour.",
   },
   melodicMinor: {
-    mood: ["smooth", "searching", "sophisticated"],
+    mood: ["sophisticated", "searching", "fluid"],
     color: ["warm", "shimmering"],
     tension: "moderate",
     brightness: "neutral",
+    stability: "high",
     culturalContext: ["classical", "jazz"],
-    summary: "The \"jazz minor\" — ascending smoothness that avoids the harmonic minor's harshness.",
+    summary: "The jazz-minor profile: controlled ambiguity with smooth motion and modern harmonic flexibility.",
   },
   dorian: {
-    mood: ["melancholic", "soulful", "hopeful"],
+    mood: ["reflective", "resilient", "wistful"],
     color: ["warm", "wistful"],
     tension: "moderate",
     brightness: "neutral",
+    stability: "high",
     culturalContext: ["jazz", "folk", "rock"],
-    summary: "Minor with a raised 6th — darker than major, more hopeful than natural minor.",
+    summary: "Minor with raised 6th energy: serious and cool, but resilient rather than resigned.",
   },
   phrygian: {
-    mood: ["haunting", "intense", "mysterious"],
-    color: ["dark", "exotic"],
+    mood: ["mysterious", "ritual", "intense"],
+    color: ["dark", "smoky"],
     tension: "high",
     brightness: "dark",
+    stability: "moderate",
     culturalContext: ["flamenco", "Middle Eastern", "metal"],
-    summary: "The flat 2nd creates immediate tension and a distinctly ancient, exotic character.",
+    summary: "The flat 2nd creates immediate constraint and danger-colored tension with ancient character.",
   },
   lydian: {
-    mood: ["mystical", "uplifting", "dreamlike"],
+    mood: ["weightless", "wonder", "expansive"],
     color: ["bright", "ethereal", "otherworldly"],
     tension: "floating",
     brightness: "ethereal",
+    stability: "high",
     culturalContext: ["cinematic", "fusion", "experimental"],
-    summary: "The raised 4th lifts the sound upward — expansive, floating, never quite at rest.",
+    summary: "The raised 4th suspends gravity: luminous and floating, yet still anchored around tonic.",
   },
   mixolydian: {
-    mood: ["relaxed", "grounded", "approachable"],
+    mood: ["relaxed", "grounded", "communal"],
     color: ["warm", "bluesy"],
     tension: "moderate",
     brightness: "warm",
+    stability: "high",
     culturalContext: ["blues", "folk", "rock"],
-    summary: "Major with a flat 7th — the scale of riffs, drones, and natural resolution.",
+    summary: "Major with flat 7th: stable and approachable, with less ceremonial pull than Ionian.",
   },
 };

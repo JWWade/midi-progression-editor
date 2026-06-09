@@ -6,10 +6,11 @@
  */
 import { describe, it, expect } from "vitest";
 import { SCALE_INTERVALS, SCALE_DESCRIPTORS } from "../../types/scales";
-import type { ScaleTension, ScaleBrightness } from "../../types/scales";
+import type { ScaleTension, ScaleBrightness, ScaleStability } from "../../types/scales";
 
 const VALID_TENSIONS: ScaleTension[] = ["stable", "moderate", "floating", "unresolved", "high"];
 const VALID_BRIGHTNESSES: ScaleBrightness[] = ["dark", "neutral", "warm", "bright", "ethereal"];
+const VALID_STABILITIES: ScaleStability[] = ["low", "moderate", "high", "veryHigh"];
 
 describe("SCALE_DESCRIPTORS", () => {
   it("covers exactly the same keys as SCALE_INTERVALS", () => {
@@ -61,6 +62,15 @@ describe("SCALE_DESCRIPTORS", () => {
         VALID_BRIGHTNESSES,
         `${mode}.brightness "${desc.brightness}" is not a valid ScaleBrightness`,
       ).toContain(desc.brightness);
+    }
+  });
+
+  it("every stability value is a valid ScaleStability member", () => {
+    for (const [mode, desc] of Object.entries(SCALE_DESCRIPTORS)) {
+      expect(
+        VALID_STABILITIES,
+        `${mode}.stability "${desc.stability}" is not a valid ScaleStability`,
+      ).toContain(desc.stability);
     }
   });
 });

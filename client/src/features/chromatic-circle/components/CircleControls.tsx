@@ -3,6 +3,7 @@ import type { PrimitiveShape } from "@/features/current-chord";
 import { ChordGrid } from "@/features/chord/components/ChordGrid";
 import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import { allReflectionAxes, type ReflectionAxis } from "@/features/chord/utils/reflectChord";
+import { useTheme } from "@/app/providers/useTheme";
 import type { CustomChordState } from "../types";
 
 interface CircleControlsProps {
@@ -49,6 +50,22 @@ function getShapeButtonStyle(isActive: boolean): React.CSSProperties {
 const ROTATE_ICON_STYLE: React.CSSProperties = {
   display: "inline-block",
 };
+
+function MutateBiohazardIcon({ isRetro = false }: { isRetro?: boolean }): React.ReactElement {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        fontSize: 16,
+        lineHeight: 1,
+        color: isRetro ? "#ffe066" : undefined,
+        textShadow: isRetro ? "0 0 6px rgba(255, 224, 102, 0.7)" : undefined,
+      }}
+    >
+      ☣
+    </span>
+  );
+}
 
 /**
  * Renders a colored polygon (no glyph) mapped from pitch-class geometry on the
@@ -120,6 +137,7 @@ export const CircleControls = memo(function CircleControls({
   customFromChord,
   diatonicRoots,
 }: CircleControlsProps) {
+  const { theme } = useTheme();
   const activeShape = customFromChord?.primitiveShape;
   const [axisPickerOpen, setAxisPickerOpen] = useState(false);
   const mirrorButtonRef = useRef<HTMLButtonElement>(null);
@@ -311,9 +329,9 @@ export const CircleControls = memo(function CircleControls({
               onClick={onMutate}
               title="Mutate one note at random"
               aria-label="Mutate one note at random"
-              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)", fontSize: 14 }}
+              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
             >
-              ⊛
+              <MutateBiohazardIcon isRetro={theme === "retro"} />
             </button>
           </div>
         </div>
