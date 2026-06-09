@@ -133,7 +133,7 @@ const hasExternalCsv = existsSync(CSV_PATH);
 const describeIfCsv = hasExternalCsv ? describe : describe.skip;
 
 describeIfCsv("chord identity - external CSV regression", () => {
-  const rows = parseCsv(readFileSync(CSV_PATH, "utf8"));
+  const rows = hasExternalCsv ? parseCsv(readFileSync(CSV_PATH, "utf8")) : [];
   const mappedRows = rows
     .map((row) => {
       const expected = parseExpectedIdentity(row.chord);
