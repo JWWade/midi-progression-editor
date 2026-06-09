@@ -43,25 +43,34 @@ export const ModePersonalityPanel = memo(function ModePersonalityPanel({
           <span key={tag} className={styles.moodChip}>{tag}</span>
         ))}
         <span
-          className={styles.tensionBadge}
+          className={`${styles.metricBadge} ${styles.tensionBadge}`}
           style={{ backgroundColor: TENSION_COLORS[descriptor.tension] }}
           aria-label={`Tension: ${descriptor.tension}`}
+          title={`Tension: ${descriptor.tension}`}
         >
-          {descriptor.tension}
+          <span className={`${styles.metricIcon} ${styles.metricIconTension}`} aria-hidden="true" />
+          <span className={styles.metricAxis}>Tension</span>
+          <span className={styles.metricValue}>{descriptor.tension}</span>
         </span>
         <span
-          className={styles.stabilityBadge}
+          className={`${styles.metricBadge} ${styles.stabilityBadge}`}
           style={{ backgroundColor: STABILITY_COLORS[descriptor.stability] }}
           aria-label={`Stability: ${descriptor.stability}`}
+          title={`Stability: ${descriptor.stability}`}
         >
-          {descriptor.stability}
+          <span className={`${styles.metricIcon} ${styles.metricIconStability}`} aria-hidden="true" />
+          <span className={styles.metricAxis}>Stability</span>
+          <span className={styles.metricValue}>{descriptor.stability}</span>
         </span>
         <span
-          className={styles.brightnessBadge}
+          className={`${styles.metricBadge} ${styles.brightnessBadge}`}
           style={{ backgroundColor: BRIGHTNESS_COLORS[descriptor.brightness] }}
           aria-label={`Brightness: ${descriptor.brightness}`}
+          title={`Brightness: ${descriptor.brightness}`}
         >
-          {descriptor.brightness}
+          <span className={`${styles.metricIcon} ${styles.metricIconBrightness}`} aria-hidden="true" />
+          <span className={styles.metricAxis}>Brightness</span>
+          <span className={styles.metricValue}>{descriptor.brightness}</span>
         </span>
       </div>
       <p className={styles.culturalContext}>{descriptor.culturalContext.join(", ")}</p>

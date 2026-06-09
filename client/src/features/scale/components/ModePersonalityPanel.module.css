@@ -34,6 +34,44 @@
   user-select: none;
 }
 
+.metricBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.metricIcon {
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.92);
+  flex: 0 0 auto;
+}
+
+.metricIconTension {
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.metricIconStability {
+  border-radius: 1px;
+}
+
+.metricIconBrightness {
+  border-radius: 50%;
+}
+
+.metricAxis {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0.86;
+}
+
+.metricValue {
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .tensionBadge {
   display: inline-flex;
   align-items: center;
