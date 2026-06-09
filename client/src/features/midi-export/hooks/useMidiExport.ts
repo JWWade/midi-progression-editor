@@ -24,8 +24,8 @@ export function useMidiExport(
   extensionRegisterPolicy: ExtensionRegisterPolicy;
   setExtensionRegisterPolicy: (v: ExtensionRegisterPolicy) => void;
 } {
-  const [startOctave, setStartOctave] = useState(3); // SATB default
-  const [voiceLeadingStyle, setVoiceLeadingStyle] = useState<VoiceLeadingStyle>('minimal');
+  const [startOctave, setStartOctave] = useState(4); // Keyboard-Friendly default
+  const [voiceLeadingStyle, setVoiceLeadingStyle] = useState<VoiceLeadingStyle>('close');
   const [strictness, setStrictness] = useState(2);
   const [motionBias, setMotionBias] = useState<MotionBias>('neutral');
   const [extensionRegisterPolicy, setExtensionRegisterPolicy] = useState<ExtensionRegisterPolicy>('strict');
