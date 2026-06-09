@@ -9,7 +9,6 @@ import {
   RING_RADIUS,
   RING_STROKE_WIDTH,
   CIRCLE_PADDING,
-  NODE_RADIUS,
 } from "../constants/visualConstants";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { getChordName } from "@/features/chord/data/chordNames";
