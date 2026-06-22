@@ -1,10 +1,14 @@
 /* ── Note-value segmented button group ───────────────────────────────────── */
 .noteValueSelector {
   display: flex;
-  gap: 0;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 6px;
-  overflow: hidden;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 82%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-bg-surface) 84%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-text-primary) 8%, transparent),
+    0 1px 4px color-mix(in srgb, #000 18%, transparent);
 }
 
 .noteButton {
@@ -13,47 +17,130 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 5px 4px;
-  font-size: 10px;
+  gap: 4px;
+  min-height: 68px;
+  padding: 8px 6px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.03em;
-  background-color: var(--color-bg-canvas);
+  letter-spacing: 0.015em;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-canvas) 94%, var(--color-bg-surface) 6%) 0%,
+    color-mix(in srgb, var(--color-bg-canvas) 86%, #000 14%) 100%
+  );
   color: var(--color-text-secondary);
-  border: none;
-  border-right: 1px solid var(--color-border-subtle);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 78%, transparent);
+  border-radius: 9px;
   cursor: pointer;
   transition:
-    background-color 0.1s ease,
-    color 0.1s ease;
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    background-color 0.12s ease;
   line-height: 1;
 }
 
-.noteButton:last-child {
-  border-right: none;
-}
-
 .noteButton:hover:not(.selected) {
-  background-color: var(--color-bg-subtle, rgba(0, 0, 0, 0.04));
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-accent, #4f46e5) 30%, var(--color-border-subtle) 70%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-accent, #4f46e5) 12%) 0%,
+    color-mix(in srgb, var(--color-bg-canvas) 76%, #000 24%) 100%
+  );
   color: var(--color-text-primary);
+  box-shadow: 0 3px 8px color-mix(in srgb, #000 24%, transparent);
 }
 
 .noteButton.selected {
-  background-color: var(--color-accent, #4f46e5);
-  color: #fff;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent, #4f46e5) 68%, white 32%) 0%,
+    color-mix(in srgb, var(--color-accent, #4f46e5) 88%, #000 12%) 100%
+  );
+  color: #f8f9ff;
+  border-color: color-mix(in srgb, var(--color-accent, #4f46e5) 72%, #d9ddff 28%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-accent, #4f46e5) 44%, transparent),
+    0 5px 10px color-mix(in srgb, var(--color-accent, #4f46e5) 24%, transparent);
 }
 
 .noteButton:focus-visible {
-  outline: 2px solid var(--color-accent, #4f46e5);
-  outline-offset: -2px;
+  outline: 2px solid color-mix(in srgb, var(--color-accent, #4f46e5) 72%, white 28%);
+  outline-offset: 1px;
+}
+
+.noteButton:active:not(.selected) {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px color-mix(in srgb, #000 22%, transparent);
 }
 
 .noteIcon {
   stroke: currentColor;
-  fill: currentColor;
+  fill: none;
   display: block;
+  opacity: 0.95;
 }
 
 .noteLabel {
   display: block;
+  text-transform: none;
+}
+
+[data-theme="retro"] .noteValueSelector {
+  border-radius: 0;
+  gap: 4px;
+  border-color: #ff00ff;
+  box-shadow: none;
+}
+
+[data-theme="retro"] .noteButton {
+  border-radius: 0;
+}
+
+[data-theme="dark"] .noteValueSelector {
+  border-color: color-mix(in srgb, var(--color-border-subtle) 68%, #6673ff 32%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-surface) 84%, #111424 16%) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 72%, #06080f 28%) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #d3dcff 10%, transparent),
+    0 1px 6px color-mix(in srgb, #000 30%, transparent);
+}
+
+[data-theme="dark"] .noteButton {
+  color: color-mix(in srgb, var(--color-text-secondary) 84%, #d4dcff 16%);
+  border-color: color-mix(in srgb, var(--color-border-subtle) 70%, #6f7dff 30%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-canvas) 80%, #161a2a 20%) 0%,
+    color-mix(in srgb, var(--color-bg-canvas) 62%, #070910 38%) 100%
+  );
+}
+
+[data-theme="dark"] .noteButton:hover:not(.selected) {
+  border-color: color-mix(in srgb, var(--color-accent, #4f46e5) 44%, #8a96ff 56%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-canvas) 64%, var(--color-accent, #4f46e5) 36%) 0%,
+    color-mix(in srgb, var(--color-bg-canvas) 54%, #0b0f1c 46%) 100%
+  );
+  color: #eef1ff;
+  box-shadow: 0 4px 10px color-mix(in srgb, #000 40%, transparent);
+}
+
+[data-theme="dark"] .noteButton.selected {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent, #4f46e5) 70%, #d5dcff 30%) 0%,
+    color-mix(in srgb, var(--color-accent, #4f46e5) 86%, #111427 14%) 100%
+  );
+  color: #ffffff;
+  border-color: color-mix(in srgb, var(--color-accent, #4f46e5) 56%, #e2e7ff 44%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-accent, #4f46e5) 56%, transparent),
+    0 6px 12px color-mix(in srgb, var(--color-accent, #4f46e5) 34%, transparent);
 }
