@@ -39,8 +39,8 @@ export default function App() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('inspect');
   const [startupSelection] = useState(() => selectRandomDiatonicStartupChord());
   const [currentChord, setCurrentChord] = useState<Chord | null>(startupSelection.chord);
-  const [keyRoot, setKeyRoot] = useState<number>(0);
-  const [keyScale, setKeyScale] = useState<ScaleType>("major");
+  const [keyRoot, setKeyRoot] = useState<number>(startupSelection.keyRoot);
+  const [keyScale, setKeyScale] = useState<ScaleType>(startupSelection.keyScale);
   const [audioParams, setAudioParams] = useState<AudioParams>(DEFAULT_AUDIO_PARAMS);
   const [bpm, setBpm] = useState(() => getRandomBpmInRange("Adagio", "Presto"));
   const [beatsPerChord, setBeatsPerChord] = useState(4);
