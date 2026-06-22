@@ -70,8 +70,8 @@ export function AppHeader({
       </div>
 
       {/* Center: brand / wordmark */}
-      <div className={styles.brand} aria-label="Application name">
-        <span className={styles.brandName}>Apeirograph</span>
+      <div className={styles.brand}>
+        <h1 className={styles.brandName}>Apeirograph</h1>
       </div>
 
       {/* Right section: layout mode + utility controls */}
