@@ -187,7 +187,7 @@ export function ProgressionSidebar({
 
   // Local state: whether the arpeggio pattern editor panel is visible.
   const [showPatternEditor, setShowPatternEditor] = useState(false);
-  const [showStaffCharts, setShowStaffCharts] = useState(false);
+  const [showStaffCharts, setShowStaffCharts] = useState(true);
 
   // Track the node-index of the most recently added tile for scroll/focus/animation.
   const [newTileNodeIndex, setNewTileNodeIndex] = useState<number | null>(null);
