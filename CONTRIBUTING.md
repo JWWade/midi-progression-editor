@@ -11,7 +11,7 @@ This guide will get you from a fresh clone to a running development environment 
 |------|-----------------|---------|
 | Node.js | 18 | [nodejs.org](https://nodejs.org) |
 | npm | 9 (bundled with Node 18+) | — |
-| .NET SDK | 10 | [dot.net](https://dot.net) |
+| .NET SDK | 10 | [dotnet.microsoft.com](https://dotnet.microsoft.com/en-us/download/dotnet) |
 | Git | any recent | [git-scm.com](https://git-scm.com) |
 
 Verify your environment:

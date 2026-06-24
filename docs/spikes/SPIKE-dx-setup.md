@@ -97,7 +97,7 @@ check_dotnet_version() {
   major=$(echo "$raw" | cut -d. -f1)
   if [ "$major" -lt "$MIN_DOTNET_MAJOR" ]; then
     echo "❌  .NET $major detected — version $MIN_DOTNET_MAJOR or higher is required."
-    echo "    Install: https://dot.net"
+    echo "    Install: https://dotnet.microsoft.com/en-us/download/dotnet"
     exit 1
   fi
   echo "✅  .NET $raw"
@@ -105,7 +105,7 @@ check_dotnet_version() {
 
 echo "Checking prerequisites..."
 check_command "node" "https://nodejs.org"
-check_command "dotnet" "https://dot.net"
+check_command "dotnet" "https://dotnet.microsoft.com/en-us/download/dotnet"
 check_node_version
 check_dotnet_version
 echo ""
@@ -138,7 +138,7 @@ IF %NODE_VER% LSS %MIN_NODE_MAJOR% (
 
 dotnet --version >nul 2>&1
 IF %ERRORLEVEL% NEQ 0 (
-  echo ^❌  'dotnet' is not installed. Install: https://dot.net
+  echo ^❌  'dotnet' is not installed. Install: https://dotnet.microsoft.com/en-us/download/dotnet
   exit /b 1
 )
 
