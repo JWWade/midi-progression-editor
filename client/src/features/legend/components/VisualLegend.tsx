@@ -2,21 +2,43 @@ import { ChordQualityColors } from "@/features/chord/constants/chordQualityColor
 import type { ChordType } from "@/features/chord/types";
 import styles from "./VisualLegend.module.css";
 
-const CHORD_QUALITY_ENTRIES: { type: ChordType; label: string }[] = [
-  { type: "major", label: "Major" },
-  { type: "minor", label: "Minor" },
-  { type: "dim", label: "Dim" },
-  { type: "aug", label: "Aug" },
-  { type: "sus2", label: "Sus 2" },
-  { type: "maj7", label: "Maj 7" },
-  { type: "maj6", label: "Major 6" },
-  { type: "min6", label: "Minor 6" },
-  { type: "min7", label: "Min 7" },
-  { type: "minmaj7", label: "m(maj7)" },
-  { type: "dom7", label: "Dom 7" },
-  { type: "dom7sus4", label: "7sus4" },
-  { type: "halfdim7", label: "ø 7" },
-  { type: "quartal", label: "Quartal" },
+type QualityTile = { type: ChordType; label: string };
+
+type QualityGroup = {
+  title: string;
+  entries: QualityTile[];
+};
+
+const CHORD_QUALITY_GROUPS: QualityGroup[] = [
+  {
+    title: "Triads + Suspended",
+    entries: [
+      { type: "major", label: "Major" },
+      { type: "minor", label: "Minor" },
+      { type: "dim", label: "Dim" },
+      { type: "aug", label: "Aug" },
+      { type: "sus2", label: "Sus 2" },
+    ],
+  },
+  {
+    title: "Added-Sixth + Minor/Major Seventh",
+    entries: [
+      { type: "maj6", label: "Major 6" },
+      { type: "min6", label: "Minor 6" },
+      { type: "maj7", label: "Maj 7" },
+      { type: "min7", label: "Min 7" },
+      { type: "minmaj7", label: "m(maj7)" },
+    ],
+  },
+  {
+    title: "Dominant + Modern Colors",
+    entries: [
+      { type: "dom7", label: "Dom 7" },
+      { type: "dom7sus4", label: "7sus4" },
+      { type: "halfdim7", label: "ø 7" },
+      { type: "quartal", label: "Quartal" },
+    ],
+  },
 ];
 
 const SEVENTH_TYPES: ReadonlySet<ChordType> = new Set([
@@ -56,23 +78,30 @@ export function VisualLegend() {
     <aside className={styles.legend} aria-label="Visual language legend">
       <section className={styles.spectrumSection}>
         <SectionHeading>Quality — Color</SectionHeading>
-        <ul className={styles.spectrumList} role="list">
-          {CHORD_QUALITY_ENTRIES.map(({ type, label }) => {
-            const { base } = ChordQualityColors[type];
-            return (
-              <li key={type} className={styles.spectrumItem}>
-                <span
-                  className={styles.spectrumBand}
-                  style={{ background: base }}
-                  aria-hidden="true"
-                >
-                  <BandGlyph type={type} />
-                </span>
-                <span className={styles.spectrumLabel}>{label}</span>
-              </li>
-            );
-          })}
-        </ul>
+        <div className={styles.groupStack}>
+          {CHORD_QUALITY_GROUPS.map((group) => (
+            <section key={group.title} className={styles.groupSection} aria-label={group.title}>
+              <h4 className={styles.groupHeading}>{group.title}</h4>
+              <ul className={styles.tileRow} role="list">
+                {group.entries.map(({ type, label }) => {
+                  const { base } = ChordQualityColors[type];
+                  return (
+                    <li key={type} className={styles.tileItem}>
+                      <span
+                        className={styles.tileBand}
+                        style={{ background: base }}
+                        aria-hidden="true"
+                      >
+                        <BandGlyph type={type} />
+                      </span>
+                      <span className={styles.tileLabel}>{label}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
       </section>
     </aside>
   );
