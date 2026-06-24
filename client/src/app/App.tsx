@@ -53,7 +53,6 @@ export default function App() {
   const [sendBackChord, setSendBackChord] = useState<Chord | null>(null);
 
   // Visualization toggles (lifted from ChromaticCircle)
-  const [showCentroid, setShowCentroid] = useState(false);
   const [showIntervals, setShowIntervals] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
 
@@ -192,8 +191,6 @@ export default function App() {
         {sendBackMessage}
       </div>
       <AppHeader
-        showCentroid={showCentroid}
-        onCentroidChange={setShowCentroid}
         showIntervals={showIntervals}
         onIntervalsChange={setShowIntervals}
         showLegend={showLegend}
@@ -239,7 +236,6 @@ export default function App() {
             onCurrentChordChange={handleCurrentChordChange}
             selectedScale={keyScale}
             keyRoot={keyRoot}
-            showCentroid={showCentroid}
             showIntervals={showIntervals}
             loadChord={sendBackChord}
             controlsLayout="below"

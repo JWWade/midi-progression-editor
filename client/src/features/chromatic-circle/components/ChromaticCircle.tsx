@@ -23,7 +23,6 @@ import {
   noteIndexToFrequency,
 } from "@/features/chord-inspection";
 import type { ToneInfo } from "@/features/chord-inspection";
-import { calculateCentroid } from "@/features/chord-geometry";
 import { getNoteStyle, chordPolygonGradientId } from "../utils/noteStyles";
 import {
   getChordComplexity,
@@ -48,7 +47,6 @@ interface ChromaticCircleProps {
   selectedScale?: ScaleType;
   /** Key root pitch class (0–11) — renders the tonic marker on this node. */
   keyRoot?: number;
-  showCentroid?: boolean;
   showIntervals?: boolean;
   /** When non-null, overrides the user's internal chord selection for rendering and animation. */
   externalChord?: Chord | null;
@@ -93,7 +91,6 @@ export function ChromaticCircle({
   initialChordName = "C",
   selectedScale: propSelectedScale = "major",
   keyRoot: propKeyRoot,
-  showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
   externalChord,
   isPlaybackActive = false,
@@ -379,7 +376,6 @@ export function ChromaticCircle({
   );
   const isAnimating = morphProgress > 0 && morphProgress < 1;
 
-  const fromCentroid = calculateCentroid(fromMorphedPoints);
   const chordComplexity = getChordComplexity({ root: rootIndex, quality: chordType });
   const strokeColor = getChordColor(chordType, chordComplexity);
   const strokeDasharray = isSeventhChord ? "5,5" : undefined;
@@ -486,8 +482,6 @@ export function ChromaticCircle({
             strokeColor={strokeColor}
             strokeDasharray={strokeDasharray}
             opacity={polygonOpacity}
-            showCentroid={propShowCentroid}
-            centroid={fromCentroid}
             showIntervals={propShowIntervals}
             chordIndices={orderedChordIndices}
             pulse={pulseCount}

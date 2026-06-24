@@ -5,8 +5,6 @@ import type { LayoutMode } from '../types/layoutMode';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
-  showCentroid: boolean;
-  onCentroidChange: (show: boolean) => void;
   showIntervals: boolean;
   onIntervalsChange: (show: boolean) => void;
   showLegend: boolean;
@@ -22,8 +20,6 @@ const LAYOUT_MODES: { mode: LayoutMode; label: string }[] = [
 ];
 
 export function AppHeader({
-  showCentroid,
-  onCentroidChange,
   showIntervals,
   onIntervalsChange,
   showLegend,
@@ -48,12 +44,6 @@ export function AppHeader({
       {/* Left section: pill toggles */}
       <div className={styles.leftSection}>
         <div className={styles.toggles}>
-          <PillToggle
-            id="show-centroid"
-            checked={showCentroid}
-            onChange={onCentroidChange}
-            label="Center"
-          />
           <PillToggle
             id="show-intervals"
             checked={showIntervals}
