@@ -33,7 +33,7 @@ jobs:
         run: npm run docs:generate
 
       - name: Upload TypeDoc as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: typedoc-${{ github.sha }}
           path: client/docs/api/
@@ -62,7 +62,7 @@ jobs:
           /p:GenerateDocumentationFile=true
 
       - name: Upload C# XML docs as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: csharp-xml-docs-${{ github.sha }}
           path: server/ParametricMusic.Api/bin/Release/
