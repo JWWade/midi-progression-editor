@@ -52,20 +52,59 @@ function getAccidentalPosition(
     : false;
 
   const inDenseCluster = nearPrevious || nearNext;
-  const horizontalOffset = inDenseCluster ? 19 : 14;
-  const verticalOffset = nearPrevious && nearNext ? -3 : (nearPrevious ? 0 : (nearNext ? 2 : 2));
+  const horizontalOffset = inDenseCluster ? 21 : 16;
+  const verticalOffset = 0;
 
   const compactHorizontalTweak = density === "compact" ? 1.5 : 0;
-  const compactVerticalTweak = density === "compact" ? -1 : 0;
+  const noteheadCenterY = getNoteheadRenderY(note.y, density);
 
   return {
     x: note.x - horizontalOffset - compactHorizontalTweak,
-    y: note.y + verticalOffset + compactVerticalTweak,
+    y: noteheadCenterY + verticalOffset,
   };
 }
 
+function buildAccidentalPositionMap(
+  layout: ReturnType<typeof buildStaffNoteLayout>,
+  density: "compact" | "comfortable",
+): Map<number, { x: number; y: number }> {
+  const candidates = layout
+    .map((note, index) => ({
+      index,
+      note,
+      pos: note.accidental ? getAccidentalPosition(note, index, layout, density) : null,
+    }))
+    .filter((entry): entry is { index: number; note: ReturnType<typeof buildStaffNoteLayout>[number]; pos: { x: number; y: number } } => entry.pos !== null)
+    .sort((a, b) => a.pos.y - b.pos.y);
+
+  const placed: Array<{ x: number; y: number }> = [];
+  const positionMap = new Map<number, { x: number; y: number }>();
+
+  for (const candidate of candidates) {
+    let x = candidate.pos.x;
+    const y = candidate.pos.y;
+
+    for (const prev of placed) {
+      const verticallyClose = Math.abs(y - prev.y) < 10;
+      const horizontallyClose = Math.abs(x - prev.x) < 8;
+      if (!verticallyClose || !horizontallyClose) {
+        continue;
+      }
+
+      // Stagger leftward when accidentals would overlap in tight vertical clusters.
+      x = prev.x - 7;
+    }
+
+    const resolved = { x, y };
+    placed.push(resolved);
+    positionMap.set(candidate.index, resolved);
+  }
+
+  return positionMap;
+}
+
 function getNoteheadRenderY(noteY: number, density: "compact" | "comfortable"): number {
-  return density === "compact" ? noteY + 0.5 : noteY;
+  return density === "compact" ? noteY - 0.5 : noteY;
 }
 
 function getVerticalFitOffset(
@@ -78,6 +117,7 @@ function getVerticalFitOffset(
   const SAFE_BOTTOM = 78;
   const NOTEHEAD_RADIUS_Y = 4.2;
   const ACCIDENTAL_HALF_HEIGHT = 5;
+  const accidentalPositionMap = buildAccidentalPositionMap(layout, density);
 
   const bounds = layout.reduce((acc, note, index) => {
     const noteheadY = getNoteheadRenderY(note.y, density);
@@ -90,7 +130,8 @@ function getVerticalFitOffset(
     }
 
     if (note.accidental) {
-      const accidentalPos = getAccidentalPosition(note, index, layout, density);
+      const accidentalPos = accidentalPositionMap.get(index);
+      if (!accidentalPos) return acc;
       acc.min = Math.min(acc.min, accidentalPos.y - ACCIDENTAL_HALF_HEIGHT);
       acc.max = Math.max(acc.max, accidentalPos.y + ACCIDENTAL_HALF_HEIGHT);
     }
@@ -155,6 +196,7 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, note
       y: note.y + verticalOffset,
       ledgerLineYs: note.ledgerLineYs.map((ledgerY) => ledgerY + verticalOffset),
     }));
+  const accidentalPositionMap = buildAccidentalPositionMap(renderedLayout, density);
   const staffLines = [14, 26, 38, 50, 62];
 
   return (
@@ -179,9 +221,7 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, note
           {clefSymbol}
         </text>
         {renderedLayout.map((note, index) => {
-          const accidentalPos = note.accidental
-            ? getAccidentalPosition(note, index, renderedLayout, density)
-            : null;
+          const accidentalPos = note.accidental ? accidentalPositionMap.get(index) ?? null : null;
           const noteheadY = getNoteheadRenderY(note.y, density);
           return (
             <g key={`${note.midi}-${note.x}`}>
@@ -196,7 +236,15 @@ export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, note
                 />
               ))}
               {note.accidental && accidentalPos && (
-                <text x={accidentalPos.x} y={accidentalPos.y} className={styles.accidental}>{note.accidental}</text>
+                <text
+                  x={accidentalPos.x}
+                  y={accidentalPos.y}
+                  className={styles.accidental}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  {note.accidental}
+                </text>
               )}
               <ellipse cx={note.x} cy={noteheadY} rx={5.6} ry={4.2} className={styles.notehead} />
             </g>

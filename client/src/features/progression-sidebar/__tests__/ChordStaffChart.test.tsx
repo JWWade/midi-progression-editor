@@ -105,7 +105,34 @@ describe("ChordStaffChart", () => {
     }));
 
     expect(accidentalX).toBeLessThan(maxNoteheadX - 10);
-    expect(nearestNoteheadY).toBeGreaterThanOrEqual(0.5);
+    expect(nearestNoteheadY).toBeLessThanOrEqual(1);
+  });
+
+  it("stagger-positions multiple accidentals in tight vertical stacks", () => {
+    const { container } = render(
+      <ChordStaffChart
+        chordName="A6"
+        voicedMidiNotes={[57, 61, 64, 66]}
+        pitchClasses={PITCH_CLASSES}
+        noteNameOverridesByPitchClass={{ 9: "A", 1: "C#", 4: "E", 6: "Gb" }}
+      />,
+    );
+
+    const accidentals = Array.from(container.querySelectorAll(`.${styles.accidental}`));
+    expect(accidentals.length).toBeGreaterThanOrEqual(2);
+
+    const points = accidentals.map((glyph) => ({
+      x: Number(glyph.getAttribute("x")),
+      y: Number(glyph.getAttribute("y")),
+    }));
+
+    const hasOverlap = points.some((a, i) =>
+      points.some((b, j) =>
+        i !== j && Math.abs(a.x - b.x) < 6 && Math.abs(a.y - b.y) < 10,
+      ),
+    );
+
+    expect(hasOverlap).toBe(false);
   });
 
   it("keeps high-register voicings within the chart viewport", () => {
@@ -131,5 +158,30 @@ describe("ChordStaffChart", () => {
     expect(allYValues.length).toBeGreaterThan(0);
     expect(Math.min(...allYValues)).toBeGreaterThanOrEqual(6);
     expect(Math.max(...allYValues)).toBeLessThanOrEqual(78);
+  });
+
+  it("keeps each accidental vertically aligned with its notehead", () => {
+    const { container } = render(
+      <ChordStaffChart
+        chordName="Bmaj7"
+        voicedMidiNotes={[59, 63, 66, 70]}
+        pitchClasses={PITCH_CLASSES}
+        noteNameOverridesByPitchClass={{ 11: "B", 3: "D#", 6: "F#", 10: "A#" }}
+      />,
+    );
+
+    const accidentalNodes = Array.from(container.querySelectorAll(`.${styles.accidental}`));
+    expect(accidentalNodes.length).toBe(3);
+
+    for (const accidental of accidentalNodes) {
+      const group = accidental.closest("g");
+      expect(group).not.toBeNull();
+      const notehead = group?.querySelector("ellipse");
+      expect(notehead).not.toBeNull();
+
+      const accidentalY = Number(accidental.getAttribute("y"));
+      const noteheadY = Number(notehead?.getAttribute("cy"));
+      expect(Math.abs(accidentalY - noteheadY)).toBeLessThanOrEqual(1);
+    }
   });
 });

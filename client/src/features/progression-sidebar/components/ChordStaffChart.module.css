@@ -60,6 +60,8 @@
   fill: var(--color-text-primary);
   font-size: 10px;
   font-weight: 800;
+  dominant-baseline: middle;
+  text-anchor: middle;
   paint-order: stroke;
   stroke: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
   stroke-width: 0.55;
