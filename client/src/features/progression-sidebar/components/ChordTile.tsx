@@ -11,6 +11,7 @@ import { playChord, playArpeggio, stopChord } from "@/features/audio";
 import type { ArpeggioHandle } from "@/features/audio";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { ChordStaffChart } from "./ChordStaffChart";
+import { buildChordSpellingMap } from "../utils/chordSpelling";
 import styles from "./ChordTile.module.css";
 
 interface ChordTileProps {
@@ -62,16 +63,17 @@ interface ChordInfoHeaderProps {
   chordName: string;
   noteIndices: readonly number[];
   pitchClasses: readonly string[];
+  spellingByPitchClass: Partial<Record<number, string>>;
   activePitchClass: number | null;
 }
 
-function ChordInfoHeader({ chordName, noteIndices, pitchClasses, activePitchClass }: ChordInfoHeaderProps) {
+function ChordInfoHeader({ chordName, noteIndices, pitchClasses, spellingByPitchClass, activePitchClass }: ChordInfoHeaderProps) {
   return (
     <div className={styles.chordInfoHeader}>
       <span className={styles.chordName}>{chordName}</span>
       <span className={styles.chordNotes}>
         {noteIndices.map((noteIndex, noteSlotIndex) => {
-          const noteName = pitchClasses[noteIndex];
+          const noteName = spellingByPitchClass[noteIndex] ?? pitchClasses[noteIndex];
           const isActive = activePitchClass === noteIndex;
           return (
             <span
@@ -125,6 +127,7 @@ export const ChordTile = memo(
   const complexity = getChordComplexity(chord);
   const accentColor = getChordColor(chord.quality, complexity);
   const chordName = resolveChordName(chord, pitchClasses);
+  const spellingByPitchClass = buildChordSpellingMap(chord, pitchClasses);
   const activePitchClass = activeArpeggioPitchClass === null
     ? null
     : ((activeArpeggioPitchClass % 12) + 12) % 12;
@@ -210,6 +213,7 @@ export const ChordTile = memo(
           chordName={chordName}
           noteIndices={noteIndices}
           pitchClasses={pitchClasses}
+          spellingByPitchClass={spellingByPitchClass}
           activePitchClass={activePitchClass}
         />
         {showStaffChart && !isGhost && (
@@ -217,6 +221,7 @@ export const ChordTile = memo(
             chordName={chordName}
             voicedMidiNotes={voicedMidiNotes}
             pitchClasses={pitchClasses}
+            noteNameOverridesByPitchClass={spellingByPitchClass}
             descriptionId={staffDescriptionId}
           />
         )}

@@ -6,6 +6,7 @@ interface ChordStaffChartProps {
   chordName: string;
   voicedMidiNotes: number[] | null;
   pitchClasses: readonly string[];
+  noteNameOverridesByPitchClass?: Partial<Record<number, string>>;
   density?: "compact" | "comfortable";
   descriptionId?: string;
 }
@@ -117,15 +118,21 @@ function getVerticalFitOffset(
   return offset;
 }
 
-export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, density = "compact", descriptionId }: ChordStaffChartProps) {
+export function ChordStaffChart({ chordName, voicedMidiNotes, pitchClasses, noteNameOverridesByPitchClass, density = "compact", descriptionId }: ChordStaffChartProps) {
   const model = useMemo(() => {
     if (!voicedMidiNotes || voicedMidiNotes.length === 0) return null;
     const clef = pickStaffClef(voicedMidiNotes);
     const accidentalPreference = inferAccidentalPreference(chordName, pitchClasses);
-    const layout = buildStaffNoteLayout(voicedMidiNotes, pitchClasses, clef, accidentalPreference);
+    const layout = buildStaffNoteLayout(
+      voicedMidiNotes,
+      pitchClasses,
+      clef,
+      accidentalPreference,
+      noteNameOverridesByPitchClass,
+    );
     if (layout.length === 0) return null;
     return { clef, layout };
-  }, [voicedMidiNotes, pitchClasses, chordName]);
+  }, [voicedMidiNotes, pitchClasses, chordName, noteNameOverridesByPitchClass]);
 
   if (!model) {
     return (

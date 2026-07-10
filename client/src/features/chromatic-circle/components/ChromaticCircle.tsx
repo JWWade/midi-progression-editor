@@ -48,6 +48,8 @@ interface ChromaticCircleProps {
   /** Key root pitch class (0–11) — renders the tonic marker on this node. */
   keyRoot?: number;
   showIntervals?: boolean;
+  showLegend?: boolean;
+  onLegendChange?: (show: boolean) => void;
   /** When non-null, overrides the user's internal chord selection for rendering and animation. */
   externalChord?: Chord | null;
   /** When true, renders a pulsing ring to indicate active playback. */
@@ -92,6 +94,8 @@ export function ChromaticCircle({
   selectedScale: propSelectedScale = "major",
   keyRoot: propKeyRoot,
   showIntervals: propShowIntervals = false,
+  showLegend = false,
+  onLegendChange,
   externalChord,
   isPlaybackActive = false,
   playingPitchClass = null,
@@ -632,6 +636,8 @@ export function ChromaticCircle({
           onChordChange={handleChordChange}
           customFromChord={customFromChord}
           diatonicRoots={keyDiatonicRoots}
+          showLegend={showLegend}
+          onLegendChange={onLegendChange}
         />
       )}
       </div>{/* end circleColumn / inner wrapper */}
@@ -649,6 +655,8 @@ export function ChromaticCircle({
             onChordChange={handleChordChange}
             customFromChord={customFromChord}
             diatonicRoots={keyDiatonicRoots}
+            showLegend={showLegend}
+            onLegendChange={onLegendChange}
           />
         </div>
       )}

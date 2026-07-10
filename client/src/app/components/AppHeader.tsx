@@ -1,32 +1,13 @@
 import { useTheme } from '../providers/useTheme';
 import { useEnharmonic } from '../providers/useEnharmonic';
-import { PillToggle } from '@/shared/components/PillToggle/PillToggle';
-import type { LayoutMode } from '../types/layoutMode';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
-  showIntervals: boolean;
-  onIntervalsChange: (show: boolean) => void;
-  showLegend: boolean;
-  onLegendChange: (show: boolean) => void;
   onLoadJson: () => void;
-  layoutMode: LayoutMode;
-  onLayoutModeChange: (mode: LayoutMode) => void;
 }
 
-const LAYOUT_MODES: { mode: LayoutMode; label: string }[] = [
-  { mode: 'inspect', label: 'Inspect' },
-  { mode: 'compose', label: 'Compose' },
-];
-
 export function AppHeader({
-  showIntervals,
-  onIntervalsChange,
-  showLegend,
-  onLegendChange,
   onLoadJson,
-  layoutMode,
-  onLayoutModeChange,
 }: AppHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { useFlats, toggleEnharmonic } = useEnharmonic();
@@ -41,21 +22,29 @@ export function AppHeader({
       </div>
     )}
     <header className={styles.header}>
-      {/* Left section: pill toggles */}
+      {/* Left section: notation toggle */}
       <div className={styles.leftSection}>
         <div className={styles.toggles}>
-          <PillToggle
-            id="show-intervals"
-            checked={showIntervals}
-            onChange={onIntervalsChange}
-            label="Intervals"
-          />
-          <PillToggle
-            id="show-legend"
-            checked={showLegend}
-            onChange={onLegendChange}
-            label="Legend"
-          />
+          <label className={styles.enharmonicToggle} htmlFor="notation-toggle">
+            <span className={styles.enharmonicSymbol} aria-hidden="true">♯</span>
+            <input
+              id="notation-toggle"
+              type="checkbox"
+              role="switch"
+              checked={useFlats}
+              onChange={(e) => {
+                if (e.target.checked !== useFlats) {
+                  toggleEnharmonic();
+                }
+              }}
+              className={styles.enharmonicInput}
+              aria-label="Use flat notation"
+            />
+            <span className={styles.enharmonicTrack} aria-hidden="true">
+              <span className={styles.enharmonicThumb} />
+            </span>
+            <span className={styles.enharmonicSymbol} aria-hidden="true">♭</span>
+          </label>
         </div>
       </div>
 
@@ -64,23 +53,8 @@ export function AppHeader({
         <h1 className={styles.brandName}>Apeirograph</h1>
       </div>
 
-      {/* Right section: layout mode + utility controls */}
+      {/* Right section: utility controls */}
       <div className={styles.rightSection}>
-        {/* Layout mode segmented controls */}
-        <div className={styles.layoutModeControls} role="group" aria-label="Workspace mode">
-          {LAYOUT_MODES.map(({ mode, label }) => (
-            <button
-              key={mode}
-              type="button"
-              className={`${styles.layoutModeButton} ${layoutMode === mode ? styles.layoutModeButtonActive : ''}`}
-              aria-pressed={layoutMode === mode}
-              onClick={() => onLayoutModeChange(mode)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
         <div className={styles.rightControls}>
           {/* Load JSON session button */}
           <button
@@ -116,16 +90,6 @@ export function AppHeader({
             {theme === 'light' ? '🌙 Dark' : theme === 'dark' ? '💾 Retro' : '☀️ Light'}
           </button>
 
-          {/* Enharmonic toggle */}
-          <button
-            type="button"
-            className={styles.themeToggle}
-            onClick={toggleEnharmonic}
-            aria-label={`Switch to ${useFlats ? 'sharp' : 'flat'} notation`}
-            title={`Switch to ${useFlats ? 'sharp' : 'flat'} notation`}
-          >
-            {useFlats ? '♯ Sharps' : '♭ Flats'}
-          </button>
         </div>
       </div>
     </header>

@@ -4,6 +4,7 @@ import { ChordGrid } from "@/features/chord/components/ChordGrid";
 import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import { allReflectionAxes, type ReflectionAxis } from "@/features/chord/utils/reflectChord";
 import { useTheme } from "@/app/providers/useTheme";
+import { PillToggle } from "@/shared/components/PillToggle/PillToggle";
 import type { CustomChordState } from "../types";
 
 interface CircleControlsProps {
@@ -16,6 +17,8 @@ interface CircleControlsProps {
   onChordChange: (name: string) => void;
   customFromChord: CustomChordState | null;
   diatonicRoots?: Set<number>;
+  showLegend: boolean;
+  onLegendChange?: (show: boolean) => void;
 }
 
 const BASE_BUTTON_STYLE: React.CSSProperties = {
@@ -136,6 +139,8 @@ export const CircleControls = memo(function CircleControls({
   onChordChange,
   customFromChord,
   diatonicRoots,
+  showLegend,
+  onLegendChange,
 }: CircleControlsProps) {
   const { theme } = useTheme();
   const activeShape = customFromChord?.primitiveShape;
@@ -437,6 +442,15 @@ export const CircleControls = memo(function CircleControls({
         aria-label="Chord"
         diatonicRoots={diatonicRoots}
       />
+
+      <div style={{ marginTop: 4 }}>
+        <PillToggle
+          id="show-legend-below-selector"
+          checked={showLegend}
+          onChange={(next) => onLegendChange?.(next)}
+          label="Legend"
+        />
+      </div>
     </div>
   );
 });
