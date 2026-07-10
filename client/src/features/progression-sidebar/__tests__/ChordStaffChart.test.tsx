@@ -55,6 +55,22 @@ describe("ChordStaffChart", () => {
     expect(description?.textContent).not.toContain("C#4");
   });
 
+  it("uses explicit note-name overrides when provided", () => {
+    render(
+      <ChordStaffChart
+        chordName="D diminished"
+        voicedMidiNotes={[50, 53, 56, 59]}
+        pitchClasses={PITCH_CLASSES}
+        noteNameOverridesByPitchClass={{ 2: "D", 5: "F", 8: "Ab", 11: "Cb" }}
+        descriptionId="d-dim-spelling"
+      />,
+    );
+
+    const description = document.getElementById("d-dim-spelling");
+    expect(description).not.toBeNull();
+    expect(description?.textContent).toContain("D3 F3 Ab3 Cb4");
+  });
+
   it("applies the comfortable density style when requested", () => {
     const { container } = render(
       <ChordStaffChart

@@ -54,6 +54,14 @@ describe("buildStaffNoteLayout", () => {
     expect(layout[0]?.noteLabel).toBe("C#4");
   });
 
+  it("respects enharmonic spelling octaves for Cb/B# style overrides", () => {
+    const cbLayout = buildStaffNoteLayout([59], pitchClasses, "treble", "auto", { 11: "Cb" });
+    const bSharpLayout = buildStaffNoteLayout([60], pitchClasses, "treble", "auto", { 0: "B#" });
+
+    expect(cbLayout[0]?.noteLabel).toBe("Cb4");
+    expect(bSharpLayout[0]?.noteLabel).toBe("B#3");
+  });
+
   it("separates closely clustered notes to avoid overlap", () => {
     const layout = buildStaffNoteLayout([60, 61], pitchClasses, "treble");
     expect(layout.length).toBe(2);

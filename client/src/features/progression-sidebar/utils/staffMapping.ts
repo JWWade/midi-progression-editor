@@ -23,6 +23,16 @@ const LETTER_TO_DIATONIC_INDEX: Readonly<Record<string, number>> = {
   B: 6,
 };
 
+const LETTER_TO_NATURAL_PITCH_CLASS: Readonly<Record<string, number>> = {
+  C: 0,
+  D: 2,
+  E: 4,
+  F: 5,
+  G: 7,
+  A: 9,
+  B: 11,
+};
+
 const STAFF_BOTTOM_LINE_REFERENCE: Readonly<Record<StaffClef, { letter: string; octave: number }>> = {
   treble: { letter: "E", octave: 4 },
   bass: { letter: "G", octave: 2 },
@@ -55,20 +65,25 @@ function toNoteName(
   return pitchClasses[pitchClass] ?? FALLBACK_NOTE_NAMES[pitchClass] ?? "C";
 }
 
-function parseLetterAndAccidental(noteName: string): { letter: string; accidental: "#" | "b" | null } {
+function parseLetterAndAccidental(noteName: string): { letter: string; accidental: "#" | "b" | null; semitoneOffset: number } {
   const letter = noteName.charAt(0).toUpperCase();
   if (!(letter in LETTER_TO_DIATONIC_INDEX)) {
-    return { letter: "C", accidental: null };
+    return { letter: "C", accidental: null, semitoneOffset: 0 };
   }
 
   const suffix = noteName.slice(1);
   if (suffix.includes("#") || suffix.includes("♯")) {
-    return { letter, accidental: "#" };
+    return { letter, accidental: "#", semitoneOffset: 1 };
   }
   if (suffix.includes("b") || suffix.includes("♭")) {
-    return { letter, accidental: "b" };
+    return { letter, accidental: "b", semitoneOffset: -1 };
   }
-  return { letter, accidental: null };
+  return { letter, accidental: null, semitoneOffset: 0 };
+}
+
+function getSpelledOctave(midi: number, letter: string, semitoneOffset: number): number {
+  const naturalPitchClass = LETTER_TO_NATURAL_PITCH_CLASS[letter] ?? 0;
+  return Math.floor((midi - naturalPitchClass - semitoneOffset) / 12) - 1;
 }
 
 function toDiatonicNumber(letter: string, octave: number): number {
@@ -129,6 +144,7 @@ export function buildStaffNoteLayout(
   pitchClasses: readonly string[],
   clef: StaffClef,
   accidentalPreference: AccidentalPreference = "auto",
+  noteNameOverridesByPitchClass?: Partial<Record<number, string>>,
 ): StaffNoteLayout[] {
   if (voicedMidiNotes.length === 0) {
     return [];
@@ -146,9 +162,10 @@ export function buildStaffNoteLayout(
 
     const layout = sortedVoicing.map((midi) => {
     const pitchClass = toPitchClass(midi);
-    const noteName = toNoteName(pitchClass, pitchClasses, accidentalPreference);
-    const { letter, accidental } = parseLetterAndAccidental(noteName);
-    const octave = Math.floor(midi / 12) - 1;
+    const noteName = noteNameOverridesByPitchClass?.[pitchClass]
+      ?? toNoteName(pitchClass, pitchClasses, accidentalPreference);
+    const { letter, accidental, semitoneOffset } = parseLetterAndAccidental(noteName);
+    const octave = getSpelledOctave(midi, letter, semitoneOffset);
     const diatonicNumber = toDiatonicNumber(letter, octave);
     const stepFromBottomLine = diatonicNumber - bottomReferenceDiatonic;
     const y = yForStep(stepFromBottomLine);
