@@ -184,8 +184,6 @@ export default function App() {
         {sendBackMessage}
       </div>
       <AppHeader
-        showLegend={showLegend}
-        onLegendChange={setShowLegend}
         onLoadJson={handleLoadJsonClick}
       />
       <div className={styles.keyContextBar}>
@@ -226,6 +224,8 @@ export default function App() {
             selectedScale={keyScale}
             keyRoot={keyRoot}
             showIntervals={false}
+            showLegend={showLegend}
+            onLegendChange={setShowLegend}
             loadChord={sendBackChord}
             controlsLayout="below"
           />

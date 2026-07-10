@@ -1,17 +1,12 @@
 import { useTheme } from '../providers/useTheme';
 import { useEnharmonic } from '../providers/useEnharmonic';
-import { PillToggle } from '@/shared/components/PillToggle/PillToggle';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
-  showLegend: boolean;
-  onLegendChange: (show: boolean) => void;
   onLoadJson: () => void;
 }
 
 export function AppHeader({
-  showLegend,
-  onLegendChange,
   onLoadJson,
 }: AppHeaderProps) {
   const { theme, toggleTheme } = useTheme();
@@ -27,15 +22,29 @@ export function AppHeader({
       </div>
     )}
     <header className={styles.header}>
-      {/* Left section: pill toggles */}
+      {/* Left section: notation toggle */}
       <div className={styles.leftSection}>
         <div className={styles.toggles}>
-          <PillToggle
-            id="show-legend"
-            checked={showLegend}
-            onChange={onLegendChange}
-            label="Legend"
-          />
+          <label className={styles.enharmonicToggle} htmlFor="notation-toggle">
+            <span className={styles.enharmonicSymbol} aria-hidden="true">♯</span>
+            <input
+              id="notation-toggle"
+              type="checkbox"
+              role="switch"
+              checked={useFlats}
+              onChange={(e) => {
+                if (e.target.checked !== useFlats) {
+                  toggleEnharmonic();
+                }
+              }}
+              className={styles.enharmonicInput}
+              aria-label="Use flat notation"
+            />
+            <span className={styles.enharmonicTrack} aria-hidden="true">
+              <span className={styles.enharmonicThumb} />
+            </span>
+            <span className={styles.enharmonicSymbol} aria-hidden="true">♭</span>
+          </label>
         </div>
       </div>
 
@@ -81,16 +90,6 @@ export function AppHeader({
             {theme === 'light' ? '🌙 Dark' : theme === 'dark' ? '💾 Retro' : '☀️ Light'}
           </button>
 
-          {/* Enharmonic toggle */}
-          <button
-            type="button"
-            className={styles.themeToggle}
-            onClick={toggleEnharmonic}
-            aria-label={`Switch to ${useFlats ? 'sharp' : 'flat'} notation`}
-            title={`Switch to ${useFlats ? 'sharp' : 'flat'} notation`}
-          >
-            {useFlats ? '♯ Sharps' : '♭ Flats'}
-          </button>
         </div>
       </div>
     </header>
