@@ -60,7 +60,7 @@ export function buildChordSpellingMap(
   pitchClasses: readonly string[],
 ): Partial<Record<number, string>> {
   const noteIndices = getChordPitchClasses(chord);
-  if ((noteIndices.length !== 3 && noteIndices.length !== 4) || noteIndices.length === 0) {
+  if (noteIndices.length !== 3 && noteIndices.length !== 4) {
     return {};
   }
 
