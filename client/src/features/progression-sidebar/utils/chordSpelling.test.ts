@@ -5,6 +5,16 @@ import { buildChordSpellingMap } from "./chordSpelling";
 const SHARP_PITCH_CLASSES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
 
 describe("buildChordSpellingMap", () => {
+  it("returns an empty map for non-tertian custom note counts", () => {
+    const emptyCustomChord: Chord = {
+      root: 0,
+      quality: "major",
+      customNotes: [],
+    };
+
+    expect(buildChordSpellingMap(emptyCustomChord, SHARP_PITCH_CLASSES)).toEqual({});
+  });
+
   it("spells diminished-seventh style tones with a flat seventh letter", () => {
     const squareLikeDiminished: Chord = {
       root: 2,
