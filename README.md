@@ -78,7 +78,7 @@ npm run dev
 
 ![Apeirograph interface preview](docs/images/chromatic-circle-interface.png)
 
-The preview highlights the chromatic circle workspace, progression sidebar, and inspector panel.
+The preview highlights the chromatic circle workspace, progression sidebar, and current chord panel.
 
 ## Environment Variables
 

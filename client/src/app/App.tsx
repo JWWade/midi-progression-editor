@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { LayoutMode } from './types/layoutMode';
 import { ChromaticCircle } from '../features/chromatic-circle';
 import { CurrentChordPanel, type Chord, formatChordName } from '../features/current-chord';
 import { getDiatonicIndices } from '../features/chromatic-circle/utils';
@@ -36,7 +35,6 @@ const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
 };
 
 export default function App() {
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>('inspect');
   const [startupSelection] = useState(() => selectRandomDiatonicStartupChord());
   const [currentChord, setCurrentChord] = useState<Chord | null>(startupSelection.chord);
   const [keyRoot, setKeyRoot] = useState<number>(startupSelection.keyRoot);
@@ -148,17 +146,13 @@ export default function App() {
     addGuardRef.current = true;
     addChord(currentChord);
     fireEvent('chordAdded');
-    // Auto-advance: inspect → compose when a chord is added to the progression.
-    if (layoutMode === 'inspect') {
-      setLayoutMode('compose');
-    }
     // currentChord intentionally stays after adding so the panel remains
     // populated and the user can immediately add the same chord again
     // without re-selecting it on the circle.
     requestAnimationFrame(() => {
       addGuardRef.current = false;
     });
-  }, [currentChord, addChord, fireEvent, layoutMode]);
+  }, [currentChord, addChord, fireEvent]);
 
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 
@@ -196,8 +190,6 @@ export default function App() {
         showLegend={showLegend}
         onLegendChange={setShowLegend}
         onLoadJson={handleLoadJsonClick}
-        layoutMode={layoutMode}
-        onLayoutModeChange={setLayoutMode}
       />
       <div className={styles.keyContextBar}>
         <button
@@ -220,13 +212,13 @@ export default function App() {
           </div>
         )}
       </div>
-      <div className={`${styles.primaryFlowContainer} ${styles[`layout_${layoutMode}`]}`}>
+      <div className={styles.primaryFlowContainer}>
         {/* Chromatic Circle - Left */}
         <section
           id="chromatic-circle"
           className={styles.circleArea}
           role="region"
-          aria-label="Chromatic Circle - Select and inspect the current chord"
+          aria-label="Chromatic Circle - Select and shape the current chord"
         >
           <ChromaticCircle
             initialChordName={startupSelection.chordName}
@@ -264,49 +256,47 @@ export default function App() {
           />
         </section>
 
-        {/* Progression Sidebar - Right (compose mode only) */}
-        {layoutMode === 'compose' && (
-          <section
-            id="chord-progression"
-            className={styles.sidebarArea}
-            role="region"
-            aria-label="Chord Progression - View and manage added chords"
-          >
-            <ProgressionSidebar
-              nodes={nodes}
-              chords={chords}
-              onMoveUp={(i) => moveChord(i, 'up')}
-              onMoveDown={(i) => moveChord(i, 'down')}
-              onDelete={deleteChord}
-              maxLength={MAX_PROGRESSION_LENGTH}
-              isPlaying={isPlaying}
-              playingIndex={playingIndex}
-              onPlay={onPlay}
-              onStop={onStop}
-              loop={loop}
-              onToggleLoop={toggleLoop}
-              bpm={bpm}
-              onBpmChange={setBpm}
-              beatsPerChord={beatsPerChord}
-              onBeatsPerChordChange={setBeatsPerChord}
-              scale={{ root: keyRoot, mode: keyScale }}
-              onApplyBridge={applyBridge}
-              onPreviewBridge={onPreviewBridge}
-              onStopPreview={onStopPreview}
-              previewBridge={previewBridge}
-              previewInsertAfterIndex={previewInsertAfterIndex}
-              isPreviewPlaying={isPreviewPlaying}
-              onSendBack={handleSendChordToCircle}
-              arpeggioEnabled={arpeggioEnabled}
-              arpeggioPattern={arpeggioPattern}
-              playingPitchClass={playingPitchClass}
-              onToggleArpeggio={toggleArpeggio}
-              onSetArpeggioPattern={setArpeggioPattern}
-              voiceLeadingConfig={voiceLeadingConfig}
-              onVoiceLeadingConfigChange={setVoiceLeadingConfig}
-            />
-          </section>
-        )}
+        {/* Progression Sidebar - Right */}
+        <section
+          id="chord-progression"
+          className={styles.sidebarArea}
+          role="region"
+          aria-label="Chord Progression - View and manage added chords"
+        >
+          <ProgressionSidebar
+            nodes={nodes}
+            chords={chords}
+            onMoveUp={(i) => moveChord(i, 'up')}
+            onMoveDown={(i) => moveChord(i, 'down')}
+            onDelete={deleteChord}
+            maxLength={MAX_PROGRESSION_LENGTH}
+            isPlaying={isPlaying}
+            playingIndex={playingIndex}
+            onPlay={onPlay}
+            onStop={onStop}
+            loop={loop}
+            onToggleLoop={toggleLoop}
+            bpm={bpm}
+            onBpmChange={setBpm}
+            beatsPerChord={beatsPerChord}
+            onBeatsPerChordChange={setBeatsPerChord}
+            scale={{ root: keyRoot, mode: keyScale }}
+            onApplyBridge={applyBridge}
+            onPreviewBridge={onPreviewBridge}
+            onStopPreview={onStopPreview}
+            previewBridge={previewBridge}
+            previewInsertAfterIndex={previewInsertAfterIndex}
+            isPreviewPlaying={isPreviewPlaying}
+            onSendBack={handleSendChordToCircle}
+            arpeggioEnabled={arpeggioEnabled}
+            arpeggioPattern={arpeggioPattern}
+            playingPitchClass={playingPitchClass}
+            onToggleArpeggio={toggleArpeggio}
+            onSetArpeggioPattern={setArpeggioPattern}
+            voiceLeadingConfig={voiceLeadingConfig}
+            onVoiceLeadingConfigChange={setVoiceLeadingConfig}
+          />
+        </section>
       </div>
       {undoPending && (
         <Toast

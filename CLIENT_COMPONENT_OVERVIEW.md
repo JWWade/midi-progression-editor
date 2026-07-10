@@ -7,7 +7,7 @@ This is a **React 19 + TypeScript** web application for editing MIDI chord progr
 - **19 feature modules** organized by domain (chord, audio, scale, etc.)
 - **Component-level accessibility**: ARIA labels, roles, live regions, keyboard navigation
 - **Interactive SVG visualization**: Chromatic circle with 12 note nodes, animated chord polygons
-- **Two layout modes**: Inspect (circle + panel) and Compose (adds sidebar)
+- **Compose-first workspace**: circle, current chord panel, and progression sidebar are always visible
 - **Audio playback**: Web Audio API with chord and arpeggiated modes
 - **MIDI export**: Voice-leading optimized notation export
 
@@ -37,16 +37,15 @@ ThemeProvider
 ### Component Hierarchy
 ```
 <App>
-  ├── <AppHeader />               # Theme, layout mode, visualization toggles
+  ├── <AppHeader />               # Theme + visualization toggles
   ├── Settings Toggle Bar
   │   ├── <KeyContextPanel />     # Root + mode selector
   │   └── <AudioDebugPanel />     # Dev-only audio parameter tweaks
   │
-  ├── Primary Flow Container     # layout: 'inspect' | 'compose'
+  ├── Primary Flow Container     # always-on 3-column compose workflow
   │   ├── <ChromaticCircle />     # SVG chord editor (always visible)
   │   ├── <CurrentChordPanel />   # Chord details & Add button
-  │   └── [Compose mode only]
-  │       └── <ProgressionSidebar /> # Chord progression list
+  │   └── <ProgressionSidebar />  # Chord progression list (always visible)
   │
   ├── Toast Notifications        # undo, errors, import status
   └── [Dev only]
@@ -71,7 +70,6 @@ showCentroid: boolean
 showIntervals: boolean
 showLegend: boolean
 isSettingsOpen: boolean
-layoutMode: 'inspect' | 'compose'
 
 // Playback state (delegated to audio feature hooks)
 isPlaying: boolean
@@ -89,7 +87,7 @@ voiceLeadingConfig: VoiceLeadingConfig
 
 ### Key Event Handlers
 - `handleCurrentChordChange()` — fires `chordSelected` tutorial event
-- `handleAddChord()` — adds chord to progression, auto-advances inspect→compose
+- `handleAddChord()` — adds chord to progression
 - `handleSendChordToCircle()` — loads chord FROM sidebar TO circle, fires `chordClicked`
 - `setKeyContext()` — **single write path for key state** (E12-02 pattern)
 - Keyboard shortcuts: `A` add, `P` play, Arrow keys navigate sidebar
@@ -469,7 +467,6 @@ Utilities module; integrated into `CircleControls` mirror action.
 | **Load JSON** | Button | AppHeader | File picker for snapshot import |
 | **Theme toggle** | Button | AppHeader | Cycle light → dark → retro |
 | **Enharmonic toggle** | Button | AppHeader | Switch sharp ↔ flat |
-| **Inspect/Compose mode** | Segmented | AppHeader | Toggle layout |
 | **Settings toggle (⚙)** | Button | Key Context Bar | Show/hide KeyContextPanel |
 | **Randomize key root (⚄)** | Button | KeyContextPanel | Random tonic |
 | **Rotate CW/CCW** | Button x2 | CircleControls | Rotate chord ±30° |
@@ -685,8 +682,6 @@ useProgression updates chords[] in localStorage
 chords prop updates ProgressionSidebar
   ↓
 New ChordTile rendered at end of list
-  ↓
-If layoutMode === 'inspect', auto-advance to 'compose'
 ```
 
 ---
@@ -739,7 +734,7 @@ App.tsx (root state)
      ├─ Centroid/Intervals/Legend toggles
      ├─ Theme toggle
      ├─ Enharmonic toggle
-     └─ Inspect/Compose mode selector
+   └─ Load JSON session
 ```
 
 ---
@@ -752,9 +747,11 @@ App.tsx (root state)
 {import.meta.env.DEV && <AudioDebugPanel />}
 ```
 
-### Layout Mode Conditional
+### Primary Flow Composition
 ```typescript
-{layoutMode === 'compose' && <ProgressionSidebar />}
+<ChromaticCircle />
+<CurrentChordPanel />
+<ProgressionSidebar />
 ```
 
 ### Settings Panel Conditional
@@ -778,9 +775,8 @@ App.tsx (root state)
   - Environment preferences (`prefers-reduced-motion`, `prefers-color-scheme`)
   - Hover/pointer capability detection
 
-### Layout Modes
-- **Inspect mode:** Circle + center panel (2-column or stacked)
-- **Compose mode:** Circle + center + sidebar (3-column or stacked)
+### Layout
+- **Compose workflow:** Circle + center + sidebar (3-column or stacked)
 - `controlsLayout` prop on ChromaticCircle: `'below' | 'side'` (auto-reverts to below on ≤900px)
 
 ---
@@ -810,7 +806,7 @@ App.tsx (root state)
 ### Memoization & Re-render Prevention
 ```typescript
 // useCallback for stable function identities
-const handleAddChord = useCallback(() => { ... }, [currentChord, addChord, fireEvent, layoutMode])
+const handleAddChord = useCallback(() => { ... }, [currentChord, addChord, fireEvent])
 
 // useMemo for expensive computations
 const diatonicIndices = useMemo(() => getDiatonicIndices(keyRoot, keyScale), [keyRoot, keyScale])
@@ -866,7 +862,7 @@ const scale = await client.post('/Scale/from-root', {
 2. Click note on circle → ToneInfoPanel shows frequency & role
 3. Drag notes to customize chord (optional)
 4. Click "Add" → Chord appended to progression
-5. Layout auto-advances to Compose mode
+5. Progression sidebar remains visible for immediate refinement
 6. Click chord in sidebar to see details
 7. Click "Play" on tile for audio preview
 8. Hover bridge gap → Suggestion popover appears
