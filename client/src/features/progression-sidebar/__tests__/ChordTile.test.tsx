@@ -137,7 +137,7 @@ describe("ChordTile — existing controls still present", () => {
     expect(screen.getByText("Em")).not.toBeNull();
     expect(screen.getByText("E")).not.toBeNull();
     expect(screen.getByText("G")).not.toBeNull();
-    expect(screen.getByText("C")).not.toBeNull();
+    expect(screen.getByText("B#")).not.toBeNull();
   });
 
   it("highlights the active arpeggio note when provided", () => {

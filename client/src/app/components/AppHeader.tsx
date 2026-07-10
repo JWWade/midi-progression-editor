@@ -4,16 +4,12 @@ import { PillToggle } from '@/shared/components/PillToggle/PillToggle';
 import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
-  showIntervals: boolean;
-  onIntervalsChange: (show: boolean) => void;
   showLegend: boolean;
   onLegendChange: (show: boolean) => void;
   onLoadJson: () => void;
 }
 
 export function AppHeader({
-  showIntervals,
-  onIntervalsChange,
   showLegend,
   onLegendChange,
   onLoadJson,
@@ -34,12 +30,6 @@ export function AppHeader({
       {/* Left section: pill toggles */}
       <div className={styles.leftSection}>
         <div className={styles.toggles}>
-          <PillToggle
-            id="show-intervals"
-            checked={showIntervals}
-            onChange={onIntervalsChange}
-            label="Intervals"
-          />
           <PillToggle
             id="show-legend"
             checked={showLegend}

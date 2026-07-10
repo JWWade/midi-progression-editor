@@ -51,7 +51,6 @@ export default function App() {
   const [sendBackChord, setSendBackChord] = useState<Chord | null>(null);
 
   // Visualization toggles (lifted from ChromaticCircle)
-  const [showIntervals, setShowIntervals] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -185,8 +184,6 @@ export default function App() {
         {sendBackMessage}
       </div>
       <AppHeader
-        showIntervals={showIntervals}
-        onIntervalsChange={setShowIntervals}
         showLegend={showLegend}
         onLegendChange={setShowLegend}
         onLoadJson={handleLoadJsonClick}
@@ -228,7 +225,7 @@ export default function App() {
             onCurrentChordChange={handleCurrentChordChange}
             selectedScale={keyScale}
             keyRoot={keyRoot}
-            showIntervals={showIntervals}
+            showIntervals={false}
             loadChord={sendBackChord}
             controlsLayout="below"
           />
