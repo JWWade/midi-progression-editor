@@ -24,6 +24,8 @@ import type { AudioParams } from "@/features/audio/constants/audioConfig";
 import { getRomanNumeral } from "../utils/romanNumeral";
 import type { ScaleType } from "@/features/scale/types";
 import type { SetKeyContextAction } from "@/features/scale";
+import { ToneInfoPanel } from "@/features/chord-inspection";
+import type { ToneInfo } from "@/features/chord-inspection";
 
 /** Duration the "Copied!" feedback badge remains visible (milliseconds). */
 const COPY_FEEDBACK_DURATION_MS = 1500;
@@ -47,6 +49,10 @@ interface CurrentChordPanelProps {
   keyScale?: ScaleType;
   /** Callback to update the key context (primary tonic-snap affordance). */
   onSetKeyContext?: (action: SetKeyContextAction) => void;
+  /** Selected tone details from the chromatic circle. */
+  selectedTone?: ToneInfo | null;
+  /** Close handler for the selected tone info panel. */
+  onCloseToneInfo?: () => void;
 }
 
 export const CurrentChordPanel = memo(function CurrentChordPanel({
@@ -60,6 +66,8 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
   keyRoot,
   keyScale,
   onSetKeyContext,
+  selectedTone,
+  onCloseToneInfo,
 }: CurrentChordPanelProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
@@ -342,6 +350,11 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
       >
         Add to Progression &#8594;
       </button>
+      {selectedTone && (
+        <div className={styles.toneInfoSection}>
+          <ToneInfoPanel selectedTone={selectedTone} onClose={onCloseToneInfo} />
+        </div>
+      )}
       {isProgressionFull && (
         <div className={styles.fullRow} role="status">
           <span className={styles.fullMessage}>

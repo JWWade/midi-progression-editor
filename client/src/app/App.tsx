@@ -24,6 +24,7 @@ import { AudioDebugPanel } from '../features/audio/components/AudioDebugPanel';
 import { useTutorial } from '../features/tutorial';
 import { getRandomBpmInRange } from '../features/midi-export/utils/bpmTempoLabel';
 import type { VoiceLeadingConfig } from '../features/voice-leading';
+import type { ToneInfo } from '../features/chord-inspection';
 import styles from './App.module.css';
 
 const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
@@ -43,6 +44,7 @@ export default function App() {
   const [bpm, setBpm] = useState(() => getRandomBpmInRange("Adagio", "Presto"));
   const [beatsPerChord, setBeatsPerChord] = useState(4);
   const [voiceLeadingConfig, setVoiceLeadingConfig] = useState<VoiceLeadingConfig>(DEFAULT_VOICE_LEADING_CONFIG);
+  const [selectedTone, setSelectedTone] = useState<ToneInfo | null>(null);
   const chordDurationMs = useMemo(() => Math.round((60 / bpm) * beatsPerChord * 1000), [bpm, beatsPerChord]);
 
   // Chord sent back from the progression sidebar to the chromatic circle.
@@ -226,6 +228,8 @@ export default function App() {
             showIntervals={false}
             showLegend={showLegend}
             onLegendChange={setShowLegend}
+            selectedTone={selectedTone}
+            onToneSelect={setSelectedTone}
             loadChord={sendBackChord}
             controlsLayout="below"
           />
@@ -242,6 +246,8 @@ export default function App() {
           <CurrentChordPanel
             chord={currentChord}
             onAddChord={handleAddChord}
+            selectedTone={selectedTone}
+            onCloseToneInfo={() => setSelectedTone(null)}
             diatonicIndices={diatonicIndices}
             isProgressionFull={isProgressionFull}
             progressionLength={chords.length}

@@ -18,7 +18,6 @@ import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import type { ScaleType } from "@/features/scale/types";
 import { useChordMorphing } from "@/features/chord-animation";
 import {
-  ToneInfoPanel,
   getToneRole,
   noteIndexToFrequency,
 } from "@/features/chord-inspection";
@@ -50,6 +49,8 @@ interface ChromaticCircleProps {
   showIntervals?: boolean;
   showLegend?: boolean;
   onLegendChange?: (show: boolean) => void;
+  selectedTone?: ToneInfo | null;
+  onToneSelect?: (tone: ToneInfo | null) => void;
   /** When non-null, overrides the user's internal chord selection for rendering and animation. */
   externalChord?: Chord | null;
   /** When true, renders a pulsing ring to indicate active playback. */
@@ -96,6 +97,8 @@ export function ChromaticCircle({
   showIntervals: propShowIntervals = false,
   showLegend = false,
   onLegendChange,
+  selectedTone = null,
+  onToneSelect,
   externalChord,
   isPlaybackActive = false,
   playingPitchClass = null,
@@ -105,7 +108,6 @@ export function ChromaticCircle({
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
 
-  const [selectedTone, setSelectedTone] = useState<ToneInfo | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -117,11 +119,13 @@ export function ChromaticCircle({
   /** Track which chord vertex note is currently being hovered/previewed (for R key re-root). */
   const hoveredVertexNoteRef = useRef<number | null>(null);
 
-  const deselectTone = useCallback(() => setSelectedTone(null), []);
+  const deselectTone = useCallback(() => {
+    onToneSelect?.(null);
+  }, [onToneSelect]);
 
   const handleNoteClick = useCallback((_noteName: string, toneInfo: ToneInfo) => {
-    setSelectedTone(toneInfo);
-  }, []);
+    onToneSelect?.(toneInfo);
+  }, [onToneSelect]);
 
   const {
     selectedChordName,
@@ -621,8 +625,6 @@ export function ChromaticCircle({
       >
         {previewAnnouncement}
       </div>
-
-      <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
 
       {/* Controls below the circle (default layout) */}
       {!isHorizontal && (
