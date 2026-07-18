@@ -639,7 +639,7 @@ export function ChromaticCircle({
           selectedChordName={selectedChordName}
           onChordChange={handleChordChange}
           customFromChord={customFromChord}
-          keyRoot={rootIndex}
+          keyRoot={propKeyRoot ?? rootIndex}
           keyScale={propSelectedScale}
           onDiatonicChordSelect={onDiatonicChordSelect}
           diatonicRoots={keyDiatonicRoots}
@@ -661,7 +661,7 @@ export function ChromaticCircle({
             selectedChordName={selectedChordName}
             onChordChange={handleChordChange}
             customFromChord={customFromChord}
-            keyRoot={rootIndex}
+            keyRoot={propKeyRoot ?? rootIndex}
             keyScale={propSelectedScale}
             onDiatonicChordSelect={onDiatonicChordSelect}
             diatonicRoots={keyDiatonicRoots}

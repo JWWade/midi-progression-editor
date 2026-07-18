@@ -1,6 +1,7 @@
-import { memo, useCallback, useState, useRef, useEffect } from "react";
+import { memo, useCallback, useState, useRef, useEffect, useMemo } from "react";
 import type { PrimitiveShape } from "@/features/current-chord";
 import type { Chord } from "@/features/current-chord";
+import { formatChordSymbol } from "@/features/current-chord";
 import { ChordGrid } from "@/features/chord/components/ChordGrid";
 import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import { allReflectionAxes, type ReflectionAxis } from "@/features/chord/utils/reflectChord";
@@ -477,9 +478,8 @@ export const CircleControls = memo(function CircleControls({
       <div style={{ marginTop: 14, display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
         <span style={SECTION_LABEL_STYLE}>Diatonic</span>
         <div style={{ display: "flex", width: "100%", gap: 8, marginTop: 8, alignItems: "stretch" }}>
-          {diatonicChords.map(({ chord, degree, qualityLabel }) => {
-            const rootLabel = pitchClasses[chord.root];
-            const buttonLabel = `${rootLabel} ${qualityLabel}`;
+          {diatonicChords.map(({ chord, degree }) => {
+            const buttonLabel = formatChordSymbol(chord, pitchClasses);
             return (
               <button
                 key={`${degree}-${chord.root}-${chord.quality}`}
