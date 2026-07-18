@@ -218,6 +218,7 @@ export default function App() {
             isPlaybackActive={isPlaying}
             playingPitchClass={playingPitchClass}
             onCurrentChordChange={handleCurrentChordChange}
+            onDiatonicChordSelect={handleCurrentChordChange}
             selectedScale={keyScale}
             keyRoot={keyRoot}
             showIntervals={false}

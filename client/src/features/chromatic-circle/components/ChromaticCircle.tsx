@@ -41,6 +41,7 @@ import styles from "./ChromaticCircle.module.css";
 
 interface ChromaticCircleProps {
   onCurrentChordChange?: (chord: Chord) => void;
+  onDiatonicChordSelect?: (chord: Chord) => void;
   /** Initial named chord selected on first render (e.g. Dmaj7). */
   initialChordName?: string;
   selectedScale?: ScaleType;
@@ -91,6 +92,7 @@ function getEnharmonicEquivalent(noteIndex: number, currentName: string): string
 
 export function ChromaticCircle({
   onCurrentChordChange,
+  onDiatonicChordSelect,
   initialChordName = "C",
   selectedScale: propSelectedScale = "major",
   keyRoot: propKeyRoot,
@@ -637,6 +639,9 @@ export function ChromaticCircle({
           selectedChordName={selectedChordName}
           onChordChange={handleChordChange}
           customFromChord={customFromChord}
+          keyRoot={rootIndex}
+          keyScale={propSelectedScale}
+          onDiatonicChordSelect={onDiatonicChordSelect}
           diatonicRoots={keyDiatonicRoots}
           showLegend={showLegend}
           onLegendChange={onLegendChange}
@@ -656,6 +661,9 @@ export function ChromaticCircle({
             selectedChordName={selectedChordName}
             onChordChange={handleChordChange}
             customFromChord={customFromChord}
+            keyRoot={rootIndex}
+            keyScale={propSelectedScale}
+            onDiatonicChordSelect={onDiatonicChordSelect}
             diatonicRoots={keyDiatonicRoots}
             showLegend={showLegend}
             onLegendChange={onLegendChange}
