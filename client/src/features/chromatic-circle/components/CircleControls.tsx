@@ -124,8 +124,8 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
 /**
  * Toolbar rendered below the chromatic circle SVG.
  *
- * Contains two button groups (Transform / Templates) and the chord-grid
- * selector.
+ * Contains two button groups (Transform / Templates), the chord-grid
+ * selector, and a placeholder DIATONIC section.
  *
  * Wrapped with React.memo so it only re-renders when its own props change.
  */
@@ -219,7 +219,7 @@ export const CircleControls = memo(function CircleControls({
   };
 
   return (
-    <div data-circle-controls style={{ display: "flex", flexDirection: "column", marginTop: 12, alignItems: "center", gap: 10 }}>
+    <div data-circle-controls style={{ display: "flex", flexDirection: "column", marginTop: 4, alignItems: "center", gap: 10 }}>
       <div style={{ display: "inline-flex", alignItems: "stretch", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
 
         {/* ── Transform ─────────────────────────────────────────────── */}
@@ -450,6 +450,10 @@ export const CircleControls = memo(function CircleControls({
           onChange={(next) => onLegendChange?.(next)}
           label="Legend"
         />
+      </div>
+
+      <div style={{ marginTop: 14, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <span style={SECTION_LABEL_STYLE}>Diatonic</span>
       </div>
     </div>
   );

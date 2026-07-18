@@ -25,6 +25,7 @@ import { useTutorial } from '../features/tutorial';
 import { getRandomBpmInRange } from '../features/midi-export/utils/bpmTempoLabel';
 import type { VoiceLeadingConfig } from '../features/voice-leading';
 import type { ToneInfo } from '../features/chord-inspection';
+import { ThemeModeDropdown } from './components/ThemeModeDropdown';
 import styles from './App.module.css';
 
 const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
@@ -187,17 +188,10 @@ export default function App() {
       </div>
       <AppHeader
         onLoadJson={handleLoadJsonClick}
+        isSettingsOpen={isSettingsOpen}
+        onToggleSettings={() => setIsSettingsOpen((v) => !v)}
       />
       <div className={styles.keyContextBar}>
-        <button
-          className={styles.settingsToggle}
-          onClick={() => setIsSettingsOpen((v) => !v)}
-          aria-expanded={isSettingsOpen}
-          aria-label="Toggle settings panels"
-          title="Settings"
-        >
-          ⚙
-        </button>
         {isSettingsOpen && (
           <div className={styles.settingsCards}>
             <KeyContextPanel
@@ -206,6 +200,7 @@ export default function App() {
               onSetKeyContext={setKeyContext}
             />
             <AudioDebugPanel params={audioParams} onChange={setAudioParams} />
+            <ThemeModeDropdown />
           </div>
         )}
       </div>

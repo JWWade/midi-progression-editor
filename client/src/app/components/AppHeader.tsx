@@ -4,12 +4,16 @@ import styles from './AppHeader.module.css';
 
 interface AppHeaderProps {
   onLoadJson: () => void;
+  isSettingsOpen: boolean;
+  onToggleSettings: () => void;
 }
 
 export function AppHeader({
   onLoadJson,
+  isSettingsOpen,
+  onToggleSettings,
 }: AppHeaderProps) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const { useFlats, toggleEnharmonic } = useEnharmonic();
 
   return (
@@ -56,6 +60,17 @@ export function AppHeader({
       {/* Right section: utility controls */}
       <div className={styles.rightSection}>
         <div className={styles.rightControls}>
+          <button
+            type="button"
+            className={styles.settingsToggle}
+            onClick={onToggleSettings}
+            aria-expanded={isSettingsOpen}
+            aria-label="Toggle settings panels"
+            title="Settings"
+          >
+            ⚙
+          </button>
+
           {/* Load JSON session button */}
           <button
             type="button"
@@ -65,29 +80,6 @@ export function AppHeader({
             title="Load session from JSON file"
           >
             Load JSON
-          </button>
-
-          {/* Theme toggle (cycles light → dark → retro → light) */}
-          <button
-            type="button"
-            className={styles.themeToggle}
-            onClick={toggleTheme}
-            aria-label={
-              theme === 'light'
-                ? 'Switch to dark mode'
-                : theme === 'dark'
-                ? 'Switch to retro mode'
-                : 'Switch to light mode'
-            }
-            title={
-              theme === 'light'
-                ? 'Switch to dark mode'
-                : theme === 'dark'
-                ? 'Switch to retro mode'
-                : 'Switch to light mode'
-            }
-          >
-            {theme === 'light' ? '🌙 Dark' : theme === 'dark' ? '💾 Retro' : '☀️ Light'}
           </button>
 
         </div>
