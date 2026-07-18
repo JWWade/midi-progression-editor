@@ -121,6 +121,14 @@ export default function App() {
     fireEvent('chordSelected');
   }, [fireEvent]);
 
+  const handleDiatonicChordSelect = useCallback((chord: Chord) => {
+    setCurrentChord(chord);
+    // Spread into a new object so ChromaticCircle's loadChord effect always fires.
+    setSendBackChord({ ...chord });
+    setSendBackMessage(`${formatChordName(chord, pitchClasses)} loaded into chromatic circle`);
+    fireEvent('chordSelected');
+  }, [pitchClasses, fireEvent]);
+
   /**
    * Single write path for all key context changes (E12-02).
    * source identifies the call site for debugging; has no semantic effect.
@@ -218,7 +226,7 @@ export default function App() {
             isPlaybackActive={isPlaying}
             playingPitchClass={playingPitchClass}
             onCurrentChordChange={handleCurrentChordChange}
-            onDiatonicChordSelect={handleCurrentChordChange}
+            onDiatonicChordSelect={handleDiatonicChordSelect}
             selectedScale={keyScale}
             keyRoot={keyRoot}
             showIntervals={false}

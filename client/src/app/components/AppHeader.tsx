@@ -2,6 +2,52 @@ import { useTheme } from '../providers/useTheme';
 import { useEnharmonic } from '../providers/useEnharmonic';
 import styles from './AppHeader.module.css';
 
+function UploadJsonIcon() {
+  return (
+    <svg
+      className={styles.loadJsonIcon}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M7.5 18.5H6.2a4.2 4.2 0 0 1-.7-8.35A5.75 5.75 0 0 1 17.9 8.7a3.75 3.75 0 0 1 1.6 7.1"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 15.4V9.4m0 0-2.2 2.2M12 9.4l2.2 2.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4.8 15.2h1.4m11.6 0h1.4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <text
+        x="19.4"
+        y="19"
+        fontSize="5.2"
+        fontWeight="700"
+        fill="currentColor"
+        textAnchor="middle"
+        dominantBaseline="middle"
+      >
+        {"{}"}
+      </text>
+    </svg>
+  );
+}
+
 interface AppHeaderProps {
   onLoadJson: () => void;
   isSettingsOpen: boolean;
@@ -76,10 +122,10 @@ export function AppHeader({
             type="button"
             className={styles.themeToggle}
             onClick={onLoadJson}
-            aria-label="Load session from JSON file"
-            title="Load session from JSON file"
+            aria-label="Upload JSON"
+            title="Upload JSON"
           >
-            Load JSON
+            <UploadJsonIcon />
           </button>
 
         </div>

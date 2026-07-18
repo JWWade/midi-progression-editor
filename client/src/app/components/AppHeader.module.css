@@ -175,8 +175,10 @@
 .themeToggle {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 3.5rem;
+  padding: 0.4rem 0.65rem;
   border-radius: 6px;
   border: 1.5px solid var(--color-border);
   background-color: var(--color-bg-surface);
@@ -196,6 +198,14 @@
 .themeToggle:focus-visible {
   outline: 3px solid var(--color-accent, #4f46e5);
   outline-offset: 2px;
+}
+
+.loadJsonIcon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  display: block;
+  color: currentColor;
 }
 
 /* ── Cursor Mode Toggle ───────────────────────────────────────────────────── */
@@ -294,6 +304,11 @@
 
   .themeToggle {
     font-size: 12px;
+  }
+
+  .loadJsonIcon {
+    width: 1rem;
+    height: 1rem;
   }
 
   .enharmonicTrack {
