@@ -112,3 +112,9 @@ flowchart LR
 | `scale` | Scale generation and display (8 modes) |
 | `tutorial` | Guided in-app tutorial (tooltips, modals, action triggers) |
 | `voice-leading` | Voice-leading path and voicing utilities |
+
+## Current Interaction Notes
+
+- `CircleControls` includes a `DIATONIC` row that renders 7 harmonized triads from `keyRoot` + `keyScale`.
+- Selecting a diatonic button updates both the current-chord panel state and the chromatic-circle polygon via the shared App callback path.
+- Theme selection is provided from the settings area via `ThemeModeDropdown` (Light, Dark, Retro), with dark as the default.

@@ -6,7 +6,7 @@ High-level topology of the Parametric MIDI Sequencer: how the browser, frontend 
 flowchart TD
     subgraph Browser["Browser"]
         direction TB
-        UI["React + TypeScript\n(Vite 7 · port 5173)"]
+        UI["React + TypeScript\n(Vite 8 · port 5173)"]
         AudioCtx["Web Audio API\n(in-browser playback)"]
         MIDIFile[".mid export\n(client-side MIDI builder)"]
     end
@@ -35,8 +35,8 @@ flowchart TD
 
 | Component | Technology | Responsibility |
 |-----------|-----------|----------------|
-| React Frontend | React 19, TypeScript 5.9, Vite 7 | Interactive UI, chord visualisation, audio playback, MIDI export |
+| React Frontend | React 19, TypeScript 5.9, Vite 8 | Interactive UI, chord visualisation, audio playback, MIDI export |
 | ASP.NET Core API | .NET 10, C# | Music theory computation, scale/chord generation, progression analysis |
 | Web Audio API | Browser built-in | In-browser chord and arpeggio playback |
 | MIDI Builder | `@tonejs/midi` | Client-side MIDI file construction and download |
-| OpenAPI / Swagger | Swashbuckle 10.1.4 | API contract definition; drives TypeScript client code generation |
+| OpenAPI / Swagger | Swashbuckle 10.2.3 | API contract definition; drives TypeScript client code generation |

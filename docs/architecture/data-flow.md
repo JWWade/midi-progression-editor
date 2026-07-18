@@ -8,35 +8,35 @@ End-to-end data flow from user interaction through to backend computation, audio
 sequenceDiagram
     actor User
     participant Circle as ChromaticCircle
-    participant ChordHook as useCustomChordState
-    participant API as Backend API
+    participant App as App.tsx state
     participant Animation as ChordAnimation
     participant Audio as Web Audio API
 
     User->>Circle: Click note on chromatic circle
-    Circle->>ChordHook: handleNoteClick(noteIndex)
-    ChordHook->>ChordHook: Build chord from selected notes
-    ChordHook->>Animation: Trigger polygon morph
+    Circle->>App: onCurrentChordChange(chord)
+    App->>App: set currentChord + selectedTone
+    App->>Animation: Trigger polygon morph
     Animation-->>Circle: Animated SVG update (350 ms)
-    ChordHook->>Audio: Optional preview playback
+    App->>Audio: Optional preview playback
 ```
 
-## Scale Fetch & Display
+## Key Context & Diatonic Row
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant ScaleUI as Scale Panel
-    participant Client as API Client
-    participant Backend as /Scale/from-root
+    participant Settings as KeyContextPanel
+    participant App as App.tsx state
+    participant Controls as CircleControls
     participant Circle as ChromaticCircle
 
-    User->>ScaleUI: Select root + mode
-    ScaleUI->>Client: POST /Scale/from-root
-    Client->>Backend: { note, scaleType }
-    Backend-->>Client: ScaleDto { notes[], modeName }
-    Client-->>ScaleUI: ScaleDto
-    ScaleUI->>Circle: Highlight diatonic notes
+    User->>Settings: Select root + mode
+    Settings->>App: onSetKeyContext(root, scale)
+    App->>Controls: Pass keyRoot + keyScale props
+    Controls->>Controls: buildDiatonicChordOptions(root, scale)
+    User->>Controls: Click diatonic chord button
+    Controls->>App: onDiatonicChordSelect(chord)
+    App->>Circle: loadChord + current chord update
 ```
 
 ## Chord Progression & MIDI Export

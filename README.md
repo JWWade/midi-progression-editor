@@ -8,6 +8,7 @@
 
 - Visualize chord shapes on an interactive chromatic circle
 - Build chord progressions with a dedicated sidebar (up to 8 chords, session-only)
+- Generate and audition 7 diatonic triads from the current key context directly under circle controls
 - Explore triads and seventh chords across all root notes and qualities
 - Animate smooth transitions between chord shapes
 - Display scale degrees with 8 available modes
@@ -138,7 +139,7 @@ ESLint enforces zero warnings. All TypeScript files must pass.
 
 ## Project Structure
 
-The frontend follows a feature-based architecture with 21 modules under `client/src/features/`. The backend exposes REST endpoints via controllers in `server/ParametricMusic.Api/Controllers/`. See [ARCHITECTURE.md](ARCHITECTURE.md) for a full breakdown.
+The frontend follows a feature-based architecture with 20 modules under `client/src/features/`. The backend exposes REST endpoints via controllers in `server/ParametricMusic.Api/Controllers/`. See [ARCHITECTURE.md](ARCHITECTURE.md) for a full breakdown.
 
 ## Documentation
 
@@ -148,8 +149,8 @@ The frontend follows a feature-based architecture with 21 modules under `client/
 
 ## Technologies
 
-- **Frontend**: React 19, TypeScript ~6.0, Vite 8, ESLint 10
-- **Backend**: ASP.NET Core .NET 10, Swashbuckle 10.1.7, xUnit 2.9
+- **Frontend**: React 19, TypeScript 5.9.x, Vite 8, ESLint 10
+- **Backend**: ASP.NET Core .NET 10, Swashbuckle 10.2.x, xUnit 2.9
 - **API**: OpenAPI/Swagger specification with code generation
 - **Build**: npm + dotnet CLI
 

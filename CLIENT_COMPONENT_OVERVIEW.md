@@ -4,7 +4,7 @@
 
 This is a **React 19 + TypeScript** web application for editing MIDI chord progressions. The codebase follows a **feature-based modular architecture** with strict separation of concerns. Key characteristics:
 
-- **19 feature modules** organized by domain (chord, audio, scale, etc.)
+- **20 feature modules** organized by domain (chord, audio, scale, etc.)
 - **Component-level accessibility**: ARIA labels, roles, live regions, keyboard navigation
 - **Interactive SVG visualization**: Chromatic circle with 12 note nodes, animated chord polygons
 - **Compose-first workspace**: circle, current chord panel, and progression sidebar are always visible
@@ -37,7 +37,7 @@ ThemeProvider
 ### Component Hierarchy
 ```
 <App>
-  ├── <AppHeader />               # Theme + visualization toggles
+  ├── <AppHeader />               # Enharmonic switch, settings toggle, JSON upload
   ├── Settings Toggle Bar
   │   ├── <KeyContextPanel />     # Root + mode selector
   │   └── <AudioDebugPanel />     # Dev-only audio parameter tweaks
@@ -66,10 +66,11 @@ chords: Chord[]                           // max 8 chords
 sendBackChord: Chord | null               // send chord TO circle from sidebar
 
 // Visualization toggles
-showCentroid: boolean
-showIntervals: boolean
 showLegend: boolean
 isSettingsOpen: boolean
+
+// Tone inspection
+selectedTone: ToneInfo | null
 
 // Playback state (delegated to audio feature hooks)
 isPlaying: boolean
@@ -104,7 +105,7 @@ voiceLeadingConfig: VoiceLeadingConfig
 | **Toast** | `shared/components/Toast/` | Notification popover with optional action button |
 
 ### Key Shared Hooks
-- `useTheme()` — access `theme`, `toggleTheme()`
+- `useTheme()` — access `theme`, `setTheme()`, `toggleTheme()`
 - `useEnharmonic()` — access `useFlats`, `toggleEnharmonic()`, `pitchClasses[]`
 
 ### Shared Types
@@ -114,7 +115,7 @@ voiceLeadingConfig: VoiceLeadingConfig
 
 ---
 
-## Feature Modules (19 Total)
+## Feature Modules (20 Total)
 
 Each feature module follows a consistent structure:
 ```
@@ -133,7 +134,7 @@ features/MODULE/
 **File:** `features/chromatic-circle/`
 
 **Components:**
-- `ChromaticCircle` — Main SVG with 12 note nodes, chord polygon, centroid, playback ring
+- `ChromaticCircle` — Main SVG with 12 note nodes, chord polygon, and playback ring
 - `NoteNode` — Single note circle with drag/click/keyboard interactions
 - `ChordPolygon` — Animated polygon connecting selected chord tones
 - `ChordVertex` — Draggable endpoint on polygon
@@ -144,19 +145,18 @@ features/MODULE/
 - **Click note** → select tone for inspection
 - **Drag note** → edit chord custom selection
 - **`R` key** → re-root chord at selected tone
-- **`I`/`S` keys** → toggle cursor modes (inspect/select)
 - **Rotate buttons** → rotate chord ±30°
 - **Mirror dropdown** → reflect chord around selected axis
 - **Mutate button** → randomize custom chord
 - **Template buttons** → snap to equilateral triangle, square, pentagon, etc.
 - **Chord grid selector** → pick named chord from template
+- **DIATONIC row buttons** → load harmonized I-vii triads from key context
 
 **Accessibility:**
 - `role="button"` on note nodes
 - `aria-label` with tone role (root, 3rd, 5th, etc.)
 - `aria-pressed` state on selected tone
-- Keyboard: Enter/Space to select, R to re-root, I/S mode switches
-- Escape to deselect tone
+- Keyboard: Enter/Space to select, `R` to re-root, `Escape` to deselect tone
 
 **Key Props:**
 ```typescript
@@ -164,8 +164,6 @@ externalChord?: Chord              // Override internal selection for playback
 loadChord?: Chord                  // Programmatic load from sidebar
 isPlaybackActive: boolean          // Show pulsing playback ring
 playingPitchClass?: number | null  // Highlight currently sounding note
-showCentroid: boolean              // Display geometric centroid
-showIntervals: boolean             // Show interval labels
 controlsLayout: 'below' | 'side'   // Responsive layout
 ```
 
@@ -461,18 +459,17 @@ Utilities module; integrated into `CircleControls` mirror action.
 ### Buttons & Button-like Elements
 | Control | Type | Location | Action |
 |---------|------|----------|--------|
-| **Centroid toggle** | Switch | AppHeader | Show/hide chord centroid |
-| **Intervals toggle** | Switch | AppHeader | Show/hide interval labels |
-| **Legend toggle** | Switch | AppHeader | Show/hide visual legend |
-| **Load JSON** | Button | AppHeader | File picker for snapshot import |
-| **Theme toggle** | Button | AppHeader | Cycle light → dark → retro |
+| **Legend toggle** | Switch | CircleControls | Show/hide visual legend |
+| **Upload JSON** | Icon button | AppHeader | File picker for snapshot import |
 | **Enharmonic toggle** | Button | AppHeader | Switch sharp ↔ flat |
-| **Settings toggle (⚙)** | Button | Key Context Bar | Show/hide KeyContextPanel |
+| **Settings toggle (⚙)** | Button | AppHeader | Show/hide settings panels |
+| **Theme mode dropdown** | Split dropdown | Settings cards | Set Light/Dark/Retro theme |
 | **Randomize key root (⚄)** | Button | KeyContextPanel | Random tonic |
 | **Rotate CW/CCW** | Button x2 | CircleControls | Rotate chord ±30° |
 | **Mirror** | Button | CircleControls | Expand axis picker |
 | **Mutate (☣)** | Button | CircleControls | Randomize custom chord |
 | **Template shapes** | Button group | CircleControls | Snap to primitive |
+| **Diatonic chord buttons (x7)** | Button row | CircleControls | Load harmonized triads by key |
 | **Play current chord** | Button | CurrentChordPanel | Audio playback |
 | **Set as tonic** | Button | CurrentChordPanel | Snap key root |
 | **Copy notes** | Button | CurrentChordPanel | Clipboard write |
@@ -527,8 +524,6 @@ Utilities module; integrated into `CircleControls` mirror action.
 | `A` | Global (not in form) | Add current chord |
 | `P` | Global (not in form) | Play current chord |
 | `← →` | ProgressionSidebar | Navigate between tiles |
-| `I` | ChromaticCircle focused | Switch to Inspect cursor mode |
-| `S` | ChromaticCircle focused | Switch to Select cursor mode |
 | `R` | ChromaticCircle with tone selected | Re-root chord at selected tone |
 | `Escape` | ChromaticCircle | Deselect tone |
 | `Escape` | TutorialModal | Dismiss modal |
@@ -581,9 +576,8 @@ Utilities module; integrated into `CircleControls` mirror action.
   <!-- SVG circle + text -->
 </g>
 
-<!-- Segmented controls -->
-<button aria-pressed={isActive}>Inspect</button>
-<button aria-pressed={!isActive}>Compose</button>
+<!-- Settings toggle -->
+<button aria-expanded={isSettingsOpen} aria-controls="settings-panel">⚙</button>
 
 <!-- Disabled add button -->
 <button disabled aria-disabled={true} aria-label="Add chord">Add</button>
@@ -731,10 +725,9 @@ App.tsx (root state)
  │   └─ ModePersonalityPanel
  │
  └─ AppHeader
-     ├─ Centroid/Intervals/Legend toggles
-     ├─ Theme toggle
      ├─ Enharmonic toggle
-   └─ Load JSON session
+     ├─ Settings toggle
+     └─ Upload JSON session
 ```
 
 ---
