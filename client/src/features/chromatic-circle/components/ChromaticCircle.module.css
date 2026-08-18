@@ -13,6 +13,16 @@
   pointer-events: none;
 }
 
+/* Boost note-label legibility over bright gradient chord-tone fills in retro mode. */
+[data-theme="retro"] .chromaticSvg g[role="button"] text {
+  fill: #ffffff !important;
+  font-weight: 800;
+  paint-order: stroke;
+  stroke: #000a2b;
+  stroke-width: 2.2px;
+  stroke-linejoin: round;
+}
+
 /* Focus ring for interactive note nodes inside the SVG */
 .chromaticSvg g[role="button"]:focus-visible {
   outline: 3px solid var(--color-text-primary, #1f2937);
@@ -31,5 +41,52 @@
   .chromaticSvg g[role="button"]:hover {
     transform: scale(1.15);
     filter: brightness(1.2);
+  }
+}
+
+/* ── Horizontal (side-by-side) layout for optional side controls ─────────── */
+
+/* Outer flex row: circle on the left, controls panel on the right */
+.horizontalLayout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+  position: relative;
+}
+
+/* Left column: grows to fill available space, capped so the circle stays
+   comfortably circular rather than spanning the full viewport. */
+.circleColumn {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 700px;
+  position: relative;
+}
+
+/* Right column: controls panel sits beside the circle, width determined by
+   its own content. */
+.controlsColumn {
+  flex: 0 0 auto;
+  /* Align the top of the controls with the SVG, not the container edge. */
+  padding-top: 8px;
+}
+
+/* On narrow screens, revert to the standard stacked (below) layout so the
+   circle and controls each get adequate horizontal room. */
+@media (max-width: 900px) {
+  .horizontalLayout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .circleColumn {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .controlsColumn {
+    padding-top: 0;
   }
 }

@@ -68,37 +68,41 @@
   border-bottom: 1px solid var(--color-border, rgba(0,0,0,0.08));
 }
 
-.settingsToggle {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
-  line-height: 1;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.settingsToggle:hover {
-  background-color: var(--color-bg-subtle);
-  color: var(--color-text-primary);
-}
-
-.settingsToggle[aria-expanded="true"] {
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-subtle);
-}
-
 .settingsCards {
   display: flex;
   align-items: flex-start;
   gap: 16px;
+}
+
+.settingsThemeControl {
+  display: flex;
+  align-items: flex-start;
+}
+
+.themeToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-border);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 150ms ease-in-out, background-color 150ms ease-in-out;
+}
+
+.themeToggle:hover {
+  border-color: var(--color-text-secondary);
+  background-color: var(--color-tile-bg-hover);
+}
+
+.themeToggle:focus-visible {
+  outline: 3px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
 }
 
 /* ── Primary flow container: three-column grid (Circle | Panel | Sidebar) ──── */
@@ -113,25 +117,6 @@
   transition: grid-template-columns 0.25s ease;
 }
 
-/* ── Layout mode variants ───────────────────────────────────────────────── */
-.layout_focus {
-  grid-template-columns: 1fr;
-  justify-items: center;
-}
-
-.layout_inspect {
-  grid-template-columns: minmax(360px, 2fr) minmax(260px, 1fr);
-}
-
-.layout_compose {
-  grid-template-columns: minmax(420px, 3fr) minmax(260px, 1fr) minmax(280px, 420px);
-}
-
-.layout_inspect .circleArea,
-.layout_compose .circleArea {
-  max-width: 480px;
-}
-
 /* ── Primary flow areas with ARIA landmarks ────────────────────────────────── */
 .circleArea {
   display: flex;
@@ -139,9 +124,10 @@
   align-items: center;
   justify-content: flex-start;
   min-width: 0;
+  max-width: 480px;
   border-radius: 8px;
   background-color: var(--color-bg-surface);
-  padding: 16px;
+  padding: 10px 16px 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -183,11 +169,15 @@
   .circleArea,
   .panelArea,
   .sidebarArea {
-    padding: 12px;
+    padding: 8px 12px 12px;
   }
 
   .sidebarArea {
     max-height: auto;
+  }
+
+  .settingsCards {
+    flex-wrap: wrap;
   }
 }
 
@@ -200,7 +190,7 @@
   .circleArea,
   .panelArea,
   .sidebarArea {
-    padding: 8px;
+    padding: 6px 8px 8px;
   }
 }
 

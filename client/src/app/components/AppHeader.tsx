@@ -1,43 +1,65 @@
 import { useTheme } from '../providers/useTheme';
 import { useEnharmonic } from '../providers/useEnharmonic';
-import { PillToggle } from '@/shared/components/PillToggle/PillToggle';
-import type { LayoutMode } from '../types/layoutMode';
 import styles from './AppHeader.module.css';
 
-interface AppHeaderProps {
-  showCentroid: boolean;
-  onCentroidChange: (show: boolean) => void;
-  showIntervals: boolean;
-  onIntervalsChange: (show: boolean) => void;
-  showLegend: boolean;
-  onLegendChange: (show: boolean) => void;
-  showPolarMelody: boolean;
-  onPolarMelodyChange: (show: boolean) => void;
-  onLoadJson: () => void;
-  layoutMode: LayoutMode;
-  onLayoutModeChange: (mode: LayoutMode) => void;
+function UploadJsonIcon() {
+  return (
+    <svg
+      className={styles.loadJsonIcon}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M7.5 18.5H6.2a4.2 4.2 0 0 1-.7-8.35A5.75 5.75 0 0 1 17.9 8.7a3.75 3.75 0 0 1 1.6 7.1"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 15.4V9.4m0 0-2.2 2.2M12 9.4l2.2 2.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4.8 15.2h1.4m11.6 0h1.4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <text
+        x="19.4"
+        y="19"
+        fontSize="5.2"
+        fontWeight="700"
+        fill="currentColor"
+        textAnchor="middle"
+        dominantBaseline="middle"
+      >
+        {"{}"}
+      </text>
+    </svg>
+  );
 }
 
-const LAYOUT_MODES: { mode: LayoutMode; label: string }[] = [
-  { mode: 'focus', label: 'Explore' },
-  { mode: 'inspect', label: 'Inspect' },
-  { mode: 'compose', label: 'Compose' },
-];
+interface AppHeaderProps {
+  onLoadJson: () => void;
+  isSettingsOpen: boolean;
+  onToggleSettings: () => void;
+}
 
 export function AppHeader({
-  showCentroid,
-  onCentroidChange,
-  showIntervals,
-  onIntervalsChange,
-  showLegend,
-  onLegendChange,
-  showPolarMelody,
-  onPolarMelodyChange,
   onLoadJson,
-  layoutMode,
-  onLayoutModeChange,
+  isSettingsOpen,
+  onToggleSettings,
 }: AppHeaderProps) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const { useFlats, toggleEnharmonic } = useEnharmonic();
 
   return (
@@ -50,103 +72,62 @@ export function AppHeader({
       </div>
     )}
     <header className={styles.header}>
-      {/* Left section: pill toggles */}
+      {/* Left section: notation toggle */}
       <div className={styles.leftSection}>
         <div className={styles.toggles}>
-          <PillToggle
-            id="show-centroid"
-            checked={showCentroid}
-            onChange={onCentroidChange}
-            label="Center"
-          />
-          <PillToggle
-            id="show-intervals"
-            checked={showIntervals}
-            onChange={onIntervalsChange}
-            label="Intervals"
-          />
-          <PillToggle
-            id="show-legend"
-            checked={showLegend}
-            onChange={onLegendChange}
-            label="Legend"
-          />
-          <PillToggle
-            id="show-polar-melody"
-            checked={showPolarMelody}
-            onChange={onPolarMelodyChange}
-            label="Polar"
-          />
+          <label className={styles.enharmonicToggle} htmlFor="notation-toggle">
+            <span className={styles.enharmonicSymbol} aria-hidden="true">♯</span>
+            <input
+              id="notation-toggle"
+              type="checkbox"
+              role="switch"
+              checked={useFlats}
+              onChange={(e) => {
+                if (e.target.checked !== useFlats) {
+                  toggleEnharmonic();
+                }
+              }}
+              className={styles.enharmonicInput}
+              aria-label="Use flat notation"
+            />
+            <span className={styles.enharmonicTrack} aria-hidden="true">
+              <span className={styles.enharmonicThumb} />
+            </span>
+            <span className={styles.enharmonicSymbol} aria-hidden="true">♭</span>
+          </label>
         </div>
       </div>
 
       {/* Center: brand / wordmark */}
-      <div className={styles.brand} aria-label="Application name">
-        <span className={styles.brandName}>Apeirograph</span>
+      <div className={styles.brand}>
+        <h1 className={styles.brandName}>Apeirograph</h1>
       </div>
 
-      {/* Right section: layout mode + utility controls */}
+      {/* Right section: utility controls */}
       <div className={styles.rightSection}>
-        {/* Layout mode segmented controls */}
-        <div className={styles.layoutModeControls} role="group" aria-label="Workspace mode">
-          {LAYOUT_MODES.map(({ mode, label }) => (
-            <button
-              key={mode}
-              type="button"
-              className={`${styles.layoutModeButton} ${layoutMode === mode ? styles.layoutModeButtonActive : ''}`}
-              aria-pressed={layoutMode === mode}
-              onClick={() => onLayoutModeChange(mode)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
         <div className={styles.rightControls}>
+          <button
+            type="button"
+            className={styles.settingsToggle}
+            onClick={onToggleSettings}
+            aria-expanded={isSettingsOpen}
+            aria-label="Toggle settings panels"
+            title="Settings"
+          >
+            ⚙
+          </button>
+
           {/* Load JSON session button */}
           <button
             type="button"
             className={styles.themeToggle}
             onClick={onLoadJson}
-            aria-label="Load session from JSON file"
-            title="Load session from JSON file"
+            aria-label="Upload JSON"
+            title="Upload JSON"
           >
-            Load JSON
+            <UploadJsonIcon />
           </button>
 
-          {/* Theme toggle (cycles light → dark → retro → light) */}
-          <button
-            type="button"
-            className={styles.themeToggle}
-            onClick={toggleTheme}
-            aria-label={
-              theme === 'light'
-                ? 'Switch to dark mode'
-                : theme === 'dark'
-                ? 'Switch to retro mode'
-                : 'Switch to light mode'
-            }
-            title={
-              theme === 'light'
-                ? 'Switch to dark mode'
-                : theme === 'dark'
-                ? 'Switch to retro mode'
-                : 'Switch to light mode'
-            }
-          >
-            {theme === 'light' ? '🌙 Dark' : theme === 'dark' ? '💾 Retro' : '☀️ Light'}
-          </button>
-
-          {/* Enharmonic toggle */}
-          <button
-            type="button"
-            className={styles.themeToggle}
-            onClick={toggleEnharmonic}
-            aria-label={`Switch to ${useFlats ? 'sharp' : 'flat'} notation`}
-            title={`Switch to ${useFlats ? 'sharp' : 'flat'} notation`}
-          >
-            {useFlats ? '♯ Sharps' : '♭ Flats'}
-          </button>
         </div>
       </div>
     </header>

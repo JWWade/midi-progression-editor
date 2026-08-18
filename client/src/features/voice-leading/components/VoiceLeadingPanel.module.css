@@ -267,6 +267,13 @@
   gap: 4px;
 }
 
+.guardHint {
+  font-size: 10px;
+  color: var(--color-accent, #4f46e5);
+  opacity: 0.85;
+  text-align: right;
+}
+
 .presetButton {
   width: 100%;
   padding: 5px 8px;
@@ -293,26 +300,34 @@
 
 /* -- Retro theme overrides ------------------------------------------------- */
 [data-theme="retro"] .toggleHeader {
+  background-color: #001a66 !important;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #404040 inset;
+  padding: 3px 6px;
   border-bottom-color: #ff00ff;
 }
 
 [data-theme="retro"] .toggleTitle {
-  color: #ffff00;
-  text-shadow: 0 0 6px #ffff00;
+  color: #fff9a6;
+  text-shadow: 0 1px 0 #000000;
   letter-spacing: 0.1em;
 }
 
 [data-theme="retro"] .summary {
-  color: #ffff00;
+  color: #ffffff;
+  opacity: 1;
+  text-shadow: 0 1px 0 #000000;
 }
 
 [data-theme="retro"] .chevron {
-  color: #ffff00;
+  color: #ffffff;
+  opacity: 1;
 }
 
 [data-theme="retro"] .label {
-  color: #ffff00;
-  text-shadow: 0 0 4px rgba(255, 255, 0, 0.5);
+  color: #fff9a6;
+  text-shadow: 0 1px 0 #000000;
 }
 
 [data-theme="retro"] .biasButton.biasSelected {
@@ -323,4 +338,9 @@
 [data-theme="retro"] .presetButton:hover {
   border-color: #ff00ff;
   background-color: rgba(255, 0, 255, 0.1);
+}
+
+[data-theme="retro"] .guardHint {
+  color: #fff9a6;
+  text-shadow: 0 1px 0 #000000;
 }

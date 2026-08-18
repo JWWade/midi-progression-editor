@@ -1,9 +1,16 @@
-import { memo, useCallback, useState, useRef, useEffect } from "react";
+import { memo, useCallback, useState, useRef, useEffect, useMemo } from "react";
 import type { PrimitiveShape } from "@/features/current-chord";
+import type { Chord } from "@/features/current-chord";
+import { formatChordSymbol } from "@/features/current-chord";
 import { ChordGrid } from "@/features/chord/components/ChordGrid";
 import { ChordQualityColors } from "@/features/chord/constants/chordQualityColors";
 import { allReflectionAxes, type ReflectionAxis } from "@/features/chord/utils/reflectChord";
+import { useTheme } from "@/app/providers/useTheme";
+import { useEnharmonic } from "@/app/providers/useEnharmonic";
+import { PillToggle } from "@/shared/components/PillToggle/PillToggle";
 import type { CustomChordState } from "../types";
+import type { ScaleType } from "@/features/scale/types";
+import { buildDiatonicChordOptions } from "@/features/scale";
 
 interface CircleControlsProps {
   onRotate: (direction: "clockwise" | "counterclockwise") => void;
@@ -14,7 +21,12 @@ interface CircleControlsProps {
   selectedChordName: string;
   onChordChange: (name: string) => void;
   customFromChord: CustomChordState | null;
+  keyRoot: number;
+  keyScale: ScaleType;
+  onDiatonicChordSelect?: (chord: Chord) => void;
   diatonicRoots?: Set<number>;
+  showLegend: boolean;
+  onLegendChange?: (show: boolean) => void;
 }
 
 const BASE_BUTTON_STYLE: React.CSSProperties = {
@@ -49,6 +61,22 @@ function getShapeButtonStyle(isActive: boolean): React.CSSProperties {
 const ROTATE_ICON_STYLE: React.CSSProperties = {
   display: "inline-block",
 };
+
+function MutateBiohazardIcon({ isRetro = false }: { isRetro?: boolean }): React.ReactElement {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        fontSize: 16,
+        lineHeight: 1,
+        color: isRetro ? "#ffe066" : undefined,
+        textShadow: isRetro ? "0 0 6px rgba(255, 224, 102, 0.7)" : undefined,
+      }}
+    >
+      ☣
+    </span>
+  );
+}
 
 /**
  * Renders a colored polygon (no glyph) mapped from pitch-class geometry on the
@@ -101,11 +129,34 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
   fontWeight: 600,
 };
 
+const DIATONIC_BUTTON_STYLE: React.CSSProperties = {
+  display: "inline-flex",
+  flex: "1 1 0",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 34,
+  minWidth: 0,
+  padding: "6px 8px",
+  borderRadius: 8,
+  borderWidth: 1.5,
+  borderStyle: "solid",
+  borderColor: "var(--color-border)",
+  background: "var(--color-bg-surface)",
+  color: "var(--color-text-primary)",
+  fontSize: 11,
+  fontWeight: 600,
+  lineHeight: 1.15,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  cursor: "pointer",
+};
+
 /**
  * Toolbar rendered below the chromatic circle SVG.
  *
- * Contains two button groups (Transform / Templates) and the chord-grid
- * selector.
+ * Contains two button groups (Transform / Templates), the chord-grid
+ * selector, and a placeholder DIATONIC section.
  *
  * Wrapped with React.memo so it only re-renders when its own props change.
  */
@@ -118,8 +169,15 @@ export const CircleControls = memo(function CircleControls({
   selectedChordName,
   onChordChange,
   customFromChord,
+  keyRoot,
+  keyScale,
+  onDiatonicChordSelect,
   diatonicRoots,
+  showLegend,
+  onLegendChange,
 }: CircleControlsProps) {
+  const { theme } = useTheme();
+  const { pitchClasses } = useEnharmonic();
   const activeShape = customFromChord?.primitiveShape;
   const [axisPickerOpen, setAxisPickerOpen] = useState(false);
   const mirrorButtonRef = useRef<HTMLButtonElement>(null);
@@ -195,8 +253,13 @@ export const CircleControls = memo(function CircleControls({
     },
   };
 
+  const diatonicChords = useMemo(
+    () => buildDiatonicChordOptions(keyRoot, keyScale),
+    [keyRoot, keyScale],
+  );
+
   return (
-    <div data-circle-controls style={{ display: "flex", flexDirection: "column", marginTop: 12, alignItems: "center", gap: 10 }}>
+    <div data-circle-controls style={{ display: "flex", flexDirection: "column", marginTop: 4, alignItems: "center", gap: 10 }}>
       <div style={{ display: "inline-flex", alignItems: "stretch", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
 
         {/* ── Transform ─────────────────────────────────────────────── */}
@@ -311,9 +374,9 @@ export const CircleControls = memo(function CircleControls({
               onClick={onMutate}
               title="Mutate one note at random"
               aria-label="Mutate one note at random"
-              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)", fontSize: 14 }}
+              style={{ ...BASE_BUTTON_STYLE, color: "var(--color-text-primary)" }}
             >
-              ⊛
+              <MutateBiohazardIcon isRetro={theme === "retro"} />
             </button>
           </div>
         </div>
@@ -412,6 +475,27 @@ export const CircleControls = memo(function CircleControls({
         </div>
       </div>
 
+      <div style={{ marginTop: 14, display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+        <span style={SECTION_LABEL_STYLE}>Diatonic</span>
+        <div style={{ display: "flex", width: "100%", gap: 8, marginTop: 8, alignItems: "stretch" }}>
+          {diatonicChords.map(({ chord, degree }) => {
+            const buttonLabel = formatChordSymbol(chord, pitchClasses);
+            return (
+              <button
+                key={`${degree}-${chord.root}-${chord.quality}`}
+                type="button"
+                onClick={() => onDiatonicChordSelect?.(chord)}
+                aria-label={`Select ${buttonLabel}`}
+                title={`Select ${buttonLabel}`}
+                style={DIATONIC_BUTTON_STYLE}
+              >
+                {buttonLabel}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <ChordGrid
         value={selectedChordName}
         onChange={onChordChange}
@@ -419,6 +503,15 @@ export const CircleControls = memo(function CircleControls({
         aria-label="Chord"
         diatonicRoots={diatonicRoots}
       />
+
+      <div style={{ marginTop: 4 }}>
+        <PillToggle
+          id="show-legend-below-selector"
+          checked={showLegend}
+          onChange={(next) => onLegendChange?.(next)}
+          label="Legend"
+        />
+      </div>
     </div>
   );
 });

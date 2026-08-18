@@ -10,7 +10,7 @@ function getInitialTheme(): Theme {
   } catch {
     // localStorage unavailable (e.g., SSR or restricted context)
   }
-  return "light";
+  return "dark";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme((t) => (t === "light" ? "dark" : t === "dark" ? "retro" : "light"));
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

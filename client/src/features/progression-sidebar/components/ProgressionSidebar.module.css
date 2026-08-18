@@ -16,8 +16,8 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 20px 24px 16px;
+  gap: 8px;
+  padding: 18px 24px 12px;
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
@@ -47,7 +47,7 @@
 .controls {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* Secondary modifier row: Speed + Loop + Arp toggles */
@@ -124,6 +124,7 @@
   background-color: color-mix(in srgb, var(--color-accent, #4f46e5) 10%, transparent);
 }
 
+
 /* ── Retro: show loop active as sunken / depressed Win95 button ───────── */
 [data-theme="retro"] .loopButtonActive {
   border-color: #808080 #dfdfdf #dfdfdf #808080 !important;
@@ -134,8 +135,9 @@
 .resetNote {
   flex-shrink: 0;
   margin: 0;
-  padding: 4px 24px 12px;
+  padding: 2px 24px 10px;
   font-size: 10px;
+  line-height: 1.2;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
   font-style: italic;

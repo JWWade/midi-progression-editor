@@ -1,7 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Chord } from "@/features/current-chord/types";
 import type { ScaleContext } from "@/shared/types/ScaleContext";
 import type { ArpeggioPattern } from "@/features/audio/types/arpeggioPattern";
+import type { VoiceLeadingConfig } from "@/features/voice-leading";
+import { buildVoicingTargets, hasExtensionRegisterTargets } from "@/features/voice-leading";
 import { useMidiExport } from "../hooks/useMidiExport";
 import { getBpmTempoLabel } from "../utils/bpmTempoLabel";
 import { NoteValueSelector } from "./NoteValueSelector";
@@ -19,9 +21,10 @@ interface MidiExportControlsProps {
   setBpm: (v: number) => void;
   beatsPerChord: number;
   setBeatsPerChord: (v: number) => void;
+  onVoiceLeadingConfigChange?: (config: VoiceLeadingConfig) => void;
 }
 
-export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPattern, bpm, setBpm, beatsPerChord, setBeatsPerChord }: MidiExportControlsProps) {
+export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPattern, bpm, setBpm, beatsPerChord, setBeatsPerChord, onVoiceLeadingConfigChange }: MidiExportControlsProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -31,9 +34,25 @@ export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPat
     setStartOctave,
     voiceLeadingStyle,
     setVoiceLeadingStyle,
+    strictness,
     motionBias,
     setMotionBias,
+    extensionRegisterPolicy,
+    setExtensionRegisterPolicy,
   } = useMidiExport(chords, arpeggioPattern, scaleContext, bpm, beatsPerChord);
+
+  const extensionGuardActive = chords.some((chord) => hasExtensionRegisterTargets(buildVoicingTargets(chord)));
+
+  useEffect(() => {
+    if (!onVoiceLeadingConfigChange) return;
+    onVoiceLeadingConfigChange({
+      style: voiceLeadingStyle,
+      strictness,
+      motionBias,
+      startOctave,
+      extensionRegisterPolicy,
+    });
+  }, [onVoiceLeadingConfigChange, voiceLeadingStyle, strictness, motionBias, startOctave, extensionRegisterPolicy]);
 
   const bpmFillPct = `${((bpm - 40) / (240 - 40)) * 100}%`;
 
@@ -92,6 +111,9 @@ export function MidiExportControls({ chords, disabled, scaleContext, arpeggioPat
         onStyleChange={setVoiceLeadingStyle}
         motionBias={motionBias}
         onMotionBiasChange={setMotionBias}
+        extensionRegisterPolicy={extensionRegisterPolicy}
+        onExtensionRegisterPolicyChange={setExtensionRegisterPolicy}
+        extensionGuardActive={extensionGuardActive}
         startOctave={startOctave}
         onStartOctaveChange={setStartOctave}
       />

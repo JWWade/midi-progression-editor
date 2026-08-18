@@ -4,6 +4,7 @@ import {
   formatChordName,
   formatChordSymbol,
   formatPrimitiveChordName,
+  getExtensionForSemitone,
   resolveChordIdentity,
   CHORD_QUALITY_LABELS,
 } from "../utils/chordName";
@@ -23,6 +24,8 @@ import type { AudioParams } from "@/features/audio/constants/audioConfig";
 import { getRomanNumeral } from "../utils/romanNumeral";
 import type { ScaleType } from "@/features/scale/types";
 import type { SetKeyContextAction } from "@/features/scale";
+import { ToneInfoPanel } from "@/features/chord-inspection";
+import type { ToneInfo } from "@/features/chord-inspection";
 
 /** Duration the "Copied!" feedback badge remains visible (milliseconds). */
 const COPY_FEEDBACK_DURATION_MS = 1500;
@@ -46,6 +49,10 @@ interface CurrentChordPanelProps {
   keyScale?: ScaleType;
   /** Callback to update the key context (primary tonic-snap affordance). */
   onSetKeyContext?: (action: SetKeyContextAction) => void;
+  /** Selected tone details from the chromatic circle. */
+  selectedTone?: ToneInfo | null;
+  /** Close handler for the selected tone info panel. */
+  onCloseToneInfo?: () => void;
 }
 
 export const CurrentChordPanel = memo(function CurrentChordPanel({
@@ -59,6 +66,8 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
   keyRoot,
   keyScale,
   onSetKeyContext,
+  selectedTone,
+  onCloseToneInfo,
 }: CurrentChordPanelProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
@@ -76,18 +85,37 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
   const intervalRows = useMemo(() => {
     if (!chord) return [];
     const indices = getChordPitchClasses(chord);
-    // For custom chords, sort root-first by ascending interval from chord.root
-    const displayIndices = isCustomChord(chord)
-      ? [...indices].sort((a, b) => ((a - chord.root + 12) % 12) - ((b - chord.root + 12) % 12))
-      : indices;
-    const offsets = isCustomChord(chord)
-      ? displayIndices.map(i => ((i - chord.root) + 12) % 12)
-      : CHORD_INTERVALS[chord.quality];
-    return offsets.slice(0, displayIndices.length).map((semitones, idx) => ({
-      noteName: pitchClasses[displayIndices[idx] ?? 0] ?? "",
-      label: semitones === 0 ? "Root" : getIntervalName(semitones),
-    }));
-  }, [chord, pitchClasses]);
+    const resolvedRoot = resolvedIdentity?.root ?? chord.root;
+    const resolvedQuality = resolvedIdentity?.quality ?? chord.quality;
+
+    if (!isCustomChord(chord)) {
+      return CHORD_INTERVALS[chord.quality].map((semitones, idx) => ({
+        noteName: pitchClasses[indices[idx] ?? 0] ?? "",
+        label: semitones === 0 ? "Root" : getIntervalName(semitones),
+      }));
+    }
+
+    const canonicalTones = new Set(transposeChord(CHORD_INTERVALS[resolvedQuality], resolvedRoot).map((note) => note.index));
+    const rows = [...indices]
+      .map((index) => {
+        const semitones = ((index - resolvedRoot) + 12) % 12;
+        const extensionLabel = !canonicalTones.has(index) ? getExtensionForSemitone(semitones) : undefined;
+        return {
+          noteName: pitchClasses[index] ?? "",
+          label: semitones === 0 ? "Root" : (extensionLabel ?? getIntervalName(semitones)),
+          semitones,
+          isExtension: extensionLabel !== undefined,
+        };
+      })
+      .sort((a, b) => {
+        if (a.semitones === 0) return -1;
+        if (b.semitones === 0) return 1;
+        if (a.isExtension !== b.isExtension) return a.isExtension ? 1 : -1;
+        return a.semitones - b.semitones;
+      });
+
+    return rows.map(({ noteName, label }) => ({ noteName, label }));
+  }, [chord, pitchClasses, resolvedIdentity]);
 
   // Roman numeral analysis relative to the declared key
   const romanAnalysis =
@@ -241,33 +269,39 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
               </span>
             </div>
           )}
-          <div className={styles.notesRow}>
-            <span
-              className={styles.noteNames}
-              aria-label={`Chord notes: ${noteNames}`}
-            >
-              {intervalRows.map(({ noteName }) => (
-                <span key={noteName}>{noteName}</span>
-              ))}
-            </span>
-            <button
-              className={`${styles.copyIconButton}${copied ? ` ${styles.copyIconButtonCopied}` : ''}`}
-              onClick={handleCopy}
-              disabled={!chord}
-              aria-label="Copy note names to clipboard"
-              title={`Copy notes: ${noteNames}`}
-            >
-              {copied ? '✓' : '⎘'}
-            </button>
-          </div>
           {intervalRows.length > 0 && (
             <div className={styles.intervalsRow} aria-label="Chord intervals">
-              {intervalRows.map(({ noteName, label }, idx) => (
-                <span key={`${idx}-${noteName}`} className={styles.intervalItem}>
-                  <span className={styles.intervalNote}>{noteName}</span>
-                  <span className={styles.intervalLabel}>{label}</span>
-                </span>
-              ))}
+              <div className={styles.intervalsList} aria-label={`Chord notes: ${noteNames}`}>
+                {intervalRows.map(({ noteName, label }, idx) => (
+                  <span key={`${idx}-${noteName}`} className={styles.intervalItem}>
+                    <span className={styles.intervalNote}>{noteName}</span>
+                    <span className={styles.intervalLabel}>{label}</span>
+                  </span>
+                ))}
+              </div>
+              <button
+                className={`${styles.copyIconButton}${copied ? ` ${styles.copyIconButtonCopied}` : ''}`}
+                onClick={handleCopy}
+                disabled={!chord}
+                aria-label="Copy note names to clipboard"
+                title={`Copy notes: ${noteNames}`}
+              >
+                {copied ? (
+                  <span className={styles.copyCheck} aria-hidden="true">✓</span>
+                ) : (
+                  <svg
+                    className={styles.copyIcon}
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect x="7" y="5" width="8" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="M5 12V4.8C5 3.81 5.81 3 6.8 3H12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                )}
+              </button>
             </div>
           )}
           <div
@@ -316,6 +350,11 @@ export const CurrentChordPanel = memo(function CurrentChordPanel({
       >
         Add to Progression &#8594;
       </button>
+      {selectedTone && (
+        <div className={styles.toneInfoSection}>
+          <ToneInfoPanel selectedTone={selectedTone} onClose={onCloseToneInfo} />
+        </div>
+      )}
       {isProgressionFull && (
         <div className={styles.fullRow} role="status">
           <span className={styles.fullMessage}>

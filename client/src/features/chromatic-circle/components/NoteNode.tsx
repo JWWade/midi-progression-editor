@@ -16,6 +16,8 @@ interface NoteNodeProps {
   x: number;
   y: number;
   noteStyle: NoteStyle;
+  /** True when this note is the active key center. */
+  isKeyRoot?: boolean;
   /** True when this note is the currently sounding arpeggio step. */
   isArpeggioActive?: boolean;
   /** True when this note is the current drag-and-drop target. */
@@ -45,6 +47,7 @@ export const NoteNode = memo(function NoteNode({
   x,
   y,
   noteStyle,
+  isKeyRoot = false,
   isArpeggioActive = false,
   isDropTarget,
   isSelected,
@@ -103,6 +106,16 @@ export const NoteNode = memo(function NoteNode({
       >
         {label}
       </text>
+
+      {/* Key-center marker: compact key glyph shown near the root note label. */}
+      {isKeyRoot && (
+        <g transform={`translate(${x + NODE_RADIUS - 4} ${y - NODE_RADIUS + 2})`} pointerEvents="none" aria-hidden="true">
+          <circle cx={0} cy={0} r={2.8} fill="none" stroke="#f59e0b" strokeWidth={1.3} />
+          <line x1={2.8} y1={0} x2={8.2} y2={0} stroke="#f59e0b" strokeWidth={1.3} strokeLinecap="round" />
+          <line x1={6.2} y1={0} x2={6.2} y2={1.8} stroke="#f59e0b" strokeWidth={1.1} strokeLinecap="round" />
+          <line x1={7.6} y1={0} x2={7.6} y2={1.2} stroke="#f59e0b" strokeWidth={1.1} strokeLinecap="round" />
+        </g>
+      )}
 
       {/* Drop-target highlight shown while dragging */}
       {isDropTarget && (

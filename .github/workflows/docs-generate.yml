@@ -1,0 +1,69 @@
+name: Generate Documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  typedoc:
+    name: Generate TypeScript API docs (TypeDoc)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate TypeDoc
+        run: npm run docs:generate
+
+      - name: Upload TypeDoc as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: typedoc-${{ github.sha }}
+          path: client/docs/api/
+          retention-days: 30
+
+  csharp-xml-docs:
+    name: Build C# with XML documentation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.x"
+
+      - name: Build with XML documentation output
+        working-directory: server/ParametricMusic.Api
+        run: >-
+          dotnet build
+          --configuration Release
+          /p:GenerateDocumentationFile=true
+
+      - name: Upload C# XML docs as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: csharp-xml-docs-${{ github.sha }}
+          path: server/ParametricMusic.Api/bin/Release/
+          retention-days: 30

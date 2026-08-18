@@ -160,14 +160,23 @@ export function useCustomChordState({
     (shape: PrimitiveShape) => {
       const root = customFromChord?.root ?? CHORD_NAME_TO_DATA[selectedChordName].root;
       const { quality, label } = PRIMITIVE_SHAPE_META[shape];
-      const newChord: CustomChordState = {
-        root, quality, customNotes: getPrimitiveNoteIndices(root, shape), primitiveShape: shape,
-      };
-      setCustomFromChord(newChord);
-      onCurrentChordChange?.(newChord);
-      onAnnounce?.(`Selected ${label}`);
+      const customNotes = getPrimitiveNoteIndices(root, shape);
+      const { root: r, quality: q, matchScore } = findNearestChord(customNotes);
+      if (matchScore === 1) {
+        setCustomFromChord(null);
+        setSelectedChordName(getChordName(r, q));
+        onCurrentChordChange?.({ root: r, quality: q });
+        onAnnounce?.(`Selected ${label}. Recognized as ${getChordName(r, q)} chord`);
+      } else {
+        const newChord: CustomChordState = {
+          root, quality, customNotes, primitiveShape: shape,
+        };
+        setCustomFromChord(newChord);
+        onCurrentChordChange?.(newChord);
+        onAnnounce?.(`Selected ${label}`);
+      }
     },
-    [customFromChord, selectedChordName, onCurrentChordChange, onAnnounce],
+    [customFromChord, selectedChordName, setSelectedChordName, onCurrentChordChange, onAnnounce],
   );
 
   const handleRerootChord = useCallback(

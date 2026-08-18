@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getScaleNotes, getDiatonicIndices } from "../scaleUtils";
+import { buildDiatonicChordOptions } from "../diatonicChords";
 import { SCALE_INTERVALS } from "@/features/scale/types/scales";
 import type { ScaleType } from "@/features/scale/types/scales";
 
@@ -110,5 +111,33 @@ describe("getDiatonicIndices", () => {
     for (const pc of [0, 2, 4, 5, 7, 9, 11]) {
       expect(set.has(pc)).toBe(true);
     }
+  });
+});
+
+// ── buildDiatonicChordOptions ───────────────────────────────────────────────
+
+describe("buildDiatonicChordOptions", () => {
+  it("builds the seven C major diatonic triads in order", () => {
+    const options = buildDiatonicChordOptions(0, "major");
+
+    expect(options).toHaveLength(7);
+    expect(options.map((option) => `${option.chord.root}:${option.chord.quality}`)).toEqual([
+      "0:major",
+      "2:minor",
+      "4:minor",
+      "5:major",
+      "7:major",
+      "9:minor",
+      "11:dim",
+    ]);
+    expect(options.map((option) => option.qualityLabel)).toEqual([
+      "major",
+      "minor",
+      "minor",
+      "major",
+      "major",
+      "minor",
+      "diminished",
+    ]);
   });
 });

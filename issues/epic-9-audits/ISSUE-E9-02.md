@@ -2,7 +2,7 @@
 
 ## Objective
 
-Act on the remaining open items identified in the [2026-03-21 Data Model & Schema Evolution Audit](../../../docs/data-model-audit.md). Six critical gaps were already fixed as part of that audit; this issue tracks the four open considerations (§6.1–§6.5) that were explicitly deferred for a future iteration.
+Act on the remaining open items identified in the [2026-03-21 Data Model & Schema Evolution Audit](../../docs/data-model-audit.md). Six critical gaps were already fixed as part of that audit; this issue tracks the four open considerations (§6.1–§6.5) that were explicitly deferred for a future iteration.
 
 ## Background
 

@@ -267,6 +267,6 @@ A follow-up implementation issue should be created with the following specificat
 ## 9. References
 
 - [Web Audio API spec — AudioContext.currentTime](https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-currenttime)
-- [Tone.js Transport — MessageChannel scheduling](https://github.com/Tone-js/Tone.js/blob/dev/src/core/clock/TickSource.ts)
+ - [Tone.js Transport — MessageChannel scheduling](https://tonejs.github.io/)
 - [HTML spec — Timers (4 ms clamp)](https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timers)
 - `docs/spikes/SPIKE-synchronized-chromatic-circle-animation.md` §7, §9.3

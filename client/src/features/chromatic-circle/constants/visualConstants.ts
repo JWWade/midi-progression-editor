@@ -58,14 +58,6 @@ export const VERTEX_BADGE_RADIUS = 5;
 /** Font size of vertex badge label text (F/T). */
 export const VERTEX_BADGE_FONT_SIZE = 8;
 
-// ─── Centroid marker ─────────────────────────────────────────────────────────
-
-/** Radius of the centroid dot. */
-export const CENTROID_RADIUS = 4;
-
-/** Half-length (px) of each arm of the centroid crosshair. */
-export const CENTROID_CROSSHAIR_LENGTH = 8;
-
 // ─── Stroke widths ───────────────────────────────────────────────────────────
 
 /** Stroke width for the ring outline circle. */

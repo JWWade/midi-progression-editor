@@ -28,14 +28,15 @@ function renderPanel(chord: Chord) {
 describe("CurrentChordPanel", () => {
   afterEach(cleanup);
   it("shows inferred symbol and resolved quality for rerooted custom chords", () => {
-    const chord: Chord = { root: 7, quality: "major", customNotes: [7, 0, 4] };
+    // G-C-F = G quartal (exact intervals: 0, 5, 10)
+    const chord: Chord = { root: 7, quality: "major", customNotes: [7, 0, 5] };
 
     renderPanel(chord);
 
     expect(screen.getByText("Gq")).not.toBeNull();
     expect(screen.getByText("Quartal").previousElementSibling?.textContent).toBe("G");
     expect(screen.getByText("Quartal")).not.toBeNull();
-    expect(screen.getByLabelText(/Chord notes: G-C-E/i)).not.toBeNull();
+    expect(screen.getByLabelText(/Chord notes: G-C-F/i)).not.toBeNull();
   });
 
   it("shows interval row with correct labels for a standard major chord", () => {
@@ -74,6 +75,21 @@ describe("CurrentChordPanel", () => {
     expect(intervalRow.textContent).toContain("Root");
     expect(intervalRow.textContent).toContain("P4");
     expect(intervalRow.textContent).toContain("m7");
+  });
+
+  it("renders recognized 9th extensions after core chord tones in the interval row", () => {
+    const chord: Chord = { root: 7, quality: "major", customNotes: [7, 9, 11] };
+
+    renderPanel(chord);
+
+    expect(screen.getByText("G9")).not.toBeNull();
+    const intervalRow = screen.getByLabelText("Chord intervals");
+    const text = intervalRow.textContent ?? "";
+    expect(text).toContain("Root");
+    expect(text).toContain("M3");
+    expect(text).toContain("9");
+    expect(text.indexOf("M3")).toBeLessThan(text.indexOf("9"));
+    expect(text).not.toContain("M2");
   });
 
   it("does not show interval row when no chord is selected", () => {

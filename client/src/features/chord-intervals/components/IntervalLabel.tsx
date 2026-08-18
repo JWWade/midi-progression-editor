@@ -1,5 +1,6 @@
 import type { Point } from "@/features/chromatic-circle/utils/geometry";
 import { INTERVAL_LABEL_TEXT_COLOR } from "@/features/chromatic-circle/constants/visualConstants";
+import { getIntervalLabelMetrics } from "../utils/intervalLabelMetrics";
 
 interface IntervalLabelProps {
   from: Point;
@@ -10,7 +11,6 @@ interface IntervalLabelProps {
 }
 
 const LABEL_OFFSET = 12;
-const RECT_WIDTH = 26;
 const RECT_HEIGHT = 16;
 const RECT_RX = 3;
 
@@ -31,25 +31,31 @@ export function IntervalLabel({
   const labelX = magnitude > 0 ? midX + (dx / magnitude) * LABEL_OFFSET : midX;
   const labelY = magnitude > 0 ? midY + (dy / magnitude) * LABEL_OFFSET : midY;
 
+  const { fontSize, rectWidth, textLength } = getIntervalLabelMetrics(intervalName);
+
   return (
     <g role="img" aria-label={`Interval: ${intervalName}`}>
       <rect
-        x={labelX - RECT_WIDTH / 2}
+        x={labelX - rectWidth / 2}
         y={labelY - RECT_HEIGHT / 2}
-        width={RECT_WIDTH}
+        width={rectWidth}
         height={RECT_HEIGHT}
         fill="white"
         rx={RECT_RX}
-        opacity={0.85}
+        stroke="rgba(17, 24, 39, 0.2)"
+        strokeWidth={0.8}
+        opacity={0.96}
       />
       <text
         x={labelX}
         y={labelY}
-        fontSize="11"
+        fontSize={fontSize}
         fontWeight="600"
         fill={INTERVAL_LABEL_TEXT_COLOR}
         textAnchor="middle"
         dominantBaseline="middle"
+        textLength={textLength}
+        lengthAdjust="spacingAndGlyphs"
         fontFamily="sans-serif"
       >
         {intervalName}

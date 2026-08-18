@@ -3,10 +3,7 @@ import { IntervalLabel, getIntervalName, getRootIntervals } from "@/features/cho
 import type { Point } from "../utils";
 import {
   CENTER,
-  CENTROID_CROSSHAIR_LENGTH,
-  CENTROID_RADIUS,
   POLYGON_STROKE_WIDTH,
-  RING_STROKE_WIDTH,
 } from "../constants/visualConstants";
 import styles from "./ChordPolygon.module.css";
 
@@ -17,8 +14,6 @@ interface ChordPolygonProps {
   strokeColor: string;
   strokeDasharray?: string;
   opacity: number;
-  showCentroid: boolean;
-  centroid: Point;
   showIntervals: boolean;
   /** Chromatic indices of all notes in the current chord (used for interval labels). */
   chordIndices: number[];
@@ -41,8 +36,6 @@ export const ChordPolygon = memo(function ChordPolygon({
   strokeColor,
   strokeDasharray,
   opacity,
-  showCentroid,
-  centroid,
   showIntervals,
   chordIndices,
   pulse = 0,
@@ -61,31 +54,6 @@ export const ChordPolygon = memo(function ChordPolygon({
         opacity={opacity}
         className={pulse > 0 ? styles.chordPulse : undefined}
       />
-
-      {/* Centroid crosshair + dot */}
-      {showCentroid && (
-        <g role="img" aria-label="From chord centroid">
-          <line
-            x1={centroid.x - CENTROID_CROSSHAIR_LENGTH}
-            y1={centroid.y}
-            x2={centroid.x + CENTROID_CROSSHAIR_LENGTH}
-            y2={centroid.y}
-            stroke={strokeColor}
-            strokeWidth={RING_STROKE_WIDTH}
-            opacity={0.5}
-          />
-          <line
-            x1={centroid.x}
-            y1={centroid.y - CENTROID_CROSSHAIR_LENGTH}
-            x2={centroid.x}
-            y2={centroid.y + CENTROID_CROSSHAIR_LENGTH}
-            stroke={strokeColor}
-            strokeWidth={RING_STROKE_WIDTH}
-            opacity={0.5}
-          />
-          <circle cx={centroid.x} cy={centroid.y} r={CENTROID_RADIUS} fill={strokeColor} opacity={0.7} />
-        </g>
-      )}
 
       {/* Interval labels between polygon vertices */}
       {showIntervals &&

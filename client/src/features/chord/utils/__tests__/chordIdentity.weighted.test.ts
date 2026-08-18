@@ -30,6 +30,48 @@ describe("weighted scorer — complete voicings score 1.0", () => {
     expect(result.quality).toBe("major");
     expect(result.matchScore).toBeCloseTo(1, 5);
   });
+
+  it("Amin7/C6 ambiguity [0,4,7,9] — prefers Amin7 identity", () => {
+    const result = findBestChordIdentity([0, 4, 7, 9]);
+    expect(result.root).toBe(9);
+    expect(result.quality).toBe("min7");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
+  it("A#min7/C#6 ambiguity [1,5,8,10] — prefers A#min7 identity", () => {
+    const result = findBestChordIdentity([1, 5, 8, 10]);
+    expect(result.root).toBe(10);
+    expect(result.quality).toBe("min7");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
+  it("A#sus2/quartal ambiguity [0,5,10] — prefers A#sus2 identity", () => {
+    const result = findBestChordIdentity([0, 5, 10]);
+    expect(result.root).toBe(10);
+    expect(result.quality).toBe("sus2");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
+  it("Bsus2/quartal ambiguity [1,6,11] — prefers Bsus2 identity", () => {
+    const result = findBestChordIdentity([1, 6, 11]);
+    expect(result.root).toBe(11);
+    expect(result.quality).toBe("sus2");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
+  it("augmented symmetry [4,8,0] — keeps quality aug and prefers first-seen root 4", () => {
+    const result = findBestChordIdentity([4, 8, 0]);
+    expect(result.root).toBe(4);
+    expect(result.quality).toBe("aug");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
+
+  it("augmented symmetry [8,0,4] — keeps quality aug and prefers first-seen root 8", () => {
+    const result = findBestChordIdentity([8, 0, 4]);
+    expect(result.root).toBe(8);
+    expect(result.quality).toBe("aug");
+    expect(result.matchScore).toBeCloseTo(1, 5);
+  });
 });
 
 // ---------------------------------------------------------------------------

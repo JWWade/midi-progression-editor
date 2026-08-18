@@ -6,6 +6,9 @@ server/**/obj/
 client/node_modules/
 client/dist/
 
+# Generated TypeDoc API documentation (produced by `npm run docs:generate`)
+client/docs/api/
+
 # IDE
 .vs/
 .vscode/

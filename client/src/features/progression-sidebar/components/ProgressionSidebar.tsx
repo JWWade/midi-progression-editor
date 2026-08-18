@@ -14,10 +14,20 @@ import { MidiExportControls } from "@/features/midi-export/components/MidiExport
 import { getChordName } from "@/features/chord/data/chordNames";
 import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import type { ArpeggioPattern } from "@/features/audio";
+import type { VoiceLeadingConfig } from "@/features/voice-leading";
+import { buildProgressionVoicings } from "@/features/voice-leading";
 import styles from "./ProgressionSidebar.module.css";
 
 /** Must match the `tileHighlight` animation duration in ChordTile.module.css */
 const HIGHLIGHT_ANIMATION_DURATION_MS = 300;
+
+const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
+  style: "close",
+  strictness: 2,
+  motionBias: "neutral",
+  startOctave: 4,
+  extensionRegisterPolicy: "strict",
+};
 
 interface ProgressionSidebarProps {
   /** All progression nodes in display order. */
@@ -55,6 +65,8 @@ interface ProgressionSidebarProps {
   playingPitchClass?: number | null;
   onToggleArpeggio?: () => void;
   onSetArpeggioPattern?: (pattern: ArpeggioPattern) => void;
+  voiceLeadingConfig?: VoiceLeadingConfig;
+  onVoiceLeadingConfigChange?: (config: VoiceLeadingConfig) => void;
 }
 
 // ── Inner component: renders the gap between two chord tiles ─────────────
@@ -166,6 +178,8 @@ export function ProgressionSidebar({
   playingPitchClass = null,
   onToggleArpeggio,
   onSetArpeggioPattern,
+  voiceLeadingConfig = DEFAULT_VOICE_LEADING_CONFIG,
+  onVoiceLeadingConfigChange,
 }: ProgressionSidebarProps) {
   const { pitchClasses } = useEnharmonic();
   const isFull = chords.length >= maxLength;
@@ -173,6 +187,7 @@ export function ProgressionSidebar({
 
   // Local state: whether the arpeggio pattern editor panel is visible.
   const [showPatternEditor, setShowPatternEditor] = useState(false);
+  const [showStaffCharts, setShowStaffCharts] = useState(true);
 
   // Track the node-index of the most recently added tile for scroll/focus/animation.
   const [newTileNodeIndex, setNewTileNodeIndex] = useState<number | null>(null);
@@ -183,6 +198,10 @@ export function ProgressionSidebar({
 
   // Compute pair metrics for the chord-only subset
   const pairMetrics = useMemo(() => computeProgressionPairMetrics(chords), [chords]);
+  const progressionVoicings = useMemo(
+    () => buildProgressionVoicings(chords, voiceLeadingConfig),
+    [chords, voiceLeadingConfig],
+  );
 
   // Derive newTileNodeIndex during render when the node list changes.
   // React-documented derived-state pattern; avoids setState-in-effect.
@@ -234,6 +253,8 @@ export function ProgressionSidebar({
           isNew={newTileNodeIndex === nodeIndex}
           isPlaying={playingIndex === ci}
           activeArpeggioPitchClass={playingIndex === ci ? playingPitchClass : null}
+          showStaffChart={showStaffCharts}
+          voicedMidiNotes={progressionVoicings[ci] ?? null}
           onMoveUp={() => onMoveUp(ci)}
           onMoveDown={() => onMoveDown(ci)}
           onDelete={() => onDelete(ci)}
@@ -350,6 +371,16 @@ export function ProgressionSidebar({
                 ⚙
               </button>
             )}
+            <button
+              className={`${styles.loopButton}${showStaffCharts ? ` ${styles.loopButtonActive}` : ""}`}
+              onClick={() => setShowStaffCharts((prev) => !prev)}
+              disabled={chordCount === 0}
+              aria-label={showStaffCharts ? "Hide staff charts" : "Show staff charts"}
+              aria-pressed={showStaffCharts}
+              title="Show staff charts"
+            >
+              Staff Charts
+            </button>
           </div>
         </div>
         {/* ARIA live region: announces playback mode changes */}
@@ -398,6 +429,7 @@ export function ProgressionSidebar({
         setBpm={onBpmChange}
         beatsPerChord={beatsPerChord}
         setBeatsPerChord={onBeatsPerChordChange}
+        onVoiceLeadingConfigChange={onVoiceLeadingConfigChange}
       />
     </aside>
   );

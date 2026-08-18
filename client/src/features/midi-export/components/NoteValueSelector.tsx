@@ -10,16 +10,14 @@ interface NoteValueSelectorProps {
 function QuarterNoteIcon() {
   return (
     <svg
-      viewBox="0 0 18 30"
-      width="14"
-      height="23"
+      viewBox="0 0 20 28"
+      width="16"
+      height="22"
       aria-hidden="true"
       className={styles.noteIcon}
     >
-      {/* Stem */}
-      <line x1="13" y1="3" x2="13" y2="23" strokeWidth="2" strokeLinecap="round" />
-      {/* Filled note head */}
-      <ellipse cx="8" cy="23" rx="7" ry="5" transform="rotate(-15 8 23)" />
+      <line x1="13.5" y1="4" x2="13.5" y2="19" strokeWidth="2.2" strokeLinecap="round" />
+      <ellipse cx="8" cy="21" rx="5.6" ry="4.1" transform="rotate(-18 8 21)" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -28,23 +26,21 @@ function QuarterNoteIcon() {
 function HalfNoteIcon() {
   return (
     <svg
-      viewBox="0 0 18 30"
-      width="14"
-      height="23"
+      viewBox="0 0 20 28"
+      width="16"
+      height="22"
       aria-hidden="true"
       className={styles.noteIcon}
     >
-      {/* Stem */}
-      <line x1="13" y1="3" x2="13" y2="23" strokeWidth="2" strokeLinecap="round" />
-      {/* Open note head */}
+      <line x1="13.5" y1="4" x2="13.5" y2="19" strokeWidth="2.2" strokeLinecap="round" />
       <ellipse
         cx="8"
-        cy="23"
-        rx="7"
-        ry="5"
-        transform="rotate(-15 8 23)"
+        cy="21"
+        rx="5.6"
+        ry="4.1"
+        transform="rotate(-18 8 21)"
         fill="none"
-        strokeWidth="2"
+        strokeWidth="2.2"
       />
     </svg>
   );
@@ -54,15 +50,13 @@ function HalfNoteIcon() {
 function WholeNoteIcon() {
   return (
     <svg
-      viewBox="0 0 18 18"
-      width="14"
-      height="14"
+      viewBox="0 0 20 20"
+      width="16"
+      height="16"
       aria-hidden="true"
       className={styles.noteIcon}
     >
-      {/* Open, slightly wider oval with a hollow centre */}
-      <ellipse cx="9" cy="9" rx="8" ry="6" fill="none" strokeWidth="2.5" />
-      <ellipse cx="9" cy="9" rx="3.5" ry="5.5" fill="currentColor" />
+      <ellipse cx="10" cy="10" rx="7" ry="5" transform="rotate(-12 10 10)" fill="none" strokeWidth="2.3" />
     </svg>
   );
 }

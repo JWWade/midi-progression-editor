@@ -1,0 +1,126 @@
+.splitButton {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 8px;
+  overflow: visible;
+}
+
+.themeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px 0 0 8px;
+  border: 1.5px solid var(--color-border);
+  border-right: none;
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 150ms ease-in-out, background-color 150ms ease-in-out;
+}
+
+.themeButton:hover {
+  border-color: var(--color-text-secondary);
+  background-color: var(--color-tile-bg-hover);
+}
+
+.themeButton:focus-visible {
+  outline: 3px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
+}
+
+.themeEmoji {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.themeChevron {
+  padding: 0.4rem 0.6rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 0 8px 8px 0;
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: border-color 150ms ease-in-out, background-color 150ms ease-in-out;
+}
+
+.themeChevron:hover {
+  border-color: var(--color-text-secondary);
+  background-color: var(--color-tile-bg-hover);
+}
+
+.themeChevron:focus-visible {
+  outline: 3px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
+}
+
+.dropdownMenu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 0;
+  min-width: 144px;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.dropdownItem:hover {
+  background-color: var(--color-bg-subtle);
+}
+
+[data-theme="retro"] .themeButton,
+[data-theme="retro"] .themeChevron,
+[data-theme="retro"] .dropdownMenu {
+  border-radius: 0;
+}
+
+[data-theme="retro"] .themeButton,
+[data-theme="retro"] .themeChevron {
+  background-color: #00134d;
+  color: #ffffff;
+  border: 2px solid;
+  border-color: #6fe4ff #00143f #00143f #6fe4ff;
+  box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #404040 inset;
+}
+
+[data-theme="retro"] .themeButton:hover,
+[data-theme="retro"] .themeChevron:hover {
+  background-color: #6fe4ff;
+  color: #00143f;
+}
+
+[data-theme="retro"] .dropdownMenu {
+  background-color: #00134d;
+  border-color: #6fe4ff;
+}
+
+[data-theme="retro"] .dropdownItem {
+  color: #ffffff;
+}
+
+[data-theme="retro"] .dropdownItem:hover {
+  background-color: #6fe4ff;
+  color: #00143f;
+}

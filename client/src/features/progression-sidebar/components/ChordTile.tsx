@@ -10,6 +10,8 @@ import { useEnharmonic } from "@/app/providers/useEnharmonic";
 import { playChord, playArpeggio, stopChord } from "@/features/audio";
 import type { ArpeggioHandle } from "@/features/audio";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
+import { ChordStaffChart } from "./ChordStaffChart";
+import { buildChordSpellingMap } from "../utils/chordSpelling";
 import styles from "./ChordTile.module.css";
 
 interface ChordTileProps {
@@ -20,6 +22,8 @@ interface ChordTileProps {
   isNew?: boolean;
   isPlaying?: boolean;
   activeArpeggioPitchClass?: number | null;
+  showStaffChart?: boolean;
+  voicedMidiNotes?: number[] | null;
   isGhost?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -33,28 +37,101 @@ interface ChordTileProps {
 
 type TilePlayMode = "chord" | "arpeggio" | null;
 
-// Memoize using data-only comparison so that inline callback wrappers created
-// in the parent's render/map loop do not trigger unnecessary re-renders.
-// Only chord identity and boolean display flags drive visual output; the
-// callback props (onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay) are stable
-// in behaviour per tile even when their reference changes.
+type ClassValue = string | false | null | undefined;
+
+function cn(...values: ClassValue[]): string {
+  return values.filter(Boolean).join(" ");
+}
+
+function resolveChordName(chord: Chord, pitchClasses: readonly string[]): string {
+  if (!isCustomChord(chord)) {
+    return getChordName(chord.root, chord.quality, pitchClasses);
+  }
+
+  if (chord.primitiveShape === "equilateral-triangle") {
+    return getChordName(chord.root, chord.quality, pitchClasses);
+  }
+
+  if (chord.primitiveShape) {
+    return formatPrimitiveChordName(chord, pitchClasses);
+  }
+
+  return formatChordSymbol(chord, pitchClasses);
+}
+
+interface ChordInfoHeaderProps {
+  chordName: string;
+  noteIndices: readonly number[];
+  pitchClasses: readonly string[];
+  spellingByPitchClass: Partial<Record<number, string>>;
+  activePitchClass: number | null;
+}
+
+function ChordInfoHeader({ chordName, noteIndices, pitchClasses, spellingByPitchClass, activePitchClass }: ChordInfoHeaderProps) {
+  return (
+    <div className={styles.chordInfoHeader}>
+      <span className={styles.chordName}>{chordName}</span>
+      <span className={styles.chordNotes}>
+        {noteIndices.map((noteIndex, noteSlotIndex) => {
+          const noteName = spellingByPitchClass[noteIndex] ?? pitchClasses[noteIndex];
+          const isActive = activePitchClass === noteIndex;
+          return (
+            <span
+              key={`${noteIndex}-${noteSlotIndex}`}
+              className={cn(styles.noteToken, isActive && styles.noteActive)}
+            >
+              {noteName}
+              {noteSlotIndex < noteIndices.length - 1 ? " " : ""}
+            </span>
+          );
+        })}
+      </span>
+    </div>
+  );
+}
+
+interface PlaybackControlsProps {
+  tilePlayMode: TilePlayMode;
+  onPlayChord: () => void;
+  onPlayArpeggio: () => void;
+}
+
+function PlaybackControls({ tilePlayMode, onPlayChord, onPlayArpeggio }: PlaybackControlsProps) {
+  return (
+    <div className={styles.playbackControls} aria-label="Chord playback">
+      <button
+        className={cn(styles.playBtn, tilePlayMode === "chord" && styles.playBtnActive)}
+        onClick={onPlayChord}
+        aria-label={tilePlayMode === "chord" ? "Stop chord" : "Play chord"}
+        title={tilePlayMode === "chord" ? "Stop" : "Play chord"}
+      >
+        {tilePlayMode === "chord" ? "■" : "▶"}
+      </button>
+      <button
+        className={cn(styles.playBtn, tilePlayMode === "arpeggio" && styles.playBtnActive)}
+        onClick={onPlayArpeggio}
+        aria-label={tilePlayMode === "arpeggio" ? "Stop arpeggio" : "Play arpeggio"}
+        title={tilePlayMode === "arpeggio" ? "Stop" : "Play arpeggio"}
+      >
+        {tilePlayMode === "arpeggio" ? "■" : "≈"}
+      </button>
+    </div>
+  );
+}
+
 export const ChordTile = memo(
   forwardRef<HTMLLIElement, ChordTileProps>(
-    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, activeArpeggioPitchClass = null, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
+    function ChordTile({ chord, index, isFirst, isLast, isNew = false, isPlaying = false, activeArpeggioPitchClass = null, showStaffChart = false, voicedMidiNotes = null, isGhost = false, onMoveUp, onMoveDown, onDelete, onAnimationEnd, onWillPlay, onSendBack }, ref) {
   const { pitchClasses } = useEnharmonic();
   const noteIndices = getChordPitchClasses(chord);
   const complexity = getChordComplexity(chord);
   const accentColor = getChordColor(chord.quality, complexity);
-  const chordName = isCustomChord(chord)
-    ? (chord.primitiveShape === "equilateral-triangle"
-      ? getChordName(chord.root, chord.quality, pitchClasses)
-      : chord.primitiveShape
-        ? formatPrimitiveChordName(chord, pitchClasses)
-        : formatChordSymbol(chord, pitchClasses))
-    : getChordName(chord.root, chord.quality, pitchClasses);
+  const chordName = resolveChordName(chord, pitchClasses);
+  const spellingByPitchClass = buildChordSpellingMap(chord, pitchClasses);
   const activePitchClass = activeArpeggioPitchClass === null
     ? null
     : ((activeArpeggioPitchClass % 12) + 12) % 12;
+  const staffDescriptionId = `chord-staff-description-${index}`;
 
   // ── Inline audio playback state ────────────────────────────────────────
   const [tilePlayMode, setTilePlayMode] = useState<TilePlayMode>(null);
@@ -116,7 +193,7 @@ export const ChordTile = memo(
   return (
     <li
       ref={ref}
-      className={`${styles.tile}${isNew ? ` ${styles.tileHighlight}` : ""}${isPlaying ? ` ${styles.tilePlaying}` : ""}${isGhost ? ` ${styles.ghostTile}` : ""}`}
+      className={cn(styles.tile, isNew && styles.tileHighlight, isPlaying && styles.tilePlaying, isGhost && styles.ghostTile)}
       style={{ "--accent-color": accentColor } as React.CSSProperties}
       aria-label={isGhost ? undefined : `${chordName}, position ${index + 1}`}
       aria-hidden={isGhost ? "true" : undefined}
@@ -132,22 +209,22 @@ export const ChordTile = memo(
         />
       </div>
       <div className={styles.chordInfo}>
-        <span className={styles.chordName}>{chordName}</span>
-        <span className={styles.chordNotes}>
-          {noteIndices.map((noteIndex, noteSlotIndex) => {
-            const noteName = pitchClasses[noteIndex];
-            const isActive = activePitchClass === noteIndex;
-            return (
-              <span
-                key={`${noteIndex}-${noteSlotIndex}`}
-                className={`${styles.noteToken}${isActive ? ` ${styles.noteActive}` : ""}`}
-              >
-                {noteName}
-                {noteSlotIndex < noteIndices.length - 1 ? " " : ""}
-              </span>
-            );
-          })}
-        </span>
+        <ChordInfoHeader
+          chordName={chordName}
+          noteIndices={noteIndices}
+          pitchClasses={pitchClasses}
+          spellingByPitchClass={spellingByPitchClass}
+          activePitchClass={activePitchClass}
+        />
+        {showStaffChart && !isGhost && (
+          <ChordStaffChart
+            chordName={chordName}
+            voicedMidiNotes={voicedMidiNotes}
+            pitchClasses={pitchClasses}
+            noteNameOverridesByPitchClass={spellingByPitchClass}
+            descriptionId={staffDescriptionId}
+          />
+        )}
       </div>
       {!isGhost && (
         <div className={styles.tileActions}>
@@ -160,24 +237,11 @@ export const ChordTile = memo(
           >
             ↩
           </button>
-          <div className={styles.playbackControls} aria-label="Chord playback">
-            <button
-              className={`${styles.playBtn}${tilePlayMode === "chord" ? ` ${styles.playBtnActive}` : ""}`}
-              onClick={handlePlayChord}
-              aria-label={tilePlayMode === "chord" ? "Stop chord" : "Play chord"}
-              title={tilePlayMode === "chord" ? "Stop" : "Play chord"}
-            >
-              {tilePlayMode === "chord" ? "■" : "▶"}
-            </button>
-            <button
-              className={`${styles.playBtn}${tilePlayMode === "arpeggio" ? ` ${styles.playBtnActive}` : ""}`}
-              onClick={handlePlayArpeggio}
-              aria-label={tilePlayMode === "arpeggio" ? "Stop arpeggio" : "Play arpeggio"}
-              title={tilePlayMode === "arpeggio" ? "Stop" : "Play arpeggio"}
-            >
-              {tilePlayMode === "arpeggio" ? "■" : "≈"}
-            </button>
-          </div>
+          <PlaybackControls
+            tilePlayMode={tilePlayMode}
+            onPlayChord={handlePlayChord}
+            onPlayArpeggio={handlePlayArpeggio}
+          />
           <div className={styles.controls} aria-label="Chord controls">
             <button
               className={styles.controlBtn}
@@ -213,14 +277,5 @@ export const ChordTile = memo(
     </li>
   );
 }),
-  (prev, next) =>
-    prev.chord === next.chord &&
-    prev.index === next.index &&
-    prev.isFirst === next.isFirst &&
-    prev.isLast === next.isLast &&
-    prev.isNew === next.isNew &&
-    prev.isPlaying === next.isPlaying &&
-    prev.activeArpeggioPitchClass === next.activeArpeggioPitchClass &&
-    prev.isGhost === next.isGhost,
 );
 

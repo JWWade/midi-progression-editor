@@ -9,12 +9,12 @@
 | Layer | Technology | Version | Purpose |
 |-------|-----------|---------|---------|
 | **Frontend** | React | 19 | UI framework |
-| **Frontend Build** | Vite | 7 | Fast build tooling and dev server |
+| **Frontend Build** | Vite | 8 | Fast build tooling and dev server |
 | **Frontend Language** | TypeScript | 5.9 | Type-safe JavaScript |
 | **API Client** | openapi-typescript | 7.13 | Type generation from OpenAPI spec |
 | **Backend** | ASP.NET Core Web API | .NET 10 | REST API server |
 | **Backend Language** | C# | Latest (implicit usings) | Type-safe backend logic |
-| **API Documentation** | Swagger/Swashbuckle | 10.1.4 | OpenAPI specification generation |
+| **API Documentation** | Swagger/Swashbuckle | 10.2.3 | OpenAPI specification generation |
 | **Testing** | xUnit | 2.9.3 | Backend unit tests |
 
 ---
@@ -127,10 +127,10 @@ client/
 │   │   ├── App.tsx                      # Root component
 │   │   ├── main.tsx                     # Entry point
 │   │   ├── components/
-│   │   │   └── AppHeader.tsx            # Header: visualization toggles, scale selector, cursor modes, theme
+│   │   │   └── AppHeader.tsx            # Header: enharmonic toggle, settings button, JSON upload button
 │   │   ├── providers/                   # Context providers
 │   │   │   ├── ThemeContext.ts          # Theme type and context definition
-│   │   │   ├── ThemeProvider.tsx        # Persistent dark/light theme (localStorage)
+│   │   │   ├── ThemeProvider.tsx        # Persistent light/dark/retro theme (default dark)
 │   │   │   ├── useTheme.ts              # useTheme() hook
 │   │   │   ├── EnharmonicContext.ts     # Enharmonic context (useFlats, pitchClasses, toggleEnharmonic)
 │   │   │   ├── EnharmonicProvider.tsx   # Enharmonic provider (sharp/flat toggle, pitch-class mapping)
@@ -327,10 +327,10 @@ import { SomeComponent } from '@/shared/components';  // instead of ../../../sha
 - ✅ **Audio Playback**: In-browser chord audio playback
 - ✅ **Scale Modes**: 8 scale types supported client-side (Major, Natural Minor, Harmonic Minor, Melodic Minor, Dorian, Phrygian, Lydian, Mixolydian); diatonic highlighting computed locally via `SCALE_INTERVALS`
 - ✅ **Scale Integration**: Scale generation via backend API (`/Scale/from-root`) available; diatonic circle highlighting uses client-side `SCALE_INTERVALS` for all 8 modes
-- ✅ **Chord Inspection**: `ToneInfoPanel` displays note name, chord role, interval from root, and frequency when a note is clicked in Info mode
-- ✅ **Cursor Modes**: Info mode (click a note to inspect it) and Select mode (click notes to toggle a custom selection); keyboard shortcuts `I` / `S`
-- ✅ **AppHeader**: Visualization toggles (Voice Leads, Extension, Centroid, Intervals), scale mode selector, cursor mode buttons, and theme toggle
-- ✅ **Dark/Light Theme**: Persistent theme toggle stored in `localStorage`; applied via `data-theme` attribute on `<html>`
+- ✅ **Chord Inspection**: `ToneInfoPanel` displays note name, chord role, interval from root, and frequency for the selected note, rendered under the current-chord panel action area
+- ✅ **Diatonic Row**: `CircleControls` renders seven key-context triads (I-vii degree order) with short chord symbols; selecting one updates both the current chord and chromatic circle
+- ✅ **AppHeader**: Focused utility header with sharp/flat notation switch, settings toggle, and icon-only JSON upload action
+- ✅ **Theme Modes**: Light/Dark/Retro theme selection via settings dropdown; persisted in `localStorage` with dark as the default
 - ✅ **MIDI Export**: Export current chord progression as a standard MIDI file (`.mid`); configurable BPM (40–240) and beats-per-chord (1, 2, 4)
 - ✅ **Enharmonic Toggle**: Global sharp/flat notation switch via `EnharmonicProvider`; `useEnharmonic()` exposes `useFlats`, `pitchClasses`, and `toggleEnharmonic`
 - ✅ **Visual Legend**: `VisualLegend` component displays chord quality colour bands (with polygon glyphs) and note opacity levels (diatonic, chord-tone chromatic, chromatic)

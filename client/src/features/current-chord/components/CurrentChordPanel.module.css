@@ -174,6 +174,14 @@
   animation: arrowSlide 0.35s ease;
 }
 
+/* ── Selected tone info block ──────────────────────────────────────────── */
+.toneInfoSection {
+  width: 100%;
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
 /* ── Action row (play + set-as-tonic) ──────────────────────────────────── */
 .actionRow {
   display: flex;
@@ -184,48 +192,19 @@
   flex-wrap: wrap;
 }
 
-/* ── Notes display row ──────────────────────────────────────────────────── */
-.notesRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 4px;
-}
-
-.noteNames {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--chord-quality-dark, #4f46e5);
-  user-select: none;
-  letter-spacing: 0.03em;
-}
-
-.noteNames span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 7px;
-  background-color: color-mix(in srgb, var(--chord-quality-base, #4f46e5) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--chord-quality-base, #4f46e5) 35%, transparent);
-  border-radius: 4px;
-}
-
-.noteSeparator {
-  color: var(--color-text-muted);
-  font-weight: 400;
-  margin: 0 3px;
-}
-
 /* ── Interval row ───────────────────────────────────────────────────────── */
 .intervalsRow {
   display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 4px;
+  justify-content: center;
+}
+
+.intervalsList {
+  display: flex;
   flex-wrap: wrap;
   gap: 4px 10px;
-  margin-top: 4px;
   justify-content: center;
 }
 
@@ -249,6 +228,20 @@
   line-height: 1.2;
 }
 
+/* Dark mode: boost legibility for secondary harmony text on deep panel tones. */
+[data-theme="dark"] .romanNumeral {
+  color: #b7c4ff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .intervalNote {
+  color: #f3f6ff;
+}
+
+[data-theme="dark"] .intervalLabel {
+  color: #c9d2e6;
+}
+
 .copyIconButton {
   display: inline-flex;
   align-items: center;
@@ -265,6 +258,16 @@
   cursor: pointer;
   flex-shrink: 0;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.copyIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.copyCheck {
+  font-size: 13px;
+  line-height: 1;
 }
 
 .copyIconButton:hover:not(:disabled) {
@@ -288,6 +291,17 @@
   background-color: #10b981;
   color: #ffffff;
   border-color: #10b981;
+}
+
+[data-theme="retro"] .copyIconButton {
+  color: #ffffff;
+  border-color: #6fe4ff;
+  background-color: #00134d;
+}
+
+[data-theme="retro"] .copyIconButton:hover:not(:disabled) {
+  background-color: #6fe4ff;
+  color: #00143f;
 }
 
 /* ── Play button ────────────────────────────────────────────────────────── */

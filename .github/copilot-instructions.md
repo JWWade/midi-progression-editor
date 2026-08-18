@@ -134,6 +134,7 @@ const scale = await client.post('/Scale/from-root', {
 - **CORS**: The backend allows requests from `http://localhost:5173` during local development.
 - **Path alias**: `@` maps to `client/src/`. Prefer `@/features/...` over relative imports across feature boundaries.
 - **Generated files**: Never manually edit `client/src/api/generated/index.ts`; always regenerate with `npm run generate:api`.
+- **Responsive CSS**: For all net-new component-level responsive work, prefer container queries first. Use media queries for page-shell layout and environment preferences such as reduced motion, hover, pointer, or viewport-wide structural changes.
 
 ## Feature Modules
 

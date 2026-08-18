@@ -20,6 +20,23 @@ export interface ChordCandidate {
 }
 
 const ALL_QUALITIES = Object.keys(CHORD_INTERVALS) as ChordType[];
+const MATCH_SCORE_EPSILON = 1e-9;
+
+// Explicit tie-break overrides used only for known ambiguity families.
+const IDENTITY_TIE_BREAK_OVERRIDES: ReadonlyArray<readonly [preferred: ChordType, fallback: ChordType]> = [
+  ["min7", "maj6"],
+  ["sus2", "quartal"],
+];
+
+function shouldPreferCandidateInTie(candidateQuality: ChordType, currentBestQuality: ChordType): boolean {
+  for (const [preferred, fallback] of IDENTITY_TIE_BREAK_OVERRIDES) {
+    if (candidateQuality === preferred && currentBestQuality === fallback) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 // Role assignment per chord type — mirrors the ROLES_OVERRIDE logic in transpose.ts
 const DEFAULT_CHORD_ROLES: ChordNoteInfo["role"][] = ["root", "third", "fifth", "seventh"];
@@ -122,16 +139,52 @@ export function findBestChordIdentity(
   noteIndices: readonly number[],
   qualityPool: readonly ChordType[] = ALL_QUALITIES,
 ): ChordIdentityMatch {
+  const normalizedNotes = dedupeNormalizedPitchClasses(noteIndices);
+  const rootOrder = new Map<number, number>();
+  for (let i = 0; i < normalizedNotes.length; i++) {
+    rootOrder.set(normalizedNotes[i], i);
+  }
+
   let bestRoot = 0;
   let bestQuality: ChordType = (qualityPool[0] ?? "major") as ChordType;
   let bestScore = 0;
 
   for (let root = 0; root < 12; root++) {
     const { quality, matchScore } = findBestQualityForRoot(noteIndices, root, qualityPool);
-    if (matchScore > bestScore) {
+    const isStrictlyBetter = matchScore > bestScore + MATCH_SCORE_EPSILON;
+    const isEffectivelyTie = Math.abs(matchScore - bestScore) <= MATCH_SCORE_EPSILON;
+
+    if (isStrictlyBetter) {
       bestScore = matchScore;
       bestRoot = root;
       bestQuality = quality;
+      continue;
+    }
+
+    if (isEffectivelyTie) {
+      if (shouldPreferCandidateInTie(quality, bestQuality)) {
+        bestScore = matchScore;
+        bestRoot = root;
+        bestQuality = quality;
+        continue;
+      }
+
+      // When quality is also tied, keep label stable by preferring whichever
+      // root appears first in the caller's deduped note order.
+      if (quality === bestQuality) {
+        const candidateOrder = rootOrder.get(root);
+        const bestOrder = rootOrder.get(bestRoot);
+
+        if (
+          candidateOrder !== undefined &&
+          bestOrder !== undefined &&
+          candidateOrder < bestOrder
+        ) {
+          bestScore = matchScore;
+          bestRoot = root;
+          bestQuality = quality;
+        }
+      }
     }
   }
 

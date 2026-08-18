@@ -18,6 +18,31 @@ export interface RandomDiatonicStartupSelection {
   chordName: string;
 }
 
+function getScaleForChordQuality(quality: ChordType): ScaleType {
+  switch (quality) {
+    case "major":
+    case "maj7":
+    case "maj6":
+    case "sus2":
+    case "aug":
+      return "major";
+    case "dom7":
+    case "dom7sus4":
+      return "mixolydian";
+    case "minor":
+    case "min7":
+    case "min6":
+      return "naturalMinor";
+    case "minmaj7":
+      return "melodicMinor";
+    case "dim":
+    case "halfdim7":
+      return "phrygian";
+    default:
+      return "major";
+  }
+}
+
 function randomInt(maxExclusive: number, rng: () => number): number {
   return Math.floor(rng() * maxExclusive);
 }
@@ -25,15 +50,18 @@ function randomInt(maxExclusive: number, rng: () => number): number {
 export function selectRandomDiatonicStartupChord(
   rng: () => number = Math.random,
 ): RandomDiatonicStartupSelection {
-  // Key is always C major (E12-01). Startup chord is uniform random over the 7
-  // diatonic roots; quality is uniform random over western chord types.
-  const keyRoot = 0;
-  const keyScale: ScaleType = "major";
+  // Startup chord remains random over C-major diatonic roots and western
+  // quality types. Key context is then inferred from the selected chord.
+  const startupPoolRoot = 0;
+  const startupPoolScale: ScaleType = "major";
 
-  const diatonicRoots = Array.from(getDiatonicIndices(keyRoot, keyScale));
-  const chordRoot = diatonicRoots[randomInt(diatonicRoots.length, rng)] ?? keyRoot;
+  const diatonicRoots = Array.from(getDiatonicIndices(startupPoolRoot, startupPoolScale));
+  const chordRoot = diatonicRoots[randomInt(diatonicRoots.length, rng)] ?? startupPoolRoot;
   const chordQuality =
     WESTERN_CHORD_TYPES[randomInt(WESTERN_CHORD_TYPES.length, rng)] ?? "major";
+
+  const keyRoot = chordRoot;
+  const keyScale = getScaleForChordQuality(chordQuality);
 
   return {
     keyRoot,

@@ -46,6 +46,12 @@ export function useBridgePreview(
     }
   }, []);
 
+  function clearPreviewState() {
+    setIsPreviewPlaying(false);
+    setPreviewBridge(null);
+    setPreviewInsertAfterIndex(null);
+  }
+
   const clearPreviewError = useCallback(() => {
     clearErrorTimer();
     setPreviewError(null);
@@ -68,9 +74,7 @@ export function useBridgePreview(
     cancelledRef.current = true;
     clearErrorTimer();
     stopChord();
-    setIsPreviewPlaying(false);
-    setPreviewBridge(null);
-    setPreviewInsertAfterIndex(null);
+    clearPreviewState();
   }, [clearErrorTimer]);
 
   const startPreview = useCallback(
@@ -106,9 +110,7 @@ export function useBridgePreview(
           }
         } finally {
           if (!cancelledRef.current) {
-            setIsPreviewPlaying(false);
-            setPreviewBridge(null);
-            setPreviewInsertAfterIndex(null);
+            clearPreviewState();
           }
         }
       };

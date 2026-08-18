@@ -10,6 +10,20 @@ For the project overview and quick-start guide, see the
 
 ---
 
+## Architecture Diagrams
+
+Architecture-as-code diagrams written in Mermaid (render natively on GitHub). Update these diagrams whenever you change system topology, add a feature module, or modify the CI pipeline.
+
+| Diagram | Description |
+|---|---|
+| [architecture/system-overview.md](architecture/system-overview.md) | Full system topology: browser, frontend, backend, services, MIDI output |
+| [architecture/frontend-features.md](architecture/frontend-features.md) | Frontend feature module dependency graph |
+| [architecture/data-flow.md](architecture/data-flow.md) | End-to-end data flow from user interaction to MIDI file output |
+| [architecture/ci-pipeline.md](architecture/ci-pipeline.md) | CI/CD pipeline stages, triggers, and required checks |
+| [architecture/README.md](architecture/README.md) | Architecture sub-index and diagram navigation guide |
+
+---
+
 ## Reference Documents
 
 | Document | Purpose |
@@ -17,6 +31,8 @@ For the project overview and quick-start guide, see the
 | [feature-module-convention.md](feature-module-convention.md) | Canonical folder structure and barrel-export rules for every frontend feature module |
 | [geometric-harmony-system.md](geometric-harmony-system.md) | Authoritative reference for coordinate systems, chord/scale intervals, polygon geometry, color language, opacity model, animation rules, and voice-leading formulas |
 | [glossary.md](glossary.md) | Normative vocabulary definitions — authoritative terms for code, UI, and music-theory concepts |
+| [tutorial-integration.md](tutorial-integration.md) | Tutorial content model, trigger strategy, and integration boundaries |
+| [tutorial-system-enhancement-plan.md](tutorial-system-enhancement-plan.md) | Planned enhancements for the tutorial system |
 
 ---
 
@@ -52,6 +68,7 @@ investigations that informed (or will inform) feature development.
 | [spikes/SPIKE-dx-setup.md](spikes/SPIKE-dx-setup.md) | Prerequisite-check scripts and `generate:api` hardening | Open |
 | [spikes/SPIKE-ii-v-bridges.md](spikes/SPIKE-ii-v-bridges.md) | Automatic ii–V bridge and tritone substitution suggestions | Complete |
 | [spikes/SPIKE-performance-hotspots.md](spikes/SPIKE-performance-hotspots.md) | Critical performance bottleneck identification | Open |
+| [spikes/SPIKE-testing-strategy.md](spikes/SPIKE-testing-strategy.md) | Frontend and backend testing strategy, coverage expectations, and roadmap | Open |
 | [spikes/SPIKE-quartal-diatonic.md](spikes/SPIKE-quartal-diatonic.md) | Quartal harmony theory and diatonic quartal chord generation | Complete |
 | [spikes/SPIKE-synchronized-chromatic-circle-animation.md](spikes/SPIKE-synchronized-chromatic-circle-animation.md) | Synchronized polygon morphing animation between chord transitions | Open |
 | [spikes/negative-harmony.md](spikes/negative-harmony.md) | Architectural readiness assessment and prototype for negative harmony transform | Complete |

@@ -9,7 +9,6 @@ import {
   RING_RADIUS,
   RING_STROKE_WIDTH,
   CIRCLE_PADDING,
-  NODE_RADIUS,
 } from "../constants/visualConstants";
 import { transposeChord, CHORD_INTERVALS } from "@/features/chord/utils/transpose";
 import { getChordName } from "@/features/chord/data/chordNames";
@@ -19,12 +18,10 @@ import { SEVENTH_CHORD_TYPES } from "@/features/chord/types";
 import type { ScaleType } from "@/features/scale/types";
 import { useChordMorphing } from "@/features/chord-animation";
 import {
-  ToneInfoPanel,
   getToneRole,
   noteIndexToFrequency,
 } from "@/features/chord-inspection";
 import type { ToneInfo } from "@/features/chord-inspection";
-import { calculateCentroid } from "@/features/chord-geometry";
 import { getNoteStyle, chordPolygonGradientId } from "../utils/noteStyles";
 import {
   getChordComplexity,
@@ -44,13 +41,17 @@ import styles from "./ChromaticCircle.module.css";
 
 interface ChromaticCircleProps {
   onCurrentChordChange?: (chord: Chord) => void;
+  onDiatonicChordSelect?: (chord: Chord) => void;
   /** Initial named chord selected on first render (e.g. Dmaj7). */
   initialChordName?: string;
   selectedScale?: ScaleType;
   /** Key root pitch class (0–11) — renders the tonic marker on this node. */
   keyRoot?: number;
-  showCentroid?: boolean;
   showIntervals?: boolean;
+  showLegend?: boolean;
+  onLegendChange?: (show: boolean) => void;
+  selectedTone?: ToneInfo | null;
+  onToneSelect?: (tone: ToneInfo | null) => void;
   /** When non-null, overrides the user's internal chord selection for rendering and animation. */
   externalChord?: Chord | null;
   /** When true, renders a pulsing ring to indicate active playback. */
@@ -63,6 +64,18 @@ interface ChromaticCircleProps {
    * so spread a new object (`{ ...chord }`) to re-send the same chord.
    */
   loadChord?: Chord | null;
+  /**
+   * Controls how the CircleControls panel (Transform, Templates, chord
+   * selector) is positioned relative to the SVG circle.
+   *
+   * - `'below'` (default): controls appear below the circle, stacked
+   *   vertically — matches the traditional compact layout used in Inspect and
+   *   Compose modes.
+   * - `'side'`: controls appear to the right of the circle in a flex row,
+   *   making full use of wider viewports when a side-by-side layout is desired. On
+   *   narrow screens (≤ 900 px) the layout automatically reverts to stacked.
+   */
+  controlsLayout?: 'below' | 'side';
 }
 
 /**
@@ -79,20 +92,24 @@ function getEnharmonicEquivalent(noteIndex: number, currentName: string): string
 
 export function ChromaticCircle({
   onCurrentChordChange,
+  onDiatonicChordSelect,
   initialChordName = "C",
   selectedScale: propSelectedScale = "major",
   keyRoot: propKeyRoot,
-  showCentroid: propShowCentroid = false,
   showIntervals: propShowIntervals = false,
+  showLegend = false,
+  onLegendChange,
+  selectedTone = null,
+  onToneSelect,
   externalChord,
   isPlaybackActive = false,
   playingPitchClass = null,
   loadChord,
+  controlsLayout = 'below',
 }: ChromaticCircleProps) {
   const { theme } = useTheme();
   const { pitchClasses } = useEnharmonic();
 
-  const [selectedTone, setSelectedTone] = useState<ToneInfo | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -104,11 +121,13 @@ export function ChromaticCircle({
   /** Track which chord vertex note is currently being hovered/previewed (for R key re-root). */
   const hoveredVertexNoteRef = useRef<number | null>(null);
 
-  const deselectTone = useCallback(() => setSelectedTone(null), []);
+  const deselectTone = useCallback(() => {
+    onToneSelect?.(null);
+  }, [onToneSelect]);
 
   const handleNoteClick = useCallback((_noteName: string, toneInfo: ToneInfo) => {
-    setSelectedTone(toneInfo);
-  }, []);
+    onToneSelect?.(toneInfo);
+  }, [onToneSelect]);
 
   const {
     selectedChordName,
@@ -367,7 +386,6 @@ export function ChromaticCircle({
   );
   const isAnimating = morphProgress > 0 && morphProgress < 1;
 
-  const fromCentroid = calculateCentroid(fromMorphedPoints);
   const chordComplexity = getChordComplexity({ root: rootIndex, quality: chordType });
   const strokeColor = getChordColor(chordType, chordComplexity);
   const strokeDasharray = isSeventhChord ? "5,5" : undefined;
@@ -396,13 +414,22 @@ export function ChromaticCircle({
       ? null
       : ((playingPitchClass % 12) + 12) % 12;
 
+  const isHorizontal = controlsLayout === 'side';
+
   return (
-    <div style={{ position: "relative", maxWidth: "100%", width: "100%" }}>
+    <div
+      className={isHorizontal ? styles.horizontalLayout : undefined}
+      style={isHorizontal ? undefined : { position: "relative", maxWidth: "100%", width: "100%" }}
+    >
+      {/* Circle SVG + live regions + tone panel (left column in side mode) */}
+      <div
+        className={isHorizontal ? styles.circleColumn : undefined}
+        style={{ position: "relative" }}
+      >
       <div
         style={{
           width: "100%",
-          maxWidth: 550,
-          margin: "0 auto",
+          ...(!isHorizontal && { maxWidth: 550, margin: "0 auto" }),
           padding: `0 ${CIRCLE_PADDING}px`,
           boxSizing: "border-box",
         }}
@@ -416,7 +443,7 @@ export function ChromaticCircle({
           style={{
             display: "block",
             width: "100%",
-            maxHeight: 550,
+            maxHeight: isHorizontal ? 660 : 550,
             cursor: "default",
             userSelect: "none",
             WebkitUserSelect: "none",
@@ -465,8 +492,6 @@ export function ChromaticCircle({
             strokeColor={strokeColor}
             strokeDasharray={strokeDasharray}
             opacity={polygonOpacity}
-            showCentroid={propShowCentroid}
-            centroid={fromCentroid}
             showIntervals={propShowIntervals}
             chordIndices={orderedChordIndices}
             pulse={pulseCount}
@@ -548,6 +573,7 @@ export function ChromaticCircle({
                   x={x}
                   y={y}
                   noteStyle={noteStyle}
+                  isKeyRoot={isTonic}
                   isArpeggioActive={isPlaybackActive && activeArpeggioPitchClass === i}
                   isDropTarget={isDragging && dragTargetIndex === i}
                   isSelected={isSelected}
@@ -559,20 +585,6 @@ export function ChromaticCircle({
                   onClick={stableNoteClick}
                   onKeyDown={stableNoteKeyDown}
                 />
-                {/* Tonic marker: structural anchor rendered above node, below drag ring */}
-                {isTonic && (
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={NODE_RADIUS + 5}
-                    fill="none"
-                    stroke="#f59e0b"
-                    strokeWidth={2.5}
-                    opacity={0.9}
-                    pointerEvents="none"
-                    aria-hidden="true"
-                  />
-                )}
               </g>
             );
           })}
@@ -616,19 +628,48 @@ export function ChromaticCircle({
         {previewAnnouncement}
       </div>
 
-      <ToneInfoPanel selectedTone={selectedTone} onClose={deselectTone} />
+      {/* Controls below the circle (default layout) */}
+      {!isHorizontal && (
+        <CircleControls
+          onRotate={handleRotateChord}
+          onMirrorWithAxis={handleMirrorWithAxis}
+          onMutate={handleMutateChord}
+          onSelectShape={handleSelectPrimitiveShape}
+          onRandomChord={handleRandomChord}
+          selectedChordName={selectedChordName}
+          onChordChange={handleChordChange}
+          customFromChord={customFromChord}
+          keyRoot={propKeyRoot ?? rootIndex}
+          keyScale={propSelectedScale}
+          onDiatonicChordSelect={onDiatonicChordSelect}
+          diatonicRoots={keyDiatonicRoots}
+          showLegend={showLegend}
+          onLegendChange={onLegendChange}
+        />
+      )}
+      </div>{/* end circleColumn / inner wrapper */}
 
-      <CircleControls
-        onRotate={handleRotateChord}
-        onMirrorWithAxis={handleMirrorWithAxis}
-        onMutate={handleMutateChord}
-        onSelectShape={handleSelectPrimitiveShape}
-        onRandomChord={handleRandomChord}
-        selectedChordName={selectedChordName}
-        onChordChange={handleChordChange}
-        customFromChord={customFromChord}
-        diatonicRoots={keyDiatonicRoots}
-      />
+      {/* Controls beside the circle (side layout) */}
+      {isHorizontal && (
+        <div className={styles.controlsColumn}>
+          <CircleControls
+            onRotate={handleRotateChord}
+            onMirrorWithAxis={handleMirrorWithAxis}
+            onMutate={handleMutateChord}
+            onSelectShape={handleSelectPrimitiveShape}
+            onRandomChord={handleRandomChord}
+            selectedChordName={selectedChordName}
+            onChordChange={handleChordChange}
+            customFromChord={customFromChord}
+            keyRoot={propKeyRoot ?? rootIndex}
+            keyScale={propSelectedScale}
+            onDiatonicChordSelect={onDiatonicChordSelect}
+            diatonicRoots={keyDiatonicRoots}
+            showLegend={showLegend}
+            onLegendChange={onLegendChange}
+          />
+        </div>
+      )}
     </div>
   );
 }
