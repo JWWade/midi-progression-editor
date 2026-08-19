@@ -36,4 +36,20 @@ describe("useProgression addChords", () => {
     expect(outcome).toEqual({ added: 0, reason: "insufficient-space" });
     expect(result.current.chords).toHaveLength(6);
   });
+
+  it("rejects a 4-chord insert when only 3 slots remain", () => {
+    const { result } = renderHook(() => useProgression());
+
+    act(() => {
+      result.current.addChords([C_MAJOR, C_MAJOR, C_MAJOR, C_MAJOR, C_MAJOR]);
+    });
+
+    let outcome: { added: number; reason?: "full" | "insufficient-space" } = { added: 0 };
+    act(() => {
+      outcome = result.current.addChords([C_MAJOR, G_MAJOR, D_MINOR, C_MAJOR]);
+    });
+
+    expect(outcome).toEqual({ added: 0, reason: "insufficient-space" });
+    expect(result.current.chords).toHaveLength(5);
+  });
 });

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildMajorOneFourFive, buildMajorTwoFiveOne } from "../buildMajorProgression";
+import {
+  buildMajorOneFiveSixFour,
+  buildMajorOneFourFive,
+  buildMajorTwoFiveOne,
+} from "../buildMajorProgression";
 
 describe("buildMajorTwoFiveOne", () => {
   it("builds Dm -> G -> C triads for C major", () => {
@@ -35,6 +39,27 @@ describe("buildMajorOneFourFive", () => {
 
   it("returns unsupported for non-major modes", () => {
     const result = buildMajorOneFourFive(0, "dorian");
+
+    expect(result.supported).toBe(false);
+    expect(result.chords).toEqual([]);
+  });
+});
+
+describe("buildMajorOneFiveSixFour", () => {
+  it("builds C -> G -> Am -> F triads for C major", () => {
+    const result = buildMajorOneFiveSixFour(0, "major");
+
+    expect(result.supported).toBe(true);
+    expect(result.chords).toEqual([
+      { root: 0, quality: "major" },
+      { root: 7, quality: "major" },
+      { root: 9, quality: "minor" },
+      { root: 5, quality: "major" },
+    ]);
+  });
+
+  it("returns unsupported for non-major modes", () => {
+    const result = buildMajorOneFiveSixFour(0, "dorian");
 
     expect(result.supported).toBe(false);
     expect(result.chords).toEqual([]);

@@ -45,3 +45,12 @@ export function buildMajorOneFourFive(root: number, scale: ScaleType): Progressi
   // Scale degrees: I, IV, V
   return buildMajorTriadProgressionFromDegrees(root, scale, [0, 3, 4]);
 }
+
+/**
+ * Builds a triad-only I-V-vi-IV progression for the active key context.
+ * v1 intentionally supports only major mode.
+ */
+export function buildMajorOneFiveSixFour(root: number, scale: ScaleType): ProgressionTemplateResult {
+  // Scale degrees: I, V, vi, IV
+  return buildMajorTriadProgressionFromDegrees(root, scale, [0, 4, 5, 3]);
+}

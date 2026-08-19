@@ -27,6 +27,7 @@ import type { VoiceLeadingConfig } from '../features/voice-leading';
 import type { ToneInfo } from '../features/chord-inspection';
 import { ThemeModeDropdown } from './components/ThemeModeDropdown';
 import {
+  buildMajorOneFiveSixFour,
   ProgressionTemplatesCard,
   buildMajorOneFourFive,
   buildMajorTwoFiveOne,
@@ -224,6 +225,33 @@ export default function App() {
     }
   }, [keyRoot, keyScale, addChords, fireEvent, chords.length]);
 
+  const handleAddOneFiveSixFour = useCallback(() => {
+    const template = buildMajorOneFiveSixFour(keyRoot, keyScale);
+    const templateName = 'I-V-vi-IV';
+    if (!template.supported) {
+      setTemplateInsertMessage(`${templateName} is available in major mode only.`);
+      return;
+    }
+
+    const result = addChords(template.chords);
+    if (result.added > 0) {
+      setTemplateInsertMessage('');
+      fireEvent('chordAdded');
+      return;
+    }
+
+    if (result.reason === 'full') {
+      setTemplateInsertMessage(`Progression is full (${chords.length}/${MAX_PROGRESSION_LENGTH}).`);
+      return;
+    }
+
+    if (result.reason === 'insufficient-space') {
+      setTemplateInsertMessage(
+        `Not enough room for ${templateName} (${template.chords.length} slots needed, ${MAX_PROGRESSION_LENGTH - chords.length} available).`,
+      );
+    }
+  }, [keyRoot, keyScale, addChords, fireEvent, chords.length]);
+
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 
   // Keep the tutorial engine in sync with app state for state-based triggers.
@@ -329,6 +357,7 @@ export default function App() {
               maxProgressionLength={MAX_PROGRESSION_LENGTH}
               onAddTwoFiveOne={handleAddTwoFiveOne}
               onAddOneFourFive={handleAddOneFourFive}
+              onAddOneFiveSixFour={handleAddOneFiveSixFour}
             />
           </div>
         </section>
