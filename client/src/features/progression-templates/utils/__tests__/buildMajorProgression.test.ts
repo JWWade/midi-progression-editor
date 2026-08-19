@@ -17,11 +17,15 @@ describe("buildMajorTwoFiveOne", () => {
     ]);
   });
 
-  it("returns unsupported for non-major modes", () => {
+  it("builds mode-relative triads for C dorian", () => {
     const result = buildMajorTwoFiveOne(0, "dorian");
 
-    expect(result.supported).toBe(false);
-    expect(result.chords).toEqual([]);
+    expect(result.supported).toBe(true);
+    expect(result.chords).toEqual([
+      { root: 2, quality: "minor" },
+      { root: 7, quality: "minor" },
+      { root: 0, quality: "minor" },
+    ]);
   });
 });
 
@@ -37,11 +41,15 @@ describe("buildMajorOneFourFive", () => {
     ]);
   });
 
-  it("returns unsupported for non-major modes", () => {
+  it("builds mode-relative triads for C dorian", () => {
     const result = buildMajorOneFourFive(0, "dorian");
 
-    expect(result.supported).toBe(false);
-    expect(result.chords).toEqual([]);
+    expect(result.supported).toBe(true);
+    expect(result.chords).toEqual([
+      { root: 0, quality: "minor" },
+      { root: 5, quality: "major" },
+      { root: 7, quality: "minor" },
+    ]);
   });
 });
 
@@ -58,10 +66,15 @@ describe("buildMajorOneFiveSixFour", () => {
     ]);
   });
 
-  it("returns unsupported for non-major modes", () => {
-    const result = buildMajorOneFiveSixFour(0, "dorian");
+  it("builds mode-relative triads for A natural minor", () => {
+    const result = buildMajorOneFiveSixFour(9, "naturalMinor");
 
-    expect(result.supported).toBe(false);
-    expect(result.chords).toEqual([]);
+    expect(result.supported).toBe(true);
+    expect(result.chords).toEqual([
+      { root: 9, quality: "minor" },
+      { root: 4, quality: "minor" },
+      { root: 5, quality: "major" },
+      { root: 2, quality: "minor" },
+    ]);
   });
 });

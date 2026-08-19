@@ -74,7 +74,7 @@ export const ProgressionTemplatesCard = memo(function ProgressionTemplatesCard({
 
     return chords
       .map((chord) => formatChordName(chord, pitchClasses))
-      .join(" -> ");
+      .join(" \u2192 ");
   };
 
   const twoFiveOnePreview = toPreview("ii-V-I", twoFiveOne.chords, twoFiveOne.supported);
@@ -89,11 +89,13 @@ export const ProgressionTemplatesCard = memo(function ProgressionTemplatesCard({
     .filter((template) => template.supported && !template.hasCapacity)
     .reduce((max, template) => Math.max(max, template.required), 0);
 
-  const helperText = !twoFiveOne.supported || !oneFourFive.supported || !oneFiveSixFour.supported
-    ? "Available in major mode only for now."
+  const hasUnsupportedTemplate = !twoFiveOne.supported || !oneFourFive.supported || !oneFiveSixFour.supported;
+
+  const helperText = hasUnsupportedTemplate
+    ? "Template unavailable for this key context."
     : blockedRequirement > 0
       ? `Need ${blockedRequirement} open slots (${remainingSlots} remaining).`
-      : "Adds triads only (no 7th extensions).";
+      : "Uses diatonic triads from the selected mode (no 7th extensions).";
 
   return (
     <section className={styles.panel} aria-label="Progression templates">

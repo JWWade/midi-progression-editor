@@ -30,6 +30,7 @@ import {
   buildMajorOneFiveSixFour,
   ProgressionTemplatesCard,
   buildMajorOneFourFive,
+  type ProgressionTemplateResult,
   buildMajorTwoFiveOne,
 } from '../features/progression-templates';
 import styles from './App.module.css';
@@ -171,11 +172,9 @@ export default function App() {
     });
   }, [currentChord, addChord, fireEvent]);
 
-  const handleAddTwoFiveOne = useCallback(() => {
-    const template = buildMajorTwoFiveOne(keyRoot, keyScale);
-    const templateName = 'ii-V-I';
-    if (!template.supported) {
-      setTemplateInsertMessage(`${templateName} is available in major mode only.`);
+  const addTemplateToProgression = useCallback((templateName: string, template: ProgressionTemplateResult) => {
+    if (!template.supported || template.chords.length === 0) {
+      setTemplateInsertMessage(`${templateName} is unavailable for the selected key context.`);
       return;
     }
 
@@ -196,61 +195,19 @@ export default function App() {
         `Not enough room for ${templateName} (${template.chords.length} slots needed, ${MAX_PROGRESSION_LENGTH - chords.length} available).`,
       );
     }
-  }, [keyRoot, keyScale, addChords, fireEvent, chords.length]);
+  }, [addChords, fireEvent, chords.length]);
+
+  const handleAddTwoFiveOne = useCallback(() => {
+    addTemplateToProgression('ii-V-I', buildMajorTwoFiveOne(keyRoot, keyScale));
+  }, [keyRoot, keyScale, addTemplateToProgression]);
 
   const handleAddOneFourFive = useCallback(() => {
-    const template = buildMajorOneFourFive(keyRoot, keyScale);
-    const templateName = 'I-IV-V';
-    if (!template.supported) {
-      setTemplateInsertMessage(`${templateName} is available in major mode only.`);
-      return;
-    }
-
-    const result = addChords(template.chords);
-    if (result.added > 0) {
-      setTemplateInsertMessage('');
-      fireEvent('chordAdded');
-      return;
-    }
-
-    if (result.reason === 'full') {
-      setTemplateInsertMessage(`Progression is full (${chords.length}/${MAX_PROGRESSION_LENGTH}).`);
-      return;
-    }
-
-    if (result.reason === 'insufficient-space') {
-      setTemplateInsertMessage(
-        `Not enough room for ${templateName} (${template.chords.length} slots needed, ${MAX_PROGRESSION_LENGTH - chords.length} available).`,
-      );
-    }
-  }, [keyRoot, keyScale, addChords, fireEvent, chords.length]);
+    addTemplateToProgression('I-IV-V', buildMajorOneFourFive(keyRoot, keyScale));
+  }, [keyRoot, keyScale, addTemplateToProgression]);
 
   const handleAddOneFiveSixFour = useCallback(() => {
-    const template = buildMajorOneFiveSixFour(keyRoot, keyScale);
-    const templateName = 'I-V-vi-IV';
-    if (!template.supported) {
-      setTemplateInsertMessage(`${templateName} is available in major mode only.`);
-      return;
-    }
-
-    const result = addChords(template.chords);
-    if (result.added > 0) {
-      setTemplateInsertMessage('');
-      fireEvent('chordAdded');
-      return;
-    }
-
-    if (result.reason === 'full') {
-      setTemplateInsertMessage(`Progression is full (${chords.length}/${MAX_PROGRESSION_LENGTH}).`);
-      return;
-    }
-
-    if (result.reason === 'insufficient-space') {
-      setTemplateInsertMessage(
-        `Not enough room for ${templateName} (${template.chords.length} slots needed, ${MAX_PROGRESSION_LENGTH - chords.length} available).`,
-      );
-    }
-  }, [keyRoot, keyScale, addChords, fireEvent, chords.length]);
+    addTemplateToProgression('I-V-vi-IV', buildMajorOneFiveSixFour(keyRoot, keyScale));
+  }, [keyRoot, keyScale, addTemplateToProgression]);
 
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 

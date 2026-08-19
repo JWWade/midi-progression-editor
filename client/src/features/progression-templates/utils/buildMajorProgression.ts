@@ -7,15 +7,11 @@ export interface ProgressionTemplateResult {
   readonly supported: boolean;
 }
 
-function buildMajorTriadProgressionFromDegrees(
+function buildTriadProgressionFromDegrees(
   root: number,
   scale: ScaleType,
   degreeIndices: readonly number[],
 ): ProgressionTemplateResult {
-  if (scale !== "major") {
-    return { chords: [], supported: false };
-  }
-
   const options = buildDiatonicChordOptions(root, scale);
   const chords: Chord[] = degreeIndices
     .map((degreeIndex) => options[degreeIndex]?.chord)
@@ -30,27 +26,27 @@ function buildMajorTriadProgressionFromDegrees(
 
 /**
  * Builds a triad-only ii-V-I progression for the active key context.
- * v1 intentionally supports only major mode.
+ * Degree mapping is interpreted relative to the currently selected mode.
  */
 export function buildMajorTwoFiveOne(root: number, scale: ScaleType): ProgressionTemplateResult {
   // Scale degrees: ii, V, I
-  return buildMajorTriadProgressionFromDegrees(root, scale, [1, 4, 0]);
+  return buildTriadProgressionFromDegrees(root, scale, [1, 4, 0]);
 }
 
 /**
  * Builds a triad-only I-IV-V progression for the active key context.
- * v1 intentionally supports only major mode.
+ * Degree mapping is interpreted relative to the currently selected mode.
  */
 export function buildMajorOneFourFive(root: number, scale: ScaleType): ProgressionTemplateResult {
   // Scale degrees: I, IV, V
-  return buildMajorTriadProgressionFromDegrees(root, scale, [0, 3, 4]);
+  return buildTriadProgressionFromDegrees(root, scale, [0, 3, 4]);
 }
 
 /**
  * Builds a triad-only I-V-vi-IV progression for the active key context.
- * v1 intentionally supports only major mode.
+ * Degree mapping is interpreted relative to the currently selected mode.
  */
 export function buildMajorOneFiveSixFour(root: number, scale: ScaleType): ProgressionTemplateResult {
   // Scale degrees: I, V, vi, IV
-  return buildMajorTriadProgressionFromDegrees(root, scale, [0, 4, 5, 3]);
+  return buildTriadProgressionFromDegrees(root, scale, [0, 4, 5, 3]);
 }

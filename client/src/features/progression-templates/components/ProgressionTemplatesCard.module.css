@@ -1,12 +1,13 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 14px;
+  padding: 16px;
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 90%, #f4f0e5 10%);
+  border: 1px solid var(--color-border-subtle, var(--color-border));
+  background-color: var(--color-bg-sidebar, var(--color-bg-surface));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
 }
 
@@ -18,17 +19,20 @@
 
 .title {
   margin: 0;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--color-text-primary);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
 }
 
 .templateRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border-subtle, var(--color-border));
 }
 
 .templateInfo {
@@ -39,37 +43,37 @@
 }
 
 .templateName {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--color-text-primary);
+  letter-spacing: 0.04em;
 }
 
 .templatePreview {
   font-size: 12px;
+  line-height: 1.45;
   color: var(--color-text-secondary);
-  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 .addButton {
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border: 1px solid var(--color-border-subtle, var(--color-border));
   border-radius: 8px;
   background-color: var(--color-bg-surface);
   color: var(--color-text-primary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  min-height: 36px;
-  padding: 8px 12px;
+  letter-spacing: 0.04em;
+  min-height: 34px;
+  padding: 7px 12px;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .addButton:hover:not(:disabled) {
-  background-color: var(--color-bg-subtle);
-}
-
-.addButton:active:not(:disabled) {
-  transform: scale(0.97);
+  background-color: var(--color-tile-bg-hover, var(--color-bg-subtle));
+  border-color: var(--color-border, var(--color-text-secondary));
 }
 
 .addButton:disabled {
@@ -77,9 +81,15 @@
   cursor: not-allowed;
 }
 
+.addButton:focus-visible {
+  outline: 2px solid var(--color-accent, #4f46e5);
+  outline-offset: 2px;
+}
+
 .helperText {
-  margin: 0;
+  margin: 2px 0 0;
   font-size: 11px;
+  line-height: 1.35;
   color: var(--color-text-secondary);
 }
 
