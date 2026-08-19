@@ -5,6 +5,13 @@ REM Starts both backend (ASP.NET Core) and frontend (Vite) servers
 echo Starting MIDI Progression Editor Development Environment...
 echo.
 
+REM Prefer a newer user-scope Node.js 22 install from winget when present.
+set NODEJS22_WINGET_DIR=
+FOR /F "usebackq delims=" %%D IN (`powershell -NoProfile -Command "$root = Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Packages\OpenJS.NodeJS.22_Microsoft.Winget.Source_8wekyb3d8bbwe'; if (Test-Path $root) { Get-ChildItem $root -Directory -Filter 'node-v22.*-win-x64' | Sort-Object Name -Descending | Select-Object -First 1 -ExpandProperty FullName }" 2^>nul`) DO set NODEJS22_WINGET_DIR=%%D
+IF DEFINED NODEJS22_WINGET_DIR (
+  set "PATH=%NODEJS22_WINGET_DIR%;%PATH%"
+)
+
 REM Free port 5110 (backend) if already occupied — targeted kill by port only.
 echo [0/4] Freeing port 5110 if occupied...
 FOR /F "tokens=5" %%P IN ('netstat -ano ^| findstr ":5110 "') DO (
