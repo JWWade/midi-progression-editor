@@ -144,6 +144,13 @@
   box-sizing: border-box;
 }
 
+.panelStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
 .sidebarArea {
   display: flex;
   flex-direction: column;

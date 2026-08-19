@@ -26,6 +26,11 @@ import { getRandomBpmInRange } from '../features/midi-export/utils/bpmTempoLabel
 import type { VoiceLeadingConfig } from '../features/voice-leading';
 import type { ToneInfo } from '../features/chord-inspection';
 import { ThemeModeDropdown } from './components/ThemeModeDropdown';
+import {
+  ProgressionTemplatesCard,
+  buildMajorOneFourFive,
+  buildMajorTwoFiveOne,
+} from '../features/progression-templates';
 import styles from './App.module.css';
 
 const DEFAULT_VOICE_LEADING_CONFIG: VoiceLeadingConfig = {
@@ -59,7 +64,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const { pitchClasses } = useEnharmonic();
-  const { nodes, chords, addChord, moveChord, deleteChord, setChords } = useProgression();
+  const { nodes, chords, addChord, addChords, moveChord, deleteChord, setChords } = useProgression();
   // Guard ref to prevent duplicate progression entries from rapid double-clicks.
   // Set synchronously when add is initiated; cleared after the current animation
   // frame so intentional subsequent adds still work.
@@ -103,6 +108,7 @@ export default function App() {
 
   // Separate ARIA live region for event-driven announcements (e.g. chord sent to circle).
   const [sendBackMessage, setSendBackMessage] = useState('');
+  const [templateInsertMessage, setTemplateInsertMessage] = useState('');
 
   useEffect(() => {
     if (isPlaying) {
@@ -163,6 +169,60 @@ export default function App() {
       addGuardRef.current = false;
     });
   }, [currentChord, addChord, fireEvent]);
+
+  const handleAddTwoFiveOne = useCallback(() => {
+    const template = buildMajorTwoFiveOne(keyRoot, keyScale);
+    const templateName = 'ii-V-I';
+    if (!template.supported) {
+      setTemplateInsertMessage(`${templateName} is available in major mode only.`);
+      return;
+    }
+
+    const result = addChords(template.chords);
+    if (result.added > 0) {
+      setTemplateInsertMessage('');
+      fireEvent('chordAdded');
+      return;
+    }
+
+    if (result.reason === 'full') {
+      setTemplateInsertMessage(`Progression is full (${chords.length}/${MAX_PROGRESSION_LENGTH}).`);
+      return;
+    }
+
+    if (result.reason === 'insufficient-space') {
+      setTemplateInsertMessage(
+        `Not enough room for ${templateName} (${template.chords.length} slots needed, ${MAX_PROGRESSION_LENGTH - chords.length} available).`,
+      );
+    }
+  }, [keyRoot, keyScale, addChords, fireEvent, chords.length]);
+
+  const handleAddOneFourFive = useCallback(() => {
+    const template = buildMajorOneFourFive(keyRoot, keyScale);
+    const templateName = 'I-IV-V';
+    if (!template.supported) {
+      setTemplateInsertMessage(`${templateName} is available in major mode only.`);
+      return;
+    }
+
+    const result = addChords(template.chords);
+    if (result.added > 0) {
+      setTemplateInsertMessage('');
+      fireEvent('chordAdded');
+      return;
+    }
+
+    if (result.reason === 'full') {
+      setTemplateInsertMessage(`Progression is full (${chords.length}/${MAX_PROGRESSION_LENGTH}).`);
+      return;
+    }
+
+    if (result.reason === 'insufficient-space') {
+      setTemplateInsertMessage(
+        `Not enough room for ${templateName} (${template.chords.length} slots needed, ${MAX_PROGRESSION_LENGTH - chords.length} available).`,
+      );
+    }
+  }, [keyRoot, keyScale, addChords, fireEvent, chords.length]);
 
   const isProgressionFull = chords.length >= MAX_PROGRESSION_LENGTH;
 
@@ -247,20 +307,30 @@ export default function App() {
           role="region"
           aria-label="Current Chord - Add to progression"
         >
-          <CurrentChordPanel
-            chord={currentChord}
-            onAddChord={handleAddChord}
-            selectedTone={selectedTone}
-            onCloseToneInfo={() => setSelectedTone(null)}
-            diatonicIndices={diatonicIndices}
-            isProgressionFull={isProgressionFull}
-            progressionLength={chords.length}
-            maxProgressionLength={MAX_PROGRESSION_LENGTH}
-            audioParams={audioParams}
-            keyRoot={keyRoot}
-            keyScale={keyScale}
-            onSetKeyContext={setKeyContext}
-          />
+          <div className={styles.panelStack}>
+            <CurrentChordPanel
+              chord={currentChord}
+              onAddChord={handleAddChord}
+              selectedTone={selectedTone}
+              onCloseToneInfo={() => setSelectedTone(null)}
+              diatonicIndices={diatonicIndices}
+              isProgressionFull={isProgressionFull}
+              progressionLength={chords.length}
+              maxProgressionLength={MAX_PROGRESSION_LENGTH}
+              audioParams={audioParams}
+              keyRoot={keyRoot}
+              keyScale={keyScale}
+              onSetKeyContext={setKeyContext}
+            />
+            <ProgressionTemplatesCard
+              keyRoot={keyRoot}
+              keyScale={keyScale}
+              progressionLength={chords.length}
+              maxProgressionLength={MAX_PROGRESSION_LENGTH}
+              onAddTwoFiveOne={handleAddTwoFiveOne}
+              onAddOneFourFive={handleAddOneFourFive}
+            />
+          </div>
         </section>
 
         {/* Progression Sidebar - Right */}
@@ -321,6 +391,12 @@ export default function App() {
         <Toast
           message={previewError}
           action={{ label: 'Dismiss', onClick: clearPreviewError }}
+        />
+      )}
+      {templateInsertMessage && (
+        <Toast
+          message={templateInsertMessage}
+          action={{ label: 'Dismiss', onClick: () => setTemplateInsertMessage('') }}
         />
       )}
       <input

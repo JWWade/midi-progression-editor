@@ -9,6 +9,10 @@ export interface UseProgressionReturn {
   /** Chord-only subset of nodes, used for playback and metric computation. */
   chords: Chord[];
   addChord: (chord: Chord) => void;
+  addChords: (chords: Chord[]) => {
+    added: number;
+    reason?: 'full' | 'insufficient-space';
+  };
   /** Moves a chord node by its chord-list index. */
   moveChord: (index: number, direction: 'up' | 'down') => void;
   /** Deletes a chord node by its chord-list index. */
@@ -31,6 +35,31 @@ export function useProgression(): UseProgressionReturn {
       return [...prev, { id: crypto.randomUUID(), type: 'chord', value: chord }];
     });
   }, []);
+
+  const addChords = useCallback((chordsToAdd: Chord[]) => {
+    if (chordsToAdd.length === 0) {
+      return { added: 0 };
+    }
+
+    if (entries.length >= MAX_PROGRESSION_LENGTH) {
+      return { added: 0, reason: 'full' as const };
+    }
+
+    if (entries.length + chordsToAdd.length > MAX_PROGRESSION_LENGTH) {
+      return { added: 0, reason: 'insufficient-space' as const };
+    }
+
+    setEntries((prev) => [
+      ...prev,
+      ...chordsToAdd.map((chord) => ({
+        id: crypto.randomUUID(),
+        type: 'chord' as const,
+        value: chord,
+      })),
+    ]);
+
+    return { added: chordsToAdd.length };
+  }, [entries]);
 
   const moveChord = useCallback((chordIndex: number, direction: 'up' | 'down') => {
     setEntries((prev) => {
@@ -62,5 +91,5 @@ export function useProgression(): UseProgressionReturn {
     );
   }, []);
 
-  return { nodes: entries, chords, addChord, moveChord, deleteChord, setChords };
+  return { nodes: entries, chords, addChord, addChords, moveChord, deleteChord, setChords };
 }
