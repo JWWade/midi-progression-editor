@@ -9,7 +9,7 @@ All diagrams are written in [Mermaid](https://mermaid.js.org/) and render native
 
 | File | Description |
 |------|-------------|
-| [system-overview.md](system-overview.md) | Full system topology: browser, frontend, backend, services, MIDI output |
+| [system-overview.md](system-overview.md) | Browser application architecture, audio, and MIDI output |
 | [frontend-features.md](frontend-features.md) | Frontend feature module dependencies and data flows |
 | [data-flow.md](data-flow.md) | End-to-end data flow from user interaction to MIDI file output |
 | [ci-pipeline.md](ci-pipeline.md) | CI/CD pipeline stages and jobs |

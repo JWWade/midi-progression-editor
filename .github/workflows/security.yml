@@ -35,36 +35,6 @@ jobs:
         working-directory: client
         run: npm audit --audit-level=high
 
-  dotnet-vulnerable:
-    name: dotnet vulnerable packages
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: "10.x"
-
-      - name: Restore packages (Api)
-        working-directory: server/ParametricMusic.Api
-        run: dotnet restore
-
-      - name: Restore packages (Tests)
-        working-directory: server/ParametricMusic.Tests
-        run: dotnet restore
-
-      - name: Check for vulnerable packages (Api)
-        working-directory: server/ParametricMusic.Api
-        run: dotnet list package --vulnerable --include-transitive
-
-      - name: Check for vulnerable packages (Tests)
-        working-directory: server/ParametricMusic.Tests
-        run: dotnet list package --vulnerable --include-transitive
-
   codeql:
     name: CodeQL analysis
     runs-on: ubuntu-latest
@@ -75,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["javascript-typescript", "csharp"]
+        language: ["javascript-typescript"]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -85,12 +55,6 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
-
-      - name: Set up .NET (for C# autobuild)
-        if: matrix.language == 'csharp'
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: "10.x"
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4.38.2

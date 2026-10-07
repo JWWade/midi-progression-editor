@@ -33,7 +33,7 @@ jobs:
           git fetch origin "$BASE_REF" --depth=1
           CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD")
 
-          SOURCE_CHANGED=$(echo "$CHANGED" | grep -cE '^(client/src/|server/ParametricMusic)' || true)
+          SOURCE_CHANGED=$(echo "$CHANGED" | grep -cE '^client/src/' || true)
           DOCS_CHANGED=$(echo "$CHANGED"   | grep -cE '^(docs/|README\.md|ARCHITECTURE\.md|CONTRIBUTING\.md)' || true)
 
           # Check whether the contributor explicitly ticked "No documentation changes required"

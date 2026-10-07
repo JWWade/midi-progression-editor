@@ -11,14 +11,12 @@ This guide will get you from a fresh clone to a running development environment 
 |------|-----------------|---------|
 | Node.js | 18 | [nodejs.org](https://nodejs.org) |
 | npm | 9 (bundled with Node 18+) | — |
-| .NET SDK | 10 | [dotnet.microsoft.com](https://dotnet.microsoft.com/en-us/download/dotnet) |
 | Git | any recent | [git-scm.com](https://git-scm.com) |
 
 Verify your environment:
 
 ```bash
 node --version   # v18+
-dotnet --version # 10.x.x
 ```
 
 ---
@@ -42,40 +40,16 @@ cd midi-progression-editor
 run-dev.bat
 ```
 
-Both launchers start the backend on **http://localhost:5110** and the frontend on **http://localhost:5173**.  
-Press <kbd>Ctrl+C</kbd> (Linux/macOS) or close the terminal windows (Windows) to stop both servers.
+Both launchers install frontend dependencies when needed and start the app at **http://localhost:5173**.
+Press <kbd>Ctrl+C</kbd> to stop the development server.
 
 ### Manual startup (any platform)
 
 ```bash
-# Terminal 1 — backend
-cd server/ParametricMusic.Api
-dotnet run
-
-# Terminal 2 — frontend
 cd client
-cp .env.example .env.local   # only needed once
 npm install                  # only needed once
 npm run dev
 ```
-
----
-
-## Environment Variables
-
-The frontend reads one optional variable:
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `VITE_API_BASE_URL` | `http://localhost:5110` | Backend base URL |
-
-Copy the template and edit as needed:
-
-```bash
-cp client/.env.example client/.env.local
-```
-
-For local development the default (`http://localhost:5110`) is already correct — you only need to change it if the backend runs on a different host or port.
 
 ---
 
@@ -88,8 +62,6 @@ cd client && npm test
 # Frontend (watch mode)
 cd client && npm run test:watch
 
-# Backend (xUnit)
-cd server/ParametricMusic.Tests && dotnet test
 ```
 
 ---
@@ -112,23 +84,9 @@ TypeScript strict mode is enforced in both compilation and ESLint. Fix all warni
 # Frontend
 cd client && npm run build
 
-# Backend
-cd server && dotnet build --configuration Release
 ```
 
 The frontend build output lands in `client/dist/`.
-
----
-
-## Regenerating the API Client
-
-Whenever you change a backend endpoint (add/remove/rename routes or request/response shapes), regenerate the TypeScript client **while the backend is running**:
-
-```bash
-cd client && npm run generate:api
-```
-
-This hits `http://localhost:5110/swagger/v1/swagger.json` and writes `src/api/generated/index.ts`. **Never edit that file by hand** — any manual edits will be overwritten on the next generation run.
 
 ---
 
@@ -138,13 +96,9 @@ This hits `http://localhost:5110/swagger/v1/swagger.json` and writes `src/api/ge
 midi-progression-editor/
 ├── client/          # React + TypeScript + Vite frontend
 │   └── src/
-│       ├── api/     # API client and generated types
 │       ├── app/     # Root component, providers, AppHeader
 │       ├── features/# Self-contained feature modules
 │       └── shared/  # Reusable components, hooks, utils
-├── server/
-│   ├── ParametricMusic.Api/    # ASP.NET Core Web API (.NET 10)
-│   └── ParametricMusic.Tests/  # xUnit test suite
 └── docs/            # Architecture decisions, spikes, audits
 ```
 
@@ -156,9 +110,8 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed walkthrough and [docs/feat
 
 1. **Create a branch** off `develop`.
 2. **Write or update tests** for your changes (see the existing test files in `__tests__/` subdirectories for examples).
-3. **Run lint and tests** locally before pushing (`npm run lint && npm test` for the frontend; `dotnet test` for the backend).
-4. **Regenerate the API client** if you changed any backend endpoint (`npm run generate:api` with the backend running).
-5. **Update documentation** if your changes affect user-visible behaviour, introduce a new feature, or change an API surface:
+3. **Run lint and tests** locally before pushing (`npm run lint && npm test`).
+4. **Update documentation** if your changes affect user-visible behaviour or introduce a new feature:
    - Update relevant files in `docs/` (reference guides, architecture diagrams)
    - Update `ARCHITECTURE.md` if the system topology changes
    - Update `README.md` if the feature list or quick-start instructions change
@@ -177,7 +130,6 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed walkthrough and [docs/feat
 
 - **TypeScript**: strict mode is enabled — avoid `any`, use explicit types.
 - **React**: functional components with hooks only (no class components).
-- **C#**: nullable reference types are enabled; use implicit usings.
 - **Imports**: use the `@/` path alias for cross-feature imports (e.g. `@/features/chord`).
 - **Responsive CSS**: for component-local responsiveness, prefer container queries first. Reserve media queries for page-shell layout and environment preferences such as reduced motion, hover, pointer, or viewport-wide structural changes.
 
@@ -188,12 +140,6 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed walkthrough and [docs/feat
 | Service | URL |
 |---------|-----|
 | Frontend dev server | http://localhost:5173 |
-| Backend HTTP | http://localhost:5110 |
-| Swagger UI | http://localhost:5110/swagger |
-
-If a port is already in use, stop the conflicting process and retry.  
-On macOS/Linux: `lsof -ti:5110 | xargs kill -9`  
-On Windows: `netstat -ano | findstr :5110`, then `taskkill /PID <pid> /F`
 
 ---
 

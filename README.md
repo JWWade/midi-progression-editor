@@ -4,7 +4,7 @@
 
 ## About
 
-**Apeirograph** is a parametric MIDI sequencer for exploring and editing chord progressions. It combines an interactive React/TypeScript web interface with an ASP.NET Core Web API backend, enabling musicians to:
+**Apeirograph** is a standalone React/TypeScript parametric MIDI sequencer for exploring and editing chord progressions, enabling musicians to:
 
 - Visualize chord shapes on an interactive chromatic circle
 - Build chord progressions with a dedicated sidebar (up to 8 chords, session-only)
@@ -21,8 +21,7 @@
 ```mermaid
 flowchart LR
    U[User in Browser] --> F[React + TypeScript Frontend]
-   F -->|HTTP/JSON| A[ASP.NET Core Web API]
-   A --> S[Music Services]
+   F --> A[Web Audio API]
    F --> E[MIDI Export]
    E --> O[.mid Output File]
 ```
@@ -30,7 +29,6 @@ flowchart LR
 ## Prerequisites
 
 - **Node.js** 18 or higher (for frontend)
-- **.NET 10 SDK** (for backend)
 - **npm** (comes with Node.js)
 
 ## Quick Start
@@ -48,27 +46,12 @@ chmod +x run-dev.sh
 run-dev.bat
 ```
 
-Both launchers start the backend on http://localhost:5110 and the frontend on http://localhost:5173.
+Both launchers install frontend dependencies when needed and start the app at http://localhost:5173.
 
 ### Option 3: Manual Setup
 
-**Terminal 1 — Backend**
-
-```bash
-cd server/ParametricMusic.Api
-dotnet restore  # First time only
-dotnet run
-```
-
-- API listens on: http://localhost:5110
-- Swagger UI: http://localhost:5110/swagger
-- Health check: GET http://localhost:5110/Health
-
-**Terminal 2 — Frontend**
-
 ```bash
 cd client
-cp .env.example .env.local  # First time only; edit if backend runs elsewhere
 npm install                  # First time only
 npm run dev
 ```
@@ -81,45 +64,7 @@ npm run dev
 
 The preview highlights the chromatic circle workspace, progression sidebar, and current chord panel.
 
-## Environment Variables
-
-Create `client/.env.local` to override defaults:
-
-```bash
-VITE_API_BASE_URL=http://localhost:5110
-```
-
-See [client/.env.example](client/.env.example) for all available variables.
-
-## API Client Type Generation
-
-After modifying backend endpoints, regenerate the TypeScript client (requires the backend running on port 5110):
-
-```bash
-cd client
-npm run generate:api
-```
-
-This fetches the OpenAPI spec and regenerates `src/api/generated/index.ts`. **Never edit this file manually.**
-
-Usage:
-```typescript
-import { client } from '@/api/client';
-
-const result = await client.post('/Scale/from-root', {
-  query: { note: 'C' },
-  body: { scaleType: 'major' }
-});
-```
-
 ## Testing
-
-### Backend
-
-```bash
-cd server/ParametricMusic.Tests
-dotnet test
-```
 
 ### Frontend
 
@@ -139,7 +84,7 @@ ESLint enforces zero warnings. All TypeScript files must pass.
 
 ## Project Structure
 
-The frontend follows a feature-based architecture with 20 modules under `client/src/features/`. The backend exposes REST endpoints via controllers in `server/ParametricMusic.Api/Controllers/`. See [ARCHITECTURE.md](ARCHITECTURE.md) for a full breakdown.
+The frontend follows a feature-based architecture with modules under `client/src/features/`. Music theory calculations, audio playback, and MIDI export run in the browser. See [ARCHITECTURE.md](ARCHITECTURE.md) for a full breakdown.
 
 ## Documentation
 
@@ -150,9 +95,7 @@ The frontend follows a feature-based architecture with 20 modules under `client/
 ## Technologies
 
 - **Frontend**: React 19, TypeScript 5.9.x, Vite 8, ESLint 10
-- **Backend**: ASP.NET Core .NET 10, Swashbuckle 10.2.x, xUnit 2.9
-- **API**: OpenAPI/Swagger specification with code generation
-- **Build**: npm + dotnet CLI
+- **Build**: npm
 
 ## Contributing
 
