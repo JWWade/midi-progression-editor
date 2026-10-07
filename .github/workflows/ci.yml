@@ -38,28 +38,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-  backend:
-    name: Backend (build, test)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: "10.x"
-
-      - name: Restore
-        run: dotnet restore midi-progression-editor.sln
-
-      - name: Build
-        run: dotnet build midi-progression-editor.sln --no-restore --configuration Release
-
-      - name: Test
-        working-directory: server/ParametricMusic.Tests
-        run: dotnet test --no-restore --configuration Release --verbosity normal

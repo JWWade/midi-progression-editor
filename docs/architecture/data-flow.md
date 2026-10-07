@@ -1,6 +1,6 @@
 # Data Flow
 
-End-to-end data flow from user interaction through to backend computation, audio playback, and MIDI file export.
+End-to-end client-side data flow from user interaction through music calculations, audio playback, and MIDI file export.
 
 ## Chord Selection & Visualisation
 

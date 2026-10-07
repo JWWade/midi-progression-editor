@@ -5,9 +5,8 @@ This is the React/TypeScript frontend for the **MIDI Progression Editor**, a par
 ## Tech Stack
 
 - **React 19** — UI framework
-- **TypeScript 6.0** — Type-safe JavaScript (strict mode)
+- **TypeScript 5.9** — Type-safe JavaScript (strict mode)
 - **Vite 8** — Development server and build tooling
-- **openapi-typescript** — Auto-generated type-safe API client from the backend's OpenAPI spec
 - **Vitest** — Unit test runner
 - **ESLint 10** — Linting (zero-warnings policy)
 
@@ -25,17 +24,7 @@ npm install
 npm run dev
 ```
 
-App is available at `http://localhost:5173`. The backend must be running at `http://localhost:5110` for API features to work.
-
-### Environment variables
-
-Create `client/.env.local` to override the default API base URL:
-
-```bash
-VITE_API_BASE_URL=http://localhost:5110
-```
-
-See `.env.example` for all available variables.
+App is available at `http://localhost:5173`. All features run in the browser; no backend or environment configuration is required.
 
 ## Available Scripts
 
@@ -46,17 +35,11 @@ See `.env.example` for all available variables.
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | Run ESLint (zero-warnings, strict mode) |
 | `npm test` | Run Vitest test suite |
-| `npm run generate:api` | Regenerate TypeScript API client from the running backend's OpenAPI spec |
 
 ## Project Structure
 
 ```
 src/
-├── api/                    # API integration layer
-│   ├── client/             # Pre-configured openapi-fetch client instance
-│   ├── generated/          # Auto-generated types + client functions (DO NOT EDIT)
-│   └── index.ts            # Public exports
-│
 ├── app/                    # Application bootstrap
 │   ├── App.tsx             # Root component
 │   ├── main.tsx            # Entry point
@@ -87,41 +70,15 @@ src/
     └── voice-leading/      # Voice-leading path utilities
 ```
 
-Each feature module follows the same internal structure:
+Features are implemented client-side and can use the following internal structure:
 
 ```
 feature/
-├── api/         # Feature-specific API calls (optional)
 ├── components/  # Feature React components
 ├── constants/   # Feature-level constants
 ├── hooks/       # Feature-specific custom hooks
 ├── types/       # Feature TypeScript types
 └── utils/       # Feature helper functions
-```
-
-## API Client
-
-The API client is auto-generated from the backend's OpenAPI specification. **Never edit `src/api/generated/index.ts` manually.**
-
-To regenerate after changing backend endpoints or DTOs:
-
-1. Start the backend: `cd ../server/ParametricMusic.Api && dotnet run`
-2. Run: `npm run generate:api`
-3. Commit both backend changes and the regenerated `src/api/generated/index.ts`
-
-Usage:
-```typescript
-import { client } from '@/api/client';
-
-const chord = await client.post('/Chord/from-root', {
-  query: { note: 'C' },
-  body: { quality: 'Major' }
-});
-
-const scale = await client.post('/Scale/from-root', {
-  query: { note: 'C' },
-  body: { scaleType: 'Major' }
-});
 ```
 
 ## Testing

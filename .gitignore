@@ -1,7 +1,3 @@
-# .NET build artifacts
-server/**/bin/
-server/**/obj/
-
 # Frontend dependencies and build output
 client/node_modules/
 client/dist/

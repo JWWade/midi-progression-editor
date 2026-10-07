@@ -22,6 +22,3 @@ export {
 // Utils
 export { getScaleNotes, getDiatonicIndices } from './utils';
 export { buildDiatonicChordOptions } from './utils';
-
-// API
-export { getScaleCMajor } from './api';
